@@ -1,0 +1,1 @@
+figures folder should be created in order for latex to convert eps files to pdf
