@@ -82,7 +82,7 @@
 %\crdata{0-12345-67-8/90/01}  % Allows default copyright data (0-89791-88-6/97/05) to be over-ridden - IF NEED BE.
 % --- End of Author Metadata ---
 
-\title{Continuous Training of SGD based Machine Learning Models after Deployment}
+\title{A Novel Approach to Continuous Training of Large Scale Machine Learning Models}
 
 %
 % You need the command \numberofauthors to handle the 'placement
@@ -140,18 +140,21 @@ Author 2
 \maketitle
 
 \begin{abstract}
-Machine learning model deployment is the final stage of machine learning pipelines.
-Typically, a machine learning model is first trained using historical data residing on disk. 
+Machine learning is increasingly pervasive in many business and scientific applications. 
+Making machine learning models ready for serving in a productive environment is a process done in form of pipelines that include several manual, semiautomatic, and automatic steps. 
+Model deployment is the final stage in these pipelines.
+Typically, a machine learning model is first trained using historical data residing on disk.
 Once the training is done, the model is deployed into a system where it can answer prediction queries in a realtime and reliable fashion.
 If new training data becomes available while the system is running, these models are updated.
 Currently, these updates are either performed incrementally (one at a time) or they require a complete retraining of the model offline.
 
-In this paper, we propose a novel deployment method for Stochastic Gradient Descent based machine learning models.
+In this paper, we propose a novel deployment method for stochastic gradient descent (SGD)-based machine learning models.
 Our method takes advantage of the stochastic and iterative nature of SGD based machine learning models, and not only applies incremental learning to constantly update the machine learning model but also eliminate the need for offline retraining by replacing it with mini-batch updates without affecting the performance.
 We have observed that the process of SGD optimization can be integrated into the lifeline of the model.
 One iteration of SGD is lightweight and can be executed while the system is running without interrupting the normal flow.
 Therefore, instead of retraining we are constantly applying mini batch updates to the model.
-Our experiments have shown that our deployment method can achieve up to an order of magnitude faster model update without degrading the quality of the model and in some case even increasing the quality due to faster adoption to changes in data distribution. 
+Our experiments show that our deployment method can achieve up to an order of magnitude faster model update without degrading the quality of the model and in some case even increasing the quality due to faster adoption to changes in data distribution.
+
 
 \end{abstract}
 
