@@ -143,16 +143,15 @@ Author 2
 Machine learning is increasingly pervasive in many business and scientific applications. 
 Making machine learning models ready for serving in a productive environment is a process done in form of pipelines that include several manual, semiautomatic, and automatic steps. 
 Model deployment is the final stage in these pipelines.
-Typically, a machine learning model is first trained using historical data residing on disk.
-Once the training is done, the model is deployed into a system where it can answer prediction queries in a realtime and reliable fashion.
-If new training data becomes available while the system is running, these models are updated.
+Once a machine learning model is trained on an initial dataset it is deployed into a system where it can answer prediction queries in a realtime and reliable fashion.
+If new training data becomes available while the system is running, the model is updated.
 Currently, these updates are either performed incrementally (one at a time) or they require a complete retraining of the model offline.
 
 In this paper, we propose a novel deployment method for stochastic gradient descent (SGD)-based machine learning models.
-Our method takes advantage of the stochastic and iterative nature of SGD based machine learning models, and not only applies incremental learning to constantly update the machine learning model but also eliminate the need for offline retraining by replacing it with mini-batch updates without affecting the performance.
-We have observed that the process of SGD optimization can be integrated into the lifeline of the model.
+SGD is an iterative process which works well with large data sets.
+In each iteration of SGD, the model is updated based on one or a sample (mini-batch) of the training items.
+Using this property of SGD, not only incremental learning can be applied but also we eliminate the need for offline retraining and replace it with continuous mini-batch updates.
 One iteration of SGD is lightweight and can be executed while the system is running without interrupting the normal flow.
-Therefore, instead of retraining we are constantly applying mini batch updates to the model.
 Our experiments show that our deployment method can achieve up to an order of magnitude faster model update without degrading the quality of the model and in some case even increasing the quality due to faster adoption to changes in data distribution.
 
 
