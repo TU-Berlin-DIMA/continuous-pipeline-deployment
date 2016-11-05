@@ -408,7 +408,6 @@ One challenging aspect is to combine the data from the stream with the sample fr
 % scalable sampling 
 
 
-
 \section{Tuning parameters} \label{tuning}
 Beside from Stochastic Gradient Descent parameters (learning rate and regularization constant), there are 2 system parameters that should be tuned. 
 Our goal, is to make these parameters adaptive, but for now we analyze their effect on the running time and mean squared error. 
@@ -424,15 +423,16 @@ This results in a paradigm where both training and serving can happen simultaneo
 \begin{figure}[H]
 \centering
 \includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-buffer-size.eps}
-\caption{Movie Lens 100k buffer size vs mean squared error}
+\caption{Movie Lens 100k buffer size vs mean squared error{\color{red} make gradient or multiple lines}}
 \label{fig:movie-lens-100k-buffer-size-mse}
 \end{figure}
 
-Figure \ref{fig:movie-lens-100k-buffer-size-mse} shows MSE for different buffer sizes for 100k MovieLens dataset. 
-While smaller buffer sizes yield better results due to more frequent training, one has to consider the overhead of extra training cycles. 
+Figure \ref{fig:movie-lens-100k-buffer-size-mse} shows mean squared error for different buffer sizes for 100k MovieLens dataset. 
+Smaller buffer sizes yield lower error rates, but the figure shows that the difference is small.
+Specially, when considering the affect buffer size has on the running time.
 Figure \ref{fig:movie-lens-100k-buffer-size-time} shows the running time on 100K MovieLens dataset using different buffer sizes. 
-Increasing the buffer size from 1000 to 5000 decreases the running time by a factor of 5 while the MSE is only decreased slightly. 
-Therefore, depending on the application we can set the buffer size to bigger values in order to increase the performance of the system. 
+Increasing the buffer size from 500 to 5000 decreases the running time by a factor of 5 while the error rate is only increased slightly.
+Therefore, depending on the application we can set the buffer size to bigger values in order to increase the performance of the system without affecting the quality of the final model substantially.
 
 \begin{figure}[H]
 \centering
@@ -447,23 +447,20 @@ Therefore, a dynamic scheduling can maximizes the performance of the system, by 
 Moreover, since training and serving can be done in parallel, we can perform training in the background and only update the weights when the training iteration is over. 
 
 \subsection{Sampling rate}
-
-Another parameter that affects the performance of the system is the sampling rate of historical data. 
-Sampling rate of 0.0 means only the new data is used in training (which is analogous to online learning) and sampling rate of 1.0 means using all the new and historical data for every new iteration of SGD. 
-Our intuition was that increasing sampling rate will only decrease the final error rate sub-linearly whereas the running time will increase linearly. 
-Therefore, a smaller sampling rate is preferable given that quality will not be affected by a great degree when sampling rate is getting closer to one. 
-Figure \ref{fig:movie-lens-100k-sample-rate} confirms our hypothesis. 
+In each iteration of SGD, as described in section \ref{continious-training-serving}, the data inside the buffer and a sample of the historical data is used to update the model.
+In this section, we investigate the affect of the sampling rate on the model quality and running time of the system.
+Figure \ref{fig:movie-lens-100k-sample-rate} shows that larger sampling rate increases the quality of the model, but similar to scheduling rate, the decrease in error rate is negligible, considering the affect it has on running time. 
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-sampling-rate.eps}
-\caption{Movie Lens 100k sample rate vs mean squared error}
+\caption{Movie Lens 100k sample rate vs mean squared error{\color{red} make gradient or multiple lines}}
 \label{fig:movie-lens-100k-sample-rate}
 \end{figure}
 
-As it can be observed sampling rates of more than 50\% hardly changes the final mean squared error. 
-Whereas the running time (figure \ref{fig:movie-lens-100k-sample-rate-time}) increases linearly with the sampling rate. 
-This leads to another trade-off between accuracy and running time. 
+Figure \ref{fig:movie-lens-100k-sample-rate-time} shows that effect of increasing sampling rate on running time.
+Using the entire historical data (sampling rate = 1.0) increases the running time 5 fold. 
+Therefore, similar to scheduling rate, setting the sampling rate to smaller values will increase the performance substantially, while only slightly affecting the quality of the model.
 
 \begin{figure}[H]
 \centering
