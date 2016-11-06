@@ -52,7 +52,7 @@
 \usepackage{color}
 \usepackage[outdir=./figures/]{epstopdf}
 \begin{document}
-
+\usepackage{todonotes}
 
 % Copyright
 \setcopyright{acmcopyright}
@@ -498,19 +498,18 @@ Figure \ref{fig:tuning-learning-rate} shows how automatic adjustment of learning
 \section{Evaluation} \label{evaluation}
 In this section, we evaluate the performance of our system using various datasets. 
 We report both the quality (error rate) and running time of the system. 
-We compare the performance of our system with Velox \cite{crankshaw2014missing}, a purely incremental approach and a fully batch approach where for every new training item that arrives at the system a new model is trained from scratch.
+We compare the performance of our system with Velox \cite{crankshaw2014missing}, a purely incremental and fully batch approach where for every new training item that arrives at the system a new model is trained from scratch.
 
 \subsection{Experimental setup}
 We run our experiments on a single node with Quad core Intel i7 and 16 GB of RAM. 
 
 \subsection{Datasets}
-\textbf{MovieLens \cite{harper2016movielens}}: to analyze the performance of our method on time varying datasets, we are using MovieLens datasets. 
-It consists of movie ratings by users during different time periods. 
-MovieLens 100k and MovieLens 1M were used in our experiments. 
-For both of the datasets, we used 10\% for initial learning (9\% training, 1\% test) and 90\% for online learning. 
+\textbf{MovieLens \cite{harper2016movielens}}: to analyze the performance of our method on time varying datasets, we use the MovieLens 100K and 1M datasets. 
+They consists of movie ratings by users during different time periods. 
+For both of the datasets, we use 10\% for initial learning (9\% training, 1\% test) and 90\% for online learning. 
 We have set the learning rate to 0.001 for all of the experiments on MovieLens dataset.
 
-\textbf{CIFAR-10 \cite{krizhevsky2009learning}}: This dataset consists of 60000 32x32 color images in 10 classes, with 6000 images per class. We will use a Neural Network to train a model to classify the images in the data set. Similar to MovieLens, 10\% is used for initial training and 90\% for online learning. Note that, in this dataset, the order is irrelevant and we assume no change in distribution of the data occurs throughout the system's lifetime. 
+\textbf{CIFAR-10 \cite{krizhevsky2009learning}}: this dataset consists of 60000 32x32 color images in 10 classes, with 6000 images per class. We use a Neural Network to train a model to classify the images in the data set. Similar to MovieLens, 10\% are used for initial training and 90\% for online learning. Note that, in this dataset, the order is irrelevant and we assume no change in distribution of the data occurs throughout the system's lifetime. 
 
 
 \subsection{Methods}
@@ -530,16 +529,16 @@ We have implemented a variation of Velox in our experiments.
 In our implementation, retraining is initiated when a predefined number of data points have arrived at the system. 
 
 \textbf{Continuous} is based on our proposed method. 
-Once there are enough new data, the scheduler will trigger a new iteration of SGD. 
+Once there are enough new data, the scheduler triggers a new iteration of SGD. 
 The data used in this new iteration of SGD consists of the new data that arrived in the system since the last scheduled iteration plus a sample of the existing historical data.
 
-\textbf{Baseline}: Baseline model is trained over the entire dataset and then used to calculate the test error rate. 
+\textbf{Baseline}: a baseline model is trained over the entire dataset and then used to calculate the test error rate. 
 
 \subsection{Comparison Under Constrained Resources }
 Both Velox and SystemX use different strategies to update the model.
 To perform a fair comparison of the two, we decided to evaluate them under similar resource constraints.
 We configured both Velox and SystemX frequency of training so that the total running time the given test datasets are similar.
-To achieve that, we have fixed the total number of epochs (SGD iterations) for both systems.
+To achieve this, we have fixed the total number of epochs (SGD iterations) for both systems.
 For Velox, this value is equal to the number of retraining multiplied by number of iterations in each retraining. 
 For SystemX, it is total number scheduled iterations throughout the lifetime of the system.
 Therefore, SystemX schedules a new iteration every 500 items for \textit{movie-lens-100k} and xxx items for \textit{movie-lens-1M} and Velox schedules a retraining every 15,000 items for movie lens 100k and xxx items for movie lens 1M.
@@ -549,8 +548,9 @@ SystemX continuously makes update (batch and incremental) to the current model a
 Whereas, Velox retrain a new model, while this new model performs better than the old model it is still losing valuable information that previous models contained.
 This explains the reason SystemX performs better than Velox when under similar resource constraints.
 Naive, offline+online, and baseline approaches are also included.
+\todo[inline]{Add discussion of naive and offline+online}
 Figure \ref{fig:movie-lens-running-time} shows the running time of the implemented methods on \textit{movie-lens-100k} and \textit{movie-lens-1M}.
-
+\todo[inline]{Add discussion performance}
 
 \begin{figure}[!ht]
 \centering
@@ -576,9 +576,9 @@ Figure \ref{fig:movie-lens-running-time} shows the running time of the implement
 \end{figure}
 
 \subsection{Scalability}
-In this section, we compare the running time of Velox and SystemX in distributed environment.
-Actual Velox implementation is used to perform the comparisons.
-We implemented SystemX, on Apache Spark.
+In this section, we compare the running time of Velox and SystemX in a distributed environment.
+The actual Velox implementation is used to perform the comparisons.
+We implemented SystemX on Apache Spark.
 
 %\subsection{Quality (MSE)} 
 %To measure the quality of the models, we have used an evolving test set. 
@@ -614,21 +614,19 @@ We implemented SystemX, on Apache Spark.
 {\color{red} make it longer}
 
 % machine learning systems for training model
-Weka \cite{hall2009weka}, Apache Mahout \cite{Owen:2011:MA:2132656} and Madlib \cite{hellerstein2012madlib} are systems that provide the necessesary toolkits to train machine learning models. 
-They do not provide any management, before or after deployment of these models. 
-They do however, provide a range of machine learning training algorithms. 
+Weka \cite{hall2009weka}, Apache Mahout \cite{Owen:2011:MA:2132656}, and Madlib \cite{hellerstein2012madlib} are systems that provide the necessary toolkits to train machine learning models. All of these systems provide a range of machine learning training algorithms. 
+They, however, do not provide any management, before or after deployment of these models. 
 Our proposed system focuses on models trainable using Stochastic Gradient Descent. 
-Contrary to these systems, it provide management of the models while in training and after deployment.
+Contrary to the systems above, it provide management of the models while in training and after deployment.
 % model management systems
-LongView \cite{akdere2011case}, MLBase \cite{kraska2013mlbase}, TuPaq \cite{sparks2015tupaq} are machine learning model management systems.
-They provide a range of training algorithms to create machine learning models.
-These systems also provide mechanism for model search as well as model management.
-Once models are created, they have to be deployed and used for serving manually by the users.
-Our system, on the contrary, is designed for deployment and continuous training.
+LongView \cite{akdere2011case}, MLBase \cite{kraska2013mlbase}, and TuPaq \cite{sparks2015tupaq} are machine learning model management systems.
+They provide a range of training algorithms to create machine learning models and mechanism for model search as well as model management.
+However, once models are created, they have to be deployed and used for serving manually by the users.
+Our system, on the contrary, is designed for automatic deployment and continuous training.
 % model serving
 Tensorflow serving \cite{abadi2016tensorflow}, and others (I haven't read yet) are systems designed to manage machine learning models after they have been trained.
 However, they do not handle quality control, incremental and batch updates and the user should retrain and update the models offline and deploy the new model into the system.
-Comparing to our system, we have made the process of model training, deployment and serving seamless. 
+Our system on the other hand features a seamless process for model training, deployment, and serving. 
 We provide incremental and batch updates to the model while the system is running.
 % Velox
 Velox \cite{crankshaw2014missing} is closest in terms of design to our system.
