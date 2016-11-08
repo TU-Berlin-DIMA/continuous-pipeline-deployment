@@ -151,9 +151,9 @@ If new training data becomes available while the system is running, the model is
 Currently, these updates are either performed incrementally (one at a time) or they require a complete retraining of the model offline.
 
 In this paper, we propose a novel deployment method for stochastic gradient descent (SGD)-based machine learning models.
-SGD is an iterative process which works well with large data sets.
+SGD is an iterative process, which works well with large data sets.
 In each iteration of SGD, the model is updated based on one or a sample (mini-batch) of the training items.
-Using this property of SGD, not only incremental learning can be applied but also we eliminate the need for offline retraining and replace it with continuous mini-batch updates.
+Using this property of SGD, not only incremental learning can be applied but we also eliminate the need for offline retraining and replace it with continuous mini-batch updates.
 One iteration of SGD is lightweight and can be executed while the system is running without interrupting the normal flow.
 Our experiments show that our deployment method can achieve up to an order of magnitude faster model update without degrading the quality of the model and in some case even increasing the quality due to faster adoption to changes in data distribution.
 
@@ -203,6 +203,8 @@ We propose the design of a system that provide realtime query support as well in
 
 \subsection{Model management and serving} \label{model-management-serving}
 
+\todo[inline]{this reads more like related work. You can make it background, then it should be before or after SGD.}
+
 \begin{figure*}[t]
 \centering
 \includegraphics[scale = 0.4]{../images/current-method.png}
@@ -238,8 +240,9 @@ This batch process affects the system and heavily slows down the model update pr
 
 % What are the contributions
 \subsection{Contributions and paper outline}
+\todo[inline]{this should be part of the intro}
 Our key observation is that, by utilizing the underlying optimization algorithm (SGD), the model training process can be seamlessly executed along side the serving and query answering component.
-Based on this observation, we present a new model for a system, that supports deployment, maintenance, incremental and fast batch updates of machine learning models.
+Based on this observation, we present a new model for a system, that supports deployment, maintenance, and incremental and fast batch updates of machine learning models.
 We are making the following contributions: 
 \begin{itemize}
 \item a system for machine learning models deployment and maintenance
@@ -262,24 +265,25 @@ Related work is discussed in section \ref{related-work} and in section \ref{conc
 In machine learning, optimization methods are used to find the minimum of the objective function (referred to as the loss function) by calculating the gradient of the function at different data points and update the function parameters based on the gradient values.
 A common optimization method is gradient descent, an iterative process where in every iteration the entire training data set is used to calculate the gradient value.
 One drawback of gradient descent is that in presence of large datasets it will become very slow since every iteration has to inspect all the training items.
-Stochastic Gradient Descent (SGD) is an approximation of the gradient descent method. 
+stochastic gradient descent (SGD) is an approximation of the gradient descent method. 
 Similar to gradient descent, it is an iterative process but in each iteration it operates on one element (or a sample of elements) at a time. 
 It calculates the gradient at a single element and updates the parameters of the model accordingly. 
-Although, it converges in more number of iterations, the overall convergence time is still much faster than gradient descent. 
+Although it converges after a higher number of iterations, the overall convergence time is still much faster than gradient descent. 
 Each iteration of SGD can be executed in a short amount of time since it only works with a sample of the data.
 We are leveraging this property of SGD and design the system so that it executes one iteration of SGD at a time while the system is running.
-In our experiments we show that time to execute single iteration of SGD is insignificant.
-Moreover, since a single iteration is a lightweight process, it can be executed in separate threads.
+In our experiments, \todo[inline]{maybe reference section} we show that time to execute single iteration of SGD is insignificant.
+Moreover, since a single iteration is a lightweight process, it can be executed in separate threads. \todo[inline]{that does not make sense to me, is it independent? then it can be executed in separate threads}
 
 \subsection{Distributed SGD}
-{\color{red} should I even include this section?}
+{\color{red} should I even include this section? - I would TR}
+\todo[inline]{this needs to be expanded to explain why parallelization and distribution might be desirable}
 One problem in distributed environment is synchronizing the updates from different nodes. 
-It has slowed down the SGD process, since after every iteration, all the updates are usually send to a master node that updates the model.
+It has slowed down the SGD process, because after every iteration, all the updates are sent to a master node that updates the model.
 \cite{recht2011hogwild, dean2012large} proposed distributed asynchronous SGD and the experimental results showed that the quality of the final model is not any worse than the synchronized approach. 
 
 
 \subsection{Learning rate tuning} \label{learning-rate}
-Learning rate or step size parameter plays an important role in convergence of SGD.
+The learning rate or step size parameter plays an important role in the convergence of SGD.
 The most common technique is to set the learning rate to a small value, and slowly decrease the value in every iteration. 
 This, however is not possible in case of continuous and online learning. 
 Adaptive learning rates have been used in online scenarios where based on different criteria the learning rate is adjusted automatically.
@@ -287,22 +291,22 @@ Schaul et al. \cite{schaul2013no} have proposed one such method were the learnin
 One advantage of their method is that it works well with non-stationary problems, where the distribution of the data is constantly changing. 
 By examining the changes in the data the learning rate will decrease (when approaching the optimum value) and increase (when the distribution of the data has changed).
  
-{\color{red}Not yet implemented}
+{\color{red}Not yet implemented - either you have some more info about thresholds etc. or you have to leave this out.}
 We use this strategy in our implementation of SGD. 
 
 
 \subsection{Machine learning models based on SGD}
 SGD is one of the most common optimization methods to train large scale problems. 
-It has been used in classification \cite{zhang2004solving}, clustering \cite{bottou1995convergence}, Neural Networks \cite{dean2012large}, and Matrix Factorization \cite{funk2006netflix}.
+It has been used in classification \cite{zhang2004solving}, clustering \cite{bottou1995convergence}, neural networks \cite{dean2012large}, and matrix factorization \cite{funk2006netflix}.
 In our system, we implemented matrix factorization and neural networks, which will be explained next. 
 
 \textbf{Matrix Factorization} is a common method used in recommender systems \cite{koren2009matrix}. 
 Matrix factorization is used to derive the latent factors (users and items) for recommender systems.
 It relies on the fact that each user and item can be described in a few dimensions (10 to 40 usually) based on the available ratings.
 These latent factors have automatically capture the similarity of users and items based on the ratings provided by the users.
-Any unknown rating, hence can be predict by simply using a dot product of the user vector with item vector.
-We used the SGD implementation of Matrix Factorization by Simon Funk \cite{funk2006netflix}. 
-An scalable version of the algorithm was also proposed by Gemulla et al. \cite{gemulla2011large}.
+Any unknown rating, hence can be predicted by simply using a dot product of the user vector with item vector.
+We used the SGD implementation of matrix factorization by Simon Funk \cite{funk2006netflix}. 
+A scalable version of the algorithm was proposed by Gemulla et al. \cite{gemulla2011large}.
 
 \textbf{Neural Networks} or deep learning inspired by biological neural networks in brain are used to learn and approximate complex functions. 
 They have been used for more than half a century to model functions and have been used in training machine learning models.
@@ -311,7 +315,7 @@ Past decade saw a change with publication of several nominal works.
 Hinton et al. \cite{hinton2006fast} proposed methods for speeding up the training of neural networks.
 ImageNet competition \cite{ILSVRC15} in 2012 was won by a neural networks approach proposed by Krizhevsky et al. \cite{krizhevsky2012imagenet} where they significantly reduced the error rate. 
 Success of Google Brain team \cite{sutskever2014sequence, mikolov2013efficient} was also instrumental to popularizing neural networks in machine learning community.
-We have implemented a multilayer Neural Network for classifying images. {\color{red}explain more?}
+We have implemented a multilayer neural network for classifying images. {\color{red}explain more?}
 
 \section{Continuous Training and Serving} \label{continious-training-serving}
 
@@ -330,13 +334,13 @@ We have implemented a multilayer Neural Network for classifying images. {\color{
 \end{figure*}
 
 % Stochastic Gradient System properties
-As described in section \ref{sgd}, stochastic gradient descent is an iterative process where in each iteration one or a sample of the data is selected randomly and the gradient is calculated based on this sample. 
+As described in Section \ref{sgd}, stochastic gradient descent is an iterative process where in each iteration one or a sample of the data is selected randomly and the gradient is calculated based on this sample. 
 After each iteration the parameters of the model are updated.
 This means that at the end of an iteration, the model can be used to make predictions.
 As more iterations are executed, the model becomes more and more accurate.
 This property of stochastic gradient descent makes it ideal for long running systems where prediction requests are arriving at the system continuously.
 % We take advantage of the underlying optimization method and design the system around it
-We take advantage of these properties of SGD.
+% We take advantage of these properties of SGD.
 % We do not need complete re-training, each iteration of SGD is light and can be easily executed while the system is running
 Since each iteration of SGD is light and fast, it can be done while the system is serving prediction requests.
 % figure
@@ -351,25 +355,27 @@ The scheduler can also decide to run an iteration if the system is idle or the l
 Each new iteration will use a random sample of the data in storage and the data in the buffer. 
 As more training observations becomes available the model is updated further.
 Figure \ref{fig:system-architecture} shows the overview of the architecture of our system.
-Next we explain each part of the system in more detail.
+Next, we explain each part of the system in more detail.
 
 \subsection{Scheduler}\label{scheduler}
 Scheduler component is responsible for scheduling of new iterations of SGD.
 An iteration of SGD can be scheduled at any point in time.
 Intuitively, the best time to execute an iteration is when the system is not under heavy load.
-This will help in utilizing system's resource as well as keeping the model up to date at all time.
+This will help in utilizing the system's resources as well as keeping the model up to date at all time.
 Another situation that a new iteration of SGD should be executed is when the system is receiving a lot of training items and the intermediate buffer is getting full.
-If the model is not updated with the new training items frequently, the quality will go down more rapidly, specially if the distribution of the data is changing rapidly.
+If the model is not updated with the new training items frequently, the quality will go down more rapidly, especially if the distribution of the data is changing rapidly.
 Incremental updates are turned off when a new iteration is scheduled to execute.
 Training iterations and model serving are disjoint and not affected by each other.
-As soon as the training iteration is completed the model is updated and incremental update is reenabled.
-This property allows the scheduler to execute new iteration of SGD in separate thread without interrupting the serving module.
+As soon as the training iteration is completed the model is updated and incremental update is reenabled. \todo[inline]{have you described incremental update vs iterations already? Maybe this could go into background as well}
+This property allows the scheduler to execute new iteration of SGD in a separate thread without interrupting the serving module.
 The scheduling rate however affects the quality of the model.
 Each new iteration slightly increases the quality of the model.
 The increase in quality is even more when new training observations have arrived at the system.
-In section \ref{evaluation} we investigate the effect of scheduling rate on model quality.
+In Section \ref{evaluation}, we investigate the effect of scheduling rate on model quality.
 In case no new training data is available, the model parameters will converge after awhile and any further training iterations will not have any effect on the model quality.
 Therefore, the scheduler component has to communicate with the model manager in order to detect whether the model parameters have converged and stop further iterations until more training data becomes available.
+
+%Tilmann needs to continue here...
 
 \subsection{Data Manager} \label{data-manager}
 In order to execute an iteration of SGD, we need to combine the training data that arrives at the system in realtime and the data stored on disk.
