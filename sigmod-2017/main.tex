@@ -52,7 +52,10 @@
 \usepackage{todonotes}
 \usepackage{color}
 \usepackage[outdir=./figures/]{epstopdf}
+\usepackage{listings}
 \begin{document}
+%\lstset{numbers=left, numberstyle=\small, numbersep=8pt, frame = single, language=Pascal, framexleftmargin=15pt}
+
 
 % Copyright
 \setcopyright{acmcopyright}
@@ -185,7 +188,7 @@ However, it is one that has received very little attention.
 ML application's life cycle does not end with training. 
 In fact deployment and serving of the models is the most crucial part that brings the actual business value. 
 % Specific problem
-In order to gain actual value out of a machine learning model, it has to be monitored in real-time in production environment. 
+In order to gain actual value out of a machine learning model, it has to be monitored in realtime in production environment. 
 These models have to be maintained and constantly updated incrementally to better fit the new data that arrives. 
 The models should also be deployed in an environment that is capable of handling high traffic. 
 While all of these are happening, the models should be re-trained since ML models usually need to have access to entire datasets, otherwise the quality will degrade if they are only updated incrementally.
@@ -196,7 +199,7 @@ Except in a very few cases \cite{akdere2011case, crankshaw2014missing}, most of 
 Moreover, systems with support for model deployment are still lacking constant monitoring and fast and accurate updates of the machine learning models.
 % What is the motivation for this work
 Given the lack of systems to support model deployment and maintenance we have set out to design a system that not only support deployment and maintenance of machine learning models but also provide constants incremental and batch updates while the system is running. 
-We propose the design of a system that provide real-time query support as well incremental and fast batch updates to the machine learning models.
+We propose the design of a system that provide realtime query support as well incremental and fast batch updates to the machine learning models.
 
 \subsection{Model management and serving} \label{model-management-serving}
 
@@ -212,22 +215,22 @@ It has only been recently that some systems, for example Velox \cite{crankshaw20
 LongView integrates predictive machine learning models into relational databases. 
 It answers predictive queries and maintains and manages the models.
 LongView uses techniques such as query optimization and materialized view selection to increase the performance of the system.
-TensorFlow Serving provides mechanisms for real-time queries, deployment and version control of machine learning models.
+TensorFlow Serving provides mechanisms for realtime queries, deployment and version control of machine learning models.
 It has out-of-the-box support for models created using TensorFlow and it provides several interfaces for users to deploy their custom models.
 However, it does not provide incremental updates to the model.
 Models have to be recreated outside of the system by the user and redeployed into TensorFlow Serving.
 Similarly, Velox provides a set of interfaces for users to deploy their models. 
 It is integrated into the \textit{Berkeley Data Analytics Stack (BDAS)}, and uses the components of BDAS such as Tachyon \cite{li2014tachyon} and Spark \cite{zaharia2010spark}. 
 Models are typically trained offline using Spark. 
-Once a model is trained, it is deployed using Velox and Velox can answer prediction queries in real-time and perform incremental updates to the model.
+Once a model is trained, it is deployed using Velox and Velox can answer prediction queries in realtime and perform incremental updates to the model.
 Velox also monitors the quality of the model using a validation set and once the error rate has gone beyond a predefined threshold it initiates a complete retraining of the model using Spark. 
 Figure \ref{fig:velox-work-flow} depicts how Velox works. 
 While all of these systems provide intuitive mechanisms for model deployment, they have some drawbacks. 
-LongView only works with static data and does not have support for real-time queries.
+LongView only works with static data and does not have support for realtime queries.
 TensorFlow Serving completely separates the process of model training from model serving. 
 It requires the users to train the model separately and while the model is being served, it does not perform incremental updates to the model.
 Velox has addressed these problems. 
-It provides a mechanism for real-time query support as well as incremental updates to the model.
+It provides a mechanism for realtime query support as well as incremental updates to the model.
 It allows retraining of the models offline when the quality has fallen bellow a predefined threshold.
 Velox provides an API that when called will initiate an out-of-core offline retraining of the model.
 It uses Stochastic Gradient Descent (SGD) optimization to train the models offline in Apache Spark.
@@ -311,6 +314,7 @@ Success of Google Brain team \cite{sutskever2014sequence, mikolov2013efficient} 
 We have implemented a multilayer Neural Network for classifying images. {\color{red}explain more?}
 
 \section{Continuous Training and Serving} \label{continious-training-serving}
+
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.30]{../images/placeholder.jpeg}
@@ -337,82 +341,109 @@ We take advantage of these properties of SGD.
 Since each iteration of SGD is light and fast, it can be done while the system is serving prediction requests.
 % figure
 Figure \ref{fig:cont-training-serving} shows the details of our proposed system.
-% more detailed explanation of the figure
-The system keeps track of incoming training observations and adds them to an intermediate buffer. 
-With the arrival of every training item, the model is also updated in an incremental and online fashion.
+An initial model is trained using the data residing on disk.
+Once the model is deployed, it receives prediction queries and training observations in a streaming fashion.
+Incoming prediction queries are answered as soon as they are received.
+Once a training observation is received the model's incremental update method is called and the training item is passed to this method.
+The system also keeps track of incoming training observations and adds them to an intermediate buffer.
 A scheduler component, will schedule a new iteration of SGD based on the rate of incoming training observations. 
 The scheduler can also decide to run an iteration if the system is idle or the load on the system is not heavy. 
 Each new iteration will use a random sample of the data in storage and the data in the buffer. 
-Since we are operating under the assumption that the model is early trained on an initial data, we can safely assume the model's quality is adequate to answer incoming predictions.
 As more training observations becomes available the model is updated further.
 Figure \ref{fig:system-architecture} shows the overview of the architecture of our system.
 Next we explain each part of the system in more detail.
 
-\subsection{Iteration scheduler}
-New iterations of SGD can be scheduled at any point in time.
+\subsection{Scheduler}\label{scheduler}
+Scheduler component is responsible for scheduling of new iterations of SGD.
+An iteration of SGD can be scheduled at any point in time.
 Intuitively, the best time to execute an iteration is when the system is not under heavy load.
 This will help in utilizing system's resource as well as keeping the model up to date at all time.
 Another situation that a new iteration of SGD should be executed is when the system is receiving a lot of training items and the intermediate buffer is getting full.
 If the model is not updated with the new training items frequently, the quality will go down more rapidly, specially if the distribution of the data is changing rapidly.
-Training iterations and model serving are disjoint and not affected by each other.
 Incremental updates are turned off when a new iteration is scheduled to execute.
-As soon as the training iteration is completed the model is updated and incremental updates are restarted.
+Training iterations and model serving are disjoint and not affected by each other.
+As soon as the training iteration is completed the model is updated and incremental update is reenabled.
 This property allows the scheduler to execute new iteration of SGD in separate thread without interrupting the serving module.
-% Talk about its effect on quality and performance 
+The scheduling rate however affects the quality of the model.
+Each new iteration slightly increases the quality of the model.
+The increase in quality is even more when new training observations have arrived at the system.
+In section \ref{evaluation} we investigate the effect of scheduling rate on model quality.
+In case no new training data is available, the model parameters will converge after awhile and any further training iterations will not have any effect on the model quality.
+Therefore, the scheduler component has to communicate with the model manager in order to detect whether the model parameters have converged and stop further iterations until more training data becomes available.
 
-\subsection{Batch data sampling} \label{sampling}
-In order to execute an iteration of SGD, we need to combine the training data that arrives at the system in real-time and the data stored on disk.
-As described earlier, SGD is an approximation technique that does not necessarily need access to the entire data in each iteration.
-Our experiments have shown that executing an iteration using the entire data in the buffer and a sample of the existing data on disk will produce the best possible quality in a reasonably fast amount of time.
-Sampling rate of the historical data has to be adjusted.
+\subsection{Data Manager} \label{data-manager}
+In order to execute an iteration of SGD, we need to combine the training data that arrives at the system in realtime and the data stored on disk.
+Data manager is responsible for storing the incoming training observations in an intermediate buffer.
+When a new training iteration is scheduled, data manager accesses the historical data stored on disk and provides a sample based on the configured sampling rate.
+The data from the sample and the data in the buffer are merged together to create the dataset for next training iteration.
+Data manager provides access to this dataset for model manager where the actual training and model updates happen.
+The data manager also communicates with scheduler in order to inform it when the intermediate buffer is becoming full and a new training iteration is required. 
+
+The created data set as described earlier, consists of the data inside the buffer and a sample of the historical data.
+The sampling rate therefore is a parameter that has to be configured.
 It can be pre-configured to a constant value based on the application.
-However, using the feedback from the system's Quality Monitoring module (section \ref{quality-monitoring}), sampling rate can be adjusted.
+However, using the feedback from the system's model manager (section \ref{model-manager}), sampling rate can be adjusted.
 For example, when data distribution is changing more rapidly smaller sampling rate will put more emphasis on the data that arrived in the system recently. 
 This is similar to the problem of concept drift, where the distribution of the incoming data changes overtime.
 This will render historical data less important, and as a result a smaller sample of the historical data (or none at all) will give more importance to the data in the buffer and help the model to adopt faster to the concept drift.
 However, if there is no concept drift in the data, larger sampling rate will increase the quality of the model after a training iteration.
 Another effect that sampling rate has on the system is the training iteration running time.
-Larger sampling rate increases the running time each training iteration as more data has to be processed.
+Larger sampling rate increases the running time of each training iteration as more data has to be processed.
 In section \ref{evaluation}, we investigate the effects of different sampling rate on both the quality and performance of the system.
 
+\subsection{Model Manager} \label{model-manager} 
+An important part of the system is model manager component.
+It is responsible for storing the model, answering prediction queries and performing incremental and batch updates to the model.
+Listing \ref{model-manager-api} shows the APIs of model manager.
+They are used to both interact with other components as well as end-users of the system.
+Scheduler component uses \textit{update} and \textit{update\_batch} to instruct the model manager to perform incremental or batch updates to the model.
+Upon a new prediction query, the \textit{predict} method is called to provide the end-user with the label of the given input.
+\begin{lstlisting}[language=Scala, basicstyle=\small\ttfamily, frame=tb ,columns=fullflexible,
+showstringspaces=false,label=model-manager-api,caption=Model Manager API, numberstyle=\tiny]
+def update(x,y)
 
-\subsection{Quality monitoring} \label{quality-monitoring} %Revise
-% every new iteration scheduled will be followed by a quality control
-An integral part of the system is its quality control module.
-It continuously check the error against a validation set and reports it back to other components.
-It helps adjust the learning rate, described in section \ref{learning-rate}. 
-When models are converging the validation error tend to decrease more slowly and learning rate should be decreased since the parameters are getting close to their optimal value.
-Quality monitoring module also help in determining the sampling rate. 
-As explained in section \ref{sampling}, an increase in error rate is an indicator of change in distribution of the data.
-As a result, reducing the sampling rate will put more emphasis on the recent data and help adopt the model the changes in the distribution.
-Quality also indicates how frequent iterations should be scheduled. 
-Although, ideally the model is continuously updated, both incremental and in batch, a decrease in quality could indicate the model is not converging fast enough and more training iterations should be executed.
-% More text
+def update_batch(X,Y)
 
-\subsection{Version control} \label{version-control} % Revise
-Once a training iteration is completed, the changes are merged back into the deployed model.
-However, the system keeps track of the all changes made to the model and can revert to any previous version of the model at any time.
-This component is essential, specially when there are rapid changes in the distribution of the data or in presence of anomalous data.
-In both cases, the system should revert to an earlier more stable version.
-In case of rapid changes to the distribution, the system should execute new iterations with less historical data.
-In case of anomalies in the data, it should discard the anomalous data. (how to differentiate between the two ? ) \#experiments
-% more text 
+def predict(x): Label
 
-\subsection{Distributed environment} % Revise
+def error_rate(X_test, Y_test): Double
+
+\end{lstlisting}
+\textit{error\_rate} method returns the mean squared error rate of the model using the provided test dataset.
+As described earlier, constant monitoring of the quality is required in order to adjust the scheduling and sampling rate.
+When the error rate is stagnating, this could mean that the model has converged using the existing data therefore model manager informs scheduler not to schedule any new iterations until new training observations have arrived at the system.
+Similarly as explained in section \ref{data-manager}, an increase in error rate could indicate a change in distribution of the data.
+As a result, reducing the sampling rate will put more emphasis on the recent data (in the intermediate buffer) and help adopt the model to the changes in the distribution.
+
+Model manager also keeps track of the changes that are made to the model.
+The model is updated both through incremental learning and training iteration.
+Model manager, creates snapshots of the model in two different scenarios; after a series incremental updates are made and after each training iteration.
+This versioning of the models is essential.
+When there is a rapid change in the distribution of the incoming data (a sudden concept drift) or when there are anomalies in the data, it is sometimes necessary to revert back to a version before the change in distribution occurred.
+In case of concept drift, new training iterations should be scheduled that only use the data in the buffer and in case of an anomalies in the data, they have to be identified and discarded before any further model updates could happen.
+
+\subsection{Distributed environment} 
 % How would it scale
 As described earlier the underlying optimization method is SGD.
 Any computation model capable of executing SGD efficiently can be used as the run-time of the system.
-% it is not based on any computation model
-Our architecture is not limited to any specific run-time and can be designed around any of the common data processing engines.
-% underlying engine can be anything as long as iterative optimization methods are supported
-Specifically, systems that are optimized in running iterative methods are suitable for our system.
+All of the components of the system described so far are not limited to any computation environment.
+However, in order to ensure scalability several considerations have to made with regards to each component.
+Data manager should be able to work on top of distributed file systems such HDFS \cite{shvachko2010hadoop}. 
+In order to allow fast processing of incoming training observations, the intermediate buffer should be stored in memory.
+Therefore, the buffer has to be distributed to all the nodes in the computing cluster.
+Certain type of machine learning models may be too large to fit into one single node.
+One example of such models is the matrix factorization model for recommender systems.
+Model manager should partition the model among all the nodes.
+It is important that model chose the partitioning strategy in such a way, that when requested the predictions can be made quickly.
+For example, when a prediction request for a specific user and item arrives at the system, the model manager should be able to quickly find the related user and item from the matrices to quickly compute the predicted rating for the specific pair.
+Our model serving ystem is also not limited to any specific run-time and can accomodate any of the common data processing engines.
 Apache Flink \cite{carbone2015apache, alexandrov2014stratosphere} and Apache Spark \cite{zaharia2010spark} are distributed data processing platform that work with data in memory and they have support for iterative algorithms.
-% joining data from disk with the the stream inside the buffer is not trivial
-One challenging aspect is to combine the data from the stream with the sample from the disk. 
-% scalable sampling 
 
 
-\section{Evaluation} \label{evaluation}
+\section{Evaluation} \label{evaluation} 
+% One more dataset (classification)
+% more explanation of the results
+% one more experiment (only train on initial data)
 In this section, we evaluate the performance of our system using various datasets. 
 We report both the quality (error rate) and running time of the system. 
 We compare the performance of our system with Velox \cite{crankshaw2014missing}, a purely incremental approach and a fully batch approach where for every new training item that arrives at the system a new model is trained from scratch.
@@ -429,7 +460,9 @@ We have set the learning rate to 0.001 for all of the experiments on MovieLens d
 \textbf{CIFAR-10 \cite{krizhevsky2009learning}}: this dataset consists of 60000 32x32 color images in 10 classes, with 6000 images per class. We use a Neural Network to train a model to classify the images in the data set. Similar to MovieLens, 10\% are used for initial training and 90\% for online learning. Note that, in this dataset, the order is irrelevant and we assume no change in distribution of the data occurs throughout the system's lifetime. 
 
 \subsection{Tuning parameters} \label{tuning}
-Beside from Stochastic Gradient Descent parameters (learning rate and regularization constant), there are 2 system parameters that should be tuned. 
+In section \ref{continious-training-serving}, we discussed how system parameters such as sampling and scheduling rate affect the performance and quality of the system.
+In this section, we are analyzing the effects of different values sampling and scheduling rate on the system.
+We 
 Our goal, is to make these parameters adaptive, but for now we analyze their effect on the running time and mean squared error. 
 
 \textbf{Scheduling rate}\\
