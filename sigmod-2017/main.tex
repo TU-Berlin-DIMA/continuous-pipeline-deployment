@@ -326,54 +326,57 @@ We have implemented a multilayer Neural Network for classifying images. {\color{
 \end{figure*}
 
 % Stochastic Gradient System properties
-As described in section \ref{sgd}, stochastic gradient descent is an iterative process where in each iteration a sample of the data is selected randomly and the gradient is calculated based on this sample. 
+As described in section \ref{sgd}, stochastic gradient descent is an iterative process where in each iteration one or a sample of the data is selected randomly and the gradient is calculated based on this sample. 
 After each iteration the parameters of the model are updated.
 This means that at the end of an iteration, the model can be used to make predictions.
 As more iterations are executed, the model becomes more and more accurate.
-{\color{red} this is the core idea of the system, it should be presented better  }This property of stochastic gradient descent makes it ideal for long running systems where prediction requests are arriving at the system continuously.
+This property of stochastic gradient descent makes it ideal for long running systems where prediction requests are arriving at the system continuously.
 % We take advantage of the underlying optimization method and design the system around it
 We take advantage of these properties of SGD.
 % We do not need complete re-training, each iteration of SGD is light and can be easily executed while the system is running
 Since each iteration of SGD is light and fast, it can be done while the system is serving prediction requests.
-% Bold claim
-We prove theoretically that, this process yields the same result as training the model offline using SGD.
 % figure
 Figure \ref{fig:cont-training-serving} shows the details of our proposed system.
 % more detailed explanation of the figure
 The system keeps track of incoming training observations and adds them to an intermediate buffer. 
+With the arrival of every training item, the model is also updated in an incremental and online fashion.
 A scheduler component, will schedule a new iteration of SGD based on the rate of incoming training observations. 
 The scheduler can also decide to run an iteration if the system is idle or the load on the system is not heavy. 
 Each new iteration will use a random sample of the data in storage and the data in the buffer. 
-This will give more importance to new data hence addresses the concept drift issue and at the same time uses historical data for more accurate model updates.
+Since we are operating under the assumption that the model is early trained on an initial data, we can safely assume the model's quality is adequate to answer incoming predictions.
+As more training observations becomes available the model is updated further.
 Figure \ref{fig:system-architecture} shows the overview of the architecture of our system.
 Next we explain each part of the system in more detail.
 
 \subsection{Iteration scheduler}
-% when to schedule a new iteration
 New iterations of SGD can be scheduled at any point in time.
 Intuitively, the best time to execute an iteration is when the system is not under heavy load.
 This will help in utilizing system's resource as well as keeping the model up to date at all time.
 Another situation that a new iteration of SGD should be executed is when the system is receiving a lot of training items and the intermediate buffer is getting full.
 If the model is not updated with the new training items frequently, the quality will go down more rapidly, specially if the distribution of the data is changing rapidly.
-% run in a separate thread
 Training iterations and model serving are disjoint and not affected by each other.
-Only when the training iteration is completed the model is updated.
+Incremental updates are turned off when a new iteration is scheduled to execute.
+As soon as the training iteration is completed the model is updated and incremental updates are restarted.
 This property allows the scheduler to execute new iteration of SGD in separate thread without interrupting the serving module.
+% Talk about its effect on quality and performance 
 
 \subsection{Batch data sampling} \label{sampling}
-% how much data to sample
 In order to execute an iteration of SGD, we need to combine the training data that arrives at the system in real-time and the data stored on disk.
 As described earlier, SGD is an approximation technique that does not necessarily need access to the entire data in each iteration.
-Our experiments have shown that executing an iteration using the entire data in the buffer and a sample of the existing data on disk will produce the best possible quality in a reasonably fast amount of time. (\#experiment)
+Our experiments have shown that executing an iteration using the entire data in the buffer and a sample of the existing data on disk will produce the best possible quality in a reasonably fast amount of time.
 Sampling rate of the historical data has to be adjusted.
-It can be pre-configured to a constant value.
-% adjusted based on the feedback from quality control ? 
-However, using the feedback from the system's Quality Monitoring module (section \ref{quality-monitoring}), sampling rate can be adjusted. (\#experiment)
-For example, when data distribution is changing more rapidly (concept drift) smaller sampling rate will put more emphasis on the data that arrived in the system recently. 
-The opposite scenario, when data distribution is stagnating, larger samples will help in increasing the model accuracy.
-Sampling rate also affects the execution time of an iteration.
+It can be pre-configured to a constant value based on the application.
+However, using the feedback from the system's Quality Monitoring module (section \ref{quality-monitoring}), sampling rate can be adjusted.
+For example, when data distribution is changing more rapidly smaller sampling rate will put more emphasis on the data that arrived in the system recently. 
+This is similar to the problem of concept drift, where the distribution of the incoming data changes overtime.
+This will render historical data less important, and as a result a smaller sample of the historical data (or none at all) will give more importance to the data in the buffer and help the model to adopt faster to the concept drift.
+However, if there is no concept drift in the data, larger sampling rate will increase the quality of the model after a training iteration.
+Another effect that sampling rate has on the system is the training iteration running time.
+Larger sampling rate increases the running time each training iteration as more data has to be processed.
+In section \ref{evaluation}, we investigate the effects of different sampling rate on both the quality and performance of the system.
 
-\subsection{Quality monitoring} \label{quality-monitoring}
+
+\subsection{Quality monitoring} \label{quality-monitoring} %Revise
 % every new iteration scheduled will be followed by a quality control
 An integral part of the system is its quality control module.
 It continuously check the error against a validation set and reports it back to other components.
@@ -384,17 +387,18 @@ As explained in section \ref{sampling}, an increase in error rate is an indicato
 As a result, reducing the sampling rate will put more emphasis on the recent data and help adopt the model the changes in the distribution.
 Quality also indicates how frequent iterations should be scheduled. 
 Although, ideally the model is continuously updated, both incremental and in batch, a decrease in quality could indicate the model is not converging fast enough and more training iterations should be executed.
+% More text
 
-\subsection{Version control} \label{version-control}
-% Store and version models
+\subsection{Version control} \label{version-control} % Revise
 Once a training iteration is completed, the changes are merged back into the deployed model.
 However, the system keeps track of the all changes made to the model and can revert to any previous version of the model at any time.
 This component is essential, specially when there are rapid changes in the distribution of the data or in presence of anomalous data.
 In both cases, the system should revert to an earlier more stable version.
 In case of rapid changes to the distribution, the system should execute new iterations with less historical data.
 In case of anomalies in the data, it should discard the anomalous data. (how to differentiate between the two ? ) \#experiments
+% more text 
 
-\subsection{Distributed environment}
+\subsection{Distributed environment} % Revise
 % How would it scale
 As described earlier the underlying optimization method is SGD.
 Any computation model capable of executing SGD efficiently can be used as the run-time of the system.
@@ -408,13 +412,27 @@ One challenging aspect is to combine the data from the stream with the sample fr
 % scalable sampling 
 
 
+\section{Evaluation} \label{evaluation}
+In this section, we evaluate the performance of our system using various datasets. 
+We report both the quality (error rate) and running time of the system. 
+We compare the performance of our system with Velox \cite{crankshaw2014missing}, a purely incremental approach and a fully batch approach where for every new training item that arrives at the system a new model is trained from scratch.
 
-\section{Tuning parameters} \label{tuning}
+\subsection{Experimental setup}
+We run our experiments on a single node with Quad core Intel i7 and 16 GB of RAM. 
+
+\subsection{Datasets}
+\textbf{MovieLens \cite{harper2016movielens}}: to analyze the performance of our method on time varying datasets, we use the MovieLens 100K and 1M datasets. 
+They consists of movie ratings by users during different time periods. 
+For both of the datasets, we use 10\% for initial learning (9\% training, 1\% test) and 90\% for online learning. 
+We have set the learning rate to 0.001 for all of the experiments on MovieLens dataset.
+
+\textbf{CIFAR-10 \cite{krizhevsky2009learning}}: this dataset consists of 60000 32x32 color images in 10 classes, with 6000 images per class. We use a Neural Network to train a model to classify the images in the data set. Similar to MovieLens, 10\% are used for initial training and 90\% for online learning. Note that, in this dataset, the order is irrelevant and we assume no change in distribution of the data occurs throughout the system's lifetime. 
+
+\subsection{Tuning parameters} \label{tuning}
 Beside from Stochastic Gradient Descent parameters (learning rate and regularization constant), there are 2 system parameters that should be tuned. 
 Our goal, is to make these parameters adaptive, but for now we analyze their effect on the running time and mean squared error. 
 
-\subsection{Scheduling rate}
-
+\textbf{Scheduling rate}\\
 This parameter specifies how often a new iteration of SGD should be scheduled. 
 In our prototype the scheduling rate is governed by a parameter called \textbf{Buffer Size}, which dictates how many new items should be stored in the buffer before a new iteration of SGD is executed. 
 Ultimately, the decision to schedule new iterations will be made by the system based on the availability of resources. 
@@ -442,13 +460,11 @@ Therefore, depending on the application we can set the buffer size to bigger val
 \label{fig:movie-lens-100k-buffer-size-time}
 \end{figure}
 
-\textbf{Dynamic scheduling:} 
-In production environments, the load on the system varies throughout the day. 
+\textbf{Dynamic scheduling:} In production environments, the load on the system varies throughout the day. 
 Therefore, a dynamic scheduling can maximizes the performance of the system, by performing more frequent updates while there are more resources available for training. 
 Moreover, since training and serving can be done in parallel, we can perform training in the background and only update the weights when the training iteration is over. 
 
-\subsection{Sampling rate}
-
+\textbf{Sampling rate}\\
 In each iteration of SGD, as described in section \ref{continious-training-serving}, the data inside the buffer and a sample of the historical data is used to update the model.
 In this section, we investigate the affect of the sampling rate on the model quality and running time of the system.
 Figure \ref{fig:movie-lens-100k-sample-rate} shows that larger sampling rate increases the quality of the model, but similar to scheduling rate, the decrease in error rate is negligible, considering the affect it has on running time. 
@@ -472,45 +488,29 @@ Therefore, similar to scheduling rate, setting the sampling rate to smaller valu
 \caption{Movie Lens 100k sampling rate vs time}
 \label{fig:movie-lens-100k-sample-rate-time}
 \end{figure}
+%
+%\subsection{Automatic tuning}
+%In this section, we demonstrate the effect of automatic parameter tuning described in section \ref{sampling}, \ref{quality-monitoring}, and \ref{version-control}. 
+%
+%\begin{figure}[h]
+%\centering
+%\includegraphics[width=\columnwidth]{../images/placeholder.jpeg}
+%\caption{automatic tuning-sampling rate}
+%\label{fig:tuning-sampling-rate}
+%\end{figure}
+%
+%Figure \ref{fig:tuning-sampling-rate} shows how automatic adjustment of sampling rate could help in decreasing the overall error rate.
+%
+%\begin{figure}[h]
+%\centering
+%\includegraphics[width=\columnwidth]{../images/placeholder.jpeg}
+%\caption{automatic tuning-learning rate}
+%\label{fig:tuning-learning-rate}
+%\end{figure}
+%
+%Figure \ref{fig:tuning-learning-rate} shows how automatic adjustment of learning rate could help in decreasing the overall error rate.
+%
 
-\subsection{Automatic tuning}
-In this section, we demonstrate the effect of automatic parameter tuning described in section \ref{sampling}, \ref{quality-monitoring}, and \ref{version-control}. 
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=\columnwidth]{../images/placeholder.jpeg}
-\caption{automatic tuning-sampling rate}
-\label{fig:tuning-sampling-rate}
-\end{figure}
-
-Figure \ref{fig:tuning-sampling-rate} shows how automatic adjustment of sampling rate could help in decreasing the overall error rate.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=\columnwidth]{../images/placeholder.jpeg}
-\caption{automatic tuning-learning rate}
-\label{fig:tuning-learning-rate}
-\end{figure}
-
-Figure \ref{fig:tuning-learning-rate} shows how automatic adjustment of learning rate could help in decreasing the overall error rate.
-
-
-
-\section{Evaluation} \label{evaluation}
-In this section, we evaluate the performance of our system using various datasets. 
-We report both the quality (error rate) and running time of the system. 
-We compare the performance of our system with Velox \cite{crankshaw2014missing}, a purely incremental approach and a fully batch approach where for every new training item that arrives at the system a new model is trained from scratch.
-
-\subsection{Experimental setup}
-We run our experiments on a single node with Quad core Intel i7 and 16 GB of RAM. 
-
-\subsection{Datasets}
-\textbf{MovieLens \cite{harper2016movielens}}: to analyze the performance of our method on time varying datasets, we use the MovieLens 100K and 1M datasets. 
-They consists of movie ratings by users during different time periods. 
-For both of the datasets, we use 10\% for initial learning (9\% training, 1\% test) and 90\% for online learning. 
-We have set the learning rate to 0.001 for all of the experiments on MovieLens dataset.
-
-\textbf{CIFAR-10 \cite{krizhevsky2009learning}}: this dataset consists of 60000 32x32 color images in 10 classes, with 6000 images per class. We use a Neural Network to train a model to classify the images in the data set. Similar to MovieLens, 10\% are used for initial training and 90\% for online learning. Note that, in this dataset, the order is irrelevant and we assume no change in distribution of the data occurs throughout the system's lifetime. 
 
 
 \subsection{Methods}
