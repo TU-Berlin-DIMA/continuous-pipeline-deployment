@@ -333,7 +333,7 @@ Past decade saw a change with publication of several nominal works.
 Hinton et al. \cite{hinton2006fast} proposed methods for speeding up the training of neural networks.
 ImageNet competition \cite{ILSVRC15} in 2012 was won by a neural networks approach proposed by Krizhevsky et al. \cite{krizhevsky2012imagenet} where they significantly reduced the error rate. 
 Success of Google Brain team \cite{sutskever2014sequence, mikolov2013efficient} was also instrumental to popularizing neural networks in machine learning community.
-We have implemented a multilayer neural network for classifying images. {\color{red}explain more?}
+We have implemented a multilayer neural network for classifying images.
 
 \section{Continuous Training and Serving} \label{continious-training-serving}
 
@@ -469,8 +469,7 @@ Apache Flink \cite{carbone2015apache, alexandrov2014stratosphere} and Apache Spa
 \todo[inline]{Offline only: train on data on disk and use the model without incremental learning}
 \todo[inline]{rename velox to full retraining in figures}
 In this section, we evaluate the performance of our system using various datasets. 
-We report both the quality (error rate) and running time of the system. 
-We compare the performance of our system with Velox \cite{crankshaw2014missing}, a purely incremental approach and a fully batch approach where for every new training item that arrives at the system a new model is trained from scratch.
+We report both the quality (error rate) and performance of our proposed method. 
 
 \subsection{Experimental setup}
 We run our experiments on a single node with Quad core Intel i7 and 16 GB of RAM. 
@@ -487,7 +486,7 @@ For \textit{movie-lens-100k} the total size of the test set is 5,000 and for \te
 We start with an empty test set, when we reach the index of a test item, we add that to the current test set and calculate the error rate based on the current test set.
 Each error calculation (called a test cycle), as a result captures the degree to which the models are adopting to the changes in the dataset.
 
-
+\todo[inline]{This has to be replace with another dataset}
 \textbf{CIFAR-10 \cite{krizhevsky2009learning}}: this dataset consists of 60000 32x32 color images in 10 classes, with 6000 images per class. We use a Neural Network to train a model to classify the images in the data set. Similar to MovieLens, 10\% are used for initial training and 90\% for online learning. Note that, in this dataset, the order is irrelevant and we assume no change in distribution of the data occurs throughout the system's lifetime. 
 
 \subsection{Tuning parameters} \label{tuning}
