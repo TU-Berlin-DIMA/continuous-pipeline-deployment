@@ -180,7 +180,7 @@ Our experiments show that our deployment method can achieve up to an order of ma
 
 \keywords{ML Model Management; Stochastic Gradient Descent; ML Systems}
 
-\section{Introduction}
+\section{Introduction} \label{introduction}
 % Problem
 Deployment and maintenance of machine learning models is a crucial step in machine learning applications' life cycle. 
 However, it is one that has received very little attention. 
@@ -201,46 +201,6 @@ Moreover, systems with support for model deployment are still lacking constant m
 Given the lack of systems to support model deployment and maintenance we have set out to design a system that not only support deployment and maintenance of machine learning models but also provide constants incremental and batch updates while the system is running. 
 We propose the design of a system that provide realtime query support as well incremental and fast batch updates to the machine learning models.
 
-\subsection{Model management and serving} \label{model-management-serving}
-
-\todo[inline]{this reads more like related work. You can make it background, then it should be before or after SGD.}
-
-\begin{figure*}[t]
-\centering
-\includegraphics[scale = 0.4]{../images/current-method.png}
-\caption{Velox Work Flow}
-\label{fig:velox-work-flow}
-\end{figure*}
-
-Traditional machine learning systems focus on training and management of models and leave the task of deployment and maintenance to the users. 
-It has only been recently that some systems, for example Velox \cite{crankshaw2014missing}, TensorFlow Serving \cite{abadi2016tensorflow}, and LongView \cite{akdere2011case} have proposed architectures to support model deployment and query answering as well. 
-LongView integrates predictive machine learning models into relational databases. 
-It answers predictive queries and maintains and manages the models.
-LongView uses techniques such as query optimization and materialized view selection to increase the performance of the system.
-TensorFlow Serving provides mechanisms for realtime queries, deployment and version control of machine learning models.
-It has out-of-the-box support for models created using TensorFlow and it provides several interfaces for users to deploy their custom models.
-However, it does not provide incremental updates to the model.
-Models have to be recreated outside of the system by the user and redeployed into TensorFlow Serving.
-Similarly, Velox provides a set of interfaces for users to deploy their models. 
-It is integrated into the \textit{Berkeley Data Analytics Stack (BDAS)}, and uses the components of BDAS such as Tachyon \cite{li2014tachyon} and Spark \cite{zaharia2010spark}. 
-Models are typically trained offline using Spark. 
-Once a model is trained, it is deployed using Velox and Velox can answer prediction queries in realtime and perform incremental updates to the model.
-Velox also monitors the quality of the model using a validation set and once the error rate has gone beyond a predefined threshold it initiates a complete retraining of the model using Spark. 
-Figure \ref{fig:velox-work-flow} depicts how Velox works. 
-While all of these systems provide intuitive mechanisms for model deployment, they have some drawbacks. 
-LongView only works with static data and does not have support for realtime queries.
-TensorFlow Serving completely separates the process of model training from model serving. 
-It requires the users to train the model separately and while the model is being served, it does not perform incremental updates to the model.
-Velox has addressed these problems. 
-It provides a mechanism for realtime query support as well as incremental updates to the model.
-It allows retraining of the models offline when the quality has fallen bellow a predefined threshold.
-Velox provides an API that when called will initiate an out-of-core offline retraining of the model.
-It uses Stochastic Gradient Descent (SGD) optimization to train the models offline in Apache Spark.
-This batch process affects the system and heavily slows down the model update process.
-
-% What are the contributions
-\subsection{Contributions and paper outline}
-\todo[inline]{this should be part of the intro}
 Our key observation is that, by utilizing the underlying optimization algorithm (SGD), the model training process can be seamlessly executed along side the serving and query answering component.
 Based on this observation, we present a new model for a system, that supports deployment, maintenance, and incremental and fast batch updates of machine learning models.
 We are making the following contributions: 
@@ -259,6 +219,8 @@ Section \ref{continious-training-serving} discusses the architecture and details
 In section \ref{tuning}, we explore the different parameters of the system and how the automatic tuning of these parameters further improve the performance.
 Section \ref{evaluation} compares the performance of our system with similar model serving and management systems. 
 Related work is discussed in section \ref{related-work} and in section \ref{conclusion} we conclude our 
+
+
 
 
 \section{Stochastic Gradient Descent} \label{sgd}
@@ -294,6 +256,50 @@ By examining the changes in the data the learning rate will decrease (when appro
 {\color{red}Not yet implemented - either you have some more info about thresholds etc. or you have to leave this out.}
 We use this strategy in our implementation of SGD. 
 
+\section{Related Work} \label{related-work}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[scale = 0.4]{../images/current-method.png}
+\caption{Velox Work Flow}
+\label{fig:velox-work-flow}
+\end{figure*}
+
+Traditional machine learning systems focus on training and management of models and leave the task of deployment and maintenance to the users. 
+It has only been recently that some systems, for example Velox \cite{crankshaw2014missing}, TensorFlow Serving \cite{abadi2016tensorflow}, and LongView \cite{akdere2011case} have proposed architectures to support model deployment and query answering as well. 
+LongView integrates predictive machine learning models into relational databases. 
+It answers predictive queries and maintains and manages the models.
+LongView uses techniques such as query optimization and materialized view selection to increase the performance of the system.
+However, LongView only works with batch data and does not provide support for realtime queries. 
+As a result it does not support incremental learning neither.
+Our system supports both realtime and incremental learning.
+TensorFlow Serving provides mechanisms for realtime queries, deployment and version control of machine learning models.
+It has out-of-the-box support for models created using TensorFlow and it provides several interfaces for users to deploy their custom models.
+However, it does not provide incremental updates to the model.
+Contrary to our system, models have to be retrained outside of the system and redeployed to TensorFlow Serving once the training is done.
+Our system supports, incremental and batch updates to the model and automatically applies these updates to the model currently being served.
+\todo[inline]{explain this offline online scenario in introduction} Velox \cite{crankshaw2014missing} is an implementation of the common machine learning serving practice, explained in section \ref{introduction}.
+Velox supports incremental learning and can answer prediction queries in realtime.
+It also eliminating the need for users to manually retrained the model offline and redeploy it again.
+It is integrated into the \textit{Berkeley Data Analytics Stack (BDAS)}, and uses the components of BDAS such as Tachyon \cite{li2014tachyon} and Spark \cite{zaharia2010spark}. 
+After the initial training of a model, it is deployed to Velox where prediction queries are answered in realtime and incremental updates are made to the model.
+Velox also monitors the quality of the model using a validation set and once the error rate has gone beyond a predefined threshold it initiates a complete retraining of the model using Spark. 
+Figure \ref{fig:velox-work-flow} depicts how Velox works. 
+Velox uses Stochastic Gradient Descent as its underlying training algorithm.
+As described in section \ref{sgd}, even the batch updates to the model can be performed in a series of independent iterations.
+However, Velox retrains the model offline from scratch.
+This has two drawbacks; any updates that has been done to model so far will be discarded, and the process of retraining on full data set requires a lot of resources.
+Our system uses the underlying properties of SGD to fully integrate the training process into the system's lifeline and eliminate the need for complete retraining of the model.
+
+Weka \cite{hall2009weka}, Apache Mahout \cite{Owen:2011:MA:2132656}, and Madlib \cite{hellerstein2012madlib} are systems that provide the necessary toolkits to train machine learning models. All of these systems provide a range of machine learning training algorithms. 
+They, however, do not provide any management, before or after deployment of these models. 
+Our proposed system focuses on models trainable using Stochastic Gradient Descent. 
+Contrary to the systems above, it provide management of the models while in training and after deployment.
+% model management systems
+MLBase \cite{kraska2013mlbase}, and TuPaq \cite{sparks2015tupaq} are machine learning model management systems.
+They provide a range of training algorithms to create machine learning models and mechanism for model search as well as model management.
+However, once models are created, they have to be deployed and used for serving manually by the users.
+Our system, on the contrary, is designed for automatic deployment and continuous training.
 
 \subsection{Machine learning models based on SGD}
 SGD is one of the most common optimization methods to train large scale problems. 
@@ -649,33 +655,6 @@ We implemented SystemX on Apache Spark.
 %\end{figure}
 %
 %Figure \ref{fig:movie-lens-1M-running-time} shows the running time of Sample, Full and Velox on the 1M MovieLens dataset. Depending on the sampling rate our system can be sometimes up to an order of magnitude faster that Velox. In the following section, we will investigate the effect of sampling rate on both running time and quality.
-
-\section{Related Work} \label{related-work}
-{\color{red} make it longer}
-
-% machine learning systems for training model
-Weka \cite{hall2009weka}, Apache Mahout \cite{Owen:2011:MA:2132656}, and Madlib \cite{hellerstein2012madlib} are systems that provide the necessary toolkits to train machine learning models. All of these systems provide a range of machine learning training algorithms. 
-They, however, do not provide any management, before or after deployment of these models. 
-Our proposed system focuses on models trainable using Stochastic Gradient Descent. 
-Contrary to the systems above, it provide management of the models while in training and after deployment.
-% model management systems
-LongView \cite{akdere2011case}, MLBase \cite{kraska2013mlbase}, and TuPaq \cite{sparks2015tupaq} are machine learning model management systems.
-They provide a range of training algorithms to create machine learning models and mechanism for model search as well as model management.
-However, once models are created, they have to be deployed and used for serving manually by the users.
-Our system, on the contrary, is designed for automatic deployment and continuous training.
-% model serving
-Tensorflow serving \cite{abadi2016tensorflow}, and others (I haven't read yet) are systems designed to manage machine learning models after they have been trained.
-However, they do not handle quality control, incremental and batch updates and the user should retrain and update the models offline and deploy the new model into the system.
-Our system on the other hand features a seamless process for model training, deployment, and serving. 
-We provide incremental and batch updates to the model while the system is running.
-% Velox
-Velox \cite{crankshaw2014missing} is closest in terms of design to our system.
-It provides a class of training algorithms based on the SGD optimization.
-It also supports serving and incremental updates of the model after they have been deployed.
-Comparing to our system however, its batch update module is out of core and offline.
-Our system makes both incremental and batch updates to the models deployed while the system is running.
-Our system also can make more frequent batch updates since each batch update is lightweight.
-
 \section{Conclusions} \label{conclusion}
 In conclusion, this is awesome. 
 %ACKNOWLEDGMENTS are optional
