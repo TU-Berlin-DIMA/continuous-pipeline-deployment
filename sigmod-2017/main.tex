@@ -466,8 +466,6 @@ Apache Flink \cite{carbone2015apache, alexandrov2014stratosphere} and Apache Spa
 
 \section{Evaluation} \label{evaluation} 
 \todo[inline]{replace runtime experiments of sampling rate and buffer size with average time of single iteration ??}
-\todo[inline]{Offline only: train on data on disk and use the model without incremental learning}
-\todo[inline]{rename velox to full retraining in figures}
 In this section, we evaluate the performance of our system using various datasets. 
 We report both the quality (error rate) and performance of our proposed method. 
 
@@ -636,6 +634,9 @@ adopt faster to the concept drift.
 Full-retraining method's error rate follows the same trend as in the case of \textit{movie-lens-100k}. 
 After every retraining, the error rate first drops then continuous to increase slowly until the next retraining.
 Offline+online and naive have steady error rates, with offline+online having a lower rate, and they both continue to keep the error rate more or less constant for all the incoming data.
+Offline-only has a starting error rate similar to that of offline+online, full-retraining, afterward the error rate continues to increase slightly.
+Similar to \textit{movie-lens-100k}, offline-only's error rate becomes bigger than naive after around half of the test cycles.
+
 Figure \ref{fig:movie-lens-running-time} shows the running time of the implemented methods on \textit{movie-lens-100k} and \textit{movie-lens-1M}.
 As expected, naive and offline+online have the lowest running times on both datasets.
 This is because they do not support batch updates to the model.
