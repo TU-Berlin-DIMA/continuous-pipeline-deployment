@@ -197,6 +197,17 @@ Most of the machine learning systems focus on training and providing tools to ma
 Kumar et al. \cite{kumar2015survey} provided an overview of landscape of existing machine learning systems. 
 Except in a very few cases \cite{akdere2011case, crankshaw2014missing}, most of the surveyed systems, focus on training of machine learning models and provide little to no support after the model has been trained.
 Moreover, systems with support for model deployment are still lacking constant monitoring and fast and accurate updates of the machine learning models.
+Therefore, the whole process of training and deployment of models are usually done manually.
+The most common approach is as follows; first a model is trained based on an existing dataset residing on disk, this model serves as the initial model.
+This model is then deployed to an environment were it can answer prediction queries arriving at the system.
+The system also receives feedbacks in the form of new training observations.
+Upon receiving a training observation, the model is updated incrementally.
+Incremental update is only supported by certain type of machine learning models, where the underlying optimization strategy allows changes in the model based on individual training items.
+These incremental updates, however, are not enough to keep the model quality at an acceptable rate and after a while the quality may degrade.
+At this point, the a new model has to be retrained based on the entire available data and has to be redeployed again.
+Some emerging machine learning systems have tried to automate this process to some extend.
+They automatically deploy the model into a production environment, monitor its quality and initiate a retraining when required.
+However, they treat the underlying machine learning models as black boxes and as a result miss many opportunities for optimizing this process.
 % What is the motivation for this work
 Given the lack of systems to support model deployment and maintenance we have set out to design a system that not only support deployment and maintenance of machine learning models but also provide constants incremental and batch updates while the system is running. 
 We propose the design of a system that provide realtime query support as well incremental and fast batch updates to the machine learning models.
@@ -233,8 +244,8 @@ It calculates the gradient at a single element and updates the parameters of the
 Although it converges after a higher number of iterations, the overall convergence time is still much faster than gradient descent. 
 Each iteration of SGD can be executed in a short amount of time since it only works with a sample of the data.
 We are leveraging this property of SGD and design the system so that it executes one iteration of SGD at a time while the system is running.
-In our experiments, \todo[inline]{maybe reference section} we show that time to execute single iteration of SGD is insignificant.
-Moreover, since a single iteration is a lightweight process, it can be executed in separate threads. \todo[inline]{that does not make sense to me, is it independent? then it can be executed in separate threads}
+In section \ref{evaluation} we show that time to execute single iteration of SGD is insignificant.
+Moreover, since a single iteration is a lightweight process, it can be executed in separate threads.
 
 \subsection{Distributed SGD}
 {\color{red} should I even include this section? - I would TR}
@@ -278,7 +289,7 @@ It has out-of-the-box support for models created using TensorFlow and it provide
 However, it does not provide incremental updates to the model.
 Contrary to our system, models have to be retrained outside of the system and redeployed to TensorFlow Serving once the training is done.
 Our system supports, incremental and batch updates to the model and automatically applies these updates to the model currently being served.
-\todo[inline]{explain this offline online scenario in introduction} Velox \cite{crankshaw2014missing} is an implementation of the common machine learning serving practice, explained in section \ref{introduction}.
+Velox \cite{crankshaw2014missing} is an implementation of the common machine learning serving practice, explained in section \ref{introduction}.
 Velox supports incremental learning and can answer prediction queries in realtime.
 It also eliminating the need for users to manually retrained the model offline and redeploy it again.
 It is integrated into the \textit{Berkeley Data Analytics Stack (BDAS)}, and uses the components of BDAS such as Tachyon \cite{li2014tachyon} and Spark \cite{zaharia2010spark}. 
@@ -372,7 +383,7 @@ Another situation that a new iteration of SGD should be executed is when the sys
 If the model is not updated with the new training items frequently, the quality will go down more rapidly, especially if the distribution of the data is changing rapidly.
 Incremental updates are turned off when a new iteration is scheduled to execute.
 Training iterations and model serving are disjoint and not affected by each other.
-As soon as the training iteration is completed the model is updated and incremental update is reenabled. \todo[inline]{have you described incremental update vs iterations already? Maybe this could go into background as well}
+As soon as the training iteration is completed the model is updated and incremental update is reenabled.
 This property allows the scheduler to execute new iteration of SGD in a separate thread without interrupting the serving module.
 The scheduling rate however affects the quality of the model.
 Each new iteration slightly increases the quality of the model.
@@ -453,9 +464,8 @@ Apache Flink \cite{carbone2015apache, alexandrov2014stratosphere} and Apache Spa
 
 
 \section{Evaluation} \label{evaluation} 
-% One more dataset (classification)
-% more explanation of the results
-% one more experiment (only train on initial data)
+\todo[inline]{Experiments for single iteration execution time}
+\todo[inline]{Offline only: train on data on disk and use the model without incremental learning}
 In this section, we evaluate the performance of our system using various datasets. 
 We report both the quality (error rate) and running time of the system. 
 We compare the performance of our system with Velox \cite{crankshaw2014missing}, a purely incremental approach and a fully batch approach where for every new training item that arrives at the system a new model is trained from scratch.
