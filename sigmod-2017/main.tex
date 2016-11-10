@@ -180,6 +180,7 @@ Our experiments show that our deployment method can achieve up to an order of ma
 \keywords{ML Model Management; Stochastic Gradient Descent; ML Systems}
 
 \section{Introduction} \label{introduction}
+\todo[inline]{describe a use case}
 % Problem
 Deployment and maintenance of machine learning models is a crucial step in machine learning applications' life cycle. 
 However, it is one that has received very little attention. 
@@ -548,30 +549,6 @@ Therefore, similar to scheduling rate, setting the sampling rate to smaller valu
 \caption{Movie Lens 100k sampling rate vs time}
 \label{fig:movie-lens-100k-sample-rate-time}
 \end{figure}
-%
-%\subsection{Automatic tuning}
-%In this section, we demonstrate the effect of automatic parameter tuning described in section \ref{sampling}, \ref{quality-monitoring}, and \ref{version-control}. 
-%
-%\begin{figure}[h]
-%\centering
-%\includegraphics[width=\columnwidth]{../images/placeholder.jpeg}
-%\caption{automatic tuning-sampling rate}
-%\label{fig:tuning-sampling-rate}
-%\end{figure}
-%
-%Figure \ref{fig:tuning-sampling-rate} shows how automatic adjustment of sampling rate could help in decreasing the overall error rate.
-%
-%\begin{figure}[h]
-%\centering
-%\includegraphics[width=\columnwidth]{../images/placeholder.jpeg}
-%\caption{automatic tuning-learning rate}
-%\label{fig:tuning-learning-rate}
-%\end{figure}
-%
-%Figure \ref{fig:tuning-learning-rate} shows how automatic adjustment of learning rate could help in decreasing the overall error rate.
-%
-
-
 
 \subsection{Methods}
 
@@ -594,7 +571,7 @@ A full retraining of the model is performed once a certain amount of training ob
 Once there are enough new data, the scheduler triggers a new iteration of SGD. 
 The data used in this new iteration of SGD consists of the new data that arrived in the system since the last scheduled iteration plus a sample of the existing historical data.
 
-%\textbf{Baseline}: a baseline model is trained over the entire dataset and then used to calculate the test error rate. 
+\textbf{Baseline}: a baseline model is trained over the entire dataset and then used to calculate the test error rate. 
 
 \subsection{Comparison Under Constrained Resources }
 Both full-retraining and continuous model use different strategies to update the model.
@@ -663,42 +640,8 @@ This is because a full retraining incurs a much higher overhead than continuousl
 Another reason for the difference in running time is that as the size of the data increases the time for running a new iteration in continuous method stays roughly the same where as the time for a full retraining increases exponentially.
 The running time of offline-only method is not included as it is similar to offline+online, since they both have include initial training and have to examine individual items arriving at the system one at a time.
 
-%\subsection{Scalability}
-%In this section, we compare the running time of Velox and SystemX in a distributed environment.
-%The actual Velox implementation is used to perform the comparisons.
-%We implemented SystemX on Apache Spark.
-
-%\subsection{Quality (MSE)} 
-%To measure the quality of the models, we have used an evolving test set. 
-%We randomly sampled 5\% of the indices to be included in the test dataset. 
-%Similar to the training data, the test set is also timestamped. 
-%We start with an empty test set once the model is deployed.
-%Whenever we encounter a new test item, it is added to the test set, and the mean squared error rate of the current model is calculated over this test set.
-%This will indicate how the implemented models are adapting to the data being observed by the system.
-%Figure \ref{fig:movie-lens-100k-score} shows the mean squared error of implemented methods on MovieLens 100k.
-%Clearly, both naive and offline+online learning have lower scores than other methods.
-%This is because only incremental learning is used in both of these methods.
-%Velox, as described earlier retrains on the entire dataset whenever the error rate exceeds a pre-defined threshold.
-%The sudden drops in error rate is where the retraining occurs.
-%Our method performs consistency well and manages to reduce the error rate.
-%Although initially, the error rate is slightly above Velox, continuous training manages to bridge the gap and reach the same error rate as Velox. {\color{red} This may change later if I use better system parameters}
-%
-%
-%{\color{red}Figure \ref{fig:movie-lens-1M-score} shows the mean squared errors of the implemented methods on MovieLens 1M. 
-%Similar to MovieLens 100K results, Full is performing better than all the other methods followed closely by Sample (with 40\% sampling rate) method. }
-%
-%\subsection{Running time} 
-%
-%\begin{figure}[H]
-%\centering
-%\includegraphics[width=\columnwidth]{../images/movie-lens-1M-time-adjusted.png}
-%\caption{Running time for Movie Lens 1M}
-%\label{fig:movie-lens-1M-running-time}
-%\end{figure}
-%
-%Figure \ref{fig:movie-lens-1M-running-time} shows the running time of Sample, Full and Velox on the 1M MovieLens dataset. Depending on the sampling rate our system can be sometimes up to an order of magnitude faster that Velox. In the following section, we will investigate the effect of sampling rate on both running time and quality.
-
 \section{Conclusions} \label{conclusion}
+\todo[inline]{revise}
 This paper presented an architecture for deployment and continuous training of machine learning models. 
 The architecture utilizes the properties of stochastic gradient descent optimization method.
 SGD is an iterative optimization process where in each iteration a small sample of the data is used to update the machine learning model, however, it typically works with static datasets.
@@ -710,12 +653,7 @@ SGD is one of the most common optimization techniques for large datasets and has
 Our experiments showed the continuous training of the machine learning models is much faster than full retraining of the model, which is the most common approach in deployment and maintenance of machine learning models. We showed that not only continuous training requires less resources but it also produces models with lower error rates that adopt faster to changes in the dataset.
 Moreover, comparing to simple techniques such incremental learning or initial batch training it produces a model with higher quality.
 
-We are currently implementing large scale use cases that require a distributed solution.
-The distributed version is based on the architectural design principles described in the paper.
-It includes a distributed Stochastic Gradient Descent, a data manager that works with distributed file systems and distributed in-memory data structures, and a model manager that partitions the machine learning model (if its size exceeds master node's memory limit) across several nodes and can update it based on new training data.
-Finally, we would like to explore other optimization strategies such as batching of prediction queries, caching of query results and more advanced methods for sampling of historical data in order to investigate their effect on the performance of the system.
-
-
+In future work, we would like to explore other optimization strategies such as batching of prediction queries, caching of query results, and more advanced methods for sampling of historical data in order to investigate their effect on the performance of the system.
 %ACKNOWLEDGMENTS are optional
 \section{Acknowledgments}
 \bibliographystyle{plain}
