@@ -699,7 +699,6 @@ The running time of offline-only method is not included as it is similar to offl
 %Figure \ref{fig:movie-lens-1M-running-time} shows the running time of Sample, Full and Velox on the 1M MovieLens dataset. Depending on the sampling rate our system can be sometimes up to an order of magnitude faster that Velox. In the following section, we will investigate the effect of sampling rate on both running time and quality.
 
 \section{Conclusions} \label{conclusion}
-\todo[inline]{should explicitly mention that we do not have a distributed version and are working on it?? - No}
 This paper presented an architecture for deployment and continuous training of machine learning models. 
 The architecture utilizes the properties of stochastic gradient descent optimization method.
 SGD is an iterative optimization process where in each iteration a small sample of the data is used to update the machine learning model, however, it typically works with static datasets.
@@ -711,11 +710,10 @@ SGD is one of the most common optimization techniques for large datasets and has
 Our experiments showed the continuous training of the machine learning models is much faster than full retraining of the model, which is the most common approach in deployment and maintenance of machine learning models. We showed that not only continuous training requires less resources but it also produces models with lower error rates that adopt faster to changes in the dataset.
 Moreover, comparing to simple techniques such incremental learning or initial batch training it produces a model with higher quality.
 
-The architecture however is at an early stage, and our experiments were done based on a simple prototype that was designed to work on single node.
-\todo[inline]{No good. Look at what other people write, maybe say that we are currently implementing large scale use cases that make a distributed solution necessary}
-This paper only included, a set of design principles of how to implement such a system and how it scales to larger computing clusters.
-Our next step would be to implement a distributed version of SGD and use that as our underlying optimization techniques.
-This will allow us to create a truly scalable and distributed system that is capable of handling great loads of data.
+We are currently implementing large scale use cases that require a distributed solution.
+The distributed version is based on the architectural design principles described in the paper.
+It includes a distributed Stochastic Gradient Descent, a data manager that works with distributed file systems and distributed in-memory data structures, and a model manager that partitions the machine learning model (if its size exceeds master node's memory limit) across several nodes and can update it based on new training data.
+Finally, we would like to explore other optimization strategies such as batching of prediction queries, caching of query results and more advanced methods for sampling of historical data in order to investigate their effect on the performance of the system.
 
 
 %ACKNOWLEDGMENTS are optional
