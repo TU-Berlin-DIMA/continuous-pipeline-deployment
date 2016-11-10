@@ -699,21 +699,20 @@ The running time of offline-only method is not included as it is similar to offl
 %Figure \ref{fig:movie-lens-1M-running-time} shows the running time of Sample, Full and Velox on the 1M MovieLens dataset. Depending on the sampling rate our system can be sometimes up to an order of magnitude faster that Velox. In the following section, we will investigate the effect of sampling rate on both running time and quality.
 
 \section{Conclusions} \label{conclusion}
-\todo[inline]{should explicitly mention that we do not have a distributed version and are working on it??}
-This paper presented an architecture for deployment and continuous training of machine learning models.
+\todo[inline]{should explicitly mention that we do not have a distributed version and are working on it?? - No}
+This paper presented an architecture for deployment and continuous training of machine learning models. 
 The architecture utilizes the properties of stochastic gradient descent optimization method.
-SGD an iterative optimization process where in each iteration a small sample of the data is used to update the machine learning model, however, it typically works with static datasets.
-Our proposed architecture uses the properties of the SGD and apply it to long running processes.
+SGD is an iterative optimization process where in each iteration a small sample of the data is used to update the machine learning model, however, it typically works with static datasets.
+Our proposed architecture uses the properties of the SGD and applies it to long running processes.
 Every successive iteration of SGD is scheduled to run while the machine learning model is being used to answer prediction queries.
 After every iteration, the model is updated with the new parameters.
-SGD is one of the most common optimization techniques for large datasets that have been successfully used in different domains such as Neural Networks, Recommender Systems, Regression and clustering models.
-Therefore, our architecture can support a range of machine learning models.
+SGD is one of the most common optimization techniques for large datasets and has been successfully used in different domains such as neural networks, recommender systems, regression, and clustering models. This makes our architecture applicable for a large range of machine learning models beyond the ones demonstrated in the evaluation.
 
-Our experiments showed the continuous training of the machine learning models is much faster than full retraining of the model which is the most common approach in deployment and maintenance of machine learning models.
-We showed that, not only continuous training requires less resources but it also produce models with lower error rates that adopt faster to changes in the dataset.
-Moreover, comparing to simple techniques such incremental learning or initial batch training it produces a model which higher quality.
+Our experiments showed the continuous training of the machine learning models is much faster than full retraining of the model, which is the most common approach in deployment and maintenance of machine learning models. We showed that not only continuous training requires less resources but it also produces models with lower error rates that adopt faster to changes in the dataset.
+Moreover, comparing to simple techniques such incremental learning or initial batch training it produces a model with higher quality.
 
 The architecture however is at an early stage, and our experiments were done based on a simple prototype that was designed to work on single node.
+\todo[inline]{No good. Look at what other people write, maybe say that we are currently implementing large scale use cases that make a distributed solution necessary}
 This paper only included, a set of design principles of how to implement such a system and how it scales to larger computing clusters.
 Our next step would be to implement a distributed version of SGD and use that as our underlying optimization techniques.
 This will allow us to create a truly scalable and distributed system that is capable of handling great loads of data.
