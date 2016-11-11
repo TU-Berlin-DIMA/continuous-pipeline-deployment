@@ -474,12 +474,11 @@ We report both the quality (error rate) and performance of our proposed method.
 
 \subsection{Experimental setup}
 We run our experiments on a single node with a quad-core Intel i7 and 16 GB of RAM. 
-
-\subsection{Datasets}
+To evaluate our proposed method, we are using 2 different datasets.
 
 \textbf{MovieLens \cite{harper2016movielens}}: to analyze the performance of our method on time varying datasets, we use the MovieLens 100K and 1M datasets. 
 They consists of movie ratings by users during different time periods. 
-For both of the datasets, we use 10\% for initial learning (9\% training, 1\% test) and 90\% for online learning. 
+For both of the datasets, we use 10\% for initial learning and 90\% for online learning. 
 We have set the learning rate to 0.001 for all of the experiments on MovieLens dataset.
 We have sorted the MovieLens data set based on the ratings timestamp and items are examined one by one according to their timestamp.
 This is to evaluate how each of the implemented methods react to changes in the distribution of the data.
@@ -493,9 +492,7 @@ it consists of 60000 28x28 color images in 10 classes. We use a neural network t
 Similar to MovieLens, 10\% are used for initial training and 90\% for online learning. 
 Note that, in this dataset, the order is irrelevant and we assume no change in distribution of the data occurs throughout the system's lifetime. 
 
-
 \subsection{Methods}
-
 In this section, we briefly describe the methods we have implemented.
 
 \textbf{Naive} implements a simple on-line learning scenario, in which the gradient of the function at every new training item is evaluated and the weight parameters are adjusted based the gradient value. 
@@ -504,7 +501,7 @@ All the other methods also include incremental learning to constantly improve th
 \textbf{Offline+online} is a variation of naive method, where first 10\% of the data is used for initial batch training.
 The remaining data is used in an online learning fashion (on element at a time). 
 
-\textbf{Offline-only} is similar to offline+online method with incremental learning switched off.
+\textbf{Offline-only} is similar to offline+online method without any online learning.
 
 \textbf{Full-retraining} is an implementation of the common deployment scenario described in Section \ref{introduction}
 Similar to the proposed system by Crankshaw \cite{crankshaw2014missing}. 
@@ -516,7 +513,6 @@ Once there are enough new data, the scheduler triggers a new iteration of SGD.
 The data used in this new iteration of SGD consists of the new data that arrived in the system since the last scheduled iteration plus a sample of the existing historical data.
 
 \textbf{Baseline}: a baseline model is trained over the entire dataset and then used to calculate the test error rate. 
-
 
 \subsection{Implementation of ML Models}
 We have implemented two different machine learning models to evaluate our system.
@@ -535,10 +531,9 @@ We set the number of hidden layers to 50 and use a softmax \cite{bishop2006patte
 Similar to recommender system case, a network is first trained on the static data.
 The training observations are of the form of \textit{\((X,y)\)}, where X is a vector of 784 dimension (1 for each pixel) and y is the digit the image is representing.
 
-
 \subsection{Tuning parameters} \label{tuning}
 In section \ref{continious-training-serving}, we discussed how system parameters such as sampling and scheduling rate affect the performance and quality of the system.
-In this section, we are analyzing the effects of different values sampling and scheduling rate on the system.
+In this section, we are analyzing the effects of different values of sampling and scheduling rate on the system.
 Our goal, is to make these parameters adaptive, but for now we analyze their effect on the running time and mean squared error. 
 
 \textbf{Scheduling rate:} This parameter specifies how often a new iteration of SGD should be scheduled. 
@@ -556,7 +551,7 @@ This results in a paradigm where both training and serving can happen simultaneo
 
 Figure \ref{fig:movie-lens-100k-buffer-size-mse} shows the mean squared error for different buffer sizes for 100k MovieLens dataset. 
 Smaller buffer sizes yield lower error rates, but the figure shows that the difference is small.
-Especially, when considering the affect the buffer size has on the running time.
+Especially, when considering the effect the buffer size has on the running time.
 Figure \ref{fig:movie-lens-100k-buffer-size-time} shows the running time on 100K MovieLens dataset using different buffer sizes. 
 Increasing the buffer size from 500 to 5000 decreases the running time by a factor of 5 while the error rate is only increased slightly.
 Therefore, depending on the application, we can set the buffer size to bigger values in order to increase the performance of the system without affecting the quality of the final model substantially.
@@ -573,8 +568,8 @@ Therefore, a dynamic scheduling maximizes the performance of the system, by perf
 Moreover, since training and serving can be done in parallel, we can perform training in the background and only update the weights when the training iteration is over. 
 
 \textbf{Sampling rate:} In each iteration of SGD, as described in Section \ref{continious-training-serving}, the data inside the buffer and a sample of the historical data is used to update the model.
-In this section, we investigate the affect of the sampling rate on the model quality and running time of the system.
-Figure \ref{fig:movie-lens-100k-sample-rate} shows that larger sampling rate increases the quality of the model, but similar to scheduling rate, the decrease in error rate is negligible considering the affect it has on running time. 
+In this section, we investigate the effect of the sampling rate on the model quality and running time of the system.
+Figure \ref{fig:movie-lens-100k-sample-rate} shows that larger sampling rate increases the quality of the model, but similar to scheduling rate, the decrease in error rate is negligible considering the effect it has on running time. 
  
 \begin{figure}[!ht]
 \centering
@@ -597,7 +592,7 @@ Therefore, similar to scheduling rate, setting the sampling rate to smaller valu
 
 \subsection{Comparison Under Constrained Resources }
 Both full-retraining and continuous model use different strategies to update the model.
-To perform a fair comparison of the two, we decided to evaluate them under similar resource constraints.
+To perform a fair comparison of the two, we are evaluating them under similar resource constraints.
 We configured both of the methods' frequency of training in such a way that the total running time on the \textit{movie-lens} and \textit{MNIST} datasets are similar.
 To achieve this, we have fixed the total number of epochs (SGD iterations) for both methods.
 For full-retraining, this value is equal to the number of retraining multiplied by number of iterations in each retraining. 
@@ -616,9 +611,9 @@ Offline-only method quality is similar to offline+online, continuous and full-re
 Since all four methods perform an initial retraining, the error rate stays low in the beginning, but offline-only quality starts to get worse since it does not include any incremental or batch retraining.
 Offline-only continuous to perform better than naive method until 3,000 test items.
 However, afterwards a small change in distribution of the data causes the model trained using offline-only method to perform worst since it cannot adopt to changes in the data and the quality continues to degrade as more new test items are examined.
-Full-retraining method, performs similar to offline+online method until the first retraining is executed.
+Full-retraining method performs similar to offline+online method until the first retraining is executed.
 There is a sudden drop in the error rate after the first retraining.
-For the reminder the data points, full-retraining performs as expected, once there is a retraining, the quality immediately increases.
+For the remainder of the data points, full-retraining performs as expected, once there is a retraining, the quality immediately increases.
 This increase in quality, however, is followed by a slow decrease due the fact that only incremental updates are being made to the model.
 Continuous method has the lowest error rate among all the implemented methods.
 It consistently manages to adopt to the changes and decrease the error rate where the distribution of the incoming data is stable.
@@ -631,15 +626,15 @@ As expected, except for immediately after a full retraining, continuous method a
 \label{fig:movie-lens-1M-score}
 \end{figure}
 
-Figure \ref{fig:movie-lens-1M-score} shows the mean squared error rate achieved the implemented methods on \textit{movie-lens-1M}.
-Similar to \textit{movie-lens-100k}, continuous method has the lowest quality among all the implemented methods.
+Figure \ref{fig:movie-lens-1M-score} shows the mean squared error rate achieved by the implemented methods on \textit{movie-lens-1M}.
+Similar to \textit{movie-lens-100k}, continuous method has the lowest error rate among all the implemented methods.
 The difference in error rate between continuous and full-retraining is even greater than the error rate for \textit{movie-lens-100k}.
 We believe a bigger shift in data distribution (data in \textit{movie-lens-1M} is gathered from a longer period of time) makes continuous method to consistently 
-adopt faster to the concept drift.
+adopt faster to the changes in data distribution.
 Full-retraining method's error rate follows the same trend as in the case of \textit{movie-lens-100k}. 
 After every retraining, the error rate first drops then continuous to increase slowly until the next retraining.
 Offline+online and naive have steady error rates, with offline+online having a lower rate, and they both continue to keep the error rate more or less constant for all the incoming data.
-Offline-only has a starting error rate similar to that of offline+online, full-retraining, afterward the error rate continues to increase slightly.
+Offline-only has a starting error rate similar to that of offline+online and full-retraining, afterwards the error rate continues to increase slightly.
 Similar to \textit{movie-lens-100k}, offline-only's error rate becomes bigger than naive after around half of the test cycles.
 In both \textit{movie-lens-100k} and \textit{movie-lens-1M} baseline method's error rate is smaller than all the other methods.
 This is simply because of the amount of available rating information that the baseline method has access to.
@@ -659,13 +654,12 @@ Its error rate starts to decrease as more training data becomes available, but i
 The gap in error rate between offline+online and offline-only is much smaller than that of movie lens datasets.
 Unlike movie lens datasets, \textit{MNIST} does not contain a shift in distribution and that is why both offline+online and offline-only performance is rather similar.
 Offline+online performs slightly better because of the extra training items that the underlying neural network is exposed to.
-Full-retraining and continuous methods behave similarly as well and unlike Movie Lens datasets, full-retraining has a more or less consistent error rate, that is the error rate does not increase after a retraining of the model.
+Full-retraining and continuous methods behave similarly as well and unlike Movie Lens datasets, full-retraining has a consistent error rate, that is the error rate does not decrease after a retraining of the model.
 Similar to offline+online's case, since there is no change in distribution of the data, the error rate does not degrade after a retraining.
 Continuous method manages to decrease the error rate as more training iterations are performed.
-As more training iterations are executed, the underlying neural network's parameter converges and as a result the error rate on the test set decreases.
-Both continuous and full-retraining method start to perform better than the baseline after a training iterations (retraining in full-retraining case).
+As more training iterations are executed, the underlying neural network's parameters converge and as a result the error rate on the test set decreases.
+Both continuous and full-retraining method start to perform better than the baseline after a few training iterations (retraining in full-retraining case).
 This is, as explained earlier because of neural network's ability to perform better when more training data are available to it.
-
 
 \begin{figure}[!ht]
 \centering
@@ -677,10 +671,10 @@ This is, as explained earlier because of neural network's ability to perform bet
 Figure \ref{fig:running-time} shows the running time of the implemented methods on \textit{movie-lens-100k}, \textit{movie-lens-1M} and \textit{MNIST}.
 As expected, naive and offline+online have the lowest running times on both datasets.
 This is because they do not support batch updates to the model.
-Training on full datasets, heavily depends on the amount of data.
-It does not scale linearly with the amount of the as in SGD, each iteration has to deal with more data and due to the size of the data, convergence rate is usually slower.
+Baseline method's running time is only affected by data size.
+When dataset size big, each iteration of SGD will examine more data and the model will converge slower as there are a lot more data to examine.
 Continuous method's running time is smaller than full-retraining by almost an order of magnitude in all workloads.
-Although we have configured both methods to use similar amount of resources (same number of iterations), continuous still manages to achieve a consistent and lower error rate in a much faster time.
+Although we have configured both methods to use similar amount of resources (same number of iterations), continuous method still manages to achieve a consistent and lower error rate in a much faster time.
 This is because a full retraining incurs a much higher overhead than continuously training the method.
 Another reason for the difference in running time is that as the size of the data increases the time for running a new iteration in continuous method stays roughly the same where as the time for a full retraining increases exponentially.
 The running time of offline-only method is not included as it is similar to offline+online, since they both have include initial training and have to examine individual items arriving at the system one at a time.
