@@ -196,24 +196,24 @@ Most of the machine learning systems focus on training and providing tools to ma
 Kumar et al. \cite{kumar2015survey} provided an overview of landscape of existing machine learning systems. 
 Except in a very few cases \cite{akdere2011case, crankshaw2014missing}, most of the surveyed systems, focus on training of machine learning models and provide little to no support after the model has been trained.
 Moreover, systems with support for model deployment are still lacking constant monitoring and fast and accurate updates of the machine learning models.
-Therefore, the whole process of training and deployment of models are usually done manually.
+Therefore, the whole process of training and deployment of models is usually done manually.
 The most common approach is as follows; first a model is trained based on an existing dataset residing on disk, this model serves as the initial model.
-This model is then deployed to an environment were it can answer prediction queries arriving at the system.
+This model is then deployed to an environment where it can answer prediction queries arriving at the system.
 The system also receives feedback in the form of new training observations.
 Upon receiving a training observation, the model is updated incrementally.
 Incremental updates are only supported by certain type of machine learning models, where the underlying optimization strategy allows changes in the model based on individual training items.
 These incremental updates, however, are not enough to keep the model quality at an acceptable rate and after a while the quality may degrade.
 At this point, a new model has to be retrained based on the entire available data and has to be redeployed again.
 
-\textbf{Example application:} to illustrate this model deployment approach, consider as an example the task of predicting the click through rate of ads.
-In order to gain profit, search engines typically show a set of advertisements, based on the user's search query and other related information (user's detail, geographical and cultural information).
-However, typically ads are sold based on click rate and therefore the search engine provider is only payed if the advertisement was clicked.
-An optimal strategy is to serve ads based on their expected click rate value.
-Machine learning models are used to find the expected click rate of ads before they are served to the user.
-A new model is created based on the available training data which typically includes click rate of ads, related search queries, click timestamps and user information (if available). 
+\textbf{Example application:} to illustrate this model deployment approach, consider as an example the task of predicting the click through rate of advertisements.
+In order to gain profit, search engines typically show a set of advertisements, based on the users' search queries and other related information (users' details, geographical and cultural information).
+However, typically advertisements are sold based on click rate and, therefore, the search engine provider is only payed if the advertisement was clicked.
+An optimal strategy is to serve advertisements based on their expected click rate value.
+Machine learning models are used to find the expected click rate of advertisements before they are served to the user.
+A new model is created based on the available training data, which typically includes click rate of advertisements, related search queries, click timestamps, and user information (if available). 
 Once the click rate predictor is deployed, prediction queries of the form of search requests arrive at the system.
-The model, based on the key words in the search request and other available information about the user, predicts the click rate of different ads and finally serves the ones with highest expected value.
-Whether ads are clicked on or not, feedback is send to the system in the form of new training observations and the model is updated accordingly.
+The model, based on the key words in the search request and other available information about the user, predicts the click rate of different advertisements and finally serves the ones with highest expected value.
+Feedback of whether advertisements are clicked on or not is send to the system in the form of new training observations and the model is updated accordingly.
 The model is also periodically retrained using entire data in order to reduce the error introduced by incremental learning to the model.
 Figure \ref{fig:click-rate} demonstrates the use case described above.
 
@@ -225,13 +225,14 @@ Figure \ref{fig:click-rate} demonstrates the use case described above.
 \end{figure}
 
 Some emerging machine learning systems have tried to automate this process to some extend.
-They automatically deploy the model into a production environment, monitor its quality and initiate a retraining when required.
-However, they treat the underlying machine learning models as black boxes and as a result miss many opportunities for optimizing this process.
+They automatically deploy the model into a production environment, monitor its quality, and initiate a retraining when required.
+However, they treat the underlying machine learning models as black boxes and as a result miss many opportunities for optimizing the training and deployment process.
 % What is the motivation for this work
-Given the lack of systems to support model deployment and maintenance we have set out to design a system that not only support deployment and maintenance of machine learning models but also provide constants incremental and batch updates while the system is running. 
-We propose the design of a system that provide realtime query support as well incremental and fast batch updates to the machine learning models.
+%Given the lack of systems to support model deployment and maintenance, we have set out to design a system that not only supports deployment and maintenance of machine learning models but also provides %constant incremental and batch updates while the system is running. 
+%We propose the design of a system that provide 
+%real-time query support as well incremental and fast batch updates to the machine learning models.
 
-Our key observation is that, by utilizing the underlying optimization algorithm (Stochastic Gradient Descent), the model training process can be seamlessly executed along side the serving and query answering component.
+Our key observation is that, by utilizing the underlying optimization algorithm (stochastic gradient descent), the model training process can be seamlessly executed along side the serving and query answering component.
 Based on this observation, we present a new model for a system, that supports deployment, maintenance, and incremental and fast batch updates of machine learning models.
 We are making the following contributions: 
 \begin{itemize}
@@ -242,6 +243,7 @@ We are making the following contributions:
 % What are the main results
 Our experiments show that we are able to achieve the same quality with similar systems while completely eliminating the offline batch training, which reduces the running time by an order of magnitude. 
 We have experimented on time dependent datasets where distribution of the data changes over time and we have shown that our method can adapt to changes in the distribution faster than the existing methods.
+
 % Outline: The rest of this document is structured as follows. ...
 The rest of this paper is organized as follows. 
 Section \ref{sgd} describes the underlying optimization method used in our system. 
@@ -274,7 +276,7 @@ The synchronization step slows down the SGD process, because after every iterati
 \cite{recht2011hogwild, dean2012large} proposed distributed asynchronous SGD and the experimental results showed that the quality of the final model is not any worse than the synchronized approach. 
 
 
-\subsection{Learning rate tuning} \label{learning-rate}
+\subsection{Learning Rate Tuning} \label{learning-rate}
 The learning rate or step size parameter plays an important role in the convergence of SGD.
 The most common technique is to set the learning rate to a small value, and slowly decrease the value in every iteration. 
 This, however is not possible in case of continuous and online learning. 
@@ -284,7 +286,7 @@ One advantage of their method is that it works well with non-stationary problems
 By examining the changes in the data the learning rate will decrease (when approaching the optimum value) and increase (when the distribution of the data has changed).
 
 
-\subsection{Machine learning models based on SGD}
+\subsection{Machine Learning Models based on SGD}
 SGD is one of the most common optimization methods to train large scale problems. 
 It has been used in classification \cite{zhang2004solving}, clustering \cite{bottou1995convergence}, neural networks \cite{dean2012large}, and matrix factorization \cite{funk2006netflix}.
 In our system, we implemented matrix factorization and neural networks, which will be explained next. 
@@ -365,12 +367,12 @@ This property of stochastic gradient descent makes it ideal for long running sys
 % We do not need complete re-training, each iteration of SGD is light and can be easily executed while the system is running
 Since each iteration of SGD is light and fast, it can be done while the system is serving prediction requests.
 % figure
-\begin{figure*}[h]
-\centering
-\includegraphics[scale=0.45]{../images/continuous.png}
-\caption{Continuous Training and Serving}
-\label{fig:cont-training-serving}
-\end{figure*}
+% \begin{figure*}[t!]
+% \centering
+% \includegraphics[scale=0.45]{../images/continuous.png}
+% \caption{Continuous Training and Serving}
+% \label{fig:cont-training-serving}
+% \end{figure*}
 
 Figure \ref{fig:cont-training-serving} shows the details of our proposed system.
 An initial model is trained using the data residing on disk.
@@ -403,34 +405,39 @@ In Section \ref{evaluation}, we investigate the effect of scheduling rate on mod
 In case no new training data is available, the model parameters will converge after awhile and any further training iterations will not have any effect on the model quality.
 Therefore, the scheduler component has to communicate with the model manager in order to detect whether the model parameters have converged and stop further iterations until more training data becomes available.
 
-%Tilmann needs to continue here...
+\begin{figure*}[t!]
+\centering
+\includegraphics[scale=0.45]{../images/continuous.png}
+\caption{Continuous Training and Serving}
+\label{fig:cont-training-serving}
+\end{figure*}
 
 \subsection{Data Manager} \label{data-manager}
-In order to execute an iteration of SGD, we need to combine the training data that arrives at the system in realtime and the data stored on disk.
-Data manager is responsible for storing the incoming training observations in an intermediate buffer.
-When a new training iteration is scheduled, data manager accesses the historical data stored on disk and provides a sample based on the configured sampling rate.
+In order to execute an iteration of SGD, we need to combine the training data that arrives at the system in real-time and the data stored on disk.
+The data manager is responsible for storing the incoming training observations in an intermediate buffer.
+When a new training iteration is scheduled, the data manager accesses the historical data stored on disk and provides a sample based on the configured sampling rate.
 The data from the sample and the data in the buffer are merged together to create the dataset for next training iteration.
-Data manager provides access to this dataset for model manager where the actual training and model updates happen.
+The data manager provides access to this dataset for model manager where the actual training and model updates happen.
 The data manager also communicates with scheduler in order to inform it when the intermediate buffer is becoming full and a new training iteration is required. 
 
-The created data set as described earlier, consists of the data inside the buffer and a sample of the historical data.
-The sampling rate therefore is a parameter that has to be configured.
+The created data set consists of the data inside the buffer and a sample of the historical data as described earlier.
+The sampling rate, therefore, is a parameter that has to be configured.
 It can be pre-configured to a constant value based on the application.
-However, using the feedback from the system's model manager (section \ref{model-manager}), sampling rate can be adjusted.
-For example, when data distribution is changing more rapidly smaller sampling rate will put more emphasis on the data that arrived in the system recently. 
-This is similar to the problem of concept drift, where the distribution of the incoming data changes overtime.
-This will render historical data less important, and as a result a smaller sample of the historical data (or none at all) will give more importance to the data in the buffer and help the model to adopt faster to the concept drift.
-However, if there is no concept drift in the data, larger sampling rate will increase the quality of the model after a training iteration.
-Another effect that sampling rate has on the system is the training iteration running time.
+However, using the feedback from the system's model manager (Section \ref{model-manager}), sampling rate can be adjusted.
+For example, when the data distribution is changing more rapidly a smaller sampling rate will put more emphasis on the data that arrived in the system recently. 
+This is similar to the problem of concept drift where the distribution of the incoming data changes overtime.
+This will render historical data less important and as a result a smaller sample of the historical data (or none at all) will give more importance to the data in the buffer and help the model to adopt faster to the concept drift.
+However, if there is no concept drift in the data, a larger sampling rate will increase the quality of the model after a training iteration.
+Another effect that the sampling rate has on the system is the training iteration running time.
 Larger sampling rate increases the running time of each training iteration as more data has to be processed.
-In section \ref{evaluation}, we investigate the effects of different sampling rate on both the quality and performance of the system.
+In Section \ref{evaluation}, we investigate the effects of different sampling rate on both the quality and performance of the system.
 
 \subsection{Model Manager} \label{model-manager} 
-An important part of the system is model manager component.
+An important part of the system is the model manager component.
 It is responsible for storing the model, answering prediction queries and performing incremental and batch updates to the model.
-Listing \ref{model-manager-api} shows the APIs of model manager.
+Listing \ref{model-manager-api} shows the APIs of the model manager.
 They are used to both interact with other components as well as end-users of the system.
-Scheduler component uses \textit{update} and \textit{update\_batch} to instruct the model manager to perform incremental or batch updates to the model.
+The scheduler component uses \textit{update} and \textit{update\_batch} to instruct the model manager to perform incremental or batch updates to the model.
 Upon a new prediction query, the \textit{predict} method is called to provide the end-user with the label of the given input.
 \begin{lstlisting}[language=Scala, basicstyle=\small\ttfamily, frame=tb ,columns=fullflexible,
 showstringspaces=false,label=model-manager-api,caption=Model Manager API, numberstyle=\tiny]
@@ -443,15 +450,16 @@ def predict(x): Label
 def error_rate(X_test, Y_test): Double
 
 \end{lstlisting}
-\textit{error\_rate} method returns the mean squared error rate of the model using the provided test dataset.
+
+the \textit{error\_rate} method returns the mean squared error rate of the model using the provided test dataset.
 As described earlier, constant monitoring of the quality is required in order to adjust the scheduling and sampling rate.
-When the error rate is stagnating, this could mean that the model has converged using the existing data therefore model manager informs scheduler not to schedule any new iterations until new training observations have arrived at the system.
-Similarly as explained in section \ref{data-manager}, an increase in error rate could indicate a change in distribution of the data.
+When the error rate is stagnating, this could mean that the model has converged using the existing data, therefore, the model manager informs scheduler not to schedule any new iterations until new training observations have arrived at the system.
+Similarly as explained in Section \ref{data-manager}, an increase in the error rate could indicate a change in distribution of the data.
 As a result, reducing the sampling rate will put more emphasis on the recent data (in the intermediate buffer) and help adopt the model to the changes in the distribution.
 
-Model manager also keeps track of the changes that are made to the model.
+The model manager also keeps track of the changes that are made to the model.
 The model is updated both through incremental learning and training iteration.
-Model manager, creates snapshots of the model in two different scenarios; after a series incremental updates are made and after each training iteration.
+The model manager creates snapshots of the model in two different scenarios; after a series incremental updates are made and after each training iteration.
 This versioning of the models is essential.
 When there is a rapid change in the distribution of the incoming data (a sudden concept drift) or when there are anomalies in the data, it is sometimes necessary to revert back to a version before the change in distribution occurred.
 In case of concept drift, new training iterations should be scheduled that only use the data in the buffer and in case of an anomalies in the data, they have to be identified and discarded before any further model updates could happen.
@@ -462,16 +470,16 @@ As described earlier the underlying optimization method is SGD.
 Any computation model capable of executing SGD efficiently can be used as the run-time of the system.
 All of the components of the system described so far are not limited to any computation environment.
 However, in order to ensure scalability several considerations have to made with regards to each component.
-Data manager should be able to work on top of distributed file systems such HDFS \cite{shvachko2010hadoop}. 
-In order to allow fast processing of incoming training observations, the intermediate buffer should be stored in memory.
+The data manager can work on top of distributed file systems such HDFS \cite{shvachko2010hadoop}. 
+In order to allow fast processing of incoming training observations, the intermediate buffer is stored in memory.
 Therefore, the buffer has to be distributed to all the nodes in the computing cluster.
-Certain type of machine learning models may be too large to fit into one single node.
+Certain types of machine learning models may be too large to fit into one single node.
 One example of such models is the matrix factorization model for recommender systems.
-Model manager should partition the model among all the nodes.
-It is important that model chose the partitioning strategy in such a way, that when requested the predictions can be made quickly.
+In this case, the model manager should partition the model among all the nodes.
+It is important that the model manager chooses the partitioning strategy in such a way, that when requested the predictions can be made quickly.
 For example, when a prediction request for a specific user and item arrives at the system, the model manager should be able to quickly find the related user and item from the matrices to quickly compute the predicted rating for the specific pair.
-Our model serving ystem is also not limited to any specific run-time and can accomodate any of the common data processing engines.
-Apache Flink \cite{carbone2015apache, alexandrov2014stratosphere} and Apache Spark \cite{zaharia2010spark} are distributed data processing platform that work with data in memory and they have support for iterative algorithms.
+Our model serving system is also not limited to any specific run-time and can accommodate any of the common data processing engines.
+Apache Flink \cite{carbone2015apache} and Apache Spark \cite{zaharia2010spark} are distributed data processing platform that work with data in memory and have support for iterative algorithms. % Lets cite the second paper later: , alexandrov2014stratosphere
 
 \begin{figure}[t]
 \centering
@@ -486,39 +494,40 @@ In this section, we evaluate the performance of our system using various dataset
 We report both the quality (error rate) and performance of our proposed method. 
 
 \subsection{Experimental setup}
-We run our experiments on a single node with Quad core Intel i7 and 16 GB of RAM. 
+We run our experiments on a single node with a quad-core Intel i7 and 16 GB of RAM. 
 
 \subsection{Datasets}
+
 \textbf{MovieLens \cite{harper2016movielens}}: to analyze the performance of our method on time varying datasets, we use the MovieLens 100K and 1M datasets. 
 They consists of movie ratings by users during different time periods. 
 For both of the datasets, we use 10\% for initial learning (9\% training, 1\% test) and 90\% for online learning. 
 We have set the learning rate to 0.001 for all of the experiments on MovieLens dataset.
-We sorted the MovieLens data set based on the ratings timestamp, and items are examined one by one according to their timestamp.
+We have sorted the MovieLens data set based on the ratings timestamp and items are examined one by one according to their timestamp.
 This is to evaluate how each of the implemented methods react to changes in the distribution of the data.
 An evolving test set was also created, where the index of the test items are first drawn uniformly at random from the entire data set.
-For \textit{movie-lens-100k} the total size of the test set is 5,000 and for \textit{movie-lens-1M} it is 50,000.
+For \textit{movie-lens-100k}, the total size of the test set is 5,000 and for \textit{movie-lens-1M} it is 50,000.
 We start with an empty test set, when we reach the index of a test item, we add that to the current test set and calculate the error rate based on the current test set.
 Each error calculation (called a test cycle), as a result captures the degree to which the models are adopting to the changes in the dataset.
 
 \textbf{MNIST \cite{lecun-mnist}}: MNIST is a dataset of handwritten digits.
-it consists of 60000 28x28 color images in 10 classes. We use a Neural Network to train a model to classify the images in the data set. 
+it consists of 60000 28x28 color images in 10 classes. We use a neural network to train a model to classify the images in the data set. 
 Similar to MovieLens, 10\% are used for initial training and 90\% for online learning. 
 Note that, in this dataset, the order is irrelevant and we assume no change in distribution of the data occurs throughout the system's lifetime. 
 
 \subsection{Implementation}
-We implemented two different machine learning models to evaluate our system.
-In this section we briefly explain each implemented methods.
+We have implemented two different machine learning models to evaluate our system.
+In this section, we briefly explain each implemented methods.
 
-\textbf{Recommender system:} we have implemented a recommender system based on the matrix factorization method described in section \ref{sgd}.
+\textbf{Recommender system:} we have implemented a recommender system based on the matrix factorization method described in Section \ref{sgd}.
 Based on our initial experiments, we have set the number of latent factors to 40.
 A model is first trained from the static data.
-To produce more accurate predictions, we have also included user, item and global bias values as described in \cite{koren2009matrix}.
+To produce more accurate predictions, we have also included user, item, and global bias values as described in \cite{koren2009matrix}.
 After the initial model is trained and deployed, any new training observations incrementally update the model.
 Training observations are of the form \textit{\((user\_id, item\_id, rating\))}.
 Based on the training observation, the bias values as well as the factors are updated for the specified user and item.
 
-\textbf{Neural Network:} to evaluate our system on an image classification task, we implemented a multi-layer perceptron neural network using back propagation\cite{collobert2004links}.
-We set the number of hidden layers to 50 and use a softmax output function.
+\textbf{Neural Network:} to evaluate our system on an image classification task, we implemented a multi-layer perceptron neural network using back propagation~\cite{collobert2004links}.
+We set the number of hidden layers to 50 and use a softmax output function. %TODO: Maybe add a reference?
 Similar to recommender system case, a network is first trained on the static data.
 The training observations are of the form of \textit{\((X,y)\)}, where X is a vector of 784 dimension (1 for each pixel) and y is the digit the image is representing.
 
@@ -526,13 +535,12 @@ The training observations are of the form of \textit{\((X,y)\)}, where X is a ve
 \subsection{Tuning parameters} \label{tuning}
 In section \ref{continious-training-serving}, we discussed how system parameters such as sampling and scheduling rate affect the performance and quality of the system.
 In this section, we are analyzing the effects of different values sampling and scheduling rate on the system.
-We 
 Our goal, is to make these parameters adaptive, but for now we analyze their effect on the running time and mean squared error. 
 
 \textbf{Scheduling rate}\\
 This parameter specifies how often a new iteration of SGD should be scheduled. 
-In our prototype the scheduling rate is governed by a parameter called \textbf{Buffer Size}, which dictates how many new items should be stored in the buffer before a new iteration of SGD is executed. 
-Ultimately, the decision to schedule new iterations will be made by the system based on the availability of resources. 
+In our prototype, the scheduling rate is governed by a parameter called \textbf{Buffer Size}, which dictates how many new items should be stored in the buffer before a new iteration of SGD is executed. 
+Ultimately, the decision to schedule new iterations is made by the system based on the availability of resources. 
 Executing one iteration of SGD even using the entire data is not a resource heavy process, and can easily be done in parallel with the serving component of the system. 
 This results in a paradigm where both training and serving can happen simultaneously. 
 
@@ -543,12 +551,12 @@ This results in a paradigm where both training and serving can happen simultaneo
 \label{fig:movie-lens-100k-buffer-size-mse}
 \end{figure}
 
-Figure \ref{fig:movie-lens-100k-buffer-size-mse} shows mean squared error for different buffer sizes for 100k MovieLens dataset. 
+Figure \ref{fig:movie-lens-100k-buffer-size-mse} shows the mean squared error for different buffer sizes for 100k MovieLens dataset. 
 Smaller buffer sizes yield lower error rates, but the figure shows that the difference is small.
-Specially, when considering the affect buffer size has on the running time.
+Especially, when considering the affect the buffer size has on the running time.
 Figure \ref{fig:movie-lens-100k-buffer-size-time} shows the running time on 100K MovieLens dataset using different buffer sizes. 
 Increasing the buffer size from 500 to 5000 decreases the running time by a factor of 5 while the error rate is only increased slightly.
-Therefore, depending on the application we can set the buffer size to bigger values in order to increase the performance of the system without affecting the quality of the final model substantially.
+Therefore, depending on the application, we can set the buffer size to bigger values in order to increase the performance of the system without affecting the quality of the final model substantially.
 
 \begin{figure}[H]
 \centering
@@ -558,13 +566,13 @@ Therefore, depending on the application we can set the buffer size to bigger val
 \end{figure}
 
 \textbf{Dynamic scheduling:} In production environments, the load on the system varies throughout the day. 
-Therefore, a dynamic scheduling can maximizes the performance of the system, by performing more frequent updates while there are more resources available for training. 
+Therefore, a dynamic scheduling maximizes the performance of the system, by performing more frequent updates while there are more resources available for training. 
 Moreover, since training and serving can be done in parallel, we can perform training in the background and only update the weights when the training iteration is over. 
 
 \textbf{Sampling rate}\\
-In each iteration of SGD, as described in section \ref{continious-training-serving}, the data inside the buffer and a sample of the historical data is used to update the model.
+In each iteration of SGD, as described in Section \ref{continious-training-serving}, the data inside the buffer and a sample of the historical data is used to update the model.
 In this section, we investigate the affect of the sampling rate on the model quality and running time of the system.
-Figure \ref{fig:movie-lens-100k-sample-rate} shows that larger sampling rate increases the quality of the model, but similar to scheduling rate, the decrease in error rate is negligible, considering the affect it has on running time. 
+Figure \ref{fig:movie-lens-100k-sample-rate} shows that larger sampling rate increases the quality of the model, but similar to scheduling rate, the decrease in error rate is negligible considering the affect it has on running time. 
  
 
 \begin{figure}[H]
@@ -598,7 +606,7 @@ The remaining data is used in an online learning fashion (on element at a time).
 
 \textbf{Offline-only} is similar to offline+online method with incremental learning switched off.
 
-\textbf{Full-retraining} is an implementation of the common deployment scenario described in section \ref{introduction}
+\textbf{Full-retraining} is an implementation of the common deployment scenario described in Section \ref{introduction}
 Similar to the proposed system by Crankshaw \cite{crankshaw2014missing}. 
 After the initial model is deployed, the model is incrementally update with every new training item.
 A full retraining of the model is performed once a certain amount of training observations have been received.
@@ -655,23 +663,17 @@ After every retraining, the error rate first drops then continuous to increase s
 Offline+online and naive have steady error rates, with offline+online having a lower rate, and they both continue to keep the error rate more or less constant for all the incoming data.
 Offline-only has a starting error rate similar to that of offline+online, full-retraining, afterward the error rate continues to increase slightly.
 Similar to \textit{movie-lens-100k}, offline-only's error rate becomes bigger than naive after around half of the test cycles.
-\todo[inline] {add result of MNIST quality}
-\begin{figure}[!ht]
-\centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/mnist-quality.eps}
-\caption{Mean Squared Error on MNIST}
-\label{fig:mnist-quality}
-\end{figure}
+
 
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/times-log-scale.eps}
-\caption{Running Time on different Workloads}
-\label{fig:running-time}
+\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-time.eps}
+\caption{Running Time on Movie Lens Dataset}
+\label{fig:movie-lens-running-time}
 \end{figure}
-\todo[inline]{include mnist running time}
-Figure \ref{fig:running-time} shows the running time of the implemented methods on \textit{movie-lens-100k} and \textit{movie-lens-1M}.
+
+Figure \ref{fig:movie-lens-running-time} shows the running time of the implemented methods on \textit{movie-lens-100k} and \textit{movie-lens-1M}.
 As expected, naive and offline+online have the lowest running times on both datasets.
 This is because they do not support batch updates to the model.
 Training on full datasets, heavily depends on the amount of data.
@@ -683,20 +685,20 @@ Another reason for the difference in running time is that as the size of the dat
 The running time of offline-only method is not included as it is similar to offline+online, since they both have include initial training and have to examine individual items arriving at the system one at a time.
 
 \section{Conclusions} \label{conclusion}
-This paper presented an architecture for deployment and continuous training of machine learning models. 
+This paper presents an architecture for deployment and continuous training of machine learning models. 
 The architecture utilizes the properties of stochastic gradient descent optimization method.
 SGD is an iterative optimization process where in each iteration a small sample of the data is used to update the machine learning model, however, it typically works with static datasets.
-Our proposed architecture uses the properties of the SGD and applies it to long running processes.
+Our proposed architecture uses the properties of the SGD and applies it to long running, integrated training and deployment processes.
 Every successive iteration of SGD is scheduled to run while the machine learning model is being used to answer prediction queries.
 After every iteration, the model is updated with the new parameters.
 SGD is one of the most common optimization techniques for large datasets and has been successfully used in different domains such as neural networks, recommender systems, regression, and clustering models. This makes our architecture applicable for a large range of machine learning models beyond the ones demonstrated in the evaluation.
 
-Our experiments showed the continuous training of the machine learning models is much faster than full retraining of the model, which is the most common approach in deployment and maintenance of machine learning models. We showed that not only continuous training requires less resources but it also produces models with lower error rates that adopt faster to changes in the dataset.
+Our experiments show the continuous training of the machine learning models is much faster than full retraining of the model, which is the most common approach in deployment and maintenance of machine learning models. We showed that not only continuous training requires less resources but it also produces models with lower error rates that adopt faster to changes in the dataset.
 Moreover, comparing to simple techniques such incremental learning or initial batch training it produces a model with higher quality.
 
-In future work, we would like to explore other optimization strategies such as batching of prediction queries, caching of query results, and more advanced methods for sampling of historical data in order to investigate their effect on the performance of the system.
+In future work, we will explore other optimization strategies such as batching of prediction queries, caching of query results, and more advanced methods for sampling of historical data in order to investigate their effect on the performance of the system.
 %ACKNOWLEDGMENTS are optional
-\section{Acknowledgments}
+%\section{Acknowledgments}
 \bibliographystyle{plain}
 \bibliography{main}
 \end{document}
