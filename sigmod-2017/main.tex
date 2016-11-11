@@ -590,6 +590,42 @@ Therefore, similar to scheduling rate, setting the sampling rate to smaller valu
 \label{fig:movie-lens-100k-sample-rate-time}
 \end{figure}
 
+\textbf{Tuning parameters based on error rate:} As described earlier, tuning the parameters are heavily influenced by application type.
+Both the underlying machine learning model and the dataset can have a big effect on the selection of sampling rate and scheduling rate.
+In the recommender system use case, due to changes in incoming data distribution, we saw that bigger sample rates and higher scheduling rates have an effect (although small) on the quality of the model.
+This, however, may not be the case for other use cases.
+To demonstrate, we perform the same set of experiments on the \textit{MNIST} dataset.
+Figure \ref{fig:mnist-sample-rate} shows the effect of different sampling rates on the neural network model for \textit{MNIST} data.
+Interestingly and contrary to the results we achieved for \textit{movie-lens-100k} the difference in error rates for different sampling rates are almost indistinguishable from each other.
+We believe this is caused by how neural networks behave.
+Increasing sampling rate, causes similar data items to be used repeatedly in each training iteration and based on our experiments neural networks are not affected by this oversampling and therefore the results are almost similar with different sampling rates.
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\columnwidth]{../images/experiment-results/mnist-sampling.eps}
+\caption{MNIST sample rate vs error rate}
+\label{fig:mnist-sample-rate}
+\end{figure}
+
+Figure \ref{fig:mnist-buffer-size} shows how buffer size affects the overall quality of the neural network models achieved.
+Similar to sampling rate case, the error rates of the models are not affected by the scheduling rate.
+New training observations that exist in the buffer have the maximum effect on the model's quality, since they have not been yet examined by the model.
+As the scheduling rate increases, the number of new training observations remain the same, and only the historical data is used more frequently to train the model.
+Since neural networks do not gain much benefit by revisiting the same items, increasing scheduling rate has no effect on the overall quality.
+
+Based on our findings, we conclude that increasing the sampling and scheduling rate does not always have an effect on the quality.
+Setting these parameters to small values however will decrease the running time considerably and save computation resources.
+
+
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\columnwidth]{../images/experiment-results/mnist-buffer-size}
+\caption{MNIST buffer size vs error rate}
+\label{fig:mnist-buffer-size}
+\end{figure}
+
+
+
 \subsection{Comparison Under Constrained Resources }
 Both full-retraining and continuous model use different strategies to update the model.
 To perform a fair comparison of the two, we are evaluating them under similar resource constraints.
@@ -692,7 +728,7 @@ SGD is one of the most common optimization techniques for large datasets and has
 To demonstrate our system's ability to incorporate different machine learning models and workloads, we implement two use cases: recommender system and Image classifier.
 The recommender system is tested on different workloads and the results show that not only it scales well but also it adopts to changes in data distribution by continuously updating the model.
 Image classifier use case as well shows how we can implement and use neural networks within our system to create a model that not only can answer prediction requests quickly, but is also able to make incremental and batch updates to further increase the model quality without creating much overhead.
-% end of new paraphraph
+% end of new paragraph
 Our experiments also shows the continuous training of the machine learning models is much faster than full retraining of them, which is the most common approach in deployment and maintenance of machine learning models. We showed that not only continuous training requires less resources but it also produces models with lower error rates that adopt faster to changes in the dataset.
 Moreover, comparing to simple techniques such incremental learning or initial batch training it produces a model with higher quality.
 
