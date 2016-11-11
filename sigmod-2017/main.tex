@@ -135,9 +135,6 @@ Author 1
 Author 2
 % 3rd. author
 \alignauthor Author 3
-\and  % use '\and' if you need 'another row' of author names
-% 4th. author
-\alignauthor Author 4
 }
 
 \maketitle
@@ -308,7 +305,6 @@ ImageNet competition \cite{ILSVRC15} in 2012 was won by a neural network propose
 Success of Google Brain team \cite{sutskever2014sequence, mikolov2013efficient} was also instrumental to popularizing neural networks in machine learning community.
 We have implemented a multilayer neural network for classifying images.
 
-
 \section{Related Work} \label{related-work}
 
 \begin{figure*}[t!]
@@ -333,7 +329,7 @@ Contrary to our system, models have to be retrained outside of the system and re
 Our system supports, incremental and batch updates to the model and automatically applies these updates to the model currently being served.
 Velox \cite{crankshaw2014missing} is an implementation of the common machine learning serving practice, explained in section \ref{introduction}.
 Velox supports incremental learning and can answer prediction queries in realtime.
-It also eliminating the need for users to manually retrained the model offline and redeploy it again.
+It also eliminates the need for users to manually retrain the model offline and redeploy it again.
 It is integrated into the \textit{Berkeley Data Analytics Stack (BDAS)}, and uses the components of BDAS such as Tachyon \cite{li2014tachyon} and Spark \cite{zaharia2010spark}. 
 After the initial training of a model, it is deployed to Velox where prediction queries are answered in realtime and incremental updates are made to the model.
 Velox also monitors the quality of the model using a validation set and once the error rate has gone beyond a predefined threshold it initiates a complete retraining of the model using Spark. 
@@ -341,14 +337,12 @@ Figure \ref{fig:velox-work-flow} depicts how Velox works.
 Velox uses Stochastic Gradient Descent as its underlying training algorithm.
 As described in section \ref{sgd}, even the batch updates to the model can be performed in a series of independent iterations.
 However, Velox retrains the model offline from scratch.
-This has two drawbacks; any updates that has been done to model so far will be discarded, and the process of retraining on full data set requires a lot of resources.
+This has two drawbacks; any updates that has been done to the model so far will be discarded, and the process of retraining on full data set requires a lot of resources.
 Our system uses the underlying properties of SGD to fully integrate the training process into the system's lifeline and eliminate the need for complete retraining of the model.
 
 Weka \cite{hall2009weka}, Apache Mahout \cite{Owen:2011:MA:2132656}, and Madlib \cite{hellerstein2012madlib} are systems that provide the necessary toolkits to train machine learning models. All of these systems provide a range of machine learning training algorithms. 
 They, however, do not provide any management, before or after deployment of these models. 
-Our proposed system focuses on models trainable using Stochastic 
- Descent. 
-Contrary to the systems above, it provide management of the models while in training and after deployment.
+Our proposed system focuses on models trainable using Stochastic Gradient Descent and as a result is able to provide management of the models both in training and after deployment.
 % model management systems
 MLBase \cite{kraska2013mlbase}, and TuPaq \cite{sparks2015tupaq} are machine learning model management systems.
 They provide a range of training algorithms to create machine learning models and mechanism for model search as well as model management.
