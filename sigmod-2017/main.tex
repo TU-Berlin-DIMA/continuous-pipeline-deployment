@@ -549,11 +549,15 @@ This results in a paradigm where both training and serving can happen simultaneo
 \label{fig:movie-lens-100k-buffer-size-mse}
 \end{figure}
 
-Figure \ref{fig:movie-lens-100k-buffer-size-mse} shows the mean squared error for different buffer sizes for 100k MovieLens dataset. 
-Smaller buffer sizes yield lower error rates, but the figure shows that the difference is small.
-Especially, when considering the effect the buffer size has on the running time.
+Figure \ref{fig:movie-lens-100k-buffer-size-mse} shows the mean squared error for different buffer sizes for \textit{movie-lens-100k} dataset. 
+An smaller buffer size causes the scheduler to initiate training iterations more frequently.
+As a result, the underlying model is updated faster.
+However, the error rate is not decreasing linearly with the buffer size.
+Further analysis show that once the model is update more frequently, it slowly starts to converge and any further training has little to no effect on the overall quality of the model
+Therefore, increasing the scheduling rate only decreases the error rate up to a point, after which increasing the scheduling rate has no effect on the overall quality of the model.
+This is extremely important, specially when considering the effect the buffer size has on the running time.
 Figure \ref{fig:movie-lens-100k-buffer-size-time} shows the running time on 100K MovieLens dataset using different buffer sizes. 
-Increasing the buffer size from 500 to 5000 decreases the running time by a factor of 5 while the error rate is only increased slightly.
+Increasing the buffer size from 500 to 5000 decreases the running time by a factor of 5 while as described before the error rate is only increased slightly.
 Therefore, depending on the application, we can set the buffer size to bigger values in order to increase the performance of the system without affecting the quality of the final model substantially.
 
 \begin{figure}[H]
@@ -570,6 +574,7 @@ Moreover, since training and serving can be done in parallel, we can perform tra
 \textbf{Sampling rate:} In each iteration of SGD, as described in Section \ref{continious-training-serving}, the data inside the buffer and a sample of the historical data is used to update the model.
 In this section, we investigate the effect of the sampling rate on the model quality and running time of the system.
 Figure \ref{fig:movie-lens-100k-sample-rate} shows that larger sampling rate increases the quality of the model, but similar to scheduling rate, the decrease in error rate is negligible considering the effect it has on running time. 
+This is again, caused by the same phenomena, where the model after training on bigger sample rates start to converge faster and as a result bigger sample sizes will not have an effect on the quality.
  
 \begin{figure}[!ht]
 \centering
@@ -597,8 +602,11 @@ This, however, may not be the case for other use cases.
 To demonstrate, we perform the same set of experiments on the \textit{MNIST} dataset.
 Figure \ref{fig:mnist-sample-rate} shows the effect of different sampling rates on the neural network model for \textit{MNIST} data.
 Interestingly and contrary to the results we achieved for \textit{movie-lens-100k} the difference in error rates for different sampling rates are almost indistinguishable from each other.
+While the difference in error rates for \textit{movie-lens-100k} was small, but it is still much greater than the difference in error rates for neural networks.
 We believe this is caused by how neural networks behave.
 Increasing sampling rate, causes similar data items to be used repeatedly in each training iteration and based on our experiments neural networks are not affected by this oversampling and therefore the results are almost similar with different sampling rates.
+Moreover, in this experiment, the number of parameters of multi-layer perceptron is far less than the number of parameters of the matrix factorization model for \textit{movie-lens-100k}.
+This causes the neural work to converge faster and therefore it is not affected by more training, unless new training observations arrive at the system.
 
 \begin{figure}[!ht]
 \centering
@@ -614,7 +622,9 @@ As the scheduling rate increases, the number of new training observations remain
 Since neural networks do not gain much benefit by revisiting the same items, increasing scheduling rate has no effect on the overall quality.
 
 Based on our findings, we conclude that increasing the sampling and scheduling rate does not always have an effect on the quality.
-Setting these parameters to small values however will decrease the running time considerably and save computation resources regardless of the type of model the system is serving.
+In both the \textit{movie-lens-100k} and \textit{MNIST} use cases the change in scheduling and sampling rate has small to no effect on the overall quality.
+Whereas, the running time of the methods are heavily influenced by these parameters.
+Setting these parameters to small values decreases the running time considerably and save computation resources regardless of the type of model the system is serving.
 
 
 \begin{figure}[!ht]
@@ -634,7 +644,7 @@ To achieve this, we have fixed the total number of epochs (SGD iterations) for b
 For full-retraining, this value is equal to the number of retraining multiplied by number of iterations in each retraining. 
 For continuous, it is total number of scheduled iterations throughout the lifetime of the system.
 Therefore, continuous method schedules a new iteration every 500 items for \textit{movie-lens-100k} and 5,000 items for \textit{movie-lens-1M} and full-retraining schedules a retraining every 15,000 items for \textit{movie-lens-100k} and 150,000 items for \textit{movie-lens-1M}.
-\begin{figure}[!ht]
+\begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-quality.eps}
 \caption{Mean Squared Error on Movie Lens 100k}
@@ -655,7 +665,7 @@ Continuous method has the lowest error rate among all the implemented methods.
 It consistently manages to adopt to the changes and decrease the error rate where the distribution of the incoming data is stable.
 As expected, except for immediately after a full retraining, continuous method always perform better that full-retraining approach.
 
-\begin{figure}[!ht]
+\begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-1m-quality.eps}
 \caption{Mean Squared Error on Movie Lens 1M}
@@ -675,7 +685,7 @@ Similar to \textit{movie-lens-100k}, offline-only's error rate becomes bigger th
 In both \textit{movie-lens-100k} and \textit{movie-lens-1M} baseline method's error rate is smaller than all the other methods.
 This is simply because of the amount of available rating information that the baseline method has access to.
 
-\begin{figure}[t]
+\begin{figure}[h]
  \centering
  \includegraphics[width=\columnwidth]{../images/experiment-results/mnist-quality.eps}
  \caption{Error Rate on MNIST}
@@ -697,7 +707,7 @@ As more training iterations are executed, the underlying neural network's parame
 Both continuous and full-retraining method start to perform better than the baseline after a few training iterations (retraining in full-retraining case).
 This is, as explained earlier because of neural network's ability to perform better when more training data are available to it.
 
-\begin{figure}[!ht]
+\begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{../images/experiment-results/times-log-scale.eps}
  \caption{Running Time on different Workloads}
