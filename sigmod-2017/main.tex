@@ -250,14 +250,11 @@ Section \ref{continious-training-serving} introduces the architecture and design
 In section \ref{evaluation}, we evaluate our system against different workloads and compare the performance of our method to other model serving and maintenance approaches. 
 Finally, section \ref{conclusion} presents our conclusion and future work.
 
-
-
-
 \section{Stochastic Gradient Descent} \label{sgd}
 In machine learning, optimization methods are used to find the minimum of the objective function (referred to as the loss function) by calculating the gradient of the function at different data points and update the function parameters based on the gradient values.
 A common optimization method is gradient descent, an iterative process where in every iteration the entire training data set is used to calculate the gradient value.
 One drawback of gradient descent is that in presence of large datasets it will become very slow since every iteration has to inspect all the training items.
-stochastic gradient descent (SGD) is an approximation of the gradient descent method. 
+Stochastic gradient descent (SGD) is an approximation of the gradient descent method. 
 Similar to gradient descent, it is an iterative process but in each iteration it operates on one element (or a sample of elements) at a time. 
 It calculates the gradient at a single element and updates the parameters of the model accordingly. 
 Although it converges after a higher number of iterations, the overall convergence time is still much faster than gradient descent. 
@@ -271,9 +268,9 @@ The amount of available data has been increasing exponentially in recent years.
 To efficiently train machine learning models on large datasets, new techniques have to be employed.
 As explained earlier, SGD inherently works well with large amount of data since it does not need to scan every data point in every iteration.
 However, the problem arises when the dataset cannot fit into the memory of a single machine and it has to be distributed.
-In this situation, one common method is distribute the gradient calculation task across the nodes in the cluster and task will work with a different data.
+In this situation, one common method is distribute the gradient calculation tasks across the nodes in the cluster, where each task will work with a different part of the data.
 One problem in this scenario is that a synchronization step is required before applying the updates to the model. 
-The synchronization step slows down the SGD process, because after every iteration, all the updates are sent to a master node that updates the model.
+The synchronization step slows down the SGD process, because after every iteration, all the updates are sent to a central process that updates the model.
 \cite{recht2011hogwild, dean2012large} proposed distributed asynchronous SGD and the experimental results showed that the quality of the final model is not any worse than the synchronized approach. 
 
 
@@ -288,7 +285,7 @@ By examining the changes in the data the learning rate will decrease (when appro
 
 \section{Related Work} \label{related-work}
 
-\begin{figure*}[t]
+\begin{figure*}[t!]
 \centering
 \includegraphics[scale = 0.4]{../images/current-method.png}
 \caption{Velox Work Flow}
@@ -355,21 +352,6 @@ Success of Google Brain team \cite{sutskever2014sequence, mikolov2013efficient} 
 We have implemented a multilayer neural network for classifying images.
 
 \section{Continuous Training and Serving} \label{continious-training-serving}
-
-\begin{figure}[h]
-\centering
-\includegraphics[scale=0.30]{../images/system-architecture.png}
-\caption{System Architecture}
-\label{fig:system-architecture}
-\end{figure}
-
-\begin{figure*}[h]
-\centering
-\includegraphics[scale=0.45]{../images/continuous.png}
-\caption{Continuous Training and Serving}
-\label{fig:cont-training-serving}
-\end{figure*}
-
 % Stochastic Gradient System properties
 As described in Section \ref{sgd}, stochastic gradient descent is an iterative process where in each iteration one or a sample of the data is selected randomly and the gradient is calculated based on this sample. 
 After each iteration the parameters of the model are updated.
@@ -381,6 +363,13 @@ This property of stochastic gradient descent makes it ideal for long running sys
 % We do not need complete re-training, each iteration of SGD is light and can be easily executed while the system is running
 Since each iteration of SGD is light and fast, it can be done while the system is serving prediction requests.
 % figure
+\begin{figure*}[h]
+\centering
+\includegraphics[scale=0.45]{../images/continuous.png}
+\caption{Continuous Training and Serving}
+\label{fig:cont-training-serving}
+\end{figure*}
+
 Figure \ref{fig:cont-training-serving} shows the details of our proposed system.
 An initial model is trained using the data residing on disk.
 Once the model is deployed, it receives prediction queries and training observations in a streaming fashion.
@@ -482,6 +471,12 @@ For example, when a prediction request for a specific user and item arrives at t
 Our model serving ystem is also not limited to any specific run-time and can accomodate any of the common data processing engines.
 Apache Flink \cite{carbone2015apache, alexandrov2014stratosphere} and Apache Spark \cite{zaharia2010spark} are distributed data processing platform that work with data in memory and they have support for iterative algorithms.
 
+\begin{figure}[t]
+\centering
+\includegraphics[scale=0.30]{../images/system-architecture.png}
+\caption{System Architecture}
+\label{fig:system-architecture}
+\end{figure}
 
 \section{Evaluation} \label{evaluation} 
 \todo[inline]{one more dataset (classification or regression)}
