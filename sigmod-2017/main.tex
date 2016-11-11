@@ -275,7 +275,6 @@ One problem in this scenario is that a synchronization step is required before a
 The synchronization step slows down the SGD process, because after every iteration, all the updates are sent to a central process that updates the model.
 \cite{recht2011hogwild, dean2012large} proposed distributed asynchronous SGD and the experimental results showed that the quality of the final model is not any worse than the synchronized approach. 
 
-
 \subsection{Learning Rate Tuning} \label{learning-rate}
 The learning rate or step size parameter plays an important role in the convergence of SGD.
 The most common technique is to set the learning rate to a small value, and slowly decrease the value in every iteration. 
@@ -284,7 +283,6 @@ Adaptive learning rates have been used in online scenarios where based on differ
 Schaul et al. \cite{schaul2013no} have proposed one such method were the learning rate can be inferred automatically based on the changes in the weight parameters. 
 One advantage of their method is that it works well with non-stationary problems, where the distribution of the data is constantly changing. 
 By examining the changes in the data the learning rate will decrease (when approaching the optimum value) and increase (when the distribution of the data has changed).
-
 
 \subsection{Machine Learning Models based on SGD}
 SGD is one of the most common optimization methods to train large scale problems. 
