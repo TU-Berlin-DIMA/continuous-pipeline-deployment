@@ -609,12 +609,12 @@ Increasing sampling rate, causes similar data items to be used repeatedly in eac
 
 Figure \ref{fig:mnist-buffer-size} shows how buffer size affects the overall quality of the neural network models achieved.
 Similar to sampling rate case, the error rates of the models are not affected by the scheduling rate.
-New training observations that exist in the buffer have the maximum effect on the model's quality, since they have not been yet examined by the model.
+New training observations that exist in the buffer have the maximum effect on the model's quality, since they are becoming available to the model for the first time.
 As the scheduling rate increases, the number of new training observations remain the same, and only the historical data is used more frequently to train the model.
 Since neural networks do not gain much benefit by revisiting the same items, increasing scheduling rate has no effect on the overall quality.
 
 Based on our findings, we conclude that increasing the sampling and scheduling rate does not always have an effect on the quality.
-Setting these parameters to small values however will decrease the running time considerably and save computation resources.
+Setting these parameters to small values however will decrease the running time considerably and save computation resources regardless of the type of model the system is serving.
 
 
 \begin{figure}[!ht]
