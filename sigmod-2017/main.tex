@@ -246,6 +246,13 @@ In section \ref{evaluation}, we evaluate our system against different workloads 
 Finally, section \ref{conclusion} presents our conclusion and future work.
 
 \section{Stochastic Gradient Descent} \label{sgd}
+\begin{figure*}[!t]
+\centering
+\includegraphics[scale = 0.4]{../images/current-method.png}
+\caption{Velox Work Flow}
+\label{fig:velox-work-flow}
+\end{figure*}
+
 In machine learning, optimization methods are used to find the minimum of the objective function (referred to as the loss function) by calculating the gradient of the function at different data points and update the function parameters based on the gradient values.
 A common optimization method is gradient descent, an iterative process where in every iteration the entire training data set is used to calculate the gradient value.
 One drawback of gradient descent is that in presence of large datasets it will become very slow since every iteration has to inspect all the training items.
@@ -302,14 +309,6 @@ Success of Google Brain team \cite{sutskever2014sequence, mikolov2013efficient} 
 We have implemented a multilayer neural network for classifying images.
 
 \section{Related Work} \label{related-work}
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[scale = 0.4]{../images/current-method.png}
-\caption{Velox Work Flow}
-\label{fig:velox-work-flow}
-\end{figure*}
-
 Traditional machine learning systems focus on training and management of models and leave the task of deployment and maintenance to the users. 
 It has only been recently that some systems, for example Velox \cite{crankshaw2014missing}, TensorFlow Serving \cite{abadi2016tensorflow}, and LongView \cite{akdere2011case} have proposed architectures to support model deployment and query answering as well. 
 LongView integrates predictive machine learning models into relational databases. 
