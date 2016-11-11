@@ -489,7 +489,6 @@ Apache Flink \cite{carbone2015apache} and Apache Spark \cite{zaharia2010spark} a
 \end{figure}
 
 \section{Evaluation} \label{evaluation} 
-\todo[inline]{one more dataset (classification or regression)}
 In this section, we evaluate the performance of our system using various datasets. 
 We report both the quality (error rate) and performance of our proposed method. 
 
@@ -620,7 +619,7 @@ The data used in this new iteration of SGD consists of the new data that arrived
 \subsection{Comparison Under Constrained Resources }
 Both full-retraining and continuous model use different strategies to update the model.
 To perform a fair comparison of the two, we decided to evaluate them under similar resource constraints.
-We configured both of the methods' frequency of training in such a way that the total running time on the \textit{movie-lens} datasets are similar.
+We configured both of the methods' frequency of training in such a way that the total running time on the \textit{movie-lens} and \textit{MNIST} datasets are similar.
 To achieve this, we have fixed the total number of epochs (SGD iterations) for both methods.
 For full-retraining, this value is equal to the number of retraining multiplied by number of iterations in each retraining. 
 For continuous, it is total number of scheduled iterations throughout the lifetime of the system.
@@ -663,22 +662,44 @@ After every retraining, the error rate first drops then continuous to increase s
 Offline+online and naive have steady error rates, with offline+online having a lower rate, and they both continue to keep the error rate more or less constant for all the incoming data.
 Offline-only has a starting error rate similar to that of offline+online, full-retraining, afterward the error rate continues to increase slightly.
 Similar to \textit{movie-lens-100k}, offline-only's error rate becomes bigger than naive after around half of the test cycles.
+In both \textit{movie-lens-100k} and \textit{movie-lens-1M} baseline method's error rate is smaller than all the other methods.
+This is simply because of the amount of available rating information that the baseline method has access to.
 
+\begin{figure}[t]
+ \centering
+ \includegraphics[width=\columnwidth]{../images/experiment-results/mnist-quality.eps}
+ \caption{Error Rate on MNIST}
+ \end{figure}
+ 
+Figure \ref{fig:mnist-quality} shows the error rate (misclassification rate) of the implemented methods on \textit{MNIST} dataset.
+For this workload, the implemented methods behave quite differently from previous experiments and that is due to dataset characteristics and the underling model properties.
+In order to achieve a high accuracy, neural networks require a lot of training data.
+This explains why the naive method performs poorly.
+Its error rate starts to decrease as more training data becomes available, but it is still far inferior to all the other methods.
+The gap in error rate between offline+online and offline-only is much smaller than that of movie lens datasets.
+Unlike movie lens datasets, \textit{MNIST} does not contain a shift in distribution and that is why both offline+online and offline-only performance is rather similar.
+Offline+online performs slightly better because of the extra training items that the underlying neural network is exposed to.
+Full-retraining and continuous methods behave similarly as well and unlike Movie Lens datasets, full-retraining has a more or less consistent error rate, that is the error rate does not increase after a retraining of the model.
+Similar to offline+online's case, since there is no change in distribution of the data, the error rate does not degrade after a retraining.
+Continuous method manages to decrease the error rate as more training iterations are performed.
+As more training iterations are executed, the underlying neural network's parameter converges and as a result the error rate on the test set decreases.
+Both continuous and full-retraining method start to perform better than the baseline after a training iterations (retraining in full-retraining case).
+This is, as explained earlier because of neural network's ability to perform better when more training data are available to it.
 
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-time.eps}
-\caption{Running Time on Movie Lens Dataset}
-\label{fig:movie-lens-running-time}
-\end{figure}
+\includegraphics[width=\columnwidth]{../images/experiment-results/times-log-scale.eps}
+ \caption{Running Time on different Workloads}
+ \label{fig:running-time}
+ \end{figure}
 
-Figure \ref{fig:movie-lens-running-time} shows the running time of the implemented methods on \textit{movie-lens-100k} and \textit{movie-lens-1M}.
+Figure \ref{fig:running-time} shows the running time of the implemented methods on \textit{movie-lens-100k}, \textit{movie-lens-1M} and \textit{MNIST}.
 As expected, naive and offline+online have the lowest running times on both datasets.
 This is because they do not support batch updates to the model.
 Training on full datasets, heavily depends on the amount of data.
-It does not scale linearly with the amount of the as in SGD, each iteration has to deal with more data and due to the size of the data convergence rate is usually slower.
-Continuous method's running time is smaller than full-retraining by a factor 3.
+It does not scale linearly with the amount of the as in SGD, each iteration has to deal with more data and due to the size of the data, convergence rate is usually slower.
+Continuous method's running time is smaller than full-retraining by almost an order of magnitude in all workloads.
 Although we have configured both methods to use similar amount of resources (same number of iterations), continuous still manages to achieve a consistent and lower error rate in a much faster time.
 This is because a full retraining incurs a much higher overhead than continuously training the method.
 Another reason for the difference in running time is that as the size of the data increases the time for running a new iteration in continuous method stays roughly the same where as the time for a full retraining increases exponentially.
