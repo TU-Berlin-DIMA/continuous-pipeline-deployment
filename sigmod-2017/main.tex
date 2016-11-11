@@ -199,23 +199,23 @@ Moreover, systems with support for model deployment are still lacking constant m
 Therefore, the whole process of training and deployment of models are usually done manually.
 The most common approach is as follows; first a model is trained based on an existing dataset residing on disk, this model serves as the initial model.
 This model is then deployed to an environment were it can answer prediction queries arriving at the system.
-The system also receives feedbacks in the form of new training observations.
+The system also receives feedback in the form of new training observations.
 Upon receiving a training observation, the model is updated incrementally.
-Incremental update is only supported by certain type of machine learning models, where the underlying optimization strategy allows changes in the model based on individual training items.
+Incremental updates are only supported by certain type of machine learning models, where the underlying optimization strategy allows changes in the model based on individual training items.
 These incremental updates, however, are not enough to keep the model quality at an acceptable rate and after a while the quality may degrade.
 At this point, a new model has to be retrained based on the entire available data and has to be redeployed again.
 
-\textbf{Example application:} to illustrate the model deployment approach, consider as an example the task of predicting the click through rate of ads.
-In order to gain profit, search engines typically show a set of advertisements, based on the user's search query.
-However, typically many ads are sold based on click rate and therefore the search engine provider is only payed if the advertisement was clicked.
+\textbf{Example application:} to illustrate this model deployment approach, consider as an example the task of predicting the click through rate of ads.
+In order to gain profit, search engines typically show a set of advertisements, based on the user's search query and other related information (user's detail, geographical and cultural information).
+However, typically ads are sold based on click rate and therefore the search engine provider is only payed if the advertisement was clicked.
 An optimal strategy is to serve ads based on their expected click rate value.
 Machine learning models are used to find the expected click rate of ads before they are served to the user.
-A new model is created based on the available training data which typically includes click rate of ads, related search queries, click timestamps and location of the user (if available). 
+A new model is created based on the available training data which typically includes click rate of ads, related search queries, click timestamps and user information (if available). 
 Once the click rate predictor is deployed, prediction queries of the form of search requests arrive at the system.
-The model based on the key words in the search request and other available information about the user predicts the click rate of different ads and finally serves the ones with highest expected value.
+The model, based on the key words in the search request and other available information about the user, predicts the click rate of different ads and finally serves the ones with highest expected value.
 Whether ads are clicked on or not, feedback is send to the system in the form of new training observations and the model is updated accordingly.
-The model is also periodically retrained using entire data in order to reduce the error introduced by incremental learning to the system.
-Figure \ref{fig:click-rate} demonstrate the use case described above.
+The model is also periodically retrained using entire data in order to reduce the error introduced by incremental learning to the model.
+Figure \ref{fig:click-rate} demonstrates the use case described above.
 
 \begin{figure}[h]
 \centering
@@ -231,24 +231,24 @@ However, they treat the underlying machine learning models as black boxes and as
 Given the lack of systems to support model deployment and maintenance we have set out to design a system that not only support deployment and maintenance of machine learning models but also provide constants incremental and batch updates while the system is running. 
 We propose the design of a system that provide realtime query support as well incremental and fast batch updates to the machine learning models.
 
-Our key observation is that, by utilizing the underlying optimization algorithm (SGD), the model training process can be seamlessly executed along side the serving and query answering component.
+Our key observation is that, by utilizing the underlying optimization algorithm (Stochastic Gradient Descent), the model training process can be seamlessly executed along side the serving and query answering component.
 Based on this observation, we present a new model for a system, that supports deployment, maintenance, and incremental and fast batch updates of machine learning models.
 We are making the following contributions: 
 \begin{itemize}
 \item a system for machine learning models deployment and maintenance
 \item uninterrupted batch updates to the model while the system is running
-\item incremental updates and handling of changes in data distribution (concept drift) 
+\item incremental updates and handling of changes in data distribution
 \end{itemize}
 % What are the main results
 Our experiments show that we are able to achieve the same quality with similar systems while completely eliminating the offline batch training, which reduces the running time by an order of magnitude. 
-We have experimented on time dependent datasets where distribution of the data changes over time and we have shown that our method can adapt to changes in the distribution.
+We have experimented on time dependent datasets where distribution of the data changes over time and we have shown that our method can adapt to changes in the distribution faster than the existing methods.
 % Outline: The rest of this document is structured as follows. ...
 The rest of this paper is organized as follows. 
 Section \ref{sgd} describes the underlying optimization method used in our system. 
-Section \ref{continious-training-serving} discusses the architecture and details of our system. 
-In section \ref{tuning}, we explore the different parameters of the system and how the automatic tuning of these parameters further improve the performance.
-Section \ref{evaluation} compares the performance of our system with similar model serving and management systems. 
-Related work is discussed in section \ref{related-work} and in section \ref{conclusion} we conclude our 
+Section \ref {related-work} discusses the related work.
+Section \ref{continious-training-serving} introduces the architecture and design principles of our system. 
+In section \ref{evaluation}, we evaluate our system against different workloads and compare the performance of our method to other model serving and maintenance approaches. 
+Finally, section \ref{conclusion} presents our conclusion and future work.
 
 
 
