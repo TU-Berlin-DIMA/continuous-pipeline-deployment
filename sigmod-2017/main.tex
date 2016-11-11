@@ -216,7 +216,7 @@ Figure \ref{fig:click-rate} demonstrates the use case described above.
 
 \begin{figure}[h]
 \centering
-\includegraphics[scale=0.30]{../images/use-case.png}
+\includegraphics[width=\columnwidth]{../images/use-case.png}
 \caption{Use Case: Click Through Rate Prediction}
 \label{fig:click-rate}
 \end{figure}
@@ -360,13 +360,12 @@ This property of stochastic gradient descent makes it ideal for long running sys
 % We take advantage of these properties of SGD.
 % We do not need complete re-training, each iteration of SGD is light and can be easily executed while the system is running
 Since each iteration of SGD is light and fast, it can be done while the system is serving prediction requests.
-% figure
-% \begin{figure*}[t!]
-% \centering
-% \includegraphics[scale=0.45]{../images/continuous.png}
-% \caption{Continuous Training and Serving}
-% \label{fig:cont-training-serving}
-% \end{figure*}
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{../images/continuous.png}
+\caption{Continuous Training and Serving}
+\label{fig:cont-training-serving}
+\end{figure*}
 
 Figure \ref{fig:cont-training-serving} shows the details of our proposed system.
 An initial model is trained using the data residing on disk.
@@ -398,13 +397,6 @@ The increase in quality is even more when new training observations have arrived
 In Section \ref{evaluation}, we investigate the effect of scheduling rate on model quality.
 In case no new training data is available, the model parameters will converge after awhile and any further training iterations will not have any effect on the model quality.
 Therefore, the scheduler component has to communicate with the model manager in order to detect whether the model parameters have converged and stop further iterations until more training data becomes available.
-
-\begin{figure*}[t!]
-\centering
-\includegraphics[scale=0.45]{../images/continuous.png}
-\caption{Continuous Training and Serving}
-\label{fig:cont-training-serving}
-\end{figure*}
 
 \subsection{Data Manager} \label{data-manager}
 In order to execute an iteration of SGD, we need to combine the training data that arrives at the system in real-time and the data stored on disk.
@@ -477,7 +469,7 @@ Apache Flink \cite{carbone2015apache} and Apache Spark \cite{zaharia2010spark} a
 
 \begin{figure}[t]
 \centering
-\includegraphics[scale=0.30]{../images/system-architecture.png}
+\includegraphics[width=\columnwidth]{../images/system-architecture.png}
 \caption{System Architecture}
 \label{fig:system-architecture}
 \end{figure}
