@@ -283,6 +283,30 @@ Schaul et al. \cite{schaul2013no} have proposed one such method were the learnin
 One advantage of their method is that it works well with non-stationary problems, where the distribution of the data is constantly changing. 
 By examining the changes in the data the learning rate will decrease (when approaching the optimum value) and increase (when the distribution of the data has changed).
 
+
+\subsection{Machine learning models based on SGD}
+SGD is one of the most common optimization methods to train large scale problems. 
+It has been used in classification \cite{zhang2004solving}, clustering \cite{bottou1995convergence}, neural networks \cite{dean2012large}, and matrix factorization \cite{funk2006netflix}.
+In our system, we implemented matrix factorization and neural networks, which will be explained next. 
+
+\textbf{Matrix Factorization} is a common method used in recommender systems \cite{koren2009matrix}. 
+Matrix factorization is used to derive the latent factors (users and items) for recommender systems.
+It relies on the fact that each user and item can be described in a few dimensions (10 to 40 usually) based on the available ratings.
+These latent factors have automatically capture the similarity of users and items based on the ratings provided by the users.
+Any unknown rating, hence can be predicted by simply using a dot product of the user vector with item vector.
+We used the SGD implementation of matrix factorization by Simon Funk \cite{funk2006netflix}. 
+A scalable version of the algorithm was proposed by Gemulla et al. \cite{gemulla2011large}.
+
+\textbf{Neural Networks} or deep learning inspired by biological neural networks in brain are used to learn and approximate complex functions. 
+They have been used for more than half a century to model functions and have been used in training machine learning models.
+However, due to slow training process and lack of large amount of training data they have not been extensively in machine learning community.
+Past decade saw a change with publication of several nominal works.
+Hinton et al. \cite{hinton2006fast} proposed methods for speeding up the training of neural networks.
+ImageNet competition \cite{ILSVRC15} in 2012 was won by a neural networks approach proposed by Krizhevsky et al. \cite{krizhevsky2012imagenet} where they significantly reduced the error rate. 
+Success of Google Brain team \cite{sutskever2014sequence, mikolov2013efficient} was also instrumental to popularizing neural networks in machine learning community.
+We have implemented a multilayer neural network for classifying images.
+
+
 \section{Related Work} \label{related-work}
 
 \begin{figure*}[t!]
@@ -328,28 +352,6 @@ MLBase \cite{kraska2013mlbase}, and TuPaq \cite{sparks2015tupaq} are machine lea
 They provide a range of training algorithms to create machine learning models and mechanism for model search as well as model management.
 However, once models are created, they have to be deployed and used for serving manually by the users.
 Our system, on the contrary, is designed for automatic deployment and continuous training.
-
-\subsection{Machine learning models based on SGD}
-SGD is one of the most common optimization methods to train large scale problems. 
-It has been used in classification \cite{zhang2004solving}, clustering \cite{bottou1995convergence}, neural networks \cite{dean2012large}, and matrix factorization \cite{funk2006netflix}.
-In our system, we implemented matrix factorization and neural networks, which will be explained next. 
-
-\textbf{Matrix Factorization} is a common method used in recommender systems \cite{koren2009matrix}. 
-Matrix factorization is used to derive the latent factors (users and items) for recommender systems.
-It relies on the fact that each user and item can be described in a few dimensions (10 to 40 usually) based on the available ratings.
-These latent factors have automatically capture the similarity of users and items based on the ratings provided by the users.
-Any unknown rating, hence can be predicted by simply using a dot product of the user vector with item vector.
-We used the SGD implementation of matrix factorization by Simon Funk \cite{funk2006netflix}. 
-A scalable version of the algorithm was proposed by Gemulla et al. \cite{gemulla2011large}.
-
-\textbf{Neural Networks} or deep learning inspired by biological neural networks in brain are used to learn and approximate complex functions. 
-They have been used for more than half a century to model functions and have been used in training machine learning models.
-However, due to slow training process and lack of large amount of training data they have not been extensively in machine learning community.
-Past decade saw a change with publication of several nominal works.
-Hinton et al. \cite{hinton2006fast} proposed methods for speeding up the training of neural networks.
-ImageNet competition \cite{ILSVRC15} in 2012 was won by a neural networks approach proposed by Krizhevsky et al. \cite{krizhevsky2012imagenet} where they significantly reduced the error rate. 
-Success of Google Brain team \cite{sutskever2014sequence, mikolov2013efficient} was also instrumental to popularizing neural networks in machine learning community.
-We have implemented a multilayer neural network for classifying images.
 
 \section{Continuous Training and Serving} \label{continious-training-serving}
 % Stochastic Gradient System properties
