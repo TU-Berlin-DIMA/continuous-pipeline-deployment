@@ -525,8 +525,8 @@ After the initial model is trained and deployed, any new training observations i
 Training observations are of the form \textit{\((user\_id, item\_id, rating\))}.
 Based on the training observation, the bias values as well as the factors are updated for the specified user and item.
 
-\textbf{Neural Network:} to evaluate our system on an image classification task, we implemented a multi-layer perceptron neural network using back propagation~\cite{collobert2004links}.
-We set the number of hidden layers to 50 and use a softmax output function. %TODO: Maybe add a reference?
+\textbf{Neural Network:} to evaluate our system on an image classification task, we implemented a multi-layer perceptron neural network using back propagation \cite{collobert2004links}.
+We set the number of hidden layers to 50 and use a softmax \cite{bishop2006pattern} output function.
 Similar to recommender system case, a network is first trained on the static data.
 The training observations are of the form of \textit{\((X,y)\)}, where X is a vector of 784 dimension (1 for each pixel) and y is the digit the image is representing.
 
