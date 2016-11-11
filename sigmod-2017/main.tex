@@ -418,6 +418,7 @@ Listing \ref{model-manager-api} shows the APIs of the model manager.
 They are used to both interact with other components as well as end-users of the system.
 The scheduler component uses \textit{update} and \textit{update\_batch} to instruct the model manager to perform incremental or batch updates to the model.
 Upon a new prediction query, the \textit{predict} method is called to provide the end-user with the label of the given input.
+\noindent\hspace{-0.1\linewidth}\begin{minipage}[t]{\linewidth}
 \begin{lstlisting}[language=Scala, basicstyle=\small\ttfamily, frame=tb ,columns=fullflexible,
 showstringspaces=false,label=model-manager-api,caption=Model Manager API, numberstyle=\tiny]
 def update(x,y)
@@ -429,7 +430,7 @@ def predict(x): Label
 def error_rate(X_test, Y_test): Double
 
 \end{lstlisting}
-
+\end{minipage}
 the \textit{error\_rate} method returns the mean squared error rate of the model using the provided test dataset.
 As described earlier, constant monitoring of the quality is required in order to adjust the scheduling and sampling rate.
 When the error rate is stagnating, this could mean that the model has converged using the existing data, therefore, the model manager informs scheduler not to schedule any new iterations until new training observations have arrived at the system.
@@ -645,6 +646,7 @@ This is simply because of the amount of available rating information that the ba
  \centering
  \includegraphics[width=\columnwidth]{../images/experiment-results/mnist-quality.eps}
  \caption{Error Rate on MNIST}
+ \label{fig:mnist-quality}
  \end{figure}
  
 Figure \ref{fig:mnist-quality} shows the error rate (misclassification rate) of the implemented methods on \textit{MNIST} dataset.
