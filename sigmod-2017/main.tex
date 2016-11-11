@@ -655,17 +655,23 @@ After every retraining, the error rate first drops then continuous to increase s
 Offline+online and naive have steady error rates, with offline+online having a lower rate, and they both continue to keep the error rate more or less constant for all the incoming data.
 Offline-only has a starting error rate similar to that of offline+online, full-retraining, afterward the error rate continues to increase slightly.
 Similar to \textit{movie-lens-100k}, offline-only's error rate becomes bigger than naive after around half of the test cycles.
-
+\todo[inline] {add result of MNIST quality}
+\begin{figure}[!ht]
+\centering
+\includegraphics[width=\columnwidth]{../images/experiment-results/mnist-quality.eps}
+\caption{Mean Squared Error on MNIST}
+\label{fig:mnist-quality}
+\end{figure}
 
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-time.eps}
-\caption{Running Time on Movie Lens Dataset}
-\label{fig:movie-lens-running-time}
+\includegraphics[width=\columnwidth]{../images/experiment-results/times-log-scale.eps}
+\caption{Running Time on different Workloads}
+\label{fig:running-time}
 \end{figure}
-
-Figure \ref{fig:movie-lens-running-time} shows the running time of the implemented methods on \textit{movie-lens-100k} and \textit{movie-lens-1M}.
+\todo[inline]{include mnist running time}
+Figure \ref{fig:running-time} shows the running time of the implemented methods on \textit{movie-lens-100k} and \textit{movie-lens-1M}.
 As expected, naive and offline+online have the lowest running times on both datasets.
 This is because they do not support batch updates to the model.
 Training on full datasets, heavily depends on the amount of data.
