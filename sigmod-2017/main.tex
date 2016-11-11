@@ -370,8 +370,8 @@ A scheduler component, will schedule a new iteration of SGD based on the rate of
 The scheduler can also decide to run an iteration if the system is idle or the load on the system is not heavy. 
 Each new iteration will use a random sample of the data in storage and the data in the buffer. 
 As more training observations becomes available the model is updated further.
-Figure \ref{fig:system-architecture} shows the overview of the architecture of our system.
-Next, we explain each part of the system in more detail.
+Figure \ref{fig:system-architecture} shows an overview of the architecture of our system.
+Next, we explain each component of the system in more detail.
 
 \subsection{Scheduler}\label{scheduler}
 Scheduler component is responsible for scheduling of new iterations of SGD.
@@ -409,7 +409,7 @@ This will render historical data less important and as a result a smaller sample
 However, if there is no concept drift in the data, a larger sampling rate will increase the quality of the model after a training iteration.
 Another effect that the sampling rate has on the system is the training iteration running time.
 Larger sampling rate increases the running time of each training iteration as more data has to be processed.
-In Section \ref{evaluation}, we investigate the effects of different sampling rate on both the quality and performance of the system.
+In Section \ref{evaluation}, we investigate the effects of different sampling rates on both the quality and performance of the system.
 
 \subsection{Model Manager} \label{model-manager} 
 An important part of the system is the model manager component.
@@ -431,7 +431,7 @@ def error_rate(X_test, Y_test): Double
 
 \end{lstlisting}
 \end{minipage}
-the \textit{error\_rate} method returns the mean squared error rate of the model using the provided test dataset.
+the \textit{error\_rate} method returns the error rate of the model using the provided test dataset.
 As described earlier, constant monitoring of the quality is required in order to adjust the scheduling and sampling rate.
 When the error rate is stagnating, this could mean that the model has converged using the existing data, therefore, the model manager informs scheduler not to schedule any new iterations until new training observations have arrived at the system.
 Similarly as explained in Section \ref{data-manager}, an increase in the error rate could indicate a change in distribution of the data.
@@ -439,7 +439,7 @@ As a result, reducing the sampling rate will put more emphasis on the recent dat
 
 The model manager also keeps track of the changes that are made to the model.
 The model is updated both through incremental learning and training iteration.
-The model manager creates snapshots of the model in two different scenarios; after a series incremental updates are made and after each training iteration.
+The model manager creates snapshots of the model in two different scenarios; after a series of incremental updates are made and after each training iteration.
 This versioning of the models is essential.
 When there is a rapid change in the distribution of the incoming data (a sudden concept drift) or when there are anomalies in the data, it is sometimes necessary to revert back to a version before the change in distribution occurred.
 In case of concept drift, new training iterations should be scheduled that only use the data in the buffer and in case of an anomalies in the data, they have to be identified and discarded before any further model updates could happen.
@@ -493,7 +493,32 @@ it consists of 60000 28x28 color images in 10 classes. We use a neural network t
 Similar to MovieLens, 10\% are used for initial training and 90\% for online learning. 
 Note that, in this dataset, the order is irrelevant and we assume no change in distribution of the data occurs throughout the system's lifetime. 
 
-\subsection{Implementation}
+
+\subsection{Methods}
+
+In this section, we briefly describe the methods we have implemented.
+
+\textbf{Naive} implements a simple on-line learning scenario, in which the gradient of the function at every new training item is evaluated and the weight parameters are adjusted based the gradient value. 
+All the other methods also include incremental learning to constantly improve the model.
+
+\textbf{Offline+online} is a variation of naive method, where first 10\% of the data is used for initial batch training.
+The remaining data is used in an online learning fashion (on element at a time). 
+
+\textbf{Offline-only} is similar to offline+online method with incremental learning switched off.
+
+\textbf{Full-retraining} is an implementation of the common deployment scenario described in Section \ref{introduction}
+Similar to the proposed system by Crankshaw \cite{crankshaw2014missing}. 
+After the initial model is deployed, the model is incrementally update with every new training item.
+A full retraining of the model is performed once a certain amount of training observations have been received.
+
+\textbf{Continuous} is based on our proposed method. 
+Once there are enough new data, the scheduler triggers a new iteration of SGD. 
+The data used in this new iteration of SGD consists of the new data that arrived in the system since the last scheduled iteration plus a sample of the existing historical data.
+
+\textbf{Baseline}: a baseline model is trained over the entire dataset and then used to calculate the test error rate. 
+
+
+\subsection{Implementation of ML Models}
 We have implemented two different machine learning models to evaluate our system.
 In this section, we briefly explain each implemented methods.
 
@@ -569,29 +594,6 @@ Therefore, similar to scheduling rate, setting the sampling rate to smaller valu
 \caption{Movie Lens 100k sampling rate vs time}
 \label{fig:movie-lens-100k-sample-rate-time}
 \end{figure}
-
-\subsection{Methods}
-
-In this section, we briefly describe the methods we have implemented.
-
-\textbf{Naive} implements a simple on-line learning scenario, in which the gradient of the function at every new training item is evaluated and the weight parameters are adjusted based the gradient value. 
-All the other methods also include incremental learning to constantly improve the model.
-
-\textbf{Offline+online} is a variation of naive method, where first 10\% of the data is used for initial batch training.
-The remaining data is used in an online learning fashion (on element at a time). 
-
-\textbf{Offline-only} is similar to offline+online method with incremental learning switched off.
-
-\textbf{Full-retraining} is an implementation of the common deployment scenario described in Section \ref{introduction}
-Similar to the proposed system by Crankshaw \cite{crankshaw2014missing}. 
-After the initial model is deployed, the model is incrementally update with every new training item.
-A full retraining of the model is performed once a certain amount of training observations have been received.
-
-\textbf{Continuous} is based on our proposed method. 
-Once there are enough new data, the scheduler triggers a new iteration of SGD. 
-The data used in this new iteration of SGD consists of the new data that arrived in the system since the last scheduled iteration plus a sample of the existing historical data.
-
-\textbf{Baseline}: a baseline model is trained over the entire dataset and then used to calculate the test error rate. 
 
 \subsection{Comparison Under Constrained Resources }
 Both full-retraining and continuous model use different strategies to update the model.
