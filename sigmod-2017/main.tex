@@ -242,8 +242,8 @@ The rest of this paper is organized as follows.
 Section \ref{sgd} describes the underlying optimization method used in our system. 
 Section \ref {related-work} discusses the related work.
 Section \ref{continious-training-serving} introduces the architecture and design principles of our system. 
-In section \ref{evaluation}, we evaluate our system against different workloads and compare the performance of our method to other model serving and maintenance approaches. 
-Finally, section \ref{conclusion} presents our conclusion and future work.
+In Section \ref{evaluation}, we evaluate our system against different workloads and compare the performance of our method to other model serving and maintenance approaches. 
+Finally, Section \ref{conclusion} presents our conclusion and future work.
 
 \section{Stochastic Gradient Descent} \label{sgd}
 \begin{figure*}[!t]
@@ -262,7 +262,7 @@ It calculates the gradient at a single element and updates the parameters of the
 Although it converges after a higher number of iterations, the overall convergence time is still much faster than gradient descent. 
 Each iteration of SGD can be executed in a short amount of time since it only works with a sample of the data.
 We are leveraging this property of SGD and design the system so that it executes one iteration of SGD at a time while the system is running.
-In section \ref{evaluation} we show that time to execute single iteration of SGD is insignificant.
+In Section \ref{evaluation} we show that time to execute single iteration of SGD is insignificant.
 Moreover, since a single iteration is a lightweight process, it can be executed in separate threads.
 
 \subsection{Distributed SGD}
@@ -320,7 +320,7 @@ It has out-of-the-box support for models created using TensorFlow and it provide
 However, it does not provide incremental updates to the model.
 Contrary to our system, models have to be retrained outside of the system and redeployed to TensorFlow Serving once the training is done.
 Our system supports, incremental and batch updates to the model and automatically applies these updates to the model currently being served.
-Velox \cite{crankshaw2014missing} is an implementation of the common machine learning serving practice, explained in section \ref{introduction}.
+Velox \cite{crankshaw2014missing} is an implementation of the common machine learning serving practice, explained in Section \ref{introduction}.
 Velox supports incremental learning and can answer prediction queries in realtime.
 It also eliminates the need for users to manually retrain the model offline and redeploy it again.
 It is integrated into the \textit{Berkeley Data Analytics Stack (BDAS)}, and uses the components of BDAS such as Tachyon \cite{li2014tachyon} and Spark \cite{zaharia2010spark}. 
@@ -328,7 +328,7 @@ After the initial training of a model, it is deployed to Velox where prediction 
 Velox also monitors the quality of the model using a validation set and once the error rate has gone beyond a predefined threshold it initiates a complete retraining of the model using Spark. 
 Figure \ref{fig:velox-work-flow} depicts how Velox works. 
 Velox uses Stochastic Gradient Descent as its underlying training algorithm.
-As described in section \ref{sgd}, even the batch updates to the model can be performed in a series of independent iterations.
+As described in Section \ref{sgd}, even the batch updates to the model can be performed in a series of independent iterations.
 However, Velox retrains the model offline from scratch.
 This has two drawbacks; any updates that has been done to the model so far will be discarded, and the process of retraining on full data set requires a lot of resources.
 Our system uses the underlying properties of SGD to fully integrate the training process into the system's lifeline and eliminate the need for complete retraining of the model.
@@ -527,7 +527,7 @@ Training observations are of the form \textit{\((user\_id, item\_id, rating\))}.
 Based on the training observation, the bias values as well as the factors are updated for the specified user and item.
 
 \textbf{Neural Network:} to evaluate our system on an image classification task, we implemented a multi-layer perceptron neural network using back propagation \cite{collobert2004links}.
-We set the number of hidden layers to 50 and use a softmax \cite{bishop2006pattern} output function.
+We set the number of hidden layers to 50 and use a softmax output function \cite{bishop2006pattern}.
 Similar to recommender system case, a network is first trained on the static data.
 The training observations are of the form of \textit{\((X,y)\)}, where X is a vector of 784 dimension (1 for each pixel) and y is the digit the image is representing.
 
@@ -599,14 +599,14 @@ Therefore, similar to scheduling rate, setting the sampling rate to smaller valu
 Both the underlying machine learning model and the dataset can have a big effect on the selection of sampling rate and scheduling rate.
 In the recommender system use case, due to changes in incoming data distribution, we saw that bigger sample rates and higher scheduling rates have an effect (although small) on the quality of the model.
 This, however, may not be the case for other use cases.
-To demonstrate, we perform the same set of experiments on the \textit{MNIST} dataset.
+To demonstrate this, we perform the same set of experiments on the \textit{MNIST} dataset.
 Figure \ref{fig:mnist-sample-rate} shows the effect of different sampling rates on the neural network model for \textit{MNIST} data.
 Interestingly and contrary to the results we achieved for \textit{movie-lens-100k} the difference in error rates for different sampling rates are almost indistinguishable from each other.
 While the difference in error rates for \textit{movie-lens-100k} was small, but it is still much greater than the difference in error rates for neural networks.
 We believe this is caused by how neural networks behave.
-Increasing sampling rate, causes similar data items to be used repeatedly in each training iteration and based on our experiments neural networks are not affected by this oversampling and therefore the results are almost similar with different sampling rates.
+Increasing sampling rate, causes similar data items to be used repeatedly in each training iteration and based on our experiments neural networks are not affected by this oversampling and, therefore, the results are almost similar with different sampling rates.
 Moreover, in this experiment, the number of parameters of multi-layer perceptron is far less than the number of parameters of the matrix factorization model for \textit{movie-lens-100k}.
-This causes the neural work to converge faster and therefore it is not affected by more training, unless new training observations arrive at the system.
+This causes the neural work to converge faster and, therefore, it is not affected by more training, unless new training observations arrive at the system.
 
 \begin{figure}[!ht]
 \centering
@@ -623,7 +623,7 @@ Since neural networks do not gain much benefit by revisiting the same items, inc
 
 Based on our findings, we conclude that increasing the sampling and scheduling rate does not always have an effect on the quality.
 In both the \textit{movie-lens-100k} and \textit{MNIST} use cases the change in scheduling and sampling rate has small to no effect on the overall quality.
-Whereas, the running time of the methods are heavily influenced by these parameters.
+However, the running time of the methods are heavily influenced by these parameters.
 Setting these parameters to small values decreases the running time considerably and save computation resources regardless of the type of model the system is serving.
 
 
@@ -637,23 +637,23 @@ Setting these parameters to small values decreases the running time considerably
 
 
 \subsection{Comparison Under Constrained Resources }
-Both full-retraining and continuous model use different strategies to update the model.
+Both, the full-retraining and the continuous model use different strategies to update the model.
 To perform a fair comparison of the two, we are evaluating them under similar resource constraints.
 We configured both of the methods' frequency of training in such a way that the total running time on the \textit{movie-lens} and \textit{MNIST} datasets are similar.
 To achieve this, we have fixed the total number of epochs (SGD iterations) for both methods.
 For full-retraining, this value is equal to the number of retraining multiplied by number of iterations in each retraining. 
-For continuous, it is total number of scheduled iterations throughout the lifetime of the system.
-Therefore, continuous method schedules a new iteration every 500 items for \textit{movie-lens-100k} and 5,000 items for \textit{movie-lens-1M} and full-retraining schedules a retraining every 15,000 items for \textit{movie-lens-100k} and 150,000 items for \textit{movie-lens-1M}.
+For the continuous model, it is total number of scheduled iterations throughout the lifetime of the system.
+Therefore, the continuous method schedules a new iteration every 500 items for \textit{movie-lens-100k} and 5,000 items for \textit{movie-lens-1M} and the full-retraining method schedules a retraining every 15,000 items for \textit{movie-lens-100k} and 150,000 items for \textit{movie-lens-1M}.
 \begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-quality.eps}
-\caption{Mean Squared Error on Movie Lens 100k}
+\caption{Mean squared error on MovieLens 100k}
 \label{fig:movie-lens-100k-score}
 \end{figure}
-Figure \ref{fig:movie-lens-100k-score} shows the mean squared error of continuous, full-retraining and several other methods on \textit{movie-lens-100k} dataset.
+Figure \ref{fig:movie-lens-100k-score} shows the mean squared error of the continuous, the full-retraining, and several other methods on \textit{movie-lens-100k} dataset.
 Naive and offline-only methods achieve the worst performance among all the existing methods.
 While Naive manages to maintains a stable error rate, it cannot guarantee a low error rate because it skipped the initial training.
-Offline-only method quality is similar to offline+online, continuous and full-retraining methods in the beginning. 
+Offline-only method quality is similar to offline+online, continuous, and full-retraining methods in the beginning. 
 Since all four methods perform an initial retraining, the error rate stays low in the beginning, but offline-only quality starts to get worse since it does not include any incremental or batch retraining.
 Offline-only continuous to perform better than naive method until 3,000 test items.
 However, afterwards a small change in distribution of the data causes the model trained using offline-only method to perform worst since it cannot adopt to changes in the data and the quality continues to degrade as more new test items are examined.
@@ -663,23 +663,23 @@ For the remainder of the data points, full-retraining performs as expected, once
 This increase in quality, however, is followed by a slow decrease due the fact that only incremental updates are being made to the model.
 Continuous method has the lowest error rate among all the implemented methods.
 It consistently manages to adopt to the changes and decrease the error rate where the distribution of the incoming data is stable.
-As expected, except for immediately after a full retraining, continuous method always perform better that full-retraining approach.
+As expected, except for immediately after a full retraining, the continuous method always performs better that the full-retraining approach.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-1m-quality.eps}
-\caption{Mean Squared Error on Movie Lens 1M}
+\caption{Mean squared error on Movie Lens 1M}
 \label{fig:movie-lens-1M-score}
 \end{figure}
 
 Figure \ref{fig:movie-lens-1M-score} shows the mean squared error rate achieved by the implemented methods on \textit{movie-lens-1M}.
-Similar to \textit{movie-lens-100k}, continuous method has the lowest error rate among all the implemented methods.
-The difference in error rate between continuous and full-retraining is even greater than the error rate for \textit{movie-lens-100k}.
-We believe a bigger shift in data distribution (data in \textit{movie-lens-1M} is gathered from a longer period of time) makes continuous method to consistently 
+Similar to \textit{movie-lens-100k}, the continuous method has the lowest error rate among all the implemented methods.
+The difference in error rate between continuous retraining and full-retraining is even greater than the error rate for \textit{movie-lens-100k}.
+We believe a bigger shift in data distribution (data in \textit{movie-lens-1M} is gathered from a longer period of time) makes zhe continuous method to consistently 
 adopt faster to the changes in data distribution.
-Full-retraining method's error rate follows the same trend as in the case of \textit{movie-lens-100k}. 
+Full-retraining the method's error rate follows the same trend as in the case of \textit{movie-lens-100k}. 
 After every retraining, the error rate first drops then continuous to increase slowly until the next retraining.
-Offline+online and naive have steady error rates, with offline+online having a lower rate, and they both continue to keep the error rate more or less constant for all the incoming data.
+Offline+online and naive methods have steady error rates, with offline+online having a lower rate, and they both continue to keep the error rate more or less constant for all the incoming data.
 Offline-only has a starting error rate similar to that of offline+online and full-retraining, afterwards the error rate continues to increase slightly.
 Similar to \textit{movie-lens-100k}, offline-only's error rate becomes bigger than naive after around half of the test cycles.
 In both \textit{movie-lens-100k} and \textit{movie-lens-1M} baseline method's error rate is smaller than all the other methods.
@@ -688,7 +688,7 @@ This is simply because of the amount of available rating information that the ba
 \begin{figure}[h]
  \centering
  \includegraphics[width=\columnwidth]{../images/experiment-results/mnist-quality.eps}
- \caption{Error Rate on MNIST}
+ \caption{Error rate on MNIST}
  \label{fig:mnist-quality}
  \end{figure}
  
@@ -697,12 +697,12 @@ For this workload, the implemented methods behave quite differently from previou
 In order to achieve a high accuracy, neural networks require a lot of training data.
 This explains why the naive method performs poorly.
 Its error rate starts to decrease as more training data becomes available, but it is still far inferior to all the other methods.
-The gap in error rate between offline+online and offline-only is much smaller than that of movie lens datasets.
-Unlike movie lens datasets, \textit{MNIST} does not contain a shift in distribution and that is why both offline+online and offline-only performance is rather similar.
-Offline+online performs slightly better because of the extra training items that the underlying neural network is exposed to.
+The gap in error rate between offline+online and offline-only methods is much smaller than that of movie lens datasets.
+Unlike the movie lens datasets, \textit{MNIST} does not contain a shift in distribution and that is why both the offline+online and offline-only methods' performance is rather similar.
+The offline+online method performs slightly better because of the extra training items that the underlying neural network is exposed to.
 Full-retraining and continuous methods behave similarly as well and unlike Movie Lens datasets, full-retraining has a consistent error rate, that is the error rate does not decrease after a retraining of the model.
-Similar to offline+online's case, since there is no change in distribution of the data, the error rate does not degrade after a retraining.
-Continuous method manages to decrease the error rate as more training iterations are performed.
+Similar to offline+online's case, since there is no change in the distribution of the data, the error rate does not degrade after a retraining.
+The continuous method manages to decrease the error rate as more training iterations are performed.
 As more training iterations are executed, the underlying neural network's parameters converge and as a result the error rate on the test set decreases.
 Both continuous and full-retraining method start to perform better than the baseline after a few training iterations (retraining in full-retraining case).
 This is, as explained earlier because of neural network's ability to perform better when more training data are available to it.
@@ -710,7 +710,7 @@ This is, as explained earlier because of neural network's ability to perform bet
 \begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{../images/experiment-results/times-log-scale.eps}
- \caption{Running Time on different Workloads}
+ \caption{Running time on different Workloads}
  \label{fig:running-time}
  \end{figure}
 
@@ -723,10 +723,10 @@ Continuous method's running time is smaller than full-retraining by almost an or
 Although we have configured both methods to use similar amount of resources (same number of iterations), continuous method still manages to achieve a consistent and lower error rate in a much faster time.
 This is because a full retraining incurs a much higher overhead than continuously training the method.
 Another reason for the difference in running time is that as the size of the data increases the time for running a new iteration in continuous method stays roughly the same where as the time for a full retraining increases exponentially.
-The running time of offline-only method is not included as it is similar to offline+online, since they both have include initial training and have to examine individual items arriving at the system one at a time.
+The running time of the offline-only method is not included as it is similar to offline+online, since they both have include initial training and have to examine individual items arriving at the system one at a time.
 
 \section{Conclusions} \label{conclusion}
-This paper presents an architecture for deployment and continuous training of machine learning models. 
+This paper presents, an architecture for deployment and continuous training of machine learning models is shown.. 
 The architecture utilizes the properties of stochastic gradient descent optimization method.
 SGD is an iterative optimization process where in each iteration a small sample of the data is used to update the machine learning model, however, it typically works with static datasets.
 Our proposed architecture uses the properties of the SGD and applies it to long running, integrated training and deployment processes.
