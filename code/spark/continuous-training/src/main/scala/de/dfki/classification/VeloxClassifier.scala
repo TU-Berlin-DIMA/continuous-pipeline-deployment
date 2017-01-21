@@ -2,7 +2,6 @@ package de.dfki.classification
 
 import java.util.concurrent.{Executors, TimeUnit}
 
-import de.dfki.classification.ContinuousClassifier.future
 import de.dfki.utils.MLUtils._
 import org.apache.log4j.Logger
 
@@ -25,15 +24,23 @@ object VeloxClassifier extends SVMClassifier {
   var now = 0l
   @transient private val logger = Logger.getLogger(getClass.getName)
 
+  /**
+    *
+    * @param args
+    * prequential/static
+    * initial-training-path
+    * streaming-path
+    * test-path(if static)
+    */
   def main(args: Array[String]): Unit = {
     run(args)
   }
 
-  override def getApplicationName(): String = "Velox SVM Model"
+  override def getApplicationName: String = "Velox SVM Model"
 
   override def run(args: Array[String]): Unit = {
     createTempFolders(historicalData)
-    val (initialDataPath, streamingDataPath, testDataPath) = parseArgs(args, BASE_DATA_DIRECTORY)
+    val (evaluationType, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args, BASE_DATA_DIRECTORY)
 
     val ssc = initializeSpark()
 
@@ -42,10 +49,15 @@ object VeloxClassifier extends SVMClassifier {
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
-    prequentialStreamEvaluation(streamingSource.map(_._2.toString).map(parsePoint), "results/velox")
+    if (evaluationType == EvaluationType.Prequential) {
+      prequentialStreamEvaluation(streamingSource.map(_._2.toString).map(parsePoint), "results/velox")
+    } else {
+      streamProcessing(testData, streamingSource.map(_._2.toString).map(parsePoint), "results/velox")
+    }
+
 
     val task = new Runnable {
-      def run() = {
+      def run() {
         logger.info("initiating a retraining of the model ...")
         streamingSource.pause()
         val model = trainModel(ssc.sparkContext, initialDataPath + "," + historicalData, 500)
@@ -53,7 +65,7 @@ object VeloxClassifier extends SVMClassifier {
         logger.info("Model was re-trained ...")
         if (streamingSource.isCompleted()) {
           logger.warn("stopping the program")
-          ssc.stop(true, true)
+          ssc.stop(stopSparkContext = true, stopGracefully = true)
           future.cancel(true)
           execService.shutdown()
         }

@@ -17,15 +17,23 @@ object ContinuousClassifier extends SVMClassifier {
   @transient val logger = Logger.getLogger(getClass.getName)
 
 
+  /**
+    *
+    * @param args
+    * prequential/static
+    * initial-training-path
+    * streaming-path
+    * test-path(if static)
+    */
   def main(args: Array[String]) {
     run(args)
   }
 
-  override def getApplicationName(): String = "Continuous SVM Model"
+  override def getApplicationName: String = "Continuous SVM Model"
 
   override def run(args: Array[String]): Unit = {
     createTempFolders(historicalData)
-    val (initialDataPath, streamingDataPath, testDataPath) = parseArgs(args, BASE_DATA_DIRECTORY)
+    val (evaluationType, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args, BASE_DATA_DIRECTORY)
 
     val ssc = initializeSpark()
 
@@ -33,10 +41,14 @@ object ContinuousClassifier extends SVMClassifier {
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
-    prequentialStreamEvaluation(streamingSource.map(_._2.toString).map(parsePoint), "results/continuous")
+    if (evaluationType == EvaluationType.Prequential) {
+      prequentialStreamEvaluation(streamingSource.map(_._2.toString).map(parsePoint), "results/continuous")
+    } else {
+      streamProcessing(testData, streamingSource.map(_._2.toString).map(parsePoint), "results/continuous")
+    }
 
     val task = new Runnable {
-      def run() = {
+      def run() {
         if (ssc.sparkContext.isStopped) {
           future.cancel(true)
         }
@@ -47,7 +59,7 @@ object ContinuousClassifier extends SVMClassifier {
         logger.info("model was updated")
         if (streamingSource.isCompleted()) {
           logger.warn("stopping the program")
-          ssc.stop(true, true)
+          ssc.stop(stopSparkContext = true, stopGracefully = true)
           future.cancel(true)
           execService.shutdown()
         }

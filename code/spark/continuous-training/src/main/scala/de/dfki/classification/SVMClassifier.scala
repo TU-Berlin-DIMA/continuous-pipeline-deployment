@@ -32,7 +32,7 @@ abstract class SVMClassifier extends Serializable {
   // constants for the directory structures
   val DATA_DIRECTORY = "data/"
   val DATA_SET = "cover-types/"
-  val BASE_DATA_DIRECTORY = DATA_DIRECTORY + DATA_SET
+  val BASE_DATA_DIRECTORY: String = DATA_DIRECTORY + DATA_SET
   val INITIAL_TRAINING = "initial-training/"
   val STREAM_TRAINING = "stream-training/"
   val TEST_DATA = "test/"
@@ -46,14 +46,21 @@ abstract class SVMClassifier extends Serializable {
   @transient var future: ScheduledFuture[_] = _
   @transient var execService: ScheduledExecutorService = _
 
+  object EvaluationType extends Enumeration {
+    type EvaluationType = Value
+    val Static = Value("STATIC")
+    val Prequential = Value("PREQUENTIAL")
+  }
 
   /**
     * Initialization of spark streaming context and checkpointing of stateful operators
     *
     * @return Spark Streaming Context object
     */
-  def initializeSpark(masterURL: String = "spark://berlin-189.b.dfki.de:7077", batchDuration: Duration = Seconds(1)): StreamingContext = {
-    val conf = new SparkConf().setMaster(masterURL).setAppName(getApplicationName())
+  def initializeSpark(batchDuration: Duration = Seconds(1)): StreamingContext = {
+    val conf = new SparkConf().setAppName(getApplicationName)
+    val masterURL = conf.get("spark.master", "local[*]")
+    conf.setMaster(masterURL)
     val ssc = new StreamingContext(conf, batchDuration)
     ssc.checkpoint("checkpoints/")
     ssc
@@ -70,7 +77,7 @@ abstract class SVMClassifier extends Serializable {
     */
   def streamProcessing(testData: DStream[LabeledPoint], observations: DStream[LabeledPoint], resultPath: String) {
     val storeErrorRate = (rdd: RDD[Double]) => {
-      val file = s"${resultPath}/${DATA_SET}/error-rate-$tempDirectory.txt"
+      val file = s"$resultPath/$DATA_SET/error-rate-$tempDirectory.txt"
       val fw = new FileWriter(file, true)
       try {
         fw.write(rdd.collect().toList.mkString("\n") + "\n")
@@ -99,7 +106,7 @@ abstract class SVMClassifier extends Serializable {
       })
       .mapWithState(StateSpec.function(mappingFunc _))
       .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
-      .map(item => (item._1 / item._2))
+      .map(item => item._1 / item._2)
       .foreachRDD(storeErrorRate)
 
     val storeRDD = (rdd: RDD[String], time: Time) => {
@@ -123,19 +130,22 @@ abstract class SVMClassifier extends Serializable {
     streamProcessing(observations, observations, resultPath)
   }
 
-  def parseArgs(args: Array[String], baseDataDirectory: String): (String, String, String) = {
-
-    if (args.length == 3) {
+  def parseArgs(args: Array[String], baseDataDirectory: String): (EvaluationType.EvaluationType, String, String, String) = {
+    if (args.length > 0) {
+      val evaluationType = EvaluationType.withName(args(0).toUpperCase())
       // folder path for initial training data
-      val initialDataPath = args(0)
+      val initialDataPath = args(1)
       // folder path for data to be streamed
       val streamingDataPath = args(1)
       // folder (file) for test data
-      val testDataPath = args(2)
+      var testDataPath = ""
+      if (evaluationType == EvaluationType.Static) {
+        testDataPath = args(2)
+      }
 
-      (initialDataPath, streamingDataPath, testDataPath)
+      (evaluationType, initialDataPath, streamingDataPath, testDataPath)
     } else {
-      (baseDataDirectory + INITIAL_TRAINING, baseDataDirectory + STREAM_TRAINING, baseDataDirectory + TEST_DATA)
+      (EvaluationType.Prequential, baseDataDirectory + INITIAL_TRAINING, baseDataDirectory + STREAM_TRAINING, baseDataDirectory + TEST_DATA)
     }
   }
 
@@ -205,7 +215,7 @@ abstract class SVMClassifier extends Serializable {
     fs.mkdirs(new Path(path))
   }
 
-  def getApplicationName(): String
+  def getApplicationName: String
 
   def run(args: Array[String])
 

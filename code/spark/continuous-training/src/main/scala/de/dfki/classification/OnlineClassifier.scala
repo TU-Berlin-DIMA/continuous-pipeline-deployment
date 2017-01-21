@@ -13,10 +13,10 @@ object OnlineClassifier extends SVMClassifier {
     run(args)
   }
 
-  override def getApplicationName(): String = "Online SVM Model"
+  override def getApplicationName: String = "Online SVM Model"
 
   override def run(args: Array[String]): Unit = {
-    val (initialDataPath, streamingDataPath, testDataPath) = parseArgs(args, BASE_DATA_DIRECTORY)
+    val (evaluationType, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args, BASE_DATA_DIRECTORY)
 
     val ssc = initializeSpark()
 
