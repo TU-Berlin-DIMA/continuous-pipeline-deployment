@@ -2,6 +2,7 @@ package de.dfki.classification
 
 import java.util.concurrent.{Executors, TimeUnit}
 
+import de.dfki.utils.CommandLineParser
 import de.dfki.utils.MLUtils.parsePoint
 import org.apache.log4j.Logger
 import org.apache.spark.streaming.Seconds
@@ -28,17 +29,24 @@ object ContinuousClassifier extends SVMClassifier {
     run(args)
   }
 
-  override def run(args: Array[String]): Unit = {
-    createTempFolders(historicalData)
-    val (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
+  def parseContinuousArgs(args: Array[String]): (Long, Long, String, String, String, String, String) = {
+    val parser = new CommandLineParser(args).parse()
+    val (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
+    val slack = parser.getOrElse("slack", 10l)
+    val tempDirectory = parser.getOrElse("temp-path", historicalData)
+    (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath, tempDirectory)
+  }
 
+  override def run(args: Array[String]): Unit = {
+    val (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath, tempDirectory) = parseContinuousArgs(args)
+    createTempFolders(tempDirectory)
     val ssc = initializeSpark(Seconds(batchDuration))
 
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + historicalData)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
-    if (testDataPath == "") {
+    if (testDataPath == "prequential") {
       prequentialStreamEvaluation(streamingSource.map(_._2.toString).map(parsePoint), resultPath)
     } else {
       streamProcessing(testData, streamingSource.map(_._2.toString).map(parsePoint), resultPath)
@@ -51,7 +59,7 @@ object ContinuousClassifier extends SVMClassifier {
         }
         logger.info("schedule an iteration of SGD")
         streamingSource.pause()
-        val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + historicalData).map(parsePoint).cache()
+        val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(parsePoint).cache()
         streamingModel.trainOn(historicalDataRDD)
         logger.info("model was updated")
         if (streamingSource.isCompleted()) {

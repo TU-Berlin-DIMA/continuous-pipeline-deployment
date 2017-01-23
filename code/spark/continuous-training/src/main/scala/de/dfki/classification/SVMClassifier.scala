@@ -6,7 +6,7 @@ import java.util.Calendar
 import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
 import de.dfki.streaming.models.OnlineSVM
-import de.dfki.utils.BatchFileInputDStream
+import de.dfki.utils.{BatchFileInputDStream, CommandLineParser}
 import de.dfki.utils.MLUtils.{parsePoint, unparsePoint}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
@@ -41,7 +41,7 @@ abstract class SVMClassifier extends Serializable {
   // unique identifier for storing the error rates and historical data
   val dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm")
   val tempDirectory = dateFormat.format(Calendar.getInstance().getTime)
-  val historicalData = BASE_DATA_DIRECTORY + tempDirectory
+  val historicalData = s"$BASE_DATA_DIRECTORY/$tempDirectory"
   var streamingModel: OnlineSVM = _
   @transient var future: ScheduledFuture[_] = _
   @transient var execService: ScheduledExecutorService = _
@@ -125,28 +125,24 @@ abstract class SVMClassifier extends Serializable {
     streamProcessing(observations, observations, resultPath)
   }
 
-  def parseArgs(args: Array[String]): (Long, Long, String, String, String, String) = {
+  def parseArgs(args: Array[String]): (Long, String, String, String, String) = {
+    val parser = new CommandLineParser(args).parse()
     if (args.length > 0) {
       // spark streaming batch duration
-      val batchDuration = args(0).toLong
-      // retraining slack
-      val slack = args(1).toLong
+      val batchDuration = parser.getLong("batch-duration")
       // path for storing experiments results
-      val resultPath = args(2)
+      val resultPath = parser.get("result-path")
       // folder path for initial training data
-      val initialDataPath = args(3)
+      val initialDataPath = parser.get("initial-training-path")
       // folder path for data to be streamed
-      val streamingDataPath = args(4)
+      val streamingDataPath = parser.get("streaming-path")
       // folder (file) for test data
-      var testDataPath = ""
-      if (args.length == 6) {
-        testDataPath = args(5)
-      }
-      (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath)
+      val testDataPath = parser.getOrElse("test-path", "prequential")
+
+      (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath)
     } else {
       (defaultBatchDuration,
-        defaultTrainingSlack,
-        s"results/$getExperimentName/$DATA_SET",
+        s"results/$DATA_SET/$getExperimentName",
         s"$BASE_DATA_DIRECTORY/$INITIAL_TRAINING",
         s"$BASE_DATA_DIRECTORY/$STREAM_TRAINING",
         s"$BASE_DATA_DIRECTORY/$TEST_DATA")

@@ -15,7 +15,7 @@ object OnlineClassifier extends SVMClassifier {
   }
 
   override def run(args: Array[String]): Unit = {
-    val (batchDuration, _, resultPath, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
+    val (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
 
     val ssc = initializeSpark(Seconds(batchDuration))
 

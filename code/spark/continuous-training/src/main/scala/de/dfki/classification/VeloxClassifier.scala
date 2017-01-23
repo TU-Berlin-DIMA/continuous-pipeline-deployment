@@ -2,6 +2,7 @@ package de.dfki.classification
 
 import java.util.concurrent.{Executors, TimeUnit}
 
+import de.dfki.utils.CommandLineParser
 import de.dfki.utils.MLUtils._
 import org.apache.log4j.Logger
 import org.apache.spark.streaming.Seconds
@@ -35,18 +36,25 @@ object VeloxClassifier extends SVMClassifier {
     run(args)
   }
 
-  override def run(args: Array[String]): Unit = {
-    createTempFolders(historicalData)
-    val (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
+  def parseVeloxArgs(args: Array[String]): (Long, Long, String, String, String, String, String) = {
+    val parser = new CommandLineParser(args).parse()
+    val (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
+    val slack = parser.getOrElse("slack", 10L)
+    val tempDirectory = parser.getOrElse("temp-path", historicalData)
+    (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath, tempDirectory)
+  }
 
+  override def run(args: Array[String]): Unit = {
+    val (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath, tempDirectory) = parseVeloxArgs(args)
+    createTempFolders(tempDirectory)
     val ssc = initializeSpark(Seconds(batchDuration))
 
 
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + historicalData)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
-    if (testDataPath == "") {
+    if (testDataPath == "prequential") {
       prequentialStreamEvaluation(streamingSource.map(_._2.toString).map(parsePoint), resultPath)
     } else {
       streamProcessing(testData, streamingSource.map(_._2.toString).map(parsePoint), resultPath)
@@ -57,7 +65,7 @@ object VeloxClassifier extends SVMClassifier {
       def run() {
         logger.info("initiating a retraining of the model ...")
         streamingSource.pause()
-        val model = trainModel(ssc.sparkContext, initialDataPath + "," + historicalData, 500)
+        val model = trainModel(ssc.sparkContext, initialDataPath + "," + tempDirectory, 500)
         streamingModel.setInitialModel(model)
         logger.info("Model was re-trained ...")
         if (streamingSource.isCompleted()) {
