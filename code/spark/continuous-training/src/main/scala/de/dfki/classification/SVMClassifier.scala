@@ -30,12 +30,12 @@ abstract class SVMClassifier extends Serializable {
 
 
   // constants for the directory structures
-  val DATA_DIRECTORY = "data/"
-  val DATA_SET = "cover-types/"
-  val BASE_DATA_DIRECTORY: String = DATA_DIRECTORY + DATA_SET
-  val INITIAL_TRAINING = "initial-training/"
-  val STREAM_TRAINING = "stream-training/"
-  val TEST_DATA = "test/"
+  val DATA_DIRECTORY = "data"
+  val DATA_SET = "cover-types"
+  val BASE_DATA_DIRECTORY: String = s"$DATA_DIRECTORY/$DATA_SET"
+  val INITIAL_TRAINING = "initial-training"
+  val STREAM_TRAINING = "stream-training"
+  val TEST_DATA = "test"
 
 
   // unique identifier for storing the error rates and historical data
@@ -46,12 +46,6 @@ abstract class SVMClassifier extends Serializable {
   @transient var future: ScheduledFuture[_] = _
   @transient var execService: ScheduledExecutorService = _
 
-  object EvaluationType extends Enumeration {
-    type EvaluationType = Value
-    val Static = Value("STATIC")
-    val Prequential = Value("PREQUENTIAL")
-  }
-
   /**
     * Initialization of spark streaming context and checkpointing of stateful operators
     *
@@ -59,6 +53,7 @@ abstract class SVMClassifier extends Serializable {
     */
   def initializeSpark(batchDuration: Duration = Seconds(1)): StreamingContext = {
     val conf = new SparkConf().setAppName(getApplicationName)
+    // if master is not set run in local mode
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
     val ssc = new StreamingContext(conf, batchDuration)
@@ -77,7 +72,7 @@ abstract class SVMClassifier extends Serializable {
     */
   def streamProcessing(testData: DStream[LabeledPoint], observations: DStream[LabeledPoint], resultPath: String) {
     val storeErrorRate = (rdd: RDD[Double]) => {
-      val file = s"$resultPath/$DATA_SET/error-rate-$tempDirectory.txt"
+      val file = s"$resultPath/error-rate-$tempDirectory.txt"
       val fw = new FileWriter(file, true)
       try {
         fw.write(rdd.collect().toList.mkString("\n") + "\n")
@@ -130,22 +125,31 @@ abstract class SVMClassifier extends Serializable {
     streamProcessing(observations, observations, resultPath)
   }
 
-  def parseArgs(args: Array[String], baseDataDirectory: String): (EvaluationType.EvaluationType, String, String, String) = {
+  def parseArgs(args: Array[String]): (Long, Long, String, String, String, String) = {
     if (args.length > 0) {
-      val evaluationType = EvaluationType.withName(args(0).toUpperCase())
+      // spark streaming batch duration
+      val batchDuration = args(0).toLong
+      // retraining slack
+      val slack = args(1).toLong
+      // path for storing experiments results
+      val resultPath = args(2)
       // folder path for initial training data
-      val initialDataPath = args(1)
+      val initialDataPath = args(3)
       // folder path for data to be streamed
-      val streamingDataPath = args(1)
+      val streamingDataPath = args(4)
       // folder (file) for test data
       var testDataPath = ""
-      if (evaluationType == EvaluationType.Static) {
-        testDataPath = args(2)
+      if (args.length == 6) {
+        testDataPath = args(5)
       }
-
-      (evaluationType, initialDataPath, streamingDataPath, testDataPath)
+      (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath)
     } else {
-      (EvaluationType.Prequential, baseDataDirectory + INITIAL_TRAINING, baseDataDirectory + STREAM_TRAINING, baseDataDirectory + TEST_DATA)
+      (defaultBatchDuration,
+        defaultTrainingSlack,
+        s"results/$getExperimentName/$DATA_SET",
+        s"$BASE_DATA_DIRECTORY/$INITIAL_TRAINING",
+        s"$BASE_DATA_DIRECTORY/$STREAM_TRAINING",
+        s"$BASE_DATA_DIRECTORY/$TEST_DATA")
     }
   }
 
@@ -158,7 +162,7 @@ abstract class SVMClassifier extends Serializable {
     * @return Online SVM Model
     */
   def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String): OnlineSVM = {
-    var model = trainModel(ssc.sparkContext, initialDataDirectories, 500)
+    val model = trainModel(ssc.sparkContext, initialDataDirectories, 500)
     new OnlineSVM().setInitialModel(model) //.setNumIterations(1)
   }
 
@@ -216,6 +220,12 @@ abstract class SVMClassifier extends Serializable {
   }
 
   def getApplicationName: String
+
+  def getExperimentName: String
+
+  def defaultBatchDuration: Long
+
+  def defaultTrainingSlack: Long
 
   def run(args: Array[String])
 

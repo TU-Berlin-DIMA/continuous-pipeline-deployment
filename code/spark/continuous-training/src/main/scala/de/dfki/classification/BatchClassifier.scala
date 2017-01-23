@@ -15,10 +15,8 @@ object BatchClassifier extends SVMClassifier {
     run(args)
   }
 
-  override def getApplicationName(): String = "Batch SVM Model"
-
   override def run(args: Array[String]): Unit = {
-    val (evaluationType, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args, BASE_DATA_DIRECTORY)
+    val (_, _, _, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
     val conf = new SparkConf().setMaster("local[*]").setAppName("Batch SVM Classifier")
     val sc = new SparkContext(conf)
 
@@ -40,6 +38,14 @@ object BatchClassifier extends SVMClassifier {
 
     println(s"Error rate = ${errorRate._1 / errorRate._2}")
   }
+
+  override def getApplicationName = "Batch SVM Model"
+
+  override def getExperimentName = "initial"
+
+  override def defaultBatchDuration = 0L
+
+  override def defaultTrainingSlack = 0L
 }
 
 //Error rate = 0.3145537463802043

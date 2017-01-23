@@ -4,6 +4,7 @@ import java.util.concurrent.{Executors, TimeUnit}
 
 import de.dfki.utils.MLUtils.parsePoint
 import org.apache.log4j.Logger
+import org.apache.spark.streaming.Seconds
 
 /**
   * Novel training and testing model
@@ -12,39 +13,35 @@ import org.apache.log4j.Logger
   * @author Behrouz Derakhshan
   */
 object ContinuousClassifier extends SVMClassifier {
-  val slack = 5l
-  var now = 0l
   @transient val logger = Logger.getLogger(getClass.getName)
 
-
   /**
-    *
     * @param args
-    * prequential/static
+    * batch-duration
+    * slack
+    * experiment-result-path
     * initial-training-path
     * streaming-path
-    * test-path(if static)
+    * test-path(optional)
     */
   def main(args: Array[String]) {
     run(args)
   }
 
-  override def getApplicationName: String = "Continuous SVM Model"
-
   override def run(args: Array[String]): Unit = {
     createTempFolders(historicalData)
-    val (evaluationType, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args, BASE_DATA_DIRECTORY)
+    val (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
 
-    val ssc = initializeSpark()
+    val ssc = initializeSpark(Seconds(batchDuration))
 
     streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + historicalData)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
-    if (evaluationType == EvaluationType.Prequential) {
-      prequentialStreamEvaluation(streamingSource.map(_._2.toString).map(parsePoint), "results/continuous")
+    if (testDataPath == "") {
+      prequentialStreamEvaluation(streamingSource.map(_._2.toString).map(parsePoint), resultPath)
     } else {
-      streamProcessing(testData, streamingSource.map(_._2.toString).map(parsePoint), "results/continuous")
+      streamProcessing(testData, streamingSource.map(_._2.toString).map(parsePoint), resultPath)
     }
 
     val task = new Runnable {
@@ -75,4 +72,12 @@ object ContinuousClassifier extends SVMClassifier {
 
 
   }
+
+  override def getApplicationName = "Continuous SVM Model"
+
+  override def getExperimentName = "continuous"
+
+  override def defaultBatchDuration = 1L
+
+  override def defaultTrainingSlack = 5L
 }
