@@ -17,13 +17,12 @@ object ContinuousClassifier extends SVMClassifier {
   @transient val logger = Logger.getLogger(getClass.getName)
 
   /**
-    * @param args
-    * batch-duration
-    * slack
-    * experiment-result-path
-    * initial-training-path
-    * streaming-path
-    * test-path(optional)
+    * @param args arguments to the main class should be a set of key, value pairs in the format of key=value
+    *             Continuous Classifier:
+    *             slack: delay between in periodic sgd iteration
+    *             temp-path: path to write the observed data for retraining purposed
+    *             refer to [[SVMClassifier]] to view the rest of the arguments
+    *
     */
   def main(args: Array[String]) {
     run(args)

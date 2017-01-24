@@ -6,7 +6,7 @@ import java.util.Calendar
 import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
 import de.dfki.streaming.models.OnlineSVM
-import de.dfki.utils.MLUtils.{parsePoint, unparsePoint}
+import de.dfki.utils.MLUtils.parsePoint
 import de.dfki.utils.{BatchFileInputDStream, CommandLineParser}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
@@ -23,6 +23,17 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * Base class for all SVM Classifier
+  *
+  * The argument to the main class should be a set of key, value pairs in the format of key=value
+  *
+  * Common arguments:
+  * batch-duration : spark's batch duration (default 1 seconds)
+  * result-path: root directory for writing experiment results
+  * initial-training-path: data used for initial training
+  * streaming-path: data used for online training (and prequential evaluation)
+  * test-path: data used for evaluation (if not specified, prequential evaluation is used)
+  *
+  * [[ContinuousClassifier]] and [[VeloxClassifier]] require extra arguments
   *
   * @author Behrouz Derakhshan
   */
