@@ -12,25 +12,25 @@ class CommandLineParser(val args: Array[String]) {
     this
   }
 
-  def getOrElse[T](key: String, els: T): T = {
-    map.getOrElse(key, els).asInstanceOf[T]
+  private def getOrElse[T](key: String, els: T): String = {
+    map.getOrElse(key, els).toString
   }
 
 
-  def get(key: String): String = {
-    map(key)
+  def get(key: String, els: String = ""): String = {
+    map.getOrElse(key, els)
   }
 
   def getDouble(key: String, default: Double = 0.0): Double = {
-    getOrElse(key, default)
+    getOrElse(key, default).toDouble
   }
 
   def getLong(key: String, default: Long = 0L): Long = {
-    getOrElse(key, default)
+    getOrElse(key, default).toLong
   }
 
   def getInteger(key: String, default: Int = 0): Int = {
-    getOrElse(key, default)
+    getOrElse(key, default).toInt
   }
 
   def print(): Unit = {

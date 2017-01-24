@@ -1,13 +1,13 @@
 package de.dfki.classification
 
-import java.io.FileWriter
+import java.io.{File, FileWriter}
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
 import de.dfki.streaming.models.OnlineSVM
-import de.dfki.utils.{BatchFileInputDStream, CommandLineParser}
 import de.dfki.utils.MLUtils.{parsePoint, unparsePoint}
+import de.dfki.utils.{BatchFileInputDStream, CommandLineParser}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.io.{LongWritable, NullWritable, Text}
@@ -28,6 +28,11 @@ import org.apache.spark.{SparkConf, SparkContext}
   */
 abstract class SVMClassifier extends Serializable {
 
+  @transient var future: ScheduledFuture[_] = _
+  @transient var execService: ScheduledExecutorService = _
+
+  // time captured at the beginning of the experiments. Used for generating unique ids
+  private val experimentTime = Calendar.getInstance().getTime
 
   // constants for the directory structures
   val DATA_DIRECTORY = "data"
@@ -37,14 +42,14 @@ abstract class SVMClassifier extends Serializable {
   val STREAM_TRAINING = "stream-training"
   val TEST_DATA = "test"
 
-
-  // unique identifier for storing the error rates and historical data
-  val dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm")
-  val tempDirectory = dateFormat.format(Calendar.getInstance().getTime)
-  val historicalData = s"$BASE_DATA_DIRECTORY/$tempDirectory"
   var streamingModel: OnlineSVM = _
-  @transient var future: ScheduledFuture[_] = _
-  @transient var execService: ScheduledExecutorService = _
+
+  def experimentResultPath(root: String): String = {
+    val dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm")
+    val experimentId = dateFormat.format(experimentTime)
+    s"$root/$experimentId"
+  }
+
 
   /**
     * Initialization of spark streaming context and checkpointing of stateful operators
@@ -72,7 +77,8 @@ abstract class SVMClassifier extends Serializable {
     */
   def streamProcessing(testData: DStream[LabeledPoint], observations: DStream[LabeledPoint], resultPath: String) {
     val storeErrorRate = (rdd: RDD[Double]) => {
-      val file = s"$resultPath/error-rate-$tempDirectory.txt"
+      val file = new File(s"${experimentResultPath(resultPath)}/error-rates.txt")
+      file.getParentFile.mkdirs()
       val fw = new FileWriter(file, true)
       try {
         fw.write(rdd.collect().toList.mkString("\n") + "\n")
@@ -103,17 +109,24 @@ abstract class SVMClassifier extends Serializable {
       .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
       .map(item => item._1 / item._2)
       .foreachRDD(storeErrorRate)
+    streamingModel.trainOn(observations)
+  }
 
+  /**
+    * Write content of the DStream to the specified location
+    * This is used for further retraining
+    *
+    * @param stream input stream
+    * @param path   output location
+    */
+  def writeStreamToDisk(stream: DStream[String], path: String): Unit = {
     val storeRDD = (rdd: RDD[String], time: Time) => {
       val hadoopConf = new Configuration()
       hadoopConf.set("mapreduce.output.basename", time.toString())
-      rdd.map(str => (null, str)).saveAsNewAPIHadoopFile(s"$historicalData", classOf[NullWritable], classOf[String],
+      rdd.map(str => (null, str)).saveAsNewAPIHadoopFile(s"$path", classOf[NullWritable], classOf[String],
         classOf[TextOutputFormat[NullWritable, String]], hadoopConf)
     }
-
-    streamingModel.trainOn(observations)
-
-    observations.map(unparsePoint).foreachRDD(storeRDD)
+    stream.foreachRDD(storeRDD)
   }
 
   /**
@@ -127,26 +140,19 @@ abstract class SVMClassifier extends Serializable {
 
   def parseArgs(args: Array[String]): (Long, String, String, String, String) = {
     val parser = new CommandLineParser(args).parse()
-    if (args.length > 0) {
-      // spark streaming batch duration
-      val batchDuration = parser.getLong("batch-duration")
-      // path for storing experiments results
-      val resultPath = parser.get("result-path")
-      // folder path for initial training data
-      val initialDataPath = parser.get("initial-training-path")
-      // folder path for data to be streamed
-      val streamingDataPath = parser.get("streaming-path")
-      // folder (file) for test data
-      val testDataPath = parser.getOrElse("test-path", "prequential")
+    // spark streaming batch duration
+    val batchDuration = parser.getLong("batch-duration", defaultBatchDuration)
+    // path for storing experiments results
+    val resultPath = parser.get("result-path", s"results/$DATA_SET/$getExperimentName")
+    // folder path for initial training data
+    val initialDataPath = parser.get("initial-training-path", s"$BASE_DATA_DIRECTORY/$INITIAL_TRAINING")
+    // folder path for data to be streamed
+    val streamingDataPath = parser.get("streaming-path", s"$BASE_DATA_DIRECTORY/$STREAM_TRAINING")
+    // folder (file) for test data
+    val testDataPath = parser.get("test-path", "prequential")
 
-      (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath)
-    } else {
-      (defaultBatchDuration,
-        s"results/$DATA_SET/$getExperimentName",
-        s"$BASE_DATA_DIRECTORY/$INITIAL_TRAINING",
-        s"$BASE_DATA_DIRECTORY/$STREAM_TRAINING",
-        s"$BASE_DATA_DIRECTORY/$TEST_DATA")
-    }
+    (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath)
+
   }
 
   /**

@@ -32,9 +32,9 @@ object ContinuousClassifier extends SVMClassifier {
   def parseContinuousArgs(args: Array[String]): (Long, Long, String, String, String, String, String) = {
     val parser = new CommandLineParser(args).parse()
     val (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
-    val slack = parser.getOrElse("slack", 10l)
-    val tempDirectory = parser.getOrElse("temp-path", historicalData)
-    (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath, tempDirectory)
+    val slack = parser.getLong("slack", 10l)
+    val tempDirectory = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
+    (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath, experimentResultPath(tempDirectory))
   }
 
   override def run(args: Array[String]): Unit = {
@@ -46,6 +46,7 @@ object ContinuousClassifier extends SVMClassifier {
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
+    writeStreamToDisk(streamingSource.map(_._2.toString), tempDirectory)
     if (testDataPath == "prequential") {
       prequentialStreamEvaluation(streamingSource.map(_._2.toString).map(parsePoint), resultPath)
     } else {

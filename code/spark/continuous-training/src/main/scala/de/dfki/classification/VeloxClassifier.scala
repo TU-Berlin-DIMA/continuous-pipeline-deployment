@@ -2,6 +2,7 @@ package de.dfki.classification
 
 import java.util.concurrent.{Executors, TimeUnit}
 
+import de.dfki.classification.ContinuousClassifier.writeStreamToDisk
 import de.dfki.utils.CommandLineParser
 import de.dfki.utils.MLUtils._
 import org.apache.log4j.Logger
@@ -39,21 +40,21 @@ object VeloxClassifier extends SVMClassifier {
   def parseVeloxArgs(args: Array[String]): (Long, Long, String, String, String, String, String) = {
     val parser = new CommandLineParser(args).parse()
     val (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
-    val slack = parser.getOrElse("slack", 10L)
-    val tempDirectory = parser.getOrElse("temp-path", historicalData)
-    (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath, tempDirectory)
+    val slack = parser.getLong("slack", 10L)
+    val tempDirectory = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
+    (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath, experimentResultPath(tempDirectory))
   }
 
   override def run(args: Array[String]): Unit = {
     val (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath, tempDirectory) = parseVeloxArgs(args)
     createTempFolders(tempDirectory)
+
     val ssc = initializeSpark(Seconds(batchDuration))
-
-
     streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
+    writeStreamToDisk(streamingSource.map(_._2.toString), tempDirectory)
     if (testDataPath == "prequential") {
       prequentialStreamEvaluation(streamingSource.map(_._2.toString).map(parsePoint), resultPath)
     } else {
