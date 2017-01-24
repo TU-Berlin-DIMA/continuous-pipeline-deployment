@@ -23,7 +23,11 @@ object OnlineClassifier extends SVMClassifier {
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
-    prequentialStreamEvaluation(streamingSource.map(_._2.toString).map(parsePoint), resultPath)
+    if (testDataPath == "prequential") {
+      prequentialStreamEvaluation(streamingSource.map(_._2.toString).map(parsePoint), resultPath)
+    } else {
+      streamProcessing(testData, streamingSource.map(_._2.toString).map(parsePoint), resultPath)
+    }
 
     ssc.start()
     ssc.awaitTermination()

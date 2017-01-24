@@ -31,7 +31,7 @@ object ContinuousClassifier extends SVMClassifier {
   def parseContinuousArgs(args: Array[String]): (Long, Long, String, String, String, String, String) = {
     val parser = new CommandLineParser(args).parse()
     val (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
-    val slack = parser.getLong("slack", 10l)
+    val slack = parser.getLong("slack", defaultTrainingSlack)
     val tempDirectory = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
     (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath, experimentResultPath(tempDirectory))
   }
@@ -59,8 +59,11 @@ object ContinuousClassifier extends SVMClassifier {
         }
         logger.info("schedule an iteration of SGD")
         streamingSource.pause()
+        val startTime = System.currentTimeMillis()
         val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(parsePoint).cache()
         streamingModel.trainOn(historicalDataRDD)
+        val endTime = System.currentTimeMillis()
+        storeTrainingTimes(endTime - startTime, resultPath)
         logger.info("model was updated")
         if (streamingSource.isCompleted()) {
           logger.warn("stopping the program")
@@ -87,5 +90,5 @@ object ContinuousClassifier extends SVMClassifier {
 
   override def defaultBatchDuration = 1L
 
-  override def defaultTrainingSlack = 5L
+  override def defaultTrainingSlack = 20L
 }

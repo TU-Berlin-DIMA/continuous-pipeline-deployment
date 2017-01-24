@@ -73,6 +73,7 @@ abstract class SVMClassifier extends Serializable {
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
     val ssc = new StreamingContext(conf, batchDuration)
+    ssc.remember(Seconds(20))
     ssc.checkpoint("checkpoints/")
     ssc
   }
@@ -92,7 +93,12 @@ abstract class SVMClassifier extends Serializable {
       file.getParentFile.mkdirs()
       val fw = new FileWriter(file, true)
       try {
-        fw.write(rdd.collect().toList.mkString("\n") + "\n")
+        // TODO: it should not write to file when the rdd is empty
+        val content = rdd.collect().toList.mkString("\n")
+        if (content == "\n") {}
+        else {
+          fw.write(s"$content\n")
+        }
       }
       finally fw.close()
     }
@@ -122,6 +128,21 @@ abstract class SVMClassifier extends Serializable {
       .foreachRDD(storeErrorRate)
     streamingModel.trainOn(observations)
   }
+
+  /**
+    * store captured running time into the given path
+    *
+    * @param duration   duration of the training
+    * @param resultPath result path
+    */
+  def storeTrainingTimes(duration: Long, resultPath: String) = {
+    val file = new File(s"${experimentResultPath(resultPath)}/training-times.txt")
+    file.getParentFile.mkdirs()
+    val fw = new FileWriter(file, true)
+    fw.write(s"$duration\n")
+    fw.close()
+  }
+
 
   /**
     * Write content of the DStream to the specified location
@@ -176,7 +197,7 @@ abstract class SVMClassifier extends Serializable {
     */
   def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String): OnlineSVM = {
     val model = trainModel(ssc.sparkContext, initialDataDirectories, 500)
-    new OnlineSVM().setInitialModel(model) //.setNumIterations(1)
+    new OnlineSVM().setInitialModel(model).setNumIterations(1)
   }
 
   /**

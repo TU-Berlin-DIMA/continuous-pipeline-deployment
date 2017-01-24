@@ -75,7 +75,7 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
       logger.warn("This streaming source is paused!!!")
       None
     }
-    if (lastProcessedFileIndex < files.length) {
+    else if (lastProcessedFileIndex < files.length) {
       val rdd = rddFromFile(files(lastProcessedFileIndex))
       lastProcessedFileIndex += 1
       Option(rdd)

@@ -38,7 +38,7 @@ object VeloxClassifier extends SVMClassifier {
   def parseVeloxArgs(args: Array[String]): (Long, Long, String, String, String, String, String) = {
     val parser = new CommandLineParser(args).parse()
     val (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
-    val slack = parser.getLong("slack", 10L)
+    val slack = parser.getLong("slack", defaultTrainingSlack)
     val tempDirectory = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
     (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath, experimentResultPath(tempDirectory))
   }
@@ -62,17 +62,28 @@ object VeloxClassifier extends SVMClassifier {
 
     val task = new Runnable {
       def run() {
+        if (ssc.sparkContext.isStopped) {
+          future.cancel(true)
+        }
         logger.info("initiating a retraining of the model ...")
+
         streamingSource.pause()
+
+        val startTime = System.currentTimeMillis()
         val model = trainModel(ssc.sparkContext, initialDataPath + "," + tempDirectory, 500)
+        val endTime = System.currentTimeMillis()
+        storeTrainingTimes(endTime - startTime, resultPath)
+
         streamingModel.setInitialModel(model)
         logger.info("Model was re-trained ...")
+
         if (streamingSource.isCompleted()) {
           logger.warn("stopping the program")
           ssc.stop(stopSparkContext = true, stopGracefully = true)
           future.cancel(true)
           execService.shutdown()
         }
+
         streamingSource.unpause()
       }
     }
