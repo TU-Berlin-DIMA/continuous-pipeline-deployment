@@ -47,7 +47,7 @@ abstract class SVMClassifier extends Serializable {
 
   // constants for the directory structures
   val DATA_DIRECTORY = "data"
-  val DATA_SET = "cover-types"
+  val DATA_SET = "criteo-sample/processed"
   val BASE_DATA_DIRECTORY: String = s"$DATA_DIRECTORY/$DATA_SET"
   val INITIAL_TRAINING = "initial-training"
   val STREAM_TRAINING = "stream-training"
@@ -73,21 +73,17 @@ abstract class SVMClassifier extends Serializable {
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
     val ssc = new StreamingContext(conf, batchDuration)
-    ssc.remember(Seconds(20))
     ssc.checkpoint("checkpoints/")
     ssc
   }
 
   /**
-    * Process two streams of data.
-    * Train the internal SVMModel using the observations DStream and write cumulative error rate to file system based
-    * on the testData DStream
+    * Store the cumulative error rate of the incoming stream in the given result directory
     *
-    * @param testData     test Data DStream
-    * @param observations observation data DStream
-    * @param resultPath   directory for writing the error rate results
+    * @param testData   test Data DStream
+    * @param resultPath directory for writing the error rate results
     */
-  def streamProcessing(testData: DStream[LabeledPoint], observations: DStream[LabeledPoint], resultPath: String) {
+  def evaluateStream(testData: DStream[LabeledPoint], resultPath: String) {
     val storeErrorRate = (rdd: RDD[Double]) => {
       val file = new File(s"${experimentResultPath(resultPath)}/error-rates.txt")
       file.getParentFile.mkdirs()
@@ -126,23 +122,20 @@ abstract class SVMClassifier extends Serializable {
       .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
       .map(item => item._1 / item._2)
       .foreachRDD(storeErrorRate)
-    streamingModel.trainOn(observations)
+
+    streamingModel.writeToDisk(testData, experimentResultPath(resultPath))
   }
 
   /**
-    * store captured running time into the given path
     *
-    * @param duration   duration of the training
-    * @param resultPath result path
+    * incrementally update the [[streamingModel]] using the incoming data stream
+    *
+    * @param observations training data stream of [[LabeledPoint]]
+    *
     */
-  def storeTrainingTimes(duration: Long, resultPath: String) = {
-    val file = new File(s"${experimentResultPath(resultPath)}/training-times.txt")
-    file.getParentFile.mkdirs()
-    val fw = new FileWriter(file, true)
-    fw.write(s"$duration\n")
-    fw.close()
+  def trainOnStream(observations: DStream[LabeledPoint]): Unit = {
+    streamingModel.trainOn(observations)
   }
-
 
   /**
     * Write content of the DStream to the specified location
@@ -162,13 +155,27 @@ abstract class SVMClassifier extends Serializable {
   }
 
   /**
-    * Prequential Evaluation of the stream. First use the data to predict and train the model
+    * store captured running time into the given path
     *
-    * @param observations training data
+    * @param duration   duration of the training
+    * @param resultPath result path
     */
-  def prequentialStreamEvaluation(observations: DStream[LabeledPoint], resultPath: String): Unit = {
-    streamProcessing(observations, observations, resultPath)
+  def storeTrainingTimes(duration: Long, resultPath: String) = {
+    val file = new File(s"${experimentResultPath(resultPath)}/training-times.txt")
+    file.getParentFile.mkdirs()
+    val fw = new FileWriter(file, true)
+    fw.write(s"$duration\n")
+    fw.close()
   }
+
+  //  /**
+  //    * Prequential Evaluation of the stream. First use the data to predict and train the model
+  //    *
+  //    * @param observations training data
+  //    */
+  //  def prequentialStreamEvaluation(observations: DStream[LabeledPoint], resultPath: String): Unit = {
+  //    evaluateStream(observations, resultPath)
+  //  }
 
   def parseArgs(args: Array[String]): (Long, String, String, String, String) = {
     val parser = new CommandLineParser(args).parse()
@@ -196,7 +203,7 @@ abstract class SVMClassifier extends Serializable {
     * @return Online SVM Model
     */
   def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String): OnlineSVM = {
-    val model = trainModel(ssc.sparkContext, initialDataDirectories, 500)
+    val model = trainModel(ssc.sparkContext, initialDataDirectories, 100)
     new OnlineSVM().setInitialModel(model).setNumIterations(1)
   }
 

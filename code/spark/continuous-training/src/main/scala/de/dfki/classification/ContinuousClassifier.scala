@@ -11,6 +11,14 @@ import org.apache.spark.streaming.Seconds
   * Novel training and testing model
   * Online training is supplemented with occasional one iteration of SGD on the historical data
   *
+  *
+  * Algorithm:
+  * 1. Train initial model
+  * 2. Write the incoming data into persistent storage
+  * 3. Evaluate on the incoming data
+  * 4. Train Incrementally on the incoming data
+  * 5. periodically perform 1 iteration of SGD on full (or a sample of)historical data
+  *
   * @author Behrouz Derakhshan
   */
 object ContinuousClassifier extends SVMClassifier {
@@ -41,17 +49,24 @@ object ContinuousClassifier extends SVMClassifier {
     createTempFolders(tempDirectory)
     val ssc = initializeSpark(Seconds(batchDuration))
 
+    // train initial model
     streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
+    // store the incoming stream to disk for further re-training
     writeStreamToDisk(streamingSource.map(_._2.toString), tempDirectory)
+
+    // evaluate the stream and incrementally update the model
     if (testDataPath == "prequential") {
-      prequentialStreamEvaluation(streamingSource.map(_._2.toString).map(parsePoint), resultPath)
+      evaluateStream(streamingSource.map(_._2.toString).map(parsePoint), resultPath)
+      trainOnStream(streamingSource.map(_._2.toString).map(parsePoint))
     } else {
-      streamProcessing(testData, streamingSource.map(_._2.toString).map(parsePoint), resultPath)
+      evaluateStream(testData, resultPath)
+      trainOnStream(streamingSource.map(_._2.toString).map(parsePoint))
     }
 
+    // periodically schedule one iteration of the SGD
     val task = new Runnable {
       def run() {
         if (ssc.sparkContext.isStopped) {
@@ -78,10 +93,8 @@ object ContinuousClassifier extends SVMClassifier {
     ssc.start()
 
     execService = Executors.newSingleThreadScheduledExecutor()
-    future = execService.scheduleAtFixedRate(task, slack, slack, TimeUnit.SECONDS)
+    future = execService.scheduleWithFixedDelay(task, slack, slack, TimeUnit.SECONDS)
     future.get()
-
-
   }
 
   override def getApplicationName = "Continuous SVM Model"
@@ -90,5 +103,5 @@ object ContinuousClassifier extends SVMClassifier {
 
   override def defaultBatchDuration = 1L
 
-  override def defaultTrainingSlack = 20L
+  override def defaultTrainingSlack = 5L
 }

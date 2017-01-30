@@ -46,36 +46,41 @@ object VeloxClassifier extends SVMClassifier {
   override def run(args: Array[String]): Unit = {
     val (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath, tempDirectory) = parseVeloxArgs(args)
     createTempFolders(tempDirectory)
-
     val ssc = initializeSpark(Seconds(batchDuration))
+
+    // train initial model
     streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
     writeStreamToDisk(streamingSource.map(_._2.toString), tempDirectory)
+
+    // evaluate the stream and incrementally update the model
     if (testDataPath == "prequential") {
-      prequentialStreamEvaluation(streamingSource.map(_._2.toString).map(parsePoint), resultPath)
+      evaluateStream(streamingSource.map(_._2.toString).map(parsePoint), resultPath)
+      trainOnStream(streamingSource.map(_._2.toString).map(parsePoint))
     } else {
-      streamProcessing(testData, streamingSource.map(_._2.toString).map(parsePoint), resultPath)
+      evaluateStream(testData, resultPath)
+      trainOnStream(streamingSource.map(_._2.toString).map(parsePoint))
     }
 
-
+    // periodically retrain the model from scratch using the historical data
     val task = new Runnable {
       def run() {
         if (ssc.sparkContext.isStopped) {
           future.cancel(true)
         }
         logger.info("initiating a retraining of the model ...")
-
+        println(streamingModel.latestModel().weights.toString)
         streamingSource.pause()
 
         val startTime = System.currentTimeMillis()
-        val model = trainModel(ssc.sparkContext, initialDataPath + "," + tempDirectory, 500)
+        val model = trainModel(ssc.sparkContext, initialDataPath + "," + tempDirectory, 100)
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)
-
         streamingModel.setInitialModel(model)
         logger.info("Model was re-trained ...")
+
 
         if (streamingSource.isCompleted()) {
           logger.warn("stopping the program")
@@ -91,8 +96,7 @@ object VeloxClassifier extends SVMClassifier {
     ssc.start()
 
     execService = Executors.newSingleThreadScheduledExecutor()
-
-    future = execService.scheduleAtFixedRate(task, slack, slack, TimeUnit.SECONDS)
+    future = execService.scheduleWithFixedDelay(task, slack, slack, TimeUnit.SECONDS)
     future.get()
 
   }
@@ -103,5 +107,5 @@ object VeloxClassifier extends SVMClassifier {
 
   override def defaultBatchDuration = 1L
 
-  override def defaultTrainingSlack = 100L
+  override def defaultTrainingSlack = 60L
 }

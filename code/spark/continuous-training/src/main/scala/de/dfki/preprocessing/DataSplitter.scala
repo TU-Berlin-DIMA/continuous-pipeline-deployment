@@ -1,8 +1,9 @@
-package de.dfki.utils
+package de.dfki.preprocessing
 
 import java.io.{File, PrintWriter}
 
 import de.dfki.classification.ContinuousClassifier
+import de.dfki.utils.MLUtils
 import org.apache.spark.SparkContext
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
@@ -32,17 +33,17 @@ class DataSplitter(sc: SparkContext = null, ratio: List[Double] = List(0.1, 0.8)
     val initialCutOff = 6000
     val (initial, streaming) = lines.splitAt(initialCutOff)
     print(initial.size)
-    val f = new File(ContinuousClassifier.BASE_DATA_DIRECTORY + ContinuousClassifier.INITIAL_TRAINING + "init")
-    f.getParentFile().mkdirs()
+    val f = new File(s"${ContinuousClassifier.BASE_DATA_DIRECTORY}/${ContinuousClassifier.INITIAL_TRAINING}/init")
+    f.getParentFile.mkdirs()
     val writer = new PrintWriter(f)
     writer.write(initial.mkString("\n"))
     writer.close()
 
-    val streamingBatchSize = 100
+    val streamingBatchSize = 540
     var i = 0
-    while (i < 540) {
+    while (i < 100) {
       val dataBatch = streaming.slice(i * streamingBatchSize, (i + 1) * streamingBatchSize)
-      val file = new File(s"${ContinuousClassifier.BASE_DATA_DIRECTORY + ContinuousClassifier.STREAM_TRAINING}stream$i")
+      val file = new File(s"${ContinuousClassifier.BASE_DATA_DIRECTORY}/${ContinuousClassifier.STREAM_TRAINING}/stream$i")
       file.getParentFile.mkdir()
       val writer = new PrintWriter(file)
       writer.write(dataBatch.mkString("\n"))

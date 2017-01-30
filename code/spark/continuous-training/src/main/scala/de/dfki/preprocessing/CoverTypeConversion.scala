@@ -1,4 +1,4 @@
-package de.dfki.examples
+package de.dfki.preprocessing
 
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.mllib.util.MLUtils

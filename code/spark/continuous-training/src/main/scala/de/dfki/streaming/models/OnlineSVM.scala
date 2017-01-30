@@ -1,6 +1,8 @@
 package de.dfki.streaming.models
 
 
+import java.io.{File, FileWriter}
+
 import org.apache.spark.mllib.classification.{SVMModel, SVMWithSGD}
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.regression.{LabeledPoint, StreamingLinearAlgorithm}
@@ -86,6 +88,23 @@ class OnlineSVM(private var stepSize: Double,
       case _ => model.get.weights.toArray.mkString("[", ",", "]")
     }
     logInfo(s"Current model: weights, ${display}")
+  }
+
+  def writeToDisk(data: DStream[LabeledPoint], resultPath: String): Unit = {
+    val storeErrorRate = (rdd: RDD[LabeledPoint]) => {
+      val file = new File(s"$resultPath/model-parameters.txt")
+      file.getParentFile.mkdirs()
+      val fw = new FileWriter(file, true)
+      try {
+
+
+        fw.write(s"${model.get.weights.toString}\n")
+
+      }
+      finally fw.close()
+    }
+    data.foreachRDD(storeErrorRate)
+
   }
 
   override def trainOn(observations: DStream[LabeledPoint]): Unit = {
