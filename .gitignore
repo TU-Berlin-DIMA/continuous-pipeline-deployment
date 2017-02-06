@@ -1,0 +1,18 @@
+# OS files
+*.DS_Store
+
+# Editor auto generated files
+*.pyc
+*.idea
+*.iml
+*.RData
+
+
+# Latex files
+*.aux
+*.bbl
+*.blg
+*.log
+*.synctex.gz
+*.pdf
+
