@@ -17,7 +17,7 @@ object InitialClassifier extends SVMClassifier {
     val ssc = initializeSpark(Seconds(batchDuration))
 
     // train initial model
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath, 100)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 

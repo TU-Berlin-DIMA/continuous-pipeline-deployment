@@ -1,9 +1,9 @@
-setwd("~/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/results/")
+setwd("~/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/results/criteo-sample/processed/")
 
-data_continuous = read.csv(file = 'sea/continuous/2017-01-26-15-49/error-rates.txt', header = FALSE)
-data_velox =read.csv(file = 'sea/velox/2017-01-26-16-32/error-rates.txt', header = FALSE)
-data_streaming =read.csv(file = 'sea/online/2017-01-26-15-56/error-rates.txt', header = FALSE)
-data_initial =read.csv(file = 'sea/initial-only/2017-01-26-15-51/error-rates.txt', header = FALSE)
+data_continuous = read.csv(file = 'continuous/2017-02-06-17-00/error-rates.txt', header = FALSE)
+data_velox =read.csv(file = 'velox/2017-02-06-17-17/error-rates.txt', header = FALSE)
+data_streaming =read.csv(file = 'online/2017-02-06-17-34/error-rates.txt', header = FALSE)
+data_initial =read.csv(file = 'initial-only/2017-02-06-17-52/error-rates.txt', header = FALSE)
 
 
 plot(1:dim(data_velox)[1], data_velox$V1, type = 'l' , col = 'red', xlim = c(1,max(dim(data_velox)[1], dim(data_velox)[1])), ylim = c(0.2,0.5))

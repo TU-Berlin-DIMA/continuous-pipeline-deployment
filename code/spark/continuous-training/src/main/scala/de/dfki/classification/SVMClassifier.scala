@@ -91,7 +91,7 @@ abstract class SVMClassifier extends Serializable {
       try {
         // TODO: it should not write to file when the rdd is empty
         val content = rdd.collect().toList.mkString("\n")
-        if (content == "\n") {}
+        if (content == "") {}
         else {
           fw.write(s"$content\n")
         }
@@ -202,9 +202,9 @@ abstract class SVMClassifier extends Serializable {
     * @param initialDataDirectories directory of initial data
     * @return Online SVM Model
     */
-  def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String): OnlineSVM = {
-    val model = trainModel(ssc.sparkContext, initialDataDirectories, 100)
-    new OnlineSVM().setInitialModel(model).setNumIterations(1)
+  def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String, numIterations: Int = 100): OnlineSVM = {
+    val model = trainModel(ssc.sparkContext, initialDataDirectories, numIterations)
+    new OnlineSVM().setInitialModel(model).setNumIterations(10).setStepSize(0.001)
   }
 
   /**
