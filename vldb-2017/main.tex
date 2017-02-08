@@ -158,7 +158,7 @@ In fact deployment and serving of the models is the most crucial part that bring
 In order to gain actual value out of a machine learning model, it has to be monitored in realtime in production environment. 
 These models have to be maintained and constantly updated incrementally to better fit the new data that arrives. 
 The models should also be deployed in an environment that is capable of handling high traffic. 
-While all of these are happening, the models should be re-trained since ML models usually need to have access to entire datasets, otherwise the quality will degrade if they are only updated incrementally.
+While all of these are happening, the models should be re-trained since ML models usually need to have access to entire datasets, otherwise the quality will degrade if they are only updated incrementally. \todo[inline] {Either find a reference or elaborate what are the reasons that pure incremental learning may degrade the quality }
 % How is it different from prior work
 Most of the machine learning systems focus on training and providing tools to make model training and search easier. 
 Kumar et al. \cite{kumar2015survey} provided an overview of landscape of existing machine learning systems. 
@@ -173,21 +173,22 @@ Incremental updates are only supported by certain type of machine learning model
 These incremental updates, however, are not enough to keep the model quality at an acceptable rate and after a while the quality may degrade.
 At this point, a new model has to be retrained based on the entire available data and has to be redeployed again.
 
-\textbf{Example application:} to illustrate this model deployment approach, consider as an example the task of predicting the click through rate of advertisements.
+\textbf{Example application:} to illustrate this model deployment approach, consider as an example the task of predicting the click through rate (CTR) of online advertisements.
+Online advertising industry is a multi-million dollar industry and CTR prediction is the machine learning problem at the heart of this industry \cite{macmahan2013, graepel2010web} \todo[inline]{go through the bing paper}.
 In order to gain profit, search engines typically show a set of advertisements, based on the users' search queries and other related information (users' details, geographical and cultural information).
-However, typically advertisements are sold based on click rate and, therefore, the search engine provider is only payed if the advertisement was clicked.
+However, typically advertisements are sold based on click rate and, therefore, the ad network provider is only payed if the advertisement was clicked.
 An optimal strategy is to serve advertisements based on their expected click rate value.
 Machine learning models are used to find the expected click rate of advertisements before they are served to the user.
-A new model is created based on the available training data, which typically includes click rate of advertisements, related search queries, click timestamps, and user information (if available). 
-Once the click rate predictor is deployed, prediction queries of the form of search requests arrive at the system.
-The model, based on the key words in the search request and other available information about the user, predicts the click rate of different advertisements and finally serves the ones with highest expected value.
+A predictive model is created based on the available training data, which typically includes content of the page, search query (in case of search engine providers), user information, content and meta-data of the ad creatives. 
+Once the model is deployed, prediction queries of the form of ad requests arrive at the system.
+The model proposes the ad creative that has the highest probability of being clicked by the user.
 Feedback of whether advertisements are clicked on or not is send to the system in the form of new training observations and the model is updated accordingly.
 The model is also periodically retrained using entire data in order to reduce the error introduced by incremental learning to the model.
-Figure \ref{fig:click-rate} demonstrates the use case described above.
+Figure \ref{fig:click-rate} demonstrates the CTR prediction use case for a search engine provider.
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=\columnwidth]{../images/use-case.png}
+\includegraphics[width=\columnwidth]{../images/use-case-1.png}
 \caption{Use Case: Click Through Rate Prediction}
 \label{fig:click-rate}
 \end{figure}
@@ -262,7 +263,17 @@ By examining the changes in the data the learning rate will decrease (when appro
 \subsection{Machine Learning Models based on SGD}
 SGD is one of the most common optimization methods to train large scale problems. 
 It has been used in classification \cite{zhang2004solving}, clustering \cite{bottou1995convergence}, neural networks \cite{dean2012large}, and matrix factorization \cite{funk2006netflix}.
-In our system, we implemented matrix factorization and neural networks, which will be explained next. 
+In our system, we implemented linear classifiers and matrix factorization, which will be explained next. 
+
+\textbf{Linear Classifiers} are arguably the most common type of machine learning models build using SGD optimization method. 
+In our CTR prediction use case described in section \ref{introduction}, logistic regression method is used to train models for prediction the click through rate \cite{macmahan2013}. 
+Logistic regression models typically output a probably instead of a class label \cite{hosmer2013applied}. 
+This probability indicates how likely an item belongs to a specific class.
+In our CTR prediction example, for every available advertisement, the click probability is predicted and depending on how many advertisements will be displayed, the ones with highest probabilities are selected.
+Support vector machine (SVM) \cite{steinwart2008support} is another common classification model.
+While logistic regression model aims to find parameters of a function that accurately fit the data points to the labels, SVM tries to find a hyperplane that separates the data points belonging to different classes.
+In many cases, both type of models work equally well, but depending the data and its complexity one method may be preferred to the other.
+\todo[inline]{make sure the references are ok}
 
 \textbf{Matrix Factorization} is a common method used in recommender systems \cite{koren2009matrix}. 
 Matrix factorization is used to derive the latent factors (users and items) for recommender systems.
@@ -272,6 +283,7 @@ Any unknown rating, hence can be predicted by simply using a dot product of the 
 We used the SGD implementation of matrix factorization by Simon Funk \cite{funk2006netflix}. 
 A scalable version of the algorithm was proposed by Gemulla et al. \cite{gemulla2011large}.
 
+\todo[inline]{Should I include neural networks ? I probably will not use them in the evaluation }
 \textbf{Neural Networks} or deep learning inspired by biological neural networks in brain are used to learn and approximate complex functions. 
 They have been used for more than half a century to model functions and have been used in training machine learning models.
 However, due to slow training process and lack of large amount of training data they have not been used extensively in machine learning community.
@@ -295,7 +307,7 @@ It has out-of-the-box support for models created using TensorFlow and it provide
 However, it does not provide incremental updates to the model.
 Contrary to our system, models have to be retrained outside of the system and redeployed to TensorFlow Serving once the training is done.
 Our system supports, incremental and batch updates to the model and automatically applies these updates to the model currently being served.
-Velox \cite{crankshaw2014missing} is an implementation of the common machine learning serving practice, explained in Section \ref{introduction}.
+Velox \cite{crankshaw2014missing} is an implementation of the common machine learning serving practice, explained in section \ref{introduction}.
 Velox supports incremental learning and can answer prediction queries in realtime.
 It also eliminates the need for users to manually retrain the model offline and redeploy it again.
 It is integrated into the \textit{Berkeley Data Analytics Stack (BDAS)}, and uses the components of BDAS such as Tachyon \cite{li2014tachyon} and Spark \cite{zaharia2010spark}. 
