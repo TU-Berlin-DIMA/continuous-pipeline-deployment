@@ -436,8 +436,8 @@ In case of concept drift, new training iterations should be scheduled that only 
 As described earlier the underlying optimization method is SGD.
 Any computation model capable of executing SGD efficiently can be used as the run-time of the system.
 All of the components of the system described so far are not limited to any computation environment.
-However, in order to ensure scalability several considerations have to made with regards to each component.
-The data manager can work on top of distributed file systems such HDFS \cite{shvachko2010hadoop}. 
+However, in order to ensure scalability several considerations have to be made with regards to each component.
+The data manager can work on top of distributed file systems such as HDFS \cite{shvachko2010hadoop}. 
 In order to allow fast processing of incoming training observations, the intermediate buffer is stored in memory.
 Therefore, the buffer has to be distributed to all the nodes in the computing cluster.
 Certain types of machine learning models may be too large to fit into one single node.
@@ -482,7 +482,7 @@ Note that, in this dataset, the order is irrelevant and we assume no change in d
 \subsection{Methods}
 In this section, we briefly describe the methods we have implemented.
 
-\textbf{Naive} implements a simple on-line learning scenario, in which the gradient of the function at every new training item is evaluated and the weight parameters are adjusted based the gradient value. 
+\textbf{Naive} implements a simple on-line learning scenario, in which the gradient of the function at every new training item is evaluated and the weight parameters are adjusted based on the gradient value. 
 All the other methods also include incremental learning to constantly improve the model.
 
 \textbf{Offline+online} is a variation of naive method, where first 10\% of the data is used for initial batch training.
@@ -543,7 +543,7 @@ However, the error rate is not decreasing linearly with the buffer size.
 Further analysis show that once the model is update more frequently, it slowly starts to converge and any further training has little to no effect on the overall quality of the model
 Therefore, increasing the scheduling rate only decreases the error rate up to a point, after which increasing the scheduling rate has no effect on the overall quality of the model.
 This is extremely important, specially when considering the effect the buffer size has on the running time.
-Figure \ref{fig:movie-lens-100k-buffer-size-time} shows the running time on 100K MovieLens dataset using different buffer sizes. 
+Figure \ref{fig:movie-lens-100k-buffer-size-time} shows the running time on \textit{movie-lens-100k} dataset using different buffer sizes. 
 Increasing the buffer size from 500 to 5000 decreases the running time by a factor of 5 while as described before the error rate is only increased slightly.
 Therefore, depending on the application, we can set the buffer size to bigger values in order to increase the performance of the system without affecting the quality of the final model substantially.
 
@@ -713,7 +713,7 @@ Another reason for the difference in running time is that as the size of the dat
 The running time of the offline-only method is not included as it is similar to offline+online, since they both have include initial training and have to examine individual items arriving at the system one at a time.
 
 \section{Conclusions} \label{conclusion}
-This paper presents, an architecture for deployment and continuous training of machine learning models is shown.. 
+This paper presents an architecture for deployment and continuous training of machine learning models.
 The architecture utilizes the properties of stochastic gradient descent optimization method.
 SGD is an iterative optimization process where in each iteration a small sample of the data is used to update the machine learning model, however, it typically works with static datasets.
 Our proposed architecture uses the properties of the SGD and applies it to long running, integrated training and deployment processes.
@@ -724,6 +724,7 @@ SGD is one of the most common optimization techniques for large datasets and has
 %new paragraph
 To demonstrate our system's ability to incorporate different machine learning models and workloads, we implement two use cases: recommender system and Image classifier.
 The recommender system is tested on different workloads and the results show that not only it scales well but also it adopts to changes in data distribution by continuously updating the model.
+\todo[inline]{remove/replace this sentence}
 Image classifier use case as well shows how we can implement and use neural networks within our system to create a model that not only can answer prediction requests quickly, but is also able to make incremental and batch updates to further increase the model quality without creating much overhead.
 % end of new paragraph
 Our experiments also shows the continuous training of the machine learning models is much faster than full retraining of them, which is the most common approach in deployment and maintenance of machine learning models. We showed that not only continuous training requires less resources but it also produces models with lower error rates that adopt faster to changes in the dataset.
