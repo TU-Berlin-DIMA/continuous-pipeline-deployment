@@ -148,6 +148,8 @@ Our experiments show that our deployment method can achieve up to an order of ma
 \keywords{ML Model Management; Stochastic Gradient Descent; ML Systems}
 
 \section{Introduction} \label{introduction}
+\todo[inline]{Remove mentions of MNIST}
+\todo[inline]{rename the model names (baseline, baseline+ and velox)}
 % Problem
 Deployment and maintenance of machine learning models is a crucial step in machine learning applications' life cycle. 
 However, it is one that has received very little attention. 
@@ -577,7 +579,7 @@ Therefore, similar to scheduling rate, setting the sampling rate to smaller valu
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-sampling-time.eps}
+\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-sampling-time-improved.eps}
 \caption{Movie Lens 100k sampling rate vs time}
 \label{fig:movie-lens-100k-sample-rate-time}
 \end{figure}
@@ -696,11 +698,11 @@ This is, as explained earlier because of neural network's ability to perform bet
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/times-log-scale.eps}
+\includegraphics[width=\columnwidth]{../images/experiment-results/times-log-scale-improved.eps}
  \caption{Running time on different Workloads}
  \label{fig:running-time}
  \end{figure}
-
+\todo[inline]{Missing data sets (Criteo and ???}
 Figure \ref{fig:running-time} shows the running time of the implemented methods on \textit{movie-lens-100k}, \textit{movie-lens-1M} and \textit{MNIST}.
 As expected, naive and offline+online have the lowest running times on both datasets.
 This is because they do not support batch updates to the model.
