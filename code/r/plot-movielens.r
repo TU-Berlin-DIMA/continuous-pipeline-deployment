@@ -85,7 +85,10 @@ p =
   guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,NA),linetype=c(1,1,1,1,0)))) 
 
 
-ggsave(p , filename = 'movie-lens-100k/5000/movie-lens-100k-quality-improved.eps', device = 'eps', dpi = 1000)
+ggsave(p , filename = 'movie-lens-100k/5000/movie-lens-100k-quality-improved.eps', 
+       device = 'eps', dpi = 1000,
+       width = 16, height = 9, 
+       units = "in")
 
 
 # Plot Movie lens 1M data
@@ -135,7 +138,10 @@ p =
   guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,NA),linetype=c(1,1,1,1,0)))) 
 
 
-ggsave(p , filename = 'movie-lens-1M/50000/movie-lens-1m-quality-improved.eps', device = 'eps', dpi = 1000)
+ggsave(p , filename = 'movie-lens-1M/50000/movie-lens-1m-quality-improved.eps', 
+       device = 'eps', dpi = 1000,
+       width = 16, height = 9, 
+       units = "in")
 
 
 
@@ -155,7 +161,10 @@ bufferVsTimePlot = ggplot(data = df) +
         axis.title=element_text(size=28)) + 
   guides(colour=FALSE)
 
-ggsave(bufferVsTimePlot , filename = 'movie-lens-100k/buffer-size/movie-lens-100k-buffer-time-improved.eps', device = 'eps', dpi = 1000)
+ggsave(bufferVsTimePlot , filename = 'movie-lens-100k/buffer-size/movie-lens-100k-buffer-time-improved.eps', 
+       device = 'eps', dpi = 1000,
+       width = 16, height = 9, 
+       units = "in")
 
 # Plot sampling rate vs time
 times = loadData('movie-lens-100k/sampling/times.txt')
@@ -173,7 +182,11 @@ bufferVsTimePlot = ggplot(data = df) +
         axis.title=element_text(size=28)) + 
   guides(colour=FALSE)
 
-ggsave(bufferVsTimePlot , filename = 'movie-lens-100k/sampling/movie-lens-100k-sampling-time-improved.eps', device = 'eps', dpi = 1000)
+ggsave(bufferVsTimePlot , filename = 'movie-lens-100k/sampling/movie-lens-100k-sampling-time-improved.eps', 
+       device = 'eps', dpi = 1000,
+       width = 16, height = 9, 
+       units = "in")
+       
 
 # Plot running time of different work loads
 time_100k = c(128.7379, 506.1425, 854.3796, 187.6295)
@@ -195,7 +208,10 @@ runningTimePlot = ggplot(melted, aes(models, value)) +
         axis.text=element_text(size=20),
         axis.title=element_text(size=28)) 
 
-ggsave(runningTimePlot , filename = 'times-log-scale-improved.eps', device = 'eps', dpi = 1000)
+ggsave(runningTimePlot , filename = 'times-log-scale-improved.eps', 
+       device = 'eps', dpi = 1000, 
+       width = 16, height = 9, 
+       units = "in")
 
 # Plot quality vs buffer size
 data = loadQuality('movie-lens-100k/buffer-size/buffers.txt')
@@ -205,102 +221,85 @@ df = data.frame(ind = 1:5001, one = data$one , two = data$two,
                 seven = data$seven , eight = data$eight, 
                 nine = data$nine , ten = data$ten)
 
-ggplot(data = df, aes(x = ind)) +
-  geom_ribbon(aes(ymin = one, ymax = two, fill = "500"),  alpha='0.5') + 
-  geom_ribbon(aes(ymin = two, ymax = three, fill =  "b" ), alpha='0.5') + 
-  geom_ribbon(aes(ymin = three, ymax = four , fill = "c"), alpha='0.5') + 
-  geom_ribbon(aes(ymin = four, ymax = five, fill ="d"), alpha='0.5' )+ 
-  geom_ribbon(aes(ymin = five, ymax = six , fill = "e"), alpha='0.5') + 
-  geom_ribbon(aes(ymin = six, ymax = seven, fill = "f"), alpha='0.5') + 
-  geom_ribbon(aes(ymin = seven, ymax = eight , fill = "g"), alpha='0.5') + 
-  geom_ribbon(aes(ymin = eight, ymax = nine, fill ="h"), alpha='0.5') + 
-  geom_ribbon(aes(ymin = nine, ymax = ten,  fill = "5000"), alpha='0.5') + 
+bufferSizePlot = 
+  ggplot(data = df, aes(x = ind)) +
+  geom_ribbon(aes(ymin = one, ymax = two, fill = "500   ")) + 
+  geom_ribbon(aes(ymin = two, ymax = three, fill =  "b" )) + 
+  geom_ribbon(aes(ymin = three, ymax = four , fill = "c")) + 
+  geom_ribbon(aes(ymin = four, ymax = five, fill ="d") )+ 
+  geom_ribbon(aes(ymin = five, ymax = six , fill = "e")) + 
+  geom_ribbon(aes(ymin = six, ymax = seven, fill = "f")) + 
+  geom_ribbon(aes(ymin = seven, ymax = eight , fill = "g")) + 
+  geom_ribbon(aes(ymin = eight, ymax = nine, fill ="h")) + 
+  geom_ribbon(aes(ymin = nine, ymax = ten,  fill = "5000   ")) + 
   
-  scale_fill_manual(name = "Buffer Size", breaks = c("500","5000"), 
+  scale_fill_manual(name = "Buffer Size", breaks = c("500   ","5000   "), 
                     values = c(
-                      "500" = rgb(0.0, 1.0, 1.0) ,
-                      "b" = rgb(0.0, .9, 1.0)  ,
-                      "c" =rgb(0.0, 0.8, 1.0) ,
-                      "d" =rgb(0.0, .7, 1.0) ,
-                      "e" =rgb(0.0, .6, 1.0) ,
-                      "f" =rgb(0.0, .5, 1.0) ,
-                      "g" =rgb(0.0, .4, 1.0) ,
-                      "h" =rgb(0.0, .3, 1.0) ,
-                      "5000" = rgb(0.0, 0.2, 1.0))) + 
+                      "500   "= rgb(0.0, 0.0, 1.0) ,
+                      "b" =rgb(0.0, 0.25, 1.0)  ,
+                      "c" =rgb(0.0, 0.35, 1.0) ,
+                      "d" =rgb(0.0, 0.45, 1.0) ,
+                      "e" =rgb(0.0, 0.55, 1.0) ,
+                      "f" =rgb(0.0, 0.6, 1.0) ,
+                      "g" =rgb(0.0, 0.65, 1.0) ,
+                      "h" =rgb(0.0, 0.80, 1.0) ,
+                      "5000   "= rgb(0.0, 0.90, 1.0))) + 
   xlab("Test Cycle") + ylab("Mean Squared Error") + 
   # legend themes
-  theme(legend.text = element_text(size = 24)) +
+  theme(legend.text = element_text(size = 24), 
+        legend.position = "bottom", 
+        legend.title= element_text(size = 24)) +
   theme(axis.text=element_text(size=20),
         axis.title=element_text(size=28)) 
 
+ggsave(bufferSizePlot , filename = 'movie-lens-100k/buffer-size/movie-lens-100k-buffer-size-improved.eps', 
+       device = cairo_ps, 
+       dpi = 1000, 
+       width = 16, height = 9, 
+       units = "in")
 
 
 
 # Plot quality vs Sampling rate
 data = loadQuality('movie-lens-100k/sampling/samples.txt')
-df = data.frame(ind = 1:5001, one = data$one , two = data$two, 
-                three = data$three , four = data$four, 
-                five = data$five , six = data$six, 
-                seven = data$seven , eight = data$eight, 
-                nine = data$nine , ten = data$ten)
+df = data.frame(ind = 1:5001, one = data$ten , two = data$nine, 
+                three = data$eight , four = data$seven, 
+                five = data$six , six = data$five, 
+                seven = data$four , eight = data$three, 
+                nine = data$two , ten = data$one)
 
-ggplot(data = df, aes(x = ind)) +
-  geom_ribbon(aes(ymin = one, ymax = two), fill = rgb(0.0, 1.0, 1.0), alpha='0.5' ,  colour=NA) + 
-  geom_ribbon(aes(ymin = two, ymax = three), fill = rgb(0.0, 0.85, 1.0), alpha='0.5',  colour=NA) + 
-  geom_ribbon(aes(ymin = three, ymax = four), fill = rgb(0.0, 0.70, 1.0), alpha='0.5',  colour=NA) + 
-  geom_ribbon(aes(ymin = four, ymax = five), fill = rgb(0.0, 0.65, 1.0), alpha='0.5',  colour=NA) + 
-  geom_ribbon(aes(ymin = five, ymax = six), fill = rgb(0.0, 0.50, 1.0), alpha='0.5',  colour=NA) + 
-  geom_ribbon(aes(ymin = six, ymax = seven), fill = rgb(0.0, 0.35, 1.0), alpha='0.5',  colour=NA) + 
-  geom_ribbon(aes(ymin = seven, ymax = eight), fill = rgb(0.0, 0.20, 1.0), alpha='0.5',  colour=NA) + 
-  geom_ribbon(aes(ymin = eight, ymax = nine), fill =rgb(0.0, 0.05, 1.0), alpha='0.5',  colour=NA) + 
-  geom_ribbon(aes(ymin = nine, ymax = ten), fill = rgb(0.0, 0.0, 1.0), alpha='0.5',  colour=NA) + 
-  #  geom_line(aes(y = one)) + 
-  #  geom_line(aes(y = ten)) +
-  scale_fill_manual(name ="Legend" , 
-                    values = c(rgb(0.0, 1.0, 1.0), rgb(0.0, 1.0, 1.0),rgb(0.0, 1.0, 1.0),
-                               rgb(0.0, 1.0, 1.0),
-                               rgb(0.0, 1.0, 1.0),
-                               rgb(0.0, 1.0, 1.0),rgb(0.0, 1.0, 1.0),rgb(0.0, 1.0, 1.0),rgb(0.0, 1.0, 1.0))) + 
-  xlab("Test Cycle") + ylab("Mean Squared Error") + 
-  # legend themes
-  theme(legend.text = element_text(size = 24), legend.key = element_rect(colour = "transparent", fill = alpha('white', 0.0)) ,
-        legend.position="bottom") +
-  theme(axis.text=element_text(size=20),
-        axis.title=element_text(size=28)) 
-
-
-
-
-
-
-
-
-
-ggplot(data = df, aes(x = ind)) +
-  geom_ribbon(aes(ymin = one, ymax = two, fill = "500"),  alpha='0.5') + 
-  geom_ribbon(aes(ymin = two, ymax = three, fill =  "b" ), alpha='0.5') + 
-  geom_ribbon(aes(ymin = three, ymax = four , fill = "c"), alpha='0.5') + 
-  geom_ribbon(aes(ymin = four, ymax = five, fill ="d"), alpha='0.5' )+ 
-  geom_ribbon(aes(ymin = five, ymax = six , fill = "e"), alpha='0.5') + 
-  geom_ribbon(aes(ymin = six, ymax = seven, fill = "f"), alpha='0.5') + 
-  geom_ribbon(aes(ymin = seven, ymax = eight , fill = "g"), alpha='0.5') + 
-  geom_ribbon(aes(ymin = eight, ymax = nine, fill ="h"), alpha='0.5') + 
-  geom_ribbon(aes(ymin = nine, ymax = ten,  fill = "5000"), alpha='0.5') + 
+samplingRatePlot = 
+  ggplot(data = df, aes(x = ind)) +
+  geom_ribbon(aes(ymin = one, ymax = two, fill = "1.0   ")) + 
+  geom_ribbon(aes(ymin = two, ymax = three, fill =  "b" )) + 
+  geom_ribbon(aes(ymin = three, ymax = four , fill = "c")) + 
+  geom_ribbon(aes(ymin = four, ymax = five, fill ="d"))+ 
+  geom_ribbon(aes(ymin = five, ymax = six , fill = "e")) + 
+  geom_ribbon(aes(ymin = six, ymax = seven, fill = "f")) + 
+  geom_ribbon(aes(ymin = seven, ymax = eight , fill = "g")) + 
+  geom_ribbon(aes(ymin = eight, ymax = nine, fill ="h")) + 
+  geom_ribbon(aes(ymin = nine, ymax = ten,  fill = "0.1   ")) + 
   
-  scale_fill_manual(name = "Buffer Size", breaks = c("500","5000"), 
-                    values = c(
-                              "500" = rgb(0.0, 1.0, 1.0) ,
-                              "b" = rgb(0.0, .9, 1.0)  ,
-                               "c" =rgb(0.0, 0.8, 1.0) ,
-                               "d" =rgb(0.0, .7, 1.0) ,
-                               "e" =rgb(0.0, .6, 1.0) ,
-                               "f" =rgb(0.0, .5, 1.0) ,
-                               "g" =rgb(0.0, .4, 1.0) ,
-                               "h" =rgb(0.0, .3, 1.0) ,
-                               "5000" = rgb(0.0, 0.2, 1.0))) + 
+  scale_fill_manual(name = "Sampling Rate", breaks = c("1.0   ","0.1   "), 
+                      values = c(
+                        "1.0   "= rgb(0.0, 0.0, 1.0) ,
+                        "b" =rgb(0.0, 0.25, 1.0)  ,
+                        "c" =rgb(0.0, 0.35, 1.0) ,
+                        "d" =rgb(0.0, 0.45, 1.0) ,
+                        "e" =rgb(0.0, 0.55, 1.0) ,
+                        "f" =rgb(0.0, 0.6, 1.0) ,
+                        "g" =rgb(0.0, 0.65, 1.0) ,
+                        "h" =rgb(0.0, 0.80, 1.0) ,
+                        "0.1   "= rgb(0.0, 0.90, 1.0))) + 
   xlab("Test Cycle") + ylab("Mean Squared Error") + 
   # legend themes
-  theme(legend.text = element_text(size = 24)) +
+  theme(legend.text = element_text(size = 24), 
+        legend.title = element_text(size = 24), 
+        legend.position = "bottom") +
   theme(axis.text=element_text(size=20),
         axis.title=element_text(size=28)) 
 
+ggsave(samplingRatePlot , filename = 'movie-lens-100k/sampling/movie-lens-100k-sampling-rate-improved.eps', 
+       device = cairo_ps, dpi = 1000, 
+       width = 16, height = 9, 
+       units = "in")
