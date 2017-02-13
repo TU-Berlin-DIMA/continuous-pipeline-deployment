@@ -227,32 +227,32 @@ df = data.frame(ind = 1:5001, one = data$one , two = data$two,
 
 bufferSizePlot = 
   ggplot(data = df, aes(x = ind)) +
-  geom_ribbon(aes(ymin = one, ymax = two, fill = "500   ")) + 
+  geom_ribbon(aes(ymin = one, ymax = two, fill = "500")) + 
   geom_ribbon(aes(ymin = two, ymax = three, fill =  "b" )) + 
   geom_ribbon(aes(ymin = three, ymax = four , fill = "c")) + 
   geom_ribbon(aes(ymin = four, ymax = five, fill ="d") )+ 
-  geom_ribbon(aes(ymin = five, ymax = six , fill = "e")) + 
+  geom_ribbon(aes(ymin = five, ymax = six , fill = "2500")) + 
   geom_ribbon(aes(ymin = six, ymax = seven, fill = "f")) + 
   geom_ribbon(aes(ymin = seven, ymax = eight , fill = "g")) + 
   geom_ribbon(aes(ymin = eight, ymax = nine, fill ="h")) + 
-  geom_ribbon(aes(ymin = nine, ymax = ten,  fill = "5000   ")) + 
+  geom_ribbon(aes(ymin = nine, ymax = ten,  fill = "5000")) + 
   
-  scale_fill_manual(name = "Buffer Size", breaks = c("500   ","5000   "), 
+  scale_fill_manual(name = "Buffer Size", breaks = c("5000","2500","500"), 
                     values = c(
-                      "500   "= rgb(0.0, 0.0, 1.0) ,
+                      "500"= rgb(0.0, 0.0, 1.0) ,
                       "b" =rgb(0.0, 0.25, 1.0)  ,
                       "c" =rgb(0.0, 0.35, 1.0) ,
                       "d" =rgb(0.0, 0.45, 1.0) ,
-                      "e" =rgb(0.0, 0.55, 1.0) ,
+                      "2500" =rgb(0.0, 0.55, 1.0) ,
                       "f" =rgb(0.0, 0.6, 1.0) ,
                       "g" =rgb(0.0, 0.65, 1.0) ,
                       "h" =rgb(0.0, 0.80, 1.0) ,
-                      "5000   "= rgb(0.0, 0.90, 1.0))) + 
+                      "5000"= rgb(0.0, 0.90, 1.0))) + 
   xlab("Test Cycle") + ylab("Mean Squared Error") + 
   # legend themes
-  theme(legend.text = element_text(size = 24), 
-        legend.position = "bottom", 
-        legend.title= element_text(size = 24)) +
+  theme(legend.text = element_text(size = 20), 
+        legend.title= element_text(size = 20), 
+        legend.key.size  = unit(1.0, "cm")) +
   theme(axis.text=element_text(size=20),
         axis.title=element_text(size=28)) 
 
@@ -284,7 +284,7 @@ samplingRatePlot =
   geom_ribbon(aes(ymin = eight, ymax = nine, fill ="h")) + 
   geom_ribbon(aes(ymin = nine, ymax = ten,  fill = "0.1")) + 
   
-  scale_fill_manual(name = "Sampling Rate", breaks = c("1.0","0.1"), 
+  scale_fill_manual(name = "Sampling Rate", breaks = c("0.1","0.5","1.0"), 
                       values = c(
                         "1.0"= rgb(0.0, 0.0, 1.0) ,
                         "b" =rgb(0.0, 0.25, 1.0)  ,
@@ -297,8 +297,9 @@ samplingRatePlot =
                         "0.1"= rgb(0.0, 0.90, 1.0))) + 
   xlab("Test Cycle") + ylab("Mean Squared Error") + 
   # legend themes
-  theme(legend.text = element_text(size = 24), 
-        legend.title = element_text(size = 24)) +
+  theme(legend.text = element_text(size = 20), 
+        legend.title = element_text(size = 20), 
+        legend.key.size  = unit(1.0, "cm")) +
   theme(axis.text=element_text(size=20),
         axis.title=element_text(size=28)) 
 
