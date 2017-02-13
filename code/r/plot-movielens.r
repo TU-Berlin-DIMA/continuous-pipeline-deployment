@@ -307,3 +307,6 @@ ggsave(samplingRatePlot , filename = 'movie-lens-100k/sampling/movie-lens-100k-s
        device = cairo_ps, dpi = 1000, 
        width = 16, height = 9, 
        units = "in")
+
+
+# Meta graph: performance, quality model type
