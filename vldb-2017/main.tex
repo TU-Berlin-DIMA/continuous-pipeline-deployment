@@ -149,11 +149,11 @@ Our experiments show that our deployment method can achieve up to an order of ma
 
 \section{Introduction} \label{introduction}
 \todo[inline]{Remove mentions of MNIST}
-\todo[inline]{rename the model names (baseline, baseline+ and velox)}
 \todo[inline]{Use case: New data sources while the system is running}
 \todo[inline]{Separate system design from model description}
 \todo[inline]{Include a meta graph (performance + quality)}
 \todo[inline]{Check the gray background in printed version}
+\todo[inline]{Improve system architecture figure}
 % Problem
 Deployment and maintenance of machine learning models is a crucial step in machine learning applications' life cycle. 
 However, it is one that has received very little attention. 
@@ -488,24 +488,26 @@ Note that, in this dataset, the order is irrelevant and we assume no change in d
 \subsection{Methods}
 In this section, we briefly describe the methods we have implemented.
 
-\textbf{Naive} implements a simple on-line learning scenario, in which the gradient of the function at every new training item is evaluated and the weight parameters are adjusted based on the gradient value. 
-All the other methods also include incremental learning to constantly improve the model.
+\textbf{Baseline} is the naive and simplest deployment model. 
+After a model is a trained from the initial data, it is used throughout the lifetime of the application without any incremental or batch learning.
 
-\textbf{Offline+online} is a variation of naive method, where first 10\% of the data is used for initial batch training.
-The remaining data is used in an online learning fashion (on element at a time). 
+\textbf{Baseline+} is similar to the baseline approach with the added incremental learning.
+After the initial model is deployed, it is constantly updated based on new training items that arrive at the system.
 
-\textbf{Offline-only} is similar to offline+online method without any online learning.
-
-\textbf{Full-retraining} is an implementation of the common deployment scenario described in Section \ref{introduction}
-Similar to the proposed system by Crankshaw \cite{crankshaw2014missing}. 
-After the initial model is deployed, the model is incrementally update with every new training item.
+\textbf{Velox} is an implementation of the common deployment scenario described in Section \ref{introduction}
+It is based on the the proposed system by Crankshaw \cite{crankshaw2014missing}. 
+After the initial model is deployed, the model is incrementally updated with every new training item.
 A full retraining of the model is performed once a certain amount of training observations have been received.
 
-\textbf{Continuous} is based on our proposed method. 
-Once there are enough new data, the scheduler triggers a new iteration of SGD. 
+\textbf{Continuous} is the implementation of our proposed method. 
+Similar to Velox and Baseline+ once, an initial model is first trained using the existing data.
+New training data is used to incrementally update the model.
+Based on the rate of incoming training data, a scheduler component triggers new iteration of SGD.
 The data used in this new iteration of SGD consists of the new data that arrived in the system since the last scheduled iteration plus a sample of the existing historical data.
 
-\textbf{Baseline}: a baseline model is trained over the entire dataset and then used to calculate the test error rate. 
+\textbf{Static training} is a simple training of a static model over the entire dataset. 
+Static training is only used to establish a baseline for comparison of the running time of different methods.
+It is only applicable in cases where the entire dataset is available.
 
 \subsection{Implementation of ML Models}
 We have implemented two different machine learning models to evaluate our system.
@@ -630,33 +632,33 @@ Setting these parameters to small values decreases the running time considerably
 
 
 \subsection{Comparison Under Constrained Resources }
-Both, the full-retraining and the continuous model use different strategies to update the model.
+\todo[inline]{mention retraining points}
+Both, the velox and the continuous model use different strategies to update the model.
 To perform a fair comparison of the two, we are evaluating them under similar resource constraints.
 We configured both of the methods' frequency of training in such a way that the total running time on the \textit{movie-lens} and \textit{MNIST} datasets are similar.
 To achieve this, we have fixed the total number of epochs (SGD iterations) for both methods.
-For full-retraining, this value is equal to the number of retraining multiplied by number of iterations in each retraining. 
+For velox, this value is equal to the number of retraining multiplied by number of iterations in each retraining. 
 For the continuous model, it is total number of scheduled iterations throughout the lifetime of the system.
-Therefore, the continuous method schedules a new iteration every 500 items for \textit{movie-lens-100k} and 5,000 items for \textit{movie-lens-1M} and the full-retraining method schedules a retraining every 15,000 items for \textit{movie-lens-100k} and 150,000 items for \textit{movie-lens-1M}.
+Therefore, the continuous method schedules a new iteration every 500 items for \textit{movie-lens-100k} and 5,000 items for \textit{movie-lens-1M} and velox method schedules a retraining every 15,000 items for \textit{movie-lens-100k} and 150,000 items for \textit{movie-lens-1M}.
 \begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-quality-improved.eps}
 \caption{Mean squared error on MovieLens 100k}
 \label{fig:movie-lens-100k-score}
 \end{figure}
-Figure \ref{fig:movie-lens-100k-score} shows the mean squared error of the continuous, the full-retraining, and several other methods on \textit{movie-lens-100k} dataset.
-Naive and offline-only methods achieve the worst performance among all the existing methods.
-While Naive manages to maintains a stable error rate, it cannot guarantee a low error rate because it skipped the initial training.
-Offline-only method quality is similar to offline+online, continuous, and full-retraining methods in the beginning. 
-Since all four methods perform an initial retraining, the error rate stays low in the beginning, but offline-only quality starts to get worse since it does not include any incremental or batch retraining.
-Offline-only continuous to perform better than naive method until 3,000 test items.
-However, afterwards a small change in distribution of the data causes the model trained using offline-only method to perform worst since it cannot adopt to changes in the data and the quality continues to degrade as more new test items are examined.
-Full-retraining method performs similar to offline+online method until the first retraining is executed.
+Figure \ref{fig:movie-lens-100k-score} shows the mean squared error of the continuous, velox, and several other methods on \textit{movie-lens-100k} dataset.
+Baseline model achieves the worst performance among all the existing methods.
+Baseline model's quality is similar to Baseline+, Continuous, and Velox methods in the beginning. 
+Since all four methods perform an initial retraining, the error rate stays low in the beginning, but Baseline quality starts to degrade since it does not include any incremental or batch retraining.
+Baseline+ continuous to perform better than naive method until 3,000 test cycles.
+However, afterwards a small change in distribution of the data causes the model trained using Baseline method to perform worst since it cannot adopt to changes in the data and the quality continues to degrade as more new test items are examined.
+Velox method performs similar to Baseline+ method until the first retraining is executed.
 There is a sudden drop in the error rate after the first retraining.
-For the remainder of the data points, full-retraining performs as expected, once there is a retraining, the quality immediately increases.
-This increase in quality, however, is followed by a slow decrease due the fact that only incremental updates are being made to the model.
-Continuous method has the lowest error rate among all the implemented methods.
+For the remainder of the data points, Velox performs as expected, once there is a retraining, the error rate immediately decreases.
+This decrease in error rate, however, is followed by a slow increase due the fact that only incremental updates are being made to the model.
+Finally, Continuous method has the lowest error rate among all the implemented methods.
 It consistently manages to adopt to the changes and decrease the error rate where the distribution of the incoming data is stable.
-As expected, except for immediately after a full retraining, the continuous method always performs better that the full-retraining approach.
+As expected, except for immediately after a full retraining, the Continuous method always performs better than Velox.
 
 \begin{figure}[h]
 \centering
@@ -666,17 +668,15 @@ As expected, except for immediately after a full retraining, the continuous meth
 \end{figure}
 
 Figure \ref{fig:movie-lens-1M-score} shows the mean squared error rate achieved by the implemented methods on \textit{movie-lens-1M}.
-Similar to \textit{movie-lens-100k}, the continuous method has the lowest error rate among all the implemented methods.
-The difference in error rate between continuous retraining and full-retraining is even greater than the error rate for \textit{movie-lens-100k}.
-We believe a bigger shift in data distribution (data in \textit{movie-lens-1M} is gathered from a longer period of time) makes zhe continuous method to consistently 
-adopt faster to the changes in data distribution.
-Full-retraining the method's error rate follows the same trend as in the case of \textit{movie-lens-100k}. 
-After every retraining, the error rate first drops then continuous to increase slowly until the next retraining.
-Offline+online and naive methods have steady error rates, with offline+online having a lower rate, and they both continue to keep the error rate more or less constant for all the incoming data.
-Offline-only has a starting error rate similar to that of offline+online and full-retraining, afterwards the error rate continues to increase slightly.
-Similar to \textit{movie-lens-100k}, offline-only's error rate becomes bigger than naive after around half of the test cycles.
-In both \textit{movie-lens-100k} and \textit{movie-lens-1M} baseline method's error rate is smaller than all the other methods.
-This is simply because of the amount of available rating information that the baseline method has access to.
+Similar to \textit{movie-lens-100k}, the Continuous method has the lowest error rate among all the implemented methods.
+The difference in error rate between Continuous and Velox is even greater than the error rate for \textit{movie-lens-100k}.
+We believe a bigger shift in data distribution (data in \textit{movie-lens-1M} is gathered from a longer period of time) makes the Continuous method to consistently adopt faster to the changes in data distribution.
+Velox's error rate follows the same trend as in the case of \textit{movie-lens-100k}. 
+After every retraining, the error rate first drops then slowly increases until the next retraining.
+Similar to \textit{movie-lens-100k} dataset, the error rate of Baseline is highest among all the implemented methods, followed by Baseline+ , where due to the incremental updates of the model the error rate is consistently lower.
+
+
+
 
 \begin{figure}[h]
  \centering
@@ -692,12 +692,12 @@ This explains why the naive method performs poorly.
 Its error rate starts to decrease as more training data becomes available, but it is still far inferior to all the other methods.
 The gap in error rate between offline+online and offline-only methods is much smaller than that of movie lens datasets.
 Unlike the movie lens datasets, \textit{MNIST} does not contain a shift in distribution and that is why both the offline+online and offline-only methods' performance is rather similar.
-The offline+online method performs slightly better because of the extra training items that the underlying neural network is exposed to.
-Full-retraining and continuous methods behave similarly as well and unlike Movie Lens datasets, full-retraining has a consistent error rate, that is the error rate does not decrease after a retraining of the model.
+The Baseline+ method performs slightly better because of the extra training items that the underlying neural network is exposed to.
+Velox and Continuous methods behave similarly as well and unlike Movie Lens datasets, Velox has a consistent error rate, that is the error rate does not decrease after a retraining of the model.
 Similar to offline+online's case, since there is no change in the distribution of the data, the error rate does not degrade after a retraining.
 The continuous method manages to decrease the error rate as more training iterations are performed.
 As more training iterations are executed, the underlying neural network's parameters converge and as a result the error rate on the test set decreases.
-Both continuous and full-retraining method start to perform better than the baseline after a few training iterations (retraining in full-retraining case).
+Both Continuous and Velox start to perform better than the baseline after a few training iterations (retraining in Velox's case).
 This is, as explained earlier because of neural network's ability to perform better when more training data are available to it.
 
 \begin{figure}[h]
@@ -708,15 +708,15 @@ This is, as explained earlier because of neural network's ability to perform bet
  \end{figure}
 \todo[inline]{Missing data sets (Criteo and ???}
 Figure \ref{fig:running-time} shows the running time of the implemented methods on \textit{movie-lens-100k}, \textit{movie-lens-1M} and \textit{MNIST}.
-As expected, naive and offline+online have the lowest running times on both datasets.
+As expected, Baseline have the lowest running times on both datasets.
 This is because they do not support batch updates to the model.
-Baseline method's running time is only affected by data size.
+Static training method's running time is only affected by data size.
 When dataset size big, each iteration of SGD will examine more data and the model will converge slower as there are a lot more data to examine.
-Continuous method's running time is smaller than full-retraining by almost an order of magnitude in all workloads.
+Continuous method's running time is smaller than Velox by almost an order of magnitude in all workloads.
 Although we have configured both methods to use similar amount of resources (same number of iterations), continuous method still manages to achieve a consistent and lower error rate in a much faster time.
 This is because a full retraining incurs a much higher overhead than continuously training the method.
 Another reason for the difference in running time is that as the size of the data increases the time for running a new iteration in continuous method stays roughly the same where as the time for a full retraining increases exponentially.
-The running time of the offline-only method is not included as it is similar to offline+online, since they both have include initial training and have to examine individual items arriving at the system one at a time.
+The running time of the Baseline+ is not included as it is similar to Baseline, since they both have include initial training and have to examine individual items arriving at the system one at a time.
 
 \section{Conclusions} \label{conclusion}
 This paper presents an architecture for deployment and continuous training of machine learning models.
