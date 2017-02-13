@@ -193,13 +193,17 @@ time_100k = c(128.7379, 506.1425, 854.3796, 187.6295)
 time_1M = c(235.8159, 4608.0255, 9610.6307, 1825.9909)
 # time_MNIST = c(2.3790788650512695, 8.481926918029785, 244.62878799438477, 1569.8254868984222, 56.363343954086304)
 models = c('Baseline', 'Continuous', 'Velox', 'Static Training')
+library(reshape)
 
 df = data.frame("models" = models, "movie_lens_100k"=time_100k, "movie_lens_1M"=time_1M)
 melted = melt(df, id.vars = 'models')
 colnames(melted) = c("models", "data_sets", "value")
 
-runningTimePlot = ggplot(melted, aes(models, value)) +   
-  geom_bar(aes(fill = data_sets), position = "dodge", stat="identity") + 
+runningTimePlot = ggplot(melted, aes(x = models, y = value, label = sprintf("%4.0f", value))) +   
+  geom_bar(aes(fill = data_sets), position = position_dodge(width = NULL), stat="identity", width = 0.5) + 
+  geom_text(aes(x = models, y = value, group = data_sets), position = position_dodge(width = 0.5), 
+            size = 8, 
+            vjust = -0.1) +
   xlab("") + ylab("Time (s) in Log Scale") + 
   scale_y_log10() +
   scale_fill_discrete(name = "", labels = c("movie_lens_100k   ", "movie_lens_1M   ")) + 
@@ -270,32 +274,31 @@ df = data.frame(ind = 1:5001, one = data$ten , two = data$nine,
 
 samplingRatePlot = 
   ggplot(data = df, aes(x = ind)) +
-  geom_ribbon(aes(ymin = one, ymax = two, fill = "1.0   ")) + 
+  geom_ribbon(aes(ymin = one, ymax = two, fill = "1.0")) + 
   geom_ribbon(aes(ymin = two, ymax = three, fill =  "b" )) + 
   geom_ribbon(aes(ymin = three, ymax = four , fill = "c")) + 
   geom_ribbon(aes(ymin = four, ymax = five, fill ="d"))+ 
-  geom_ribbon(aes(ymin = five, ymax = six , fill = "e")) + 
+  geom_ribbon(aes(ymin = five, ymax = six , fill = "0.5")) + 
   geom_ribbon(aes(ymin = six, ymax = seven, fill = "f")) + 
   geom_ribbon(aes(ymin = seven, ymax = eight , fill = "g")) + 
   geom_ribbon(aes(ymin = eight, ymax = nine, fill ="h")) + 
-  geom_ribbon(aes(ymin = nine, ymax = ten,  fill = "0.1   ")) + 
+  geom_ribbon(aes(ymin = nine, ymax = ten,  fill = "0.1")) + 
   
-  scale_fill_manual(name = "Sampling Rate", breaks = c("1.0   ","0.1   "), 
+  scale_fill_manual(name = "Sampling Rate", breaks = c("1.0","0.1"), 
                       values = c(
-                        "1.0   "= rgb(0.0, 0.0, 1.0) ,
+                        "1.0"= rgb(0.0, 0.0, 1.0) ,
                         "b" =rgb(0.0, 0.25, 1.0)  ,
                         "c" =rgb(0.0, 0.35, 1.0) ,
                         "d" =rgb(0.0, 0.45, 1.0) ,
-                        "e" =rgb(0.0, 0.55, 1.0) ,
+                        "0.5" =rgb(0.0, 0.55, 1.0) ,
                         "f" =rgb(0.0, 0.6, 1.0) ,
                         "g" =rgb(0.0, 0.65, 1.0) ,
                         "h" =rgb(0.0, 0.80, 1.0) ,
-                        "0.1   "= rgb(0.0, 0.90, 1.0))) + 
+                        "0.1"= rgb(0.0, 0.90, 1.0))) + 
   xlab("Test Cycle") + ylab("Mean Squared Error") + 
   # legend themes
   theme(legend.text = element_text(size = 24), 
-        legend.title = element_text(size = 24), 
-        legend.position = "bottom") +
+        legend.title = element_text(size = 24)) +
   theme(axis.text=element_text(size=20),
         axis.title=element_text(size=28)) 
 
