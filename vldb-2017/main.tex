@@ -150,11 +150,12 @@ Our experiments show that our deployment method can achieve up to an order of ma
 \section{Introduction} \label{introduction}
 \todo[inline]{POLISH}
 \todo[inline]{Remove mentions of MNIST}
-\todo[inline]{Better System Architecture}
 \todo[inline]{Include a meta graph (performance + quality)}
 \todo[inline]{improve related work}
 \todo[inline]{Remove gray background in plots}
 \todo[inline]{mention Clipper in related work}
+\todo[inline]{CRITEO Dataset experiments}
+\todo[inline]{make retraining points more visible and mention them in evaluation chapter}
 % Problem
 Deployment and maintenance of machine learning models is a crucial step in machine learning applications' life cycle. 
 However, it is one that has received very little attention. 
@@ -370,13 +371,17 @@ Moreover, new batch data sources can be stored in the buffer (or persistent stor
 \todo[inline]{requires improvement}
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{../images/system-architecture-1.pdf}
+\includegraphics[width=\columnwidth]{../images/system-architecture-2.pdf}
 \caption{System Architecture}
 \label{fig:system-architecture}
 \end{figure}
-
-Figure \ref{fig:system-architecture} shows an overview of the architecture of our system.
+The proposed system comprises three main component; model manager, data manager and scheduler. 
+Figure \ref{fig:system-architecture} shows an overview of the architecture of our system and the interactions between its components.
+Incoming training observations are forwarded to the data manager where they first stored in a buffer then they are passed on to the model manager in order to incrementally update the model.
+Prediction requests are directly forwarded to the model manager, where based on the latest available model a prediction is made and the result is returned to the to the users.
+Both scheduler and data manager components are constantly communicating with each other and the model manager to obtain the latest statistics such as the model quality and buffer size, which in turn helps in tuning the scheduling and sampling rate for next iterations of SGD. 
 Next, we explain each component of the system in more detail.
+
 \subsection{Scheduler}\label{scheduler}
 Scheduler component is responsible for scheduling of new iterations of SGD.
 An iteration of SGD can be scheduled at any point in time.
@@ -386,19 +391,20 @@ Another situation that a new iteration of SGD should be executed is when the sys
 If the model is not updated with the new training items frequently, the quality will go down more rapidly, especially if the distribution of the data is changing rapidly.
 Incremental updates are turned off when a new iteration is scheduled to execute.
 Training iterations and model serving are disjoint and not affected by each other.
-As soon as the training iteration is completed the model is updated and incremental update is reenabled.
+As soon as the training iteration is completed the model is updated and incremental update is re-enabled.
 This property allows the scheduler to execute new iteration of SGD in a separate thread without interrupting the serving module.
 The scheduling rate however affects the quality of the model.
 Each new iteration slightly increases the quality of the model.
 The increase in quality is even more when new training observations have arrived at the system.
+
 In Section \ref{evaluation}, we investigate the effect of scheduling rate on model quality.
-In case no new training data is available, the model parameters will converge after awhile and any further training iterations will not have any effect on the model quality.
+In case no new training data is available, the model parameters will eventually converge and any further training iterations will not have any effect on the model quality.
 Therefore, the scheduler component has to communicate with the model manager in order to detect whether the model parameters have converged and stop further iterations until more training data becomes available.
 
 \subsection{Data Manager} \label{data-manager}
 In order to execute an iteration of SGD, we need to combine the training data that arrives at the system in real-time and the data stored on disk.
 The data manager is responsible for storing the incoming training observations in an intermediate buffer.
-When a new training iteration is scheduled, the data manager accesses the historical data stored on disk and provides a sample based on the configured sampling rate.
+When a new training iteration is scheduled, the data manager accesses the historical data stored on disk and provides a sample.
 The data from the sample and the data in the buffer are merged together to create the dataset for next training iteration.
 The data manager provides access to this dataset for model manager where the actual training and model updates happen.
 The data manager also communicates with scheduler in order to inform it when the intermediate buffer is becoming full and a new training iteration is required. 
@@ -414,6 +420,10 @@ However, if there is no concept drift in the data, a larger sampling rate will i
 Another effect that the sampling rate has on the system is the training iteration running time.
 Larger sampling rate increases the running time of each training iteration as more data has to be processed.
 In Section \ref{evaluation}, we investigate the effects of different sampling rates on both the quality and performance of the system.
+
+Moreover,  new data sets can be registered in data manager.
+In our current prototype, new data sets first have to be stored on disk, and data manager should be informed of the data path.
+Newly available data sets are used in the subsequent SGD iterations.
 
 \subsection{Model Manager} \label{model-manager} 
 An important part of the system is the model manager component.
@@ -448,22 +458,18 @@ This versioning of the models is essential.
 When there is a rapid change in the distribution of the incoming data (a sudden concept drift) or when there are anomalies in the data, it is sometimes necessary to revert back to a version before the change in distribution occurred.
 In case of concept drift, new training iterations should be scheduled that only use the data in the buffer and in case of an anomalies in the data, they have to be identified and discarded before any further model updates could happen.
 
-\subsection{Distributed environment} 
-% How would it scale
-As described earlier the underlying optimization method is SGD.
-Any computation model capable of executing SGD efficiently can be used as the run-time of the system.
-All of the components of the system described so far are not limited to any computation environment.
-However, in order to ensure scalability several considerations have to be made with regards to each component.
-The data manager can work on top of distributed file systems such as HDFS \cite{shvachko2010hadoop}. 
-In order to allow fast processing of incoming training observations, the intermediate buffer is stored in memory.
-Therefore, the buffer has to be distributed to all the nodes in the computing cluster.
-Certain types of machine learning models may be too large to fit into one single node.
-One example of such models is the matrix factorization model for recommender systems.
-In this case, the model manager should partition the model among all the nodes.
-It is important that the model manager chooses the partitioning strategy in such a way, that when requested the predictions can be made quickly.
-For example, when a prediction request for a specific user and item arrives at the system, the model manager should be able to quickly find the related user and item from the matrices to quickly compute the predicted rating for the specific pair.
-Our model serving system is also not limited to any specific run-time and can accommodate any of the common data processing engines.
-Apache Flink \cite{carbone2015apache} and Apache Spark \cite{zaharia2010spark} are distributed data processing platform that work with data in memory and have support for iterative algorithms. % Lets cite the second paper later: , alexandrov2014stratosphere
+\subsection{SGD Run-Time} 
+All components of our model serving system described so far are not limited to any specific run time.
+We have decoupled the components from the actual run time of the system.
+As described earlier the underlying optimization method is SGD and any run time capable of performing incremental and batch SGD updates efficiently are suitable options for our system.
+Apache Flink \cite{carbone2015apache} and Apache Spark \cite{zaharia2010spark} are distributed data processing platform that work with data in memory and have support for iterative algorithms, which makes both of them ideal options for our SGD run-time.
+In our current prototype, we are using Apache Spark \cite{zaharia2010spark} as our SGD run-time, but we plan incorporate Apache Flink in the complete version of the system.
+Model manager is the component responsible for communicating with the SGD run-time.
+In the current version of our prototype, model manager requests Spark to perform both incremental and batch updates to the model, both of which are supported by the built in machine learning library of Spark.
+The choice of run-time for SGD slightly influences the data manager as well.
+In our prototype, historical data is stored on Hadoop Distributed File System (HDFS) \cite{shvachko2010hadoop}.
+Therefore, the data manager should have support for HDFS.
+Both Flink and Spark provide out-of-the-box support for HDFS.
 
 \section{Evaluation} \label{evaluation} 
 In this section, we evaluate the performance of our system using various datasets. 
