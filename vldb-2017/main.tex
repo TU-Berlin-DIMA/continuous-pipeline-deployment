@@ -148,27 +148,28 @@ Our experiments show that our deployment method can achieve up to an order of ma
 \keywords{ML Model Management; Stochastic Gradient Descent; ML Systems}
 
 \section{Introduction} \label{introduction}
-\todo[inline]{POLISH}
-\todo[inline]{Remove mentions of MNIST}
-\todo[inline]{Include a meta graph (performance + quality)}
-\todo[inline]{improve related work}
-\todo[inline]{Remove gray background in plots}
-\todo[inline]{mention Clipper in related work}
-\todo[inline]{CRITEO Dataset experiments}
-\todo[inline]{make retraining points more visible and mention them in evaluation chapter}
+%\todo[inline]{POLISH}
+%\todo[inline]{Remove mentions of MNIST}
+%\todo[inline]{Include a meta graph (performance + quality)}
+%\todo[inline]{improve related work}
+%\todo[inline]{Remove gray background in plots}
+%\todo[inline]{mention Clipper in related work}
+%\todo[inline]{CRITEO Dataset experiments}
+%\todo[inline]{make retraining points more visible and mention them in evaluation chapter}
 % Problem
 Deployment and maintenance of machine learning models is a crucial step in machine learning applications' life cycle. 
 However, it is one that has received very little attention. 
 % Why is it important
 ML application's life cycle does not end with training. 
-In fact deployment and serving of the models is the most crucial part that brings the actual business value. 
+In fact deployment and serving of the models is the most important aspect that brings the actual business value. 
 % Specific problem
-In order to gain actual value out of a machine learning model, it has to be monitored in realtime in production environment. 
-These models have to be maintained and constantly updated incrementally to better fit the new data that arrives. 
+In order to gain actual value out of the machine learning models, they have to be monitored in realtime in production environment. 
+These models have to be maintained and constantly updated incrementally to better fit the new data that arrives at the system. 
 The models should also be deployed in an environment that is capable of handling high traffic. 
-While all of these are happening, the models should be re-trained since ML models usually need to have access to entire datasets, otherwise the quality will degrade if they are only updated incrementally. \todo[inline] {Either find a reference or elaborate what are the reasons that pure incremental learning may degrade the quality }
+While the system is running, it is also possible that new data sets become available.
+In order to prevent the model's quality from degrading, periodic retraining should be performed to better fit the model with the data that has arrived at the system since the last training.
 % How is it different from prior work
-Most of the machine learning systems focus on training and providing tools to make model training and search easier. 
+Most of the current machine learning research focuses on training and providing tools to make model training and search easier. 
 Kumar et al. \cite{kumar2015survey} provided an overview of landscape of existing machine learning systems. 
 Except in a very few cases \cite{akdere2011case, crankshaw2014missing}, most of the surveyed systems, focus on training of machine learning models and provide little to no support after the model has been trained.
 Moreover, systems with support for model deployment are still lacking constant monitoring and fast and accurate updates of the machine learning models.
@@ -179,22 +180,21 @@ The system also receives feedback in the form of new training observations.
 Upon receiving a training observation, the model is updated incrementally.
 Incremental updates are only supported by certain type of machine learning models, where the underlying optimization strategy allows changes in the model based on individual training items.
 These incremental updates, however, are not enough to keep the model quality at an acceptable rate and after a while the quality may degrade.
-Moreover, new batches of training data from external sources may become available while the system is running.
-In order to further train the model on this new batch of data, first the new data set is combined with the existing one and then the model is retrained using the entire data.
+Moreover, new data sets from external sources may become available while the system is running which are combined with the existing data.
 At this point, a new model has to be retrained based on the entire available data and has to be redeployed again.
 
 \textbf{Example application:} to illustrate this model deployment approach, consider as an example the task of predicting the click through rate (CTR) of online advertisements.
-Online advertising industry is a multi-million dollar industry and CTR prediction is the machine learning problem at the heart of this industry \cite{macmahan2013, graepel2010web} \todo[inline]{go through the bing paper}.
+Online advertising industry is a multi-million dollar industry and CTR prediction is the machine learning problem at the heart of this industry \cite{macmahan2013, graepel2010web}.
 In order to gain profit, search engines typically show a set of advertisements, based on the users' search queries and other related information (users' details, geographical and cultural information).
 However, typically advertisements are sold based on click rate and, therefore, the ad network provider is only payed if the advertisement was clicked.
 An optimal strategy is to serve advertisements based on their expected click rate value.
 Machine learning models are used to find the expected click rate of advertisements before they are served to the user.
-A predictive model is created based on the available training data, which typically includes content of the page, search query (in case of search engine providers), user information, content and meta-data of the ad creatives. 
+A predictive model is created based on the available training data, which typically includes content of the page, search query, user information, content and meta-data of the available ad creatives. 
 Once the model is deployed, prediction queries of the form of ad requests arrive at the system.
-The model proposes the ad creative that has the highest probability of being clicked by the user.
-Feedback of whether advertisements are clicked on or not is send to the system in the form of new training observations and the model is updated accordingly.
+The model proposes the ad creatives that have the highest probabilities of being clicked by the user.
+Feedback of whether advertisements are clicked on or not is send back to the system in the form of new training observations and the model is updated accordingly.
 Furthermore, new training data sources in the form user databases, new ad creatives with their metadata and more web pages will become available as more companies employ the service of the ad provider.
-In order to leverage the new data and reduce the error bias introduced by incremental learning, the model is also periodically retrained using entire data.
+In order to leverage the new data and reduce the error introduced by incremental learning, the model is periodically retrained using entire data.
 Figure \ref{fig:click-rate} demonstrates the CTR prediction use case for a search engine provider.
 
 \begin{figure}[h]
@@ -204,7 +204,7 @@ Figure \ref{fig:click-rate} demonstrates the CTR prediction use case for a searc
 \label{fig:click-rate}
 \end{figure}
 
-Some emerging machine learning systems have tried to automate this process to some extend.
+Some emerging machine learning systems have tried to automate this process to some extend \cite{crankshaw2014missing}.
 They automatically deploy the model into a production environment, monitor its quality, and initiate a retraining when required.
 However, they treat the underlying machine learning models as black boxes and as a result miss many opportunities for optimizing the training and deployment process.
 % What is the motivation for this work
@@ -217,7 +217,7 @@ Based on this observation, we present a new model for a system, that supports de
 We are making the following contributions: 
 \begin{itemize}
 \item a system for machine learning models deployment and maintenance
-\item uninterrupted batch updates to the model while the system is running
+\item elimination of offline batch retraining and introduction of uninterrupted updates to the model while the system is running
 \item incremental updates and handling of changes in data distribution
 \end{itemize}
 % What are the main results
@@ -227,9 +227,10 @@ We have experimented on time dependent datasets where distribution of the data c
 % Outline: The rest of this document is structured as follows. ...
 The rest of this paper is organized as follows. 
 Section \ref{sgd} describes the underlying optimization method used in our system. 
-Section \ref {related-work} discusses the related work.
-Section \ref{continious-training-serving} introduces the architecture and design principles of our system. 
+Section \ref{continious-training-serving} introduces the design principles of our system. 
+Section \ref{sec:system-architecutre} discusses the architecture and component of the system.
 In Section \ref{evaluation}, we evaluate our system against different workloads and compare the performance of our method to other model serving and maintenance approaches. 
+Section \ref {related-work} discusses the related work.
 Finally, Section \ref{conclusion} presents our conclusion and future work.
 
 \section{Stochastic Gradient Descent} \label{sgd}
@@ -367,7 +368,7 @@ As more training observations becomes available the model is updated further.
 Moreover, new batch data sources can be stored in the buffer (or persistent storage unit) as soon as they become available, and used immediately to further train the model without requiring a new model to be retrained from scratch.
 
 
-\section{System Architecture}
+\section{System Architecture} \label{sec:system-architecutre}
 \todo[inline]{requires improvement}
 \begin{figure}[t]
 \centering
