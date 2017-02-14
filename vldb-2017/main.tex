@@ -148,14 +148,12 @@ Our experiments show that our deployment method can achieve up to an order of ma
 \keywords{ML Model Management; Stochastic Gradient Descent; ML Systems}
 
 \section{Introduction} \label{introduction}
+\todo[inline]{POLISH}
 \todo[inline]{Remove mentions of MNIST}
-\todo[inline]{Use case: New data sources while the system is running}
-\todo[inline]{Separate system design from model description}
+\todo[inline]{Better System Architecture}
 \todo[inline]{Include a meta graph (performance + quality)}
-\todo[inline]{describe velox in more detail}
-\todo[inline]{describe my own method in more detail}
 \todo[inline]{improve related work}
-\todo[inline]{Check the gray background in printed version}
+\todo[inline]{Remove gray background in plots}
 \todo[inline]{mention Clipper in related work}
 % Problem
 Deployment and maintenance of machine learning models is a crucial step in machine learning applications' life cycle. 
@@ -180,6 +178,8 @@ The system also receives feedback in the form of new training observations.
 Upon receiving a training observation, the model is updated incrementally.
 Incremental updates are only supported by certain type of machine learning models, where the underlying optimization strategy allows changes in the model based on individual training items.
 These incremental updates, however, are not enough to keep the model quality at an acceptable rate and after a while the quality may degrade.
+Moreover, new batches of training data from external sources may become available while the system is running.
+In order to further train the model on this new batch of data, first the new data set is combined with the existing one and then the model is retrained using the entire data.
 At this point, a new model has to be retrained based on the entire available data and has to be redeployed again.
 
 \textbf{Example application:} to illustrate this model deployment approach, consider as an example the task of predicting the click through rate (CTR) of online advertisements.
@@ -192,7 +192,8 @@ A predictive model is created based on the available training data, which typica
 Once the model is deployed, prediction queries of the form of ad requests arrive at the system.
 The model proposes the ad creative that has the highest probability of being clicked by the user.
 Feedback of whether advertisements are clicked on or not is send to the system in the form of new training observations and the model is updated accordingly.
-The model is also periodically retrained using entire data in order to reduce the error introduced by incremental learning to the model.
+Furthermore, new training data sources in the form user databases, new ad creatives with their metadata and more web pages will become available as more companies employ the service of the ad provider.
+In order to leverage the new data and reduce the error bias introduced by incremental learning, the model is also periodically retrained using entire data.
 Figure \ref{fig:click-rate} demonstrates the CTR prediction use case for a search engine provider.
 
 \begin{figure}[h]
@@ -206,7 +207,7 @@ Some emerging machine learning systems have tried to automate this process to so
 They automatically deploy the model into a production environment, monitor its quality, and initiate a retraining when required.
 However, they treat the underlying machine learning models as black boxes and as a result miss many opportunities for optimizing the training and deployment process.
 % What is the motivation for this work
-%Given the lack of systems to support model deployment and maintenance, we have set out to design a system that not only supports deployment and maintenance of machine learning models but also provides %constant incremental and batch updates while the system is running. 
+%Given the lack of systems to support model deployment and maintenance, we have set out to design a system that not only supports deployment and maintenance of machine learning models but also provides %constant crashing and batch updates while the system is running. 
 %We propose the design of a system that provide 
 %real-time query support as well incremental and fast batch updates to the machine learning models.
 
@@ -231,12 +232,6 @@ In Section \ref{evaluation}, we evaluate our system against different workloads 
 Finally, Section \ref{conclusion} presents our conclusion and future work.
 
 \section{Stochastic Gradient Descent} \label{sgd}
-\begin{figure*}[!t]
-\centering
-\includegraphics[scale = 0.5]{../images/velox-1.pdf}
-\caption{Velox Work Flow}
-\label{fig:velox-work-flow}
-\end{figure*}
 
 In machine learning, optimization methods are used to find the minimum of the objective function (referred to as the loss function) by calculating the gradient of the function at different data points and update the function parameters based on the gradient values.
 A common optimization method is gradient descent, an iterative process where in every iteration the entire training data set is used to calculate the gradient value.
@@ -302,8 +297,14 @@ ImageNet competition \cite{ILSVRC15} in 2012 was won by a neural network propose
 Success of Google Brain team \cite{sutskever2014sequence, mikolov2013efficient} was also instrumental to popularizing neural networks in machine learning community.
 We have implemented a multilayer neural network for classifying images.
 
-
 \section{Continuous Training and Serving} \label{continious-training-serving}
+\todo[inline]{requires a lot of improvement}
+\begin{figure*}[!t]
+\centering
+\includegraphics[scale = 0.5]{../images/velox-1.pdf}
+\caption{Velox Work Flow}
+\label{fig:velox-work-flow}
+\end{figure*}
 % Stochastic Gradient System properties
 As described in Section \ref{sgd}, stochastic gradient descent is an iterative process where in each iteration one or a sample of the data is selected randomly and the gradient is calculated based on this sample. 
 After each iteration the parameters of the model are updated.
@@ -323,7 +324,7 @@ If an ad is click by a user, this information is sent back to the system as a ne
 However, if an ad is not clicked by a user, it is not a strong indication of user's negative taste towards a specific ad.
 Therefore, training items with negative labels are typically only generated if an ad has a very low (close to zero) click ratio for a very long period of time.
 
-% INCOMPLETE
+\subsection{State of the Art} \label{sub:state-of-the-art}
 Velox \cite{crankshaw2014missing} is an state of the art system which has implemented this deployment model.
 It uses Apache Spark to train an initial model using the available data.
 Once the model is trained, it is deployed into a distributed environment, where prediction queries are answered in real time.
@@ -332,7 +333,18 @@ The incoming training data is also stored in a persistent storage.
 To ensure the model is performing well, its quality is monitored over time.
 Velox periodically retrains the model from scratch. 
 This retraining can be triggered when the size of new training data has surpasses a predefined limit, or the quality of the model has gone below a user defined threshold or simply after a fixed period of time defined by the user.
+Although Velox continuously monitors and updates the underlying model, it has 3 drawbacks:\\
+\begin{itemize}
+\item Complete retraining discards all the current model parameter
+\item Process of retraining on full data set requires a lot of resources
+\item When new batch data sources are introduced, a complete retraining has to be performed in order to update the model
+\end{itemize}
+To address these problems, we introduced a new deployment system which we describe next.
 
+\subsection{Continuous Deployment}
+Our key observation is that, by utilizing SGD's proprties, the model training process can be seamlessly executed along side the serving and query answering component.
+Similar to Velox, models are incrementally update.
+However, unlike Velox, the retraining process is completely eliminated and instead is replaced by a series of consecutive 1-iteration of SGD optimization.
 Since each iteration of SGD is light and fast, it can be done while the system is serving prediction requests.
 \begin{figure*}[t]
 \centering
@@ -351,9 +363,18 @@ A scheduler component, will schedule a new iteration of SGD based on the rate of
 The scheduler can also decide to run an iteration if the system is idle or the load on the system is not heavy. 
 Each new iteration will use a random sample of the data in storage and the data in the buffer. 
 As more training observations becomes available the model is updated further.
+Moreover, new batch data sources can be stored in the buffer (or persistent storage unit) as soon as they become available, and used immediately to further train the model without requiring a new model to be retrained from scratch.
 
 
 \section{System Architecture}
+\todo[inline]{requires improvement}
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{../images/system-architecture-1.pdf}
+\caption{System Architecture}
+\label{fig:system-architecture}
+\end{figure}
+
 Figure \ref{fig:system-architecture} shows an overview of the architecture of our system.
 Next, we explain each component of the system in more detail.
 \subsection{Scheduler}\label{scheduler}
@@ -443,13 +464,6 @@ It is important that the model manager chooses the partitioning strategy in such
 For example, when a prediction request for a specific user and item arrives at the system, the model manager should be able to quickly find the related user and item from the matrices to quickly compute the predicted rating for the specific pair.
 Our model serving system is also not limited to any specific run-time and can accommodate any of the common data processing engines.
 Apache Flink \cite{carbone2015apache} and Apache Spark \cite{zaharia2010spark} are distributed data processing platform that work with data in memory and have support for iterative algorithms. % Lets cite the second paper later: , alexandrov2014stratosphere
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{../images/system-architecture-1.pdf}
-\caption{System Architecture}
-\label{fig:system-architecture}
-\end{figure}
 
 \section{Evaluation} \label{evaluation} 
 In this section, we evaluate the performance of our system using various datasets. 
@@ -722,6 +736,7 @@ It has out-of-the-box support for models created using TensorFlow and it provide
 However, it does not provide incremental updates to the model.
 Contrary to our system, models have to be retrained outside of the system and redeployed to TensorFlow Serving once the training is done.
 Our system supports, incremental and batch updates to the model and automatically applies these updates to the model currently being served.
+\todo[inline]{modify the velox text here}
 Velox \cite{crankshaw2014missing} is an implementation of the common machine learning serving practice, explained in section \ref{introduction}.
 Velox supports incremental learning and can answer prediction queries in realtime.
 It also eliminates the need for users to manually retrain the model offline and redeploy it again.
