@@ -66,11 +66,12 @@ p =
   # plot retraining points
   geom_point(data = df[retrainings,c(1,3)], 
              aes(x=time, y = velox, colour="e", fill = "Retraining"), 
-             shape = 8, 
+             shape = 23, 
              lwd = 7 ) + 
   # x and y labels
   xlab("Test Cycle") + ylab("Mean Squared Error") + 
   # legend themes
+  theme_bw() + 
   theme(legend.text = element_text(size = 24), legend.key = element_rect(colour = "transparent", fill = alpha('white', 0.0)) ,
         legend.position="bottom") +
   theme(axis.text=element_text(size=20),
@@ -78,7 +79,7 @@ p =
   # legend for line graph   
   scale_color_manual(name ="",  # Name,
                      labels = c("Baseline   ", "Baseline+    ", "Continuous    ", "Velox    ", ""), 
-                     values = c("a" = "green", "b" = "orange", "c" = "blue","d" = "red", "e" = "black"))  +
+                     values = c("a" = "green", "b" = "orange", "c" = "blue","d" = "red", "e" = "red"))  +
   # legend for retraining point
   scale_fill_manual(name = "", values = c("Retraining" = "black")) + 
   # guides for enhancing legend

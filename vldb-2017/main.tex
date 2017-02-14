@@ -148,14 +148,21 @@ Our experiments show that our deployment method can achieve up to an order of ma
 \keywords{ML Model Management; Stochastic Gradient Descent; ML Systems}
 
 \section{Introduction} \label{introduction}
-%\todo[inline]{POLISH}
-%\todo[inline]{Remove mentions of MNIST}
-%\todo[inline]{Include a meta graph (performance + quality)}
-%\todo[inline]{improve related work}
-%\todo[inline]{Remove gray background in plots}
-%\todo[inline]{mention Clipper in related work}
-%\todo[inline]{CRITEO Dataset experiments}
-%\todo[inline]{make retraining points more visible and mention them in evaluation chapter}
+\todo[inline]{POLISH}
+\todo[inline]{Remove mentions of MNIST}
+\todo[inline]{Include a meta graph (performance + quality)}
+\todo[inline]{modify velox text in related work chapter}
+\todo[inline]{improve related work}
+\todo[inline]{Remove gray background in plots}
+\todo[inline]{mention Clipper in related work}
+\todo[inline]{CRITEO Dataset experiments}
+\todo[inline]{mention retraining points in the experiments}
+\todo[inline]{make sure the references in SGD chapter for linear classifiers are ok}
+\todo[inline]{Remove Neural Networks ? }
+\todo[inline]{Improve Continuous Training and Serving Chapter}
+\todo[inline]{Improve SGD Chapter}
+\todo[inline]{Improve System Architecture chapter}
+\todo[inline]{Remove image classifier mention from conclusion}
 % Problem
 Deployment and maintenance of machine learning models is a crucial step in machine learning applications' life cycle. 
 However, it is one that has received very little attention. 
@@ -279,7 +286,6 @@ In our CTR prediction example, for every available advertisement, the click prob
 Support vector machine (SVM) \cite{steinwart2008support} is another common classification model.
 While logistic regression model aims to find parameters of a function that accurately fit the data points to the labels, SVM tries to find a hyperplane that separates the data points belonging to different classes.
 In many cases, both type of models work equally well, but depending the data and its complexity one method may be preferred to the other.
-\todo[inline]{make sure the references are ok}
 
 \textbf{Matrix Factorization} is a common method used in recommender systems \cite{koren2009matrix}. 
 Matrix factorization is used to derive the latent factors (users and items) for recommender systems.
@@ -289,7 +295,6 @@ Any unknown rating, hence can be predicted by simply using a dot product of the 
 We used the SGD implementation of matrix factorization by Simon Funk \cite{funk2006netflix}. 
 A scalable version of the algorithm was proposed by Gemulla et al. \cite{gemulla2011large}.
 
-\todo[inline]{Should I include neural networks ? I probably will not use them in the evaluation }
 \textbf{Neural Networks} or deep learning inspired by biological neural networks in brain are used to learn and approximate complex functions. 
 They have been used for more than half a century to model functions and have been used in training machine learning models.
 However, due to slow training process and lack of large amount of training data they have not been used extensively in machine learning community.
@@ -300,7 +305,6 @@ Success of Google Brain team \cite{sutskever2014sequence, mikolov2013efficient} 
 We have implemented a multilayer neural network for classifying images.
 
 \section{Continuous Training and Serving} \label{continious-training-serving}
-\todo[inline]{requires a lot of improvement}
 \begin{figure*}[!t]
 \centering
 \includegraphics[scale = 0.5]{../images/velox-1.pdf}
@@ -369,7 +373,6 @@ Moreover, new batch data sources can be stored in the buffer (or persistent stor
 
 
 \section{System Architecture} \label{sec:system-architecutre}
-\todo[inline]{requires improvement}
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{../images/system-architecture-2.pdf}
@@ -643,7 +646,6 @@ Setting these parameters to small values decreases the running time considerably
 
 
 \subsection{Comparison Under Constrained Resources }
-\todo[inline]{mention retraining points}
 Both, the velox and the continuous model use different strategies to update the model.
 To perform a fair comparison of the two, we are evaluating them under similar resource constraints.
 We configured both of the methods' frequency of training in such a way that the total running time on the \textit{movie-lens} and \textit{MNIST} datasets are similar.
@@ -717,7 +719,6 @@ This is, as explained earlier because of neural network's ability to perform bet
  \caption{Running time on different Workloads}
  \label{fig:running-time}
  \end{figure}
-\todo[inline]{Missing data sets (Criteo and ???}
 Figure \ref{fig:running-time} shows the running time of the implemented methods on \textit{movie-lens-100k}, \textit{movie-lens-1M} and \textit{MNIST}.
 As expected, Baseline have the lowest running times on both datasets.
 This is because they do not support batch updates to the model.
@@ -743,7 +744,6 @@ It has out-of-the-box support for models created using TensorFlow and it provide
 However, it does not provide incremental updates to the model.
 Contrary to our system, models have to be retrained outside of the system and redeployed to TensorFlow Serving once the training is done.
 Our system supports, incremental and batch updates to the model and automatically applies these updates to the model currently being served.
-\todo[inline]{modify the velox text here}
 Velox \cite{crankshaw2014missing} is an implementation of the common machine learning serving practice, explained in section \ref{introduction}.
 Velox supports incremental learning and can answer prediction queries in realtime.
 It also eliminates the need for users to manually retrain the model offline and redeploy it again.
@@ -779,7 +779,6 @@ SGD is one of the most common optimization techniques for large datasets and has
 %new paragraph
 To demonstrate our system's ability to incorporate different machine learning models and workloads, we implement two use cases: recommender system and Image classifier.
 The recommender system is tested on different workloads and the results show that not only it scales well but also it adopts to changes in data distribution by continuously updating the model.
-\todo[inline]{remove/replace this sentence}
 Image classifier use case as well shows how we can implement and use neural networks within our system to create a model that not only can answer prediction requests quickly, but is also able to make incremental and batch updates to further increase the model quality without creating much overhead.
 % end of new paragraph
 Our experiments also shows the continuous training of the machine learning models is much faster than full retraining of them, which is the most common approach in deployment and maintenance of machine learning models. We showed that not only continuous training requires less resources but it also produces models with lower error rates that adopt faster to changes in the dataset.
