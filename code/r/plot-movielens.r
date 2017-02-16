@@ -331,19 +331,18 @@ df = data.frame('error'=c(mean(continuous100k), mean(velox100k), 0.7362879642607
                 'models'=c('Continuous', 'Velox', 'Static'))
 p = ggplot(data = df, aes(x = time, y = error)) + 
   geom_point(alpha = 0) + 
-  geom_text(aes(label = models), size = 8, hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
+  geom_text(aes(label = models, colour = models), size = 10, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
   xlab("Time (m)") + ylab("Mean Squared Error") + 
   ylim(c(0.5, 1.0)) + 
-  ggtitle("Movie Lens 100k") + 
   theme_bw() + 
-  theme(plot.title = element_text(lineheight=.8, face="bold", size = 26)) + 
   theme(legend.text = element_text(size = 26), 
         legend.title = element_text(size = 26), 
         legend.key.size  = unit(1.0, "cm")) +
-  theme(axis.text=element_text(size=26),
-        axis.title=element_text(size=28)) 
+  theme(axis.text=element_text(size=40),
+        axis.title=element_text(size=40)) +
+  scale_colour_manual(values = c("Static" = "black", "Continuous" = "Green", "Velox" = "Red"))
 
-ggsave(p , filename = 'movie-lens-100k/systems.eps', 
+ggsave(p , filename = 'movie-lens-100k/movie-lens-100k-systems.eps', 
        device = cairo_ps, dpi = 1000, 
        width = 16, height = 9, 
        units = "in")
@@ -354,19 +353,18 @@ df = data.frame('error'=c(mean(continuous1m), mean(velox1m), 0.5392938220858208)
                 'models'=c('Continuous', 'Velox', 'Static'))
 p = ggplot(data = df, aes(x = time, y = error)) + 
   geom_point(alpha = 0) + 
-  geom_text(aes(label = models), size = 8, hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
-  xlab("Time (m)") + ylab("Mean Squared Error") + 
-  ggtitle("Movie Lens 1M") + 
+  geom_text(aes(label = models, colour = models), size = 10, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
+  xlab("Time (m)") + ylab("") + 
   ylim(c(0.5, 1.0)) + 
   theme_bw() + 
-  theme(plot.title = element_text(lineheight=.8, face="bold", size = 26)) + 
   theme(legend.text = element_text(size = 26), 
         legend.title = element_text(size = 26), 
         legend.key.size  = unit(1.0, "cm")) +
-  theme(axis.text=element_text(size=26),
-        axis.title=element_text(size=28)) 
+  theme(axis.text=element_text(size=40),
+        axis.title=element_text(size=40)) +
+  scale_colour_manual(values = c("Static" = "black", "Continuous" = "Green", "Velox" = "Red"))
 
-ggsave(p , filename = 'movie-lens-1m/systems.eps', 
+ggsave(p , filename = 'movie-lens-1m/movie-lens-1m-systems.eps', 
        device = cairo_ps, dpi = 1000, 
        width = 16, height = 9, 
        units = "in")
