@@ -149,15 +149,12 @@ Our experiments show that our deployment method can achieve up to an order of ma
 \keywords{ML Model Management; Stochastic Gradient Descent; ML Systems}
 
 \section{Introduction} \label{introduction}
-%\todo[inline]{POLISH}
-%\todo[inline]{Remove mentions of MNIST}
-%\todo[inline]{Include a meta graph (performance + quality)}
-%\todo[inline]{modify velox text in related work chapter}
-%\todo[inline]{improve related work}
-%\todo[inline]{mention Clipper in related work}
-%\todo[inline]{CRITEO Dataset experiments}
-%\todo[inline]{mention retraining points in the experiments}
-%\todo[inline]{Remove image classifier mention from conclusion}
+\todo[inline]{POLISH}
+\todo[inline]{Remove mentions of MNIST}
+\todo[inline]{Include a meta graph (performance + quality)}
+\todo[inline]{CRITEO Dataset experiments}
+\todo[inline]{mention retraining points in the experiments}
+\todo[inline]{Remove image classifier mention from conclusion}
 % Problem
 Deployment and maintenance of machine learning models is a crucial step in machine learning applications' life cycle. 
 However, it is one that has received very little attention. 
@@ -752,28 +749,26 @@ It has out-of-the-box support for models created using TensorFlow and it provide
 However, it does not provide incremental updates to the model.
 Contrary to our system, models have to be retrained outside of the system and redeployed to TensorFlow Serving once the training is done.
 Our system supports, incremental and batch updates to the model and automatically applies these updates to the model currently being served.
+
 Velox \cite{crankshaw2014missing} is an implementation of the common machine learning serving practice, explained in section \ref{introduction}.
 Velox supports incremental learning and can answer prediction queries in realtime.
 It also eliminates the need for users to manually retrain the model offline and redeploy it again.
-It is integrated into the \textit{Berkeley Data Analytics Stack (BDAS)}, and uses the components of BDAS such as Tachyon \cite{li2014tachyon} and Spark \cite{zaharia2010spark}. 
-After the initial training of a model, it is deployed to Velox where prediction queries are answered in realtime and incremental updates are made to the model.
-Velox also monitors the quality of the model using a validation set and once the error rate has gone beyond a predefined threshold it initiates a complete retraining of the model using Spark. 
-Figure \ref{fig:velox-work-flow} depicts how Velox works. 
-Velox uses Stochastic Gradient Descent as its underlying training algorithm.
-As described in Section \ref{sgd}, even the batch updates to the model can be performed in a series of independent iterations.
-However, Velox retrains the model offline from scratch.
-This has two drawbacks; any updates that has been done to the model so far will be discarded, and the process of retraining on full data set requires a lot of resources.
-Our system uses the underlying properties of SGD to fully integrate the training process into the system's lifeline and eliminate the need for complete retraining of the model.
+Velox monitors the quality of the model using a validation set and once the error rate has gone beyond a predefined threshold it initiates a complete retraining of the model using Spark. 
+This deployment method, however, has three drawbacks; retraining discards updates that have been applied to the model so far, the process of retraining on full data set is resource intensive and time consuming and new datasets introduced to the system only influence the model after the next retraining.
+Our system uses the underlying properties of SGD to fully integrate the training process into the system's lifeline and eliminate the need for complete retraining of the model, which both reduces the time spent on training and can produce an updated model swiftly.
+Clipper \cite{crankshaw2016clipper} is another machine learning deployment system that focuses on producing higher quality predictions by maintaining an ensemble of models.
+It constantly examines the confidence of each model and for each prediction request, it uses the model with the highest confidence.
+However, it does not incrementally train the models in production which overtime leads to models becoming outdated.
+Our deployment model on the other hand, focuses on maintenance and constant updates of the models in production environment.
 
 Weka \cite{hall2009weka}, Apache Mahout \cite{Owen:2011:MA:2132656}, and Madlib \cite{hellerstein2012madlib} are systems that provide the necessary toolkits to train machine learning models. All of these systems provide a range of machine learning training algorithms. 
 They, however, do not provide any management, before or after deployment of these models. 
 Our proposed system focuses on models trainable using Stochastic Gradient Descent and as a result is able to provide management of the models both in training and after deployment.
-% model management systems
-MLBase \cite{kraska2013mlbase}, and TuPaq \cite{sparks2015tupaq} are machine learning model management systems.
+
+MLBase \cite{kraska2013mlbase} and TuPaq \cite{sparks2015tupaq} are machine learning model management systems.
 They provide a range of training algorithms to create machine learning models and mechanism for model search as well as model management.
 However, once models are created, they have to be deployed and used for serving manually by the users.
-Our system, on the contrary, is designed for automatic deployment and continuous training.
-
+Our system, on the contrary, is designed for deployment and maintenance of already trained models.
 
 \section{Conclusions} \label{conclusion}
 This paper presents an architecture for deployment and continuous training of machine learning models.
