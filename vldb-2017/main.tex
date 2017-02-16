@@ -156,7 +156,6 @@ Our experiments show that our deployment method can achieve up to an order of ma
 \todo[inline]{mention Clipper in related work}
 \todo[inline]{CRITEO Dataset experiments}
 \todo[inline]{mention retraining points in the experiments}
-\todo[inline]{Improve Continuous Training and Serving Chapter}
 \todo[inline]{Improve System Architecture chapter}
 \todo[inline]{Remove image classifier mention from conclusion}
 % Problem
@@ -314,8 +313,7 @@ However, the SGD run-time is decoupled from the rest of the components as will b
 % Stochastic Gradient System properties
 As described in Section \ref{sgd}, stochastic gradient descent is an iterative process where in each iteration one or a sample of the data is selected randomly and the gradient is calculated based on this sample. 
 After each iteration the parameters of the model are updated.
-This means that at the end of an iteration, the model can be used to make predictions.
-As more iterations are executed, the model becomes more and more accurate.
+As more iterations are executed, the model becomes more accurate.
 Since SGD can train a model using both individual and (mini-)batches of data items, it is an idea optimization methods for deployment environments.
 Initial models can be trained over large batches data.
 After the initial training, these models can be deployed into a production environment where they will answer prediction queries arriving at the system.
@@ -332,26 +330,31 @@ Therefore, training items with negative labels are typically only generated if a
 
 \subsection{State of the Art} \label{sub:state-of-the-art}
 Velox \cite{crankshaw2014missing} is an state of the art system which has implemented this deployment model.
-It uses Apache Spark to train an initial model using the available data.
+It uses Apache Spark to train an initial model using the available training data.
 Once the model is trained, it is deployed into a distributed environment, where prediction queries are answered in real time.
 When new training data arrives at the system the model is incrementally updated.
 The incoming training data is also stored in a persistent storage.
 To ensure the model is performing well, its quality is monitored over time.
 Velox periodically retrains the model from scratch. 
 This retraining can be triggered when the size of new training data has surpasses a predefined limit, or the quality of the model has gone below a user defined threshold or simply after a fixed period of time defined by the user.
+Figure \ref{fig:velox-work-flow} depicts how Velox works. 
+A buffer is used to store the incoming training observations, which will be combined with the historical data during the next retraining phase.
 Although Velox continuously monitors and updates the underlying model, it has 3 drawbacks:\\
 \begin{itemize}
 \item Complete retraining discards all the current model parameter
-\item Process of retraining on full data set requires a lot of resources
-\item When new batch data sources are introduced, a complete retraining has to be performed in order to update the model
+\item Process of retraining on full dataset is a time consuming process that requires a lot of resources
+\item When new datasets are introduced, a complete retraining has to be performed in order to update the model
 \end{itemize}
+While the model is being retrained, incremental updates are turned off.
+Moreover, newly introduced datasets will not have any effect on the model until the next retraining.
+This negatively affects the quality of the predictions produced by the system.
 To address these problems, we introduced a new deployment system which we describe next.
 
 \subsection{Continuous Deployment}
-Our key observation is that, by utilizing SGD's proprties, the model training process can be seamlessly executed along side the serving and query answering component.
-Similar to Velox, models are incrementally update.
+Our key observation is that, by utilizing SGD's properties, the model training process can be seamlessly executed along side the serving and query answering component.
+Similar to Velox, models are incrementally updated.
 However, unlike Velox, the retraining process is completely eliminated and instead is replaced by a series of consecutive 1-iteration of SGD optimization.
-Since each iteration of SGD is light and fast, it can be done while the system is serving prediction requests.
+Since each iteration of SGD is light and fast, it can be executed while the system is serving prediction requests.
 \begin{figure*}[t]
 \centering
 \includegraphics[scale = 0.5]{../images/continuous-1.pdf}
@@ -363,13 +366,17 @@ Figure \ref{fig:cont-training-serving} shows how our proposed system works.
 An initial model is trained using the data residing on disk.
 Once the model is deployed, it receives prediction queries and training observations in a streaming fashion.
 Incoming prediction queries are answered as soon as they are received.
-Once a training observation is received the model's incremental update method is called and the training item is passed to this method.
+Once a training observation is received the model is incrementally updated.
 The system also keeps track of incoming training observations and adds them to an intermediate buffer.
 A scheduler component, will schedule a new iteration of SGD based on the rate of incoming training observations. 
 The scheduler can also decide to run an iteration if the system is idle or the load on the system is not heavy. 
 Each new iteration will use a random sample of the data in storage and the data in the buffer. 
 As more training observations becomes available the model is updated further.
-Moreover, new batch data sources can be stored in the buffer (or persistent storage unit) as soon as they become available, and used immediately to further train the model without requiring a new model to be retrained from scratch.
+Moreover, new datasets can be stored in the buffer (or persistent storage unit) as soon as they become available, and used immediately to further train the model without requiring a new model to be retrained from scratch.
+In our deployment system, we are addressing the issues with current methods have.
+First of all, the models are never discarded and new iterations of SGD are applied directly to the current version of the model.
+The retraining process is replaced by a series of independent SGD iterations.
+Therefore, incremental updates are not turned off and effect of new datasets are visible in the model within a small time frame.
 
 
 \section{System Architecture} \label{sec:system-architecutre}
