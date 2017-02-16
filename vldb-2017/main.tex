@@ -156,7 +156,6 @@ Our experiments show that our deployment method can achieve up to an order of ma
 \todo[inline]{mention Clipper in related work}
 \todo[inline]{CRITEO Dataset experiments}
 \todo[inline]{mention retraining points in the experiments}
-\todo[inline]{Improve System Architecture chapter}
 \todo[inline]{Remove image classifier mention from conclusion}
 % Problem
 Deployment and maintenance of machine learning models is a crucial step in machine learning applications' life cycle. 
@@ -386,10 +385,10 @@ Therefore, incremental updates are not turned off and effect of new datasets are
 \caption{System Architecture}
 \label{fig:system-architecture}
 \end{figure}
-The proposed system comprises three main component; model manager, data manager and scheduler. 
+The proposed system comprises three main component; model manager, data manager and scheduler and an independent SGD run-time. 
 Figure \ref{fig:system-architecture} shows an overview of the architecture of our system and the interactions between its components.
-Incoming training observations are forwarded to the data manager where they first stored in a buffer then they are passed on to the model manager in order to incrementally update the model.
-Prediction requests are directly forwarded to the model manager, where based on the latest available model a prediction is made and the result is returned to the to the users.
+Incoming training observations are forwarded to the data manager where they first stored in a buffer and then passed on to the model manager in order to incrementally update the model.
+Prediction requests are directly forwarded to the model manager, where based on the latest available model a prediction is made and the result is returned to the to the user.
 Both scheduler and data manager components are constantly communicating with each other and the model manager to obtain the latest statistics such as the model quality and buffer size, which in turn helps in tuning the scheduling and sampling rate for next iterations of SGD. 
 Next, we explain each component of the system in more detail.
 
@@ -399,10 +398,9 @@ An iteration of SGD can be scheduled at any point in time.
 Intuitively, the best time to execute an iteration is when the system is not under heavy load.
 This will help in utilizing the system's resources as well as keeping the model up to date at all time.
 Another situation that a new iteration of SGD should be executed is when the system is receiving a lot of training items and the intermediate buffer is getting full.
-If the model is not updated with the new training items frequently, the quality will go down more rapidly, especially if the distribution of the data is changing rapidly.
-Incremental updates are turned off when a new iteration is scheduled to execute.
+If the model is not updated with the new training items frequently, the quality will go down more rapidly, especially if the distribution of the data is changing.
 Training iterations and model serving are disjoint and not affected by each other.
-As soon as the training iteration is completed the model is updated and incremental update is re-enabled.
+As soon as the training iteration is completed the model is updated.
 This property allows the scheduler to execute new iteration of SGD in a separate thread without interrupting the serving module.
 The scheduling rate however affects the quality of the model.
 Each new iteration slightly increases the quality of the model.
@@ -441,14 +439,14 @@ An important part of the system is the model manager component.
 It is responsible for storing the model, answering prediction queries and performing incremental and batch updates to the model.
 Listing \ref{model-manager-api} shows the APIs of the model manager.
 They are used to both interact with other components as well as end-users of the system.
-The scheduler component uses \textit{update} and \textit{update\_batch} to instruct the model manager to perform incremental or batch updates to the model.
-Upon a new prediction query, the \textit{predict} method is called to provide the end-user with the label of the given input.
+The scheduler component uses \textit{update} and \textit{update\_iteration} to instruct the model manager to perform incremental or batch updates (one iteration of SGD) to the model.
+Upon a new prediction query, the \textit{predict} method is called to provide the end-user with the label of the given input.\\
 \noindent\hspace{-0.1\linewidth}\begin{minipage}[t]{\linewidth}
 \begin{lstlisting}[language=Scala, basicstyle=\small\ttfamily, frame=tb ,columns=fullflexible,
 showstringspaces=false,label=model-manager-api,caption=Model Manager API, numberstyle=\tiny]
 def update(x,y)
 
-def update_batch(X,Y)
+def update_iteration(X,Y)
 
 def predict(x): Label
 
@@ -456,7 +454,9 @@ def error_rate(X_test, Y_test): Double
 
 \end{lstlisting}
 \end{minipage}
-the \textit{error\_rate} method returns the error rate of the model using the provided test dataset.
+
+
+The \textit{error\_rate} method returns the error rate of the model using the provided test dataset.
 As described earlier, constant monitoring of the quality is required in order to adjust the scheduling and sampling rate.
 When the error rate is stagnating, this could mean that the model has converged using the existing data, therefore, the model manager informs scheduler not to schedule any new iterations until new training observations have arrived at the system.
 Similarly as explained in Section \ref{data-manager}, an increase in the error rate could indicate a change in distribution of the data.
