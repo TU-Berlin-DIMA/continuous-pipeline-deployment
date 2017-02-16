@@ -119,7 +119,8 @@ Making machine learning models ready for serving in a productive environment is 
 Model deployment is the final stage in these pipelines.
 Once a machine learning model is trained on an initial dataset it is deployed into a system where it can answer prediction queries in a realtime and reliable fashion.
 If new training data becomes available while the system is running, the model is updated.
-Currently, these updates are either performed incrementally (one at a time) or they require a complete retraining of the model offline.
+Currently, these updates are either performed incrementally or they require a complete retraining of the model offline. 
+However, complete retraining of the model is often a time consuming and resource intensive process.
 
 In this paper, we propose a novel deployment method for stochastic gradient descent (SGD)-based machine learning models.
 SGD is an iterative process, which works well with large data sets.
