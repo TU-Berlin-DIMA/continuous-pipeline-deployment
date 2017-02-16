@@ -153,14 +153,10 @@ Our experiments show that our deployment method can achieve up to an order of ma
 \todo[inline]{Include a meta graph (performance + quality)}
 \todo[inline]{modify velox text in related work chapter}
 \todo[inline]{improve related work}
-\todo[inline]{Remove gray background in plots}
 \todo[inline]{mention Clipper in related work}
 \todo[inline]{CRITEO Dataset experiments}
 \todo[inline]{mention retraining points in the experiments}
-\todo[inline]{make sure the references in SGD chapter for linear classifiers are ok}
-\todo[inline]{Remove Neural Networks ? }
 \todo[inline]{Improve Continuous Training and Serving Chapter}
-\todo[inline]{Improve SGD Chapter}
 \todo[inline]{Improve System Architecture chapter}
 \todo[inline]{Remove image classifier mention from conclusion}
 % Problem
@@ -241,28 +237,27 @@ Section \ref {related-work} discusses the related work.
 Finally, Section \ref{conclusion} presents our conclusion and future work.
 
 \section{Stochastic Gradient Descent} \label{sgd}
-
 In machine learning, optimization methods are used to find the minimum of the objective function (referred to as the loss function) by calculating the gradient of the function at different data points and update the function parameters based on the gradient values.
 A common optimization method is gradient descent, an iterative process where in every iteration the entire training data set is used to calculate the gradient value.
 One drawback of gradient descent is that in presence of large datasets it will become very slow since every iteration has to inspect all the training items.
 Stochastic gradient descent (SGD) is an approximation of the gradient descent method. 
 Similar to gradient descent, it is an iterative process but in each iteration it operates on one element (or a sample of elements) at a time. 
 It calculates the gradient at a single element and updates the parameters of the model accordingly. 
-Although it converges after a higher number of iterations, the overall convergence time is still much faster than gradient descent. 
+Although it converges after a higher number of iterations, the overall convergence time is lower (sometimes by orders of magnitude) than gradient descent. 
 Each iteration of SGD can be executed in a short amount of time since it only works with a sample of the data.
-We are leveraging this property of SGD and design the system so that it executes one iteration of SGD at a time while the system is running.
-In Section \ref{evaluation} we show that time to execute single iteration of SGD is insignificant.
-Moreover, since a single iteration is a lightweight process, it can be executed in separate threads.
+We are leveraging this property of SGD and design our system so that it executes one iteration of SGD at a time while the system is running.
+In Section \ref{evaluation} we show that time to execute a single iteration of SGD is insignificant.
+Moreover, since a single iteration is a lightweight process, it can be executed in separate threads and will not interrupt the prediction query answering component of the system.
 
 \subsection{Distributed SGD}
 The amount of available data has been increasing exponentially in recent years.
 To efficiently train machine learning models on large datasets, new techniques have to be employed.
 As explained earlier, SGD inherently works well with large amount of data since it does not need to scan every data point in every iteration.
 However, the problem arises when the dataset cannot fit into the memory of a single machine and it has to be distributed.
-In this situation, one common method is distribute the gradient calculation tasks across the nodes in the cluster, where each task will work with a different part of the data.
+In this situation, one common method is to distribute the gradient calculation tasks across the nodes in the cluster, where each task will work with a different part of the data.
 One problem in this scenario is that a synchronization step is required before applying the updates to the model. 
 The synchronization step slows down the SGD process, because after every iteration, all the updates are sent to a central process that updates the model.
-\cite{recht2011hogwild, dean2012large} proposed distributed asynchronous SGD and the experimental results showed that the quality of the final model is not any worse than the synchronized approach. 
+\cite{recht2011hogwild, dean2012large} proposed distributed asynchronous SGD and their experiments show that the quality of the final model is not any worse than the synchronized approach. 
 
 \subsection{Learning Rate Tuning} \label{learning-rate}
 The learning rate or step size parameter plays an important role in the convergence of SGD.
@@ -274,12 +269,13 @@ One advantage of their method is that it works well with non-stationary problems
 By examining the changes in the data the learning rate will decrease (when approaching the optimum value) and increase (when the distribution of the data has changed).
 
 \subsection{Machine Learning Models based on SGD}
-SGD is one of the most common optimization methods to train large scale problems. 
+SGD is one of the most common optimization methods for training machine learning models on large datasets. 
 It has been used in classification \cite{zhang2004solving}, clustering \cite{bottou1995convergence}, neural networks \cite{dean2012large}, and matrix factorization \cite{funk2006netflix}.
-In our system, we implemented linear classifiers and matrix factorization, which will be explained next. 
+In our prototype, we have implemented linear classifiers and matrix factorization models.
+Some examples of machine learning models that use SGD are: 
 
 \textbf{Linear Classifiers} are arguably the most common type of machine learning models build using SGD optimization method. 
-In our CTR prediction use case described in section \ref{introduction}, logistic regression method is used to train models for prediction the click through rate \cite{macmahan2013}. 
+In our CTR prediction use case described in section \ref{introduction}, logistic regression method is used to train models for predicting the click through rate \cite{macmahan2013}. 
 Logistic regression models typically output a probably instead of a class label \cite{hosmer2013applied}. 
 This probability indicates how likely an item belongs to a specific class.
 In our CTR prediction example, for every available advertisement, the click probability is predicted and depending on how many advertisements will be displayed, the ones with highest probabilities are selected.
@@ -292,7 +288,7 @@ Matrix factorization is used to derive the latent factors (users and items) for 
 It relies on the fact that each user and item can be described in a few dimensions (10 to 40 usually) based on the available ratings.
 These latent factors have automatically capture the similarity of users and items based on the ratings provided by the users.
 Any unknown rating, hence can be predicted by simply using a dot product of the user vector with item vector.
-We used the SGD implementation of matrix factorization by Simon Funk \cite{funk2006netflix}. 
+In our prototype, we used the SGD implementation of matrix factorization by Simon Funk \cite{funk2006netflix}. 
 A scalable version of the algorithm was proposed by Gemulla et al. \cite{gemulla2011large}.
 
 \textbf{Neural Networks} or deep learning inspired by biological neural networks in brain are used to learn and approximate complex functions. 
@@ -302,7 +298,11 @@ Past decade saw a change with publication of several nominal works.
 Hinton et al. \cite{hinton2006fast} proposed methods for speeding up the training of neural networks.
 ImageNet competition \cite{ILSVRC15} in 2012 was won by a neural network proposed by Krizhevsky et al. \cite{krizhevsky2012imagenet} where they significantly reduced the error rate. 
 Success of Google Brain team \cite{sutskever2014sequence, mikolov2013efficient} was also instrumental to popularizing neural networks in machine learning community.
-We have implemented a multilayer neural network for classifying images.
+
+SGD is the core run-time of our model deployment system.
+SGD's near constant iteration running time and its fast adoption to changes in data distribution makes it ideal for both large datasets and real-time environments.
+In our prototype, we are using a simple implementation of distributed SGD with synchronization and a constant learning rate.
+However, the SGD run-time is decoupled from the rest of the components as will be explained in section \ref{sec:system-architecutre}, therefore more robust versions of distributed SGD and learning rate adaption methods can be used in the system without affecting other components.
 
 \section{Continuous Training and Serving} \label{continious-training-serving}
 \begin{figure*}[!t]

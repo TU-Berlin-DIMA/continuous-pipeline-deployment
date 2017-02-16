@@ -66,22 +66,22 @@ p =
   # plot retraining points
   geom_point(data = df[retrainings,c(1,3)], 
              aes(x=time, y = velox, colour="e", fill = "Retraining"), 
-             shape = 23, 
+             shape = 24, 
              lwd = 7 ) + 
   # x and y labels
   xlab("Test Cycle") + ylab("Mean Squared Error") + 
   # legend themes
   theme_bw() + 
-  theme(legend.text = element_text(size = 24), legend.key = element_rect(colour = "transparent", fill = alpha('white', 0.0)) ,
+  theme(legend.text = element_text(size = 26), legend.key = element_rect(colour = "transparent", fill = alpha('white', 0.0)) ,
         legend.position="bottom") +
-  theme(axis.text=element_text(size=20),
+  theme(axis.text=element_text(size=26),
         axis.title=element_text(size=28)) + 
   # legend for line graph   
   scale_color_manual(name ="",  # Name,
                      labels = c("Baseline   ", "Baseline+    ", "Continuous    ", "Velox    ", ""), 
                      values = c("a" = "green", "b" = "orange", "c" = "blue","d" = "red", "e" = "red"))  +
   # legend for retraining point
-  scale_fill_manual(name = "", values = c("Retraining" = "black")) + 
+  scale_fill_manual(name = "", values = c("Retraining" = "red")) + 
   # guides for enhancing legend
   guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,NA),linetype=c(1,1,1,1,0)))) 
 
@@ -120,21 +120,22 @@ p =
   # plot retraining points
   geom_point(data = df[retrainings,c(1,3)], 
              aes(x=time, y = velox, colour="e", fill = "Retraining"), 
-             shape = 8, 
+             shape = 24, 
              lwd = 7 ) + 
   # x and y labels
   xlab("Test Cycle") + ylab("Mean Squared Error") + 
   # legend themes
-  theme(legend.text = element_text(size = 24), legend.key = element_rect(colour = "transparent", fill = alpha('white', 0.0)) ,
+  theme_bw() + 
+  theme(legend.text = element_text(size = 26), legend.key = element_rect(colour = "transparent", fill = alpha('white', 0.0)) ,
         legend.position="bottom") +
-  theme(axis.text=element_text(size=20),
+  theme(axis.text=element_text(size=26),
         axis.title=element_text(size=28)) + 
   # legend for line graph   
   scale_color_manual(name ="",  # Name,
                      labels = c("Baseline   ", "Baseline+    ", "Continuous    ", "Velox    ", ""), 
-                     values = c("a" = "green", "b" = "orange", "c" = "blue","d" = "red", "e" = "black"))  +
+                     values = c("a" = "green", "b" = "orange", "c" = "blue","d" = "red", "e" = "red"))  +
   # legend for retraining point
-  scale_fill_manual(name = "", values = c("Retraining" = "black")) + 
+  scale_fill_manual(name = "", values = c("Retraining" = "red")) + 
   # guides for enhancing legend
   guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,NA),linetype=c(1,1,1,1,0)))) 
 
@@ -158,7 +159,8 @@ bufferVsTimePlot = ggplot(data = df) +
   geom_point(lwd = 4)  + 
   xlab("Buffer size") + ylab("Time (m)") + 
   scale_color_manual(values=c("blue" = "blue")) + 
-  theme(axis.text=element_text(size=20),
+  theme_bw() + 
+  theme(axis.text=element_text(size=26),
         axis.title=element_text(size=28)) + 
   guides(colour=FALSE)
 
@@ -179,7 +181,8 @@ bufferVsTimePlot = ggplot(data = df) +
   geom_point(lwd = 4)  + 
   xlab("Sampling Rate") + ylab("Time (m)") + 
   scale_color_manual(values=c("blue" = "blue")) + 
-  theme(axis.text=element_text(size=20),
+  theme_bw() + 
+  theme(axis.text=element_text(size=26),
         axis.title=element_text(size=28)) + 
   guides(colour=FALSE)
 
@@ -208,9 +211,10 @@ runningTimePlot = ggplot(melted, aes(x = models, y = value, label = sprintf("%4.
   xlab("") + ylab("Time (s) in Log Scale") + 
   scale_y_log10() +
   scale_fill_discrete(name = "", labels = c("movie_lens_100k   ", "movie_lens_1M   ")) + 
+  theme_bw() + 
   theme(legend.position = "bottom" , 
-        legend.text = element_text(size = 24),
-        axis.text=element_text(size=20),
+        legend.text = element_text(size = 26),
+        axis.text=element_text(size=26),
         axis.title=element_text(size=28)) 
 
 ggsave(runningTimePlot , filename = 'times-log-scale-improved.eps', 
@@ -251,10 +255,11 @@ bufferSizePlot =
                       "5000"= rgb(0.0, 0.90, 1.0))) + 
   xlab("Test Cycle") + ylab("Mean Squared Error") + 
   # legend themes
-  theme(legend.text = element_text(size = 20), 
-        legend.title= element_text(size = 20), 
+  theme_bw() + 
+  theme(legend.text = element_text(size = 26), 
+        legend.title= element_text(size = 26), 
         legend.key.size  = unit(1.0, "cm")) +
-  theme(axis.text=element_text(size=20),
+  theme(axis.text=element_text(size=26),
         axis.title=element_text(size=28)) 
 
 ggsave(bufferSizePlot , filename = 'movie-lens-100k/buffer-size/movie-lens-100k-buffer-size-improved.eps', 
@@ -298,10 +303,11 @@ samplingRatePlot =
                         "0.1"= rgb(0.0, 0.90, 1.0))) + 
   xlab("Test Cycle") + ylab("Mean Squared Error") + 
   # legend themes
-  theme(legend.text = element_text(size = 20), 
-        legend.title = element_text(size = 20), 
+  theme_bw() + 
+  theme(legend.text = element_text(size = 26), 
+        legend.title = element_text(size = 26), 
         legend.key.size  = unit(1.0, "cm")) +
-  theme(axis.text=element_text(size=20),
+  theme(axis.text=element_text(size=26),
         axis.title=element_text(size=28)) 
 
 ggsave(samplingRatePlot , filename = 'movie-lens-100k/sampling/movie-lens-100k-sampling-rate-improved.eps', 
@@ -311,3 +317,56 @@ ggsave(samplingRatePlot , filename = 'movie-lens-100k/sampling/movie-lens-100k-s
 
 
 # Meta graph: performance, quality model type
+continuous100k = loadData('movie-lens-100k/5000/continuous-error.txt')
+velox100k = loadData('movie-lens-100k/5000/velox-error.txt')
+
+continuous1m = loadData('movie-lens-1m/50000/continuous-error.txt')
+velox1m = loadData('movie-lens-1m/50000/velox-error.txt')
+
+time_100k = c(128.7379, 506.1425, 854.3796, 187.6295)/60.0
+time_1M = c(235.8159, 4608.0255, 9610.6307, 1825.9909)/60.0
+
+df = data.frame('error'=c(mean(continuous100k), mean(velox100k), 0.7362879642607749), 
+                'time' = c(506.1425/60, 854.3796/60, 187.6295/60), 
+                'models'=c('Continuous', 'Velox', 'Static'))
+p = ggplot(data = df, aes(x = time, y = error)) + 
+  geom_point(alpha = 0) + 
+  geom_text(aes(label = models), size = 8, hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
+  xlab("Time (m)") + ylab("Mean Squared Error") + 
+  ylim(c(0.5, 1.0)) + 
+  ggtitle("Movie Lens 100k") + 
+  theme_bw() + 
+  theme(plot.title = element_text(lineheight=.8, face="bold", size = 26)) + 
+  theme(legend.text = element_text(size = 26), 
+        legend.title = element_text(size = 26), 
+        legend.key.size  = unit(1.0, "cm")) +
+  theme(axis.text=element_text(size=26),
+        axis.title=element_text(size=28)) 
+
+ggsave(p , filename = 'movie-lens-100k/systems.eps', 
+       device = cairo_ps, dpi = 1000, 
+       width = 16, height = 9, 
+       units = "in")
+
+
+df = data.frame('error'=c(mean(continuous1m), mean(velox1m), 0.5392938220858208), 
+                'time' = c(4608.0255/60, 9610.6307/60, 1825.9909/60), 
+                'models'=c('Continuous', 'Velox', 'Static'))
+p = ggplot(data = df, aes(x = time, y = error)) + 
+  geom_point(alpha = 0) + 
+  geom_text(aes(label = models), size = 8, hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
+  xlab("Time (m)") + ylab("Mean Squared Error") + 
+  ggtitle("Movie Lens 1M") + 
+  ylim(c(0.5, 1.0)) + 
+  theme_bw() + 
+  theme(plot.title = element_text(lineheight=.8, face="bold", size = 26)) + 
+  theme(legend.text = element_text(size = 26), 
+        legend.title = element_text(size = 26), 
+        legend.key.size  = unit(1.0, "cm")) +
+  theme(axis.text=element_text(size=26),
+        axis.title=element_text(size=28)) 
+
+ggsave(p , filename = 'movie-lens-1m/systems.eps', 
+       device = cairo_ps, dpi = 1000, 
+       width = 16, height = 9, 
+       units = "in")
