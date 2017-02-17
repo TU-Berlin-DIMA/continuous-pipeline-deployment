@@ -199,7 +199,7 @@ Figure \ref{fig:click-rate} demonstrates the CTR prediction use case for a searc
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=\columnwidth]{../images/use-case-1.pdf}
+\includegraphics[width=\columnwidth]{../images/use-case-4.pdf}
 \caption{Use Case: Click Through Rate Prediction}
 \label{fig:click-rate}
 \end{figure}
@@ -380,7 +380,7 @@ Therefore, incremental updates are not turned off and effect of new datasets are
 \section{System Architecture} \label{sec:system-architecutre}
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{../images/system-architecture-2.pdf}
+\includegraphics[width=\columnwidth]{../images/system-architecture-6.pdf}
 \caption{System Architecture}
 \label{fig:system-architecture}
 \end{figure}
@@ -736,13 +736,13 @@ This is because a full retraining incurs a much higher overhead than continuousl
 Another reason for the difference in running time is that as the size of the data increases the time for running a new iteration in continuous method stays roughly the same where as the time for a full retraining increases exponentially.
 The running time of the Baseline+ is not included as it is similar to Baseline, since they both have include initial training and have to examine individual items arriving at the system one at a time.
 
-\begin{figure}[h]
-\begin{subfigure}{.25\textwidth}
+\begin{figure*}[h]
+\begin{subfigure}{.5\textwidth}
   \includegraphics[width=\linewidth]{../images/experiment-results/movie-lens-100k-systems.eps}
   \caption{Movie Lens 100K}
   \label{fig:sfig2}
 \end{subfigure}%
-\begin{subfigure}{0.25\textwidth}
+\begin{subfigure}{0.5\textwidth}
   \includegraphics[width=\linewidth]{../images/experiment-results/movie-lens-1m-systems.eps}
   \caption{Movie Lens 1M}
   \label{fig:sfig1}
@@ -750,7 +750,7 @@ The running time of the Baseline+ is not included as it is similar to Baseline, 
 
 \caption{Performance vs Quality}
 \label{fig:fig}
-\end{figure}
+\end{figure*}
 
 \section{Related Work} \label{related-work}
 Traditional machine learning systems focus on training and management of models and leave the task of deployment and maintenance to the users. 

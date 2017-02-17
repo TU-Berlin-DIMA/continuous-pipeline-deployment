@@ -1,6 +1,7 @@
 package de.dfki.preprocessing
 
 import de.dfki.utils.CommandLineParser
+import org.apache.spark.SparkConf
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 
 import scala.util.Random
@@ -55,9 +56,12 @@ object CriteoFeatureEngineering {
     val data = parser.get("input-path", INPUT_PATH)
     val result = parser.get("output-path", OUTPUT_PATH)
 
+    val conf = new SparkConf().setAppName("Criteo Feature Engineering")
+    val masterURL = conf.get("spark.master", "local[*]")
+    conf.setMaster(masterURL)
+
     val spark = SparkSession.builder()
-      .master("local[*]")
-      .appName("Criteo Feature Engineering")
+      .config(conf)
       .getOrCreate()
 
     val df = spark.read.format("csv").option("delimiter", "\t").option("header", "false").load(data)
