@@ -331,7 +331,7 @@ df = data.frame('error'=c(mean(continuous100k), mean(velox100k), 0.7362879642607
                 'models'=c('Continuous', 'Velox', 'Static'))
 p = ggplot(data = df, aes(x = time, y = error)) + 
   geom_point(alpha = 0) + 
-  geom_text(aes(label = models, colour = models), size = 10, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
+  geom_text(aes(label = models, colour = models), size = 14, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
   xlab("Time (m)") + ylab("Mean Squared Error") + 
   ylim(c(0.5, 1.0)) + 
   theme_bw() + 
@@ -353,7 +353,7 @@ df = data.frame('error'=c(mean(continuous1m), mean(velox1m), 0.5392938220858208)
                 'models'=c('Continuous', 'Velox', 'Static'))
 p = ggplot(data = df, aes(x = time, y = error)) + 
   geom_point(alpha = 0) + 
-  geom_text(aes(label = models, colour = models), size = 10, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
+  geom_text(aes(label = models, colour = models), size = 14, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
   xlab("Time (m)") + ylab("") + 
   ylim(c(0.5, 1.0)) + 
   theme_bw() + 

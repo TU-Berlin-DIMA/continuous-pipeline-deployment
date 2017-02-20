@@ -54,6 +54,7 @@
 \usepackage[outdir=./figures/]{epstopdf}
 \usepackage{listings}
 \usepackage{subcaption}
+\usepackage[blocks]{authblk}
 \begin{document}
 %\lstset{numbers=left, numberstyle=\small, numbersep=8pt, frame = single, language=Pascal, framexleftmargin=15pt}
 
@@ -68,7 +69,7 @@
 %\crdata{0-12345-67-8/90/01}  % Allows default copyright data (0-89791-88-6/97/05) to be over-ridden - IF NEED BE.
 % --- End of Author Metadata ---
 
-\title{A Novel Approach to Continuous Training of Large Scale Machine Learning Models}
+\title{Continuous Training of Large Scale Machine Learning Models}
 
 %
 % You need the command \numberofauthors to handle the 'placement
@@ -93,25 +94,35 @@
 % \additionalauthors command.
 % These 'additional authors' will be output/set for you
 % without further effort on your part as the last section in
-% the body of your article BEFORE References or any Appendices.
+% the body of your article BEFORE References or any 
 
-\numberofauthors{3} %  in this sample file, there are a *total*
-% of EIGHT authors. SIX appear on the 'first-page' (for formatting
-% reasons) and the remaining two appear in the \additionalauthors section.
-%
-\author{
-\alignauthor
-Behrouz Derakhshan\\
-	\email{behrouz.derakhshan@dfki.de}
-% 2nd. author
-\alignauthor
-Tilmann Rabl \\
-	\email{rabl@tu-berlin.de}
-% 3rd. author
-\alignauthor 
-Volker Markl\\
-	\email{volker.markl@tu-berlin.de}
-}
+
+\renewcommand\Authfont{\fontsize{15}{14.4}\selectfont \bfseries }
+\renewcommand\Affilfont{\fontsize{14}{14.4}\selectfont \normalfont}
+
+\author[1]{Behrouz Derakhshan}
+\author[1,2]{Tilmann Rabl}
+\author[1,2]{Volker Markl}
+
+\affil[1]{DFKI, Germany \protect\\ \large{firstname.lastname@dfki.de}}  
+
+\affil[2]{TU Berlin, Germany \protect\\  \large{firstname.lastname@tu-berlin.de}}
+
+
+
+%\author{
+%\alignauthor
+%Behrouz Derakhshan\\
+%	\email{behrouz.derakhshan@dfki.de}
+%% 2nd. author
+%\alignauthor
+%Tilmann Rabl \\
+%	\email{rabl@tu-berlin.de}
+%% 3rd. author
+%\alignauthor 
+%Volker Markl\\
+%	\email{volker.markl@tu-berlin.de}
+%}
 
 \maketitle
 \begin{abstract}
@@ -152,10 +163,10 @@ Our experiments show that our deployment method can achieve up to an order of ma
 \section{Introduction} \label{introduction}
 \todo[inline]{POLISH}
 \todo[inline]{Remove mentions of MNIST}
-\todo[inline]{Include a meta graph (performance + quality)}
 \todo[inline]{CRITEO Dataset experiments}
 \todo[inline]{mention retraining points in the experiments}
 \todo[inline]{Remove image classifier mention from conclusion}
+\todo[inline]{improve based on Volker's comments}
 % Problem
 Deployment and maintenance of machine learning models is a crucial step in machine learning applications' life cycle. 
 However, it is one that has received very little attention. 
