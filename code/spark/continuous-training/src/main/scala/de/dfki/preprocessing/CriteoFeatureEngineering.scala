@@ -50,11 +50,13 @@ import scala.util.Random
 object CriteoFeatureEngineering {
   val INPUT_PATH = "data/criteo-sample/raw/"
   val OUTPUT_PATH = "data/criteo-sample/processed/"
+  val NUMBER_OF_STREAMING_FILES = 500
 
   def main(args: Array[String]): Unit = {
     val parser = new CommandLineParser(args).parse()
     val data = parser.get("input-path", INPUT_PATH)
     val result = parser.get("output-path", OUTPUT_PATH)
+    val fileCount = parser.getInteger("file-count", NUMBER_OF_STREAMING_FILES)
 
     val conf = new SparkConf().setAppName("Criteo Feature Engineering")
     val masterURL = conf.get("spark.master", "local[*]")
@@ -78,7 +80,7 @@ object CriteoFeatureEngineering {
 
     splits(1).rdd
       .map(row => row.toString.substring(1, row.toString.length - 1))
-      .repartition(500)
+      .repartition(fileCount)
       .mapPartitions(partition => Random.shuffle(partition))
       .saveAsTextFile(s"$result/stream-training/")
   }
