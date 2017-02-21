@@ -241,17 +241,16 @@ Section \ref {related-work} discusses related work.
 Finally, Section \ref{conclusion} presents our conclusion and future work.
 
 \section{Stochastic Gradient Descent} \label{sgd}
-In machine learning, optimization methods are used to find the minimum of the objective function (referred to as the loss function) by calculating the gradient of the function at different data points and update the function parameters based on the gradient values.
+Machine learning applies optimization methods in order to find the minimum of an objective function (referred to as the loss function) by calculating the gradient of the function at different data points and update the function parameters based on the gradient values.
 A common optimization method is gradient descent, an iterative process where in every iteration the entire training data set is used to calculate the gradient value.
 One drawback of gradient descent is that in presence of large datasets it will become very slow since every iteration has to inspect all the training items.
-Stochastic gradient descent (SGD) is an approximation of the gradient descent method. 
+Stochastic gradient descent (SGD) \cite{bottou2010large} is an approximation of the gradient descent method. 
 Similar to gradient descent, it is an iterative process but in each iteration it operates on one element (or a sample of elements) at a time. 
 It calculates the gradient at a single element and updates the parameters of the model accordingly. 
 Although it converges after a higher number of iterations, the overall convergence time is lower (sometimes by orders of magnitude) than gradient descent. 
 Each iteration of SGD can be executed in a short amount of time since it only works with a sample of the data.
-We are leveraging this property of SGD and design our system so that it executes one iteration of SGD at a time while the system is running.
-In Section \ref{evaluation} we show that time to execute a single iteration of SGD is insignificant.
-Moreover, since a single iteration is a lightweight process, it can be executed in separate threads and will not interrupt the prediction query answering component of the system.
+We are leveraging this property of SGD and design our deployment system so that it executes one iteration of SGD at a time without interrupting the query answering component.
+In Section \ref{evaluation} we show that the time to execute a single iteration of SGD is insignificant.
 
 \subsection{Distributed SGD}
 The amount of available data has been increasing exponentially in recent years.
