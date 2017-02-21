@@ -14,9 +14,9 @@ cp /home/behrouz/jar/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar 
 /share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rmr hdfs://cloud-11:44000/user/behrouz/criteo/stream-training
 /share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rmr hdfs://cloud-11:44000/user/behrouz/criteo/initial-training
 
-/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.CriteoFeatureEngineering --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/user/behrouz/criteo/raw/" "output-path=hdfs://cloud-11:44000/user/behrouz/criteo/" "file-count=5000"
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.CriteoFeatureEngineering --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/user/behrouz/criteo/raw/" "output-path=hdfs://cloud-11:44000/user/behrouz/criteo/" "file-count=2000"
 
-/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.classification.ContinuousClassifier --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "batch-duration=3" "slack=30" "result-path=/share/hadoop/behrouz/experiments/continuous/batch-3-slack-60/" "initial-training-path=hdfs://cloud-11:44000/user/behrouz/criteo/initial-training" "streaming-path=hdfs://cloud-11:44000/user/behrouz/criteo/stream-training" "temp-path=hdfs://cloud-11:44000/user/behrouz/criteo/temp-data"
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.classification.ContinuousClassifier --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "batch-duration=2" "slack=50" "result-path=/share/hadoop/behrouz/experiments/continuous/batch-3-slack-60/" "initial-training-path=hdfs://cloud-11:44000/user/behrouz/criteo/initial-training" "streaming-path=hdfs://cloud-11:44000/user/behrouz/criteo/stream-training" "temp-path=hdfs://cloud-11:44000/user/behrouz/criteo/temp-data"
 
 
 
