@@ -262,25 +262,24 @@ This synchronization step slows down the SGD process, because after every iterat
 Experiments on distributed, asynchronous SGD \cite{recht2011hogwild, dean2012large} show that the quality of the final model is not any worse than the synchronized approach. 
 
 \subsection{Learning Rate Tuning} \label{learning-rate}
-The learning rate or step size parameter plays an important role in the convergence of SGD.
-The most common technique is to set the learning rate to a small value, and slowly decrease the value in every iteration. 
-This, however is not possible in case of continuous and online learning. 
+Learning rate or step size is a parameter of SGD, which controls the amount of change in model parameters during each iteration of SGD.
+It plays an important role in the convergence of SGD.
+The most common technique is to set the learning rate to a small value, and slowly decrease the value in every iteration until the model converges.
+However, in continuous and online learning due to possible changes in data distribution model's parameters may never converge.
 Adaptive learning rates have been used in online scenarios where based on different criteria the learning rate is adjusted automatically.
-Schaul et al. \cite{schaul2013no} have proposed one such method were the learning rate can be inferred automatically based on the changes in the weight parameters. 
+Schaul et al. \cite{schaul2013no} have proposed one such method were the learning rate can be inferred automatically based on the changes in the parameters of the model. 
 One advantage of their method is that it works well with non-stationary problems, where the distribution of the data is constantly changing. 
-By examining the changes in the data the learning rate will decrease (when approaching the optimum value) and increase (when the distribution of the data has changed).
+Based on observed changes in the data, one can adjust the learning rate to decrease (when approaching the optimum value) or increase (when the distribution of the data has changed).
 
 \subsection{Machine Learning Models based on SGD}
 SGD is one of the most common optimization methods for training machine learning models on large datasets. 
 It has been used in classification \cite{zhang2004solving}, clustering \cite{bottou1995convergence}, neural networks \cite{dean2012large}, and matrix factorization \cite{funk2006netflix}.
-In our prototype, we have implemented linear classifiers and matrix factorization models.
 Some examples of machine learning models that use SGD are: 
 
-\textbf{Linear Classifiers} are arguably the most common type of machine learning models build using SGD optimization method. 
-In our CTR prediction use case described in section \ref{introduction}, logistic regression method is used to train models for predicting the click through rate \cite{macmahan2013}. 
-Logistic regression models typically output a probably instead of a class label \cite{hosmer2013applied}. 
-This probability indicates how likely an item belongs to a specific class.
-In our CTR prediction example, for every available advertisement, the click probability is predicted and depending on how many advertisements will be displayed, the ones with highest probabilities are selected.
+\textbf{Linear Classifiers} are arguably the most common type of machine learning models built using the SGD optimization method. 
+In our CTR prediction example described in section \ref{introduction}, logistic regression method is used to train models for predicting the click through rate \cite{macmahan2013}. 
+Logistic regression models typically output a probability instead of a class label \cite{hosmer2013applied} that indicates how likely an item belongs to a specific class.
+In our example, for every available advertisement, the click probability is predicted and depending on how many advertisements will be displayed, the ones with highest probabilities are selected.
 Support vector machine (SVM) \cite{steinwart2008support} is another common classification model.
 While logistic regression model aims to find parameters of a function that accurately fit the data points to the labels, SVM tries to find a hyperplane that separates the data points belonging to different classes.
 In many cases, both type of models work equally well, but depending the data and its complexity one method may be preferred to the other.
@@ -290,7 +289,6 @@ Matrix factorization is used to derive the latent factors (users and items) for 
 It relies on the fact that each user and item can be described in a few dimensions (10 to 40 usually) based on the available ratings.
 These latent factors have automatically capture the similarity of users and items based on the ratings provided by the users.
 Any unknown rating, hence can be predicted by simply using a dot product of the user vector with item vector.
-In our prototype, we used the SGD implementation of matrix factorization by Simon Funk \cite{funk2006netflix}. 
 A scalable version of the algorithm was proposed by Gemulla et al. \cite{gemulla2011large}.
 
 \textbf{Neural Networks} or deep learning inspired by biological neural networks in brain are used to learn and approximate complex functions. 
@@ -300,11 +298,8 @@ Past decade saw a change with publication of several nominal works.
 Hinton et al. \cite{hinton2006fast} proposed methods for speeding up the training of neural networks.
 ImageNet competition \cite{ILSVRC15} in 2012 was won by a neural network proposed by Krizhevsky et al. \cite{krizhevsky2012imagenet} where they significantly reduced the error rate. 
 Success of Google Brain team \cite{sutskever2014sequence, mikolov2013efficient} was also instrumental to popularizing neural networks in machine learning community.
-
-SGD is the core run-time of our model deployment system.
-SGD's near constant iteration running time and its fast adoption to changes in data distribution makes it ideal for both large datasets and real-time environments.
-In our prototype, we are using a simple implementation of distributed SGD with synchronization and a constant learning rate.
-However, the SGD run-time is decoupled from the rest of the components as will be explained in section \ref{sec:system-architecutre}, therefore more robust versions of distributed SGD and learning rate adaption methods can be used in the system without affecting other components.
+SGD is the idea optimization algorithm for training neural networks since it works very well with large datasets (which are required for training neural networks).
+In fact, almost all of the recent works on neural networks use SGD for training them.
 
 \section{Continuous Training and Serving} \label{continious-training-serving}
 \begin{figure*}[!t]
@@ -489,6 +484,15 @@ Both Flink and Spark provide out-of-the-box support for HDFS.
 \section{Evaluation} \label{evaluation} 
 In this section, we evaluate the performance of our system using various datasets. 
 We report both the quality (error rate) and performance of our proposed method. 
+
+
+\subsection{Machine learning models}
+\todo[inline]{explain the details of the models implemented}
+In our prototype, we used the SGD implementation of matrix factorization by Simon Funk \cite{funk2006netflix}. 
+SGD is the core run-time of our model deployment system.
+SGD's near constant runtime per iteration and its fast adaptation to changes in data distribution makes it ideal for both large datasets and real-time environments.
+In our prototype, we are using a simple implementation of distributed SGD with synchronization and a constant learning rate.
+However, the SGD run-time is decoupled from the rest of the components as will be explained in section \ref{sec:system-architecutre}, therefore more robust versions of distributed SGD and learning rate adaption methods can be used in the system without affecting other components.
 
 \subsection{Experimental setup}
 We run our experiments on a single node with a quad-core Intel i7 and 16 GB of RAM. 
