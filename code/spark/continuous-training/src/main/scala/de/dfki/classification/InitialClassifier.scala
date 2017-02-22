@@ -4,6 +4,9 @@ import de.dfki.utils.MLUtils.parsePoint
 import org.apache.spark.streaming.Seconds
 
 /**
+  * Baseline classifier
+  * Train an initial model and deploy it without further incremental learning
+  *
   * @author Behrouz Derakhshan
   */
 object InitialClassifier extends SVMClassifier {

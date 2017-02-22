@@ -253,14 +253,13 @@ We are leveraging this property of SGD and design our deployment system so that 
 In Section \ref{evaluation} we show that the time to execute a single iteration of SGD is insignificant.
 
 \subsection{Distributed SGD}
-The amount of available data has been increasing exponentially in recent years.
-To efficiently train machine learning models on large datasets, new techniques have to be employed.
-As explained earlier, SGD inherently works well with large amount of data since it does not need to scan every data point in every iteration.
-However, the problem arises when the dataset cannot fit into the memory of a single machine and it has to be distributed.
+To efficiently train machine learning models on large datasets, scalable techniques have to be employed.
+As explained earlier, SGD inherently works well with large amount of data since it does not need to scan every data point during every iteration.
+However, the problem arises when the dataset cannot fit into the memory of a single machine and has to be distributed.
 In this situation, one common method is to distribute the gradient calculation tasks across the nodes in the cluster, where each task will work with a different part of the data.
-One problem in this scenario is that a synchronization step is required before applying the updates to the model. 
-The synchronization step slows down the SGD process, because after every iteration, all the updates are sent to a central process that updates the model.
-\cite{recht2011hogwild, dean2012large} proposed distributed asynchronous SGD and their experiments show that the quality of the final model is not any worse than the synchronized approach. 
+One problem of this approach is that a synchronization step is required before applying the updates to the model. 
+This synchronization step slows down the SGD process, because after every iteration, all the updates have to be sent to a central process that updates the model.
+Experiments on distributed, asynchronous SGD \cite{recht2011hogwild, dean2012large} show that the quality of the final model is not any worse than the synchronized approach. 
 
 \subsection{Learning Rate Tuning} \label{learning-rate}
 The learning rate or step size parameter plays an important role in the convergence of SGD.

@@ -5,6 +5,9 @@ import org.apache.log4j.Logger
 import org.apache.spark.streaming.Seconds
 
 /**
+  * Baseline+ classifier
+  * Train an initial model and apply incremental learning after deployment
+  *
   * @author Behrouz Derakhshan
   */
 object OnlineClassifier extends SVMClassifier {
