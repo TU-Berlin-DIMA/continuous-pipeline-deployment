@@ -16,7 +16,7 @@ object BatchClassifier extends SVMClassifier {
   }
 
   override def run(args: Array[String]): Unit = {
-    val (_, _, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
+    val (_, _, initialDataPath, streamingDataPath, testDataPath, _) = parseArgs(args)
     val conf = new SparkConf().setMaster("local[*]").setAppName("Batch SVM Classifier")
     val sc = new SparkContext(conf)
 
@@ -41,7 +41,7 @@ object BatchClassifier extends SVMClassifier {
 
   override def getApplicationName = "Batch SVM Model"
 
-  override def getExperimentName = "initial"
+  override def getExperimentName = "batch"
 
   override def defaultBatchDuration = 0L
 

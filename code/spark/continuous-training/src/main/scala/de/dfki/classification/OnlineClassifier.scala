@@ -18,30 +18,33 @@ object OnlineClassifier extends SVMClassifier {
   }
 
   override def run(args: Array[String]): Unit = {
-    val (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
+    val (batchDuration, resultRoot, initialDataPath, streamingDataPath,
+    testDataPath, errorType) = parseArgs(args)
 
     val ssc = initializeSpark(Seconds(batchDuration))
-
+    val parent = s"batch-$batchDuration-slack-none-incremental-true-error-$errorType"
+    val resultPath = experimentResultPath(resultRoot, parent)
     streamingModel = createInitialStreamingModel(ssc, initialDataPath)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
     // evaluate the stream and incrementally update the model
     if (testDataPath == "prequential") {
-      evaluateStream(streamingSource.map(_._2.toString).map(parsePoint), resultPath)
-      trainOnStream(streamingSource.map(_._2.toString).map(parsePoint))
+      evaluateStream(streamingSource.map(_._2.toString).map(parsePoint), resultPath, errorType)
     } else {
-      evaluateStream(testData, resultPath)
-      trainOnStream(streamingSource.map(_._2.toString).map(parsePoint))
+      evaluateStream(testData, resultPath, errorType)
     }
+
+    trainOnStream(streamingSource.map(_._2.toString).map(parsePoint))
+
 
     ssc.start()
     ssc.awaitTermination()
   }
 
-  override def getApplicationName: String = "Online SVM Model"
+  override def getApplicationName: String = "Baseline+ SVM Model"
 
-  override def getExperimentName = "online"
+  override def getExperimentName = "baseline-plus"
 
   override def defaultBatchDuration = 1L
 

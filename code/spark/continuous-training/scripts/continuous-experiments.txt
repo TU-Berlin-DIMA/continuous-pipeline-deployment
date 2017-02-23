@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+CLUSTER :
+
+CRITEO:
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.classification.ContinuousClassifier --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "batch-duration=2" "slack=50" "incremental=true" "error-type=cumulative"  "initial-training-path=hdfs://cloud-11:44000/user/behrouz/criteo/initial-training" "streaming-path=hdfs://cloud-11:44000/user/behrouz/criteo/stream-training" "temp-path=hdfs://cloud-11:44000/user/behrouz/criteo/temp-data" "result-path=/share/hadoop/behrouz/experiments/continuous/"
+
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.classification.ContinuousClassifier --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "batch-duration=2" "slack=50" "incremental=false" "error-type=cumulative"  "initial-training-path=hdfs://cloud-11:44000/user/behrouz/criteo/initial-training" "streaming-path=hdfs://cloud-11:44000/user/behrouz/criteo/stream-training" "temp-path=hdfs://cloud-11:44000/user/behrouz/criteo/temp-data" "result-path=/share/hadoop/behrouz/experiments/continuous/"
+
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.classification.ContinuousClassifier --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "batch-duration=2" "slack=50" "incremental=true" "error-type=normal"  "initial-training-path=hdfs://cloud-11:44000/user/behrouz/criteo/initial-training" "streaming-path=hdfs://cloud-11:44000/user/behrouz/criteo/stream-training" "temp-path=hdfs://cloud-11:44000/user/behrouz/criteo/temp-data" "result-path=/share/hadoop/behrouz/experiments/continuous/"
+
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.classification.ContinuousClassifier --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "batch-duration=2" "slack=50" "incremental=false" "error-type=normal"  "initial-training-path=hdfs://cloud-11:44000/user/behrouz/criteo/initial-training" "streaming-path=hdfs://cloud-11:44000/user/behrouz/criteo/stream-training" "temp-path=hdfs://cloud-11:44000/user/behrouz/criteo/temp-data" "result-path=/share/hadoop/behrouz/experiments/continuous/"
+
+
+
+Local: 
+Cover-types: 
+~/Documents/frameworks/spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class de.dfki.classification.ContinuousClassifier target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "batch-duration=1" "slack=50" "result-path=results/cover-types/continuous" "initial-training-path=data/cover-types/initial-training" "streaming-path=data/cover-types/stream-training" "temp-path=data/cover-types/temp-data"
+
+criteo-sample: 
+~/Documents/frameworks/spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class de.dfki.classification.ContinuousClassifier --master "spark://berlin-189.b.dfki.de:7077" /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "batch-duration=1" "slack=10" "incremental=false" "error-type=normal"  "initial-training-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-sample/initial-training" "streaming-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-sample/stream-training" "temp-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-sample/temp-data" "result-path=/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/criteo-sample/continuous/"

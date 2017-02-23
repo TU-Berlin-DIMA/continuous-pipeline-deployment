@@ -16,19 +16,21 @@ object InitialClassifier extends SVMClassifier {
   }
 
   override def run(args: Array[String]): Unit = {
-    val (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
+    val (batchDuration, resultRoot, initialDataPath,
+    streamingDataPath, testDataPath, errorType) = parseArgs(args)
     val ssc = initializeSpark(Seconds(batchDuration))
-
+    val parent = s"batch-$batchDuration-slack-none-incremental-false-error-$errorType"
+    val resultPath = experimentResultPath(resultRoot, parent)
     // train initial model
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath, 100)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
     // evaluate the stream
     if (testDataPath == "prequential") {
-      evaluateStream(streamingSource.map(_._2.toString).map(parsePoint), resultPath)
+      evaluateStream(streamingSource.map(_._2.toString).map(parsePoint), resultPath, errorType)
     } else {
-      evaluateStream(testData, resultPath)
+      evaluateStream(testData, resultPath, errorType)
     }
 
     ssc.start()
@@ -37,9 +39,9 @@ object InitialClassifier extends SVMClassifier {
   }
 
 
-  override def getApplicationName = "Initial SVM Model"
+  override def getApplicationName = "Baseline SVM Model"
 
-  override def getExperimentName = "initial-only"
+  override def getExperimentName = "baseline"
 
   override def defaultBatchDuration = 1L
 

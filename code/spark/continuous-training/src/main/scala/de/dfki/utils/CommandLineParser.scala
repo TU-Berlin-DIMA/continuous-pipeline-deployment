@@ -33,6 +33,10 @@ class CommandLineParser(val args: Array[String]) {
     getOrElse(key, default).toInt
   }
 
+  def getBoolean(key: String, default: Boolean = false): Boolean = {
+    getOrElse(key, default).toBoolean
+  }
+
   def print(): Unit = {
     println(map)
   }

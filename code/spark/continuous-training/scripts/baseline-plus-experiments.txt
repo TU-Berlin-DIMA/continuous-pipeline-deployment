@@ -1,0 +1,5 @@
+
+
+Local:
+Criteo sample:
+~/Documents/frameworks/spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class de.dfki.classification.OnlineClassifier --master "spark://berlin-189.b.dfki.de:7077" /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "batch-duration=1" "error-type=normal"  "initial-training-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-sample/initial-training" "streaming-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-sample/stream-training" "result-path=/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/criteo-sample/baseline-plus/"

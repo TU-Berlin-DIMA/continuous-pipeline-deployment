@@ -36,16 +36,22 @@ object ContinuousClassifier extends SVMClassifier {
     run(args)
   }
 
-  def parseContinuousArgs(args: Array[String]): (Long, Long, String, String, String, String, String) = {
+  def parseContinuousArgs(args: Array[String]): (Long, Long, String, String, String, String, String, Boolean, String) = {
     val parser = new CommandLineParser(args).parse()
-    val (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
+    val (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath, errorType) = parseArgs(args)
     val slack = parser.getLong("slack", defaultTrainingSlack)
     val tempDirectory = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
-    (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath, experimentResultPath(tempDirectory))
+    val incremental = parser.getBoolean("incremental", true)
+    (batchDuration, slack, resultPath, initialDataPath, streamingDataPath,
+      testDataPath, tempDirectory, incremental, errorType)
   }
 
   override def run(args: Array[String]): Unit = {
-    val (batchDuration, slack, resultPath, initialDataPath, streamingDataPath, testDataPath, tempDirectory) = parseContinuousArgs(args)
+    val (batchDuration, slack, resultRoot, initialDataPath, streamingDataPath,
+    testDataPath, tempRoot, incremental, errorType) = parseContinuousArgs(args)
+    val parent = s"batch-$batchDuration-slack-$slack-incremental-${incremental.toString}-error-$errorType"
+    val resultPath = experimentResultPath(resultRoot, parent)
+    val tempDirectory = experimentResultPath(tempRoot, parent)
     createTempFolders(tempDirectory)
     val ssc = initializeSpark(Seconds(batchDuration))
 
@@ -59,10 +65,12 @@ object ContinuousClassifier extends SVMClassifier {
 
     // evaluate the stream and incrementally update the model
     if (testDataPath == "prequential") {
-      evaluateStream(streamingSource.map(_._2.toString).map(parsePoint), resultPath)
-      trainOnStream(streamingSource.map(_._2.toString).map(parsePoint))
+      evaluateStream(streamingSource.map(_._2.toString).map(parsePoint), resultPath, errorType)
     } else {
-      evaluateStream(testData, resultPath)
+      evaluateStream(testData, resultPath, errorType)
+    }
+
+    if (incremental) {
       trainOnStream(streamingSource.map(_._2.toString).map(parsePoint))
     }
 

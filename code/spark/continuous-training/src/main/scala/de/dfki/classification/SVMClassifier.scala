@@ -55,10 +55,10 @@ abstract class SVMClassifier extends Serializable {
 
   var streamingModel: OnlineSVM = _
 
-  def experimentResultPath(root: String): String = {
+  def experimentResultPath(root: String, parent: String): String = {
     val dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm")
     val experimentId = dateFormat.format(experimentTime)
-    s"$root/$experimentId"
+    s"$root/$parent/$experimentId"
   }
 
 
@@ -83,47 +83,58 @@ abstract class SVMClassifier extends Serializable {
     * @param testData   test Data DStream
     * @param resultPath directory for writing the error rate results
     */
-  def evaluateStream(testData: DStream[LabeledPoint], resultPath: String) {
-    val storeErrorRate = (rdd: RDD[Double]) => {
-      val file = new File(s"${experimentResultPath(resultPath)}/error-rates.txt")
-      file.getParentFile.mkdirs()
-      val fw = new FileWriter(file, true)
-      try {
-        // TODO: it should not write to file when the rdd is empty
-        val content = rdd.collect().toList.mkString("\n")
-        if (content == "") {}
-        else {
-          fw.write(s"$content\n")
-        }
-      }
-      finally fw.close()
-    }
-
-    def mappingFunc(key: String, value: Option[(Double, Double)], state: State[(Double, Double)]): (Double, Double) = {
-      val currentState = state.getOption().getOrElse(0.0, 0.0)
-      val currentTuple = value.getOrElse(0.0, 0.0)
-      val error = currentTuple._1 + currentState._1
-      val sum = currentTuple._2 + currentState._2
-      state.update(error, sum)
-      (error, sum)
-    }
+  def evaluateStream(testData: DStream[LabeledPoint], resultPath: String, errorType: String = "cumulative") {
 
     // periodically check test error
-    streamingModel.predictOnValues(testData.map(lp => (lp.label, lp.features)))
+    val predictions = streamingModel.predictOnValues(testData.map(lp => (lp.label, lp.features)))
       .map(a => {
         if (a._1 == a._2) {
-          ("e", (0.0, 1.0))
+          (0.0, 1.0)
         }
         else {
-          ("e", (1.0, 1.0))
+          (1.0, 1.0)
         }
       })
-      .mapWithState(StateSpec.function(mappingFunc _))
-      .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
-      .map(item => item._1 / item._2)
-      .foreachRDD(storeErrorRate)
 
-    streamingModel.writeToDisk(testData, experimentResultPath(resultPath))
+    if (errorType == "cumulative") {
+      predictions
+        .map(p => ("e", p))
+        .mapWithState(StateSpec.function(mappingFunc _))
+        .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
+        .map(item => item._1 / item._2)
+        .foreachRDD(rdd => storeErrorRate(rdd, resultPath))
+    } else {
+      predictions
+        .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
+        .map(item => item._1 / item._2)
+        .foreachRDD(rdd => storeErrorRate(rdd, resultPath))
+    }
+
+    streamingModel.writeToDisk(testData, resultPath)
+  }
+
+
+  private val storeErrorRate = (rdd: RDD[Double], resultPath: String) => {
+    val file = new File(s"$resultPath/error-rates.txt")
+    file.getParentFile.mkdirs()
+    val fw = new FileWriter(file, true)
+    try {
+      val content = rdd.collect().toList.mkString("\n")
+      if (content == "") {}
+      else {
+        fw.write(s"$content\n")
+      }
+    }
+    finally fw.close()
+  }
+
+  private def mappingFunc(key: String, value: Option[(Double, Double)], state: State[(Double, Double)]): (Double, Double) = {
+    val currentState = state.getOption().getOrElse(0.0, 0.0)
+    val currentTuple = value.getOrElse(0.0, 0.0)
+    val error = currentTuple._1 + currentState._1
+    val sum = currentTuple._2 + currentState._2
+    state.update(error, sum)
+    (error, sum)
   }
 
   /**
@@ -161,7 +172,7 @@ abstract class SVMClassifier extends Serializable {
     * @param resultPath result path
     */
   def storeTrainingTimes(duration: Long, resultPath: String) = {
-    val file = new File(s"${experimentResultPath(resultPath)}/training-times.txt")
+    val file = new File(s"$resultPath/training-times.txt")
     file.getParentFile.mkdirs()
     val fw = new FileWriter(file, true)
     fw.write(s"$duration\n")
@@ -177,7 +188,7 @@ abstract class SVMClassifier extends Serializable {
   //    evaluateStream(observations, resultPath)
   //  }
 
-  def parseArgs(args: Array[String]): (Long, String, String, String, String) = {
+  def parseArgs(args: Array[String]): (Long, String, String, String, String, String) = {
     val parser = new CommandLineParser(args).parse()
     // spark streaming batch duration
     val batchDuration = parser.getLong("batch-duration", defaultBatchDuration)
@@ -189,8 +200,10 @@ abstract class SVMClassifier extends Serializable {
     val streamingDataPath = parser.get("streaming-path", s"$BASE_DATA_DIRECTORY/$STREAM_TRAINING")
     // folder (file) for test data
     val testDataPath = parser.get("test-path", "prequential")
+    // cumulative test error
+    val errorType = parser.get("error-type", "cumulative")
 
-    (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath)
+    (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath, errorType)
 
   }
 
@@ -259,6 +272,7 @@ abstract class SVMClassifier extends Serializable {
     val fs = FileSystem.get(new Configuration())
     fs.mkdirs(new Path(path))
   }
+
 
   def getApplicationName: String
 
