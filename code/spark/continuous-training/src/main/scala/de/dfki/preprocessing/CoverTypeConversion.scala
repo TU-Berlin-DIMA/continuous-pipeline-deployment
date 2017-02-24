@@ -19,10 +19,10 @@ object CoverTypeConversion {
       new LabeledPoint(lp.label - 1, lp.features)
     })
 
-    val rdds = trainData.randomSplit(Array(0.1, 0.1, 0.8))
+    val rdds = trainData.randomSplit(Array(0.2, 0.8))
     writeToFile(rdds(0), "data/cover-types/initial-training/")
-    writeToFile(rdds(1), "data/cover-types/test/")
-    writeToFile(rdds(2).repartition(200), "data/cover-types/stream-training/")
+    //writeToFile(rdds(1), "data/cover-types/test/")
+    writeToFile(rdds(1).repartition(500), "data/cover-types/stream-training/")
   }
 
   def writeToFile(data: RDD[LabeledPoint], path: String) = {

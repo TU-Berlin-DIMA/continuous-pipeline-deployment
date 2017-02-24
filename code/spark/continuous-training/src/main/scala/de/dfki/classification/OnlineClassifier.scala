@@ -22,7 +22,13 @@ object OnlineClassifier extends SVMClassifier {
     testDataPath, errorType) = parseArgs(args)
 
     val ssc = initializeSpark(Seconds(batchDuration))
-    val parent = s"batch-$batchDuration-slack-none-incremental-true-error-$errorType"
+    var testType = ""
+    if (testDataPath == "prequential") {
+      testType = "prequential"
+    } else {
+      testType = "dataset"
+    }
+    val parent = s"$getExperimentName/batch-$batchDuration-slack-none-incremental-true-error-$errorType-$testType"
     val resultPath = experimentResultPath(resultRoot, parent)
     streamingModel = createInitialStreamingModel(ssc, initialDataPath)
     val streamingSource = streamSource(ssc, streamingDataPath)

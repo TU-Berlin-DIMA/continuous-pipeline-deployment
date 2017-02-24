@@ -126,7 +126,7 @@
 
 \maketitle
 \begin{abstract}
-\todo[inline]{first paragraph too long? get to the point faster}
+%\todo[inline]{first paragraph too long? get to the point faster}
 %Volker
 Many scientific and business applications rely on methods from machine learning in order to derive novel insight from large data sets.
 %Volker
@@ -137,14 +137,14 @@ Many of these steps are not automated, but require manual configuration by a dat
 Once a machine learning model is trained on an initial dataset it is deployed into a system where it can answer prediction queries in a realtime and reliable fashion.
 When new training data becomes available while the system is running, the model is updated.
 These updates are typically applied incrementally.
-However, to ensure higher quality of prediction and better adoption to changes in data distribution, models are retrained.
-Retraining of models is a time consuming and resource intensive process.
+Furthermore, to ensure higher quality of prediction and better adaptation to changes in data distribution, models are retrained periodically.
+However, retraining of models is a time consuming and resource intensive process.
 
 In this paper, we propose a novel deployment method for stochastic gradient descent (SGD)-based machine learning models.
 SGD is an iterative process, which works well with large data sets.
 During each iteration, SGD updates the model based on one or sample of the training items.
 Using this property, we eliminate the need for complete retraining by replacing it with a series of consecutive SGD iterations.
-We show that individual iterations of SGD are light weight and can be executed while the system is running.
+We show that individual iterations of SGD are light weight and can be executed while the system is answering prediction queries.
 Our experiments show that our deployment method updates models an order of magnitude faster, without degrading the quality of the model.
 Furthermore, models can adopt faster to changes in data distribution using our deployment method.
 \end{abstract}
@@ -153,14 +153,13 @@ Furthermore, models can adopt faster to changes in data distribution using our d
 \keywords{Machine Learning Model Management; Stochastic Gradient Descent; Machine Learning Systems}
 
 \section{Introduction} \label{introduction}
-\todo[inline]{POLISH}
-\todo[inline]{Remove mentions of MNIST}
-\todo[inline]{CRITEO Dataset experiments}
-\todo[inline]{mention retraining points in the experiments}
-\todo[inline]{Remove image classifier mention from conclusion}
-\todo[inline]{Make sure there are no repetitions in the paper}
-\todo[inline]{Add BBDC and streamline funding id}
-\todo[inline]{improve based on Volker's comments}
+%\todo[inline]{POLISH}
+%\todo[inline]{Remove mentions of MNIST}
+%\todo[inline]{CRITEO Dataset experiments}
+%\todo[inline]{mention retraining points in the experiments}
+%\todo[inline]{Remove image classifier mention from conclusion}
+%\todo[inline]{Make sure there are no repetitions in the paper}
+%\todo[inline]{Add BBDC and streamline funding id}
 % Problem
 Deploying and maintaining machine learning (ML) models is a crucial step in the lifecycle of a machine learning application. 
 %Volker
@@ -182,23 +181,29 @@ Most of the surveyed systems focus on training of machine learning models and pr
 Only few systems \cite{akdere2011case, crankshaw2014missing}, support deploying and maintaining the models as well.
 Moreover, systems with support for model deployment are still lacking constant monitoring and fast and accurate updates of the machine learning models.
 The whole process of training and deployment of models is usually performed manually.
-\todo[inline]{move velox and continuous diagrams here}
+\begin{figure*}[t]
+\centering
+\includegraphics[scale = 0.5]{../images/velox-1.pdf}
+\caption{Current Model Deployment Method}
+\label{fig:velox-work-flow}
+\end{figure*}
 The most common approach is as follows; first a model is trained based on an existing dataset residing on disk, this model serves as the initial model.
 This model is then deployed to an environment where it can answer prediction queries arriving at the system.
 The system also receives feedback in the form of new training observations.
 Upon receiving a training observation, the model is updated incrementally.
 Incremental updates are only supported by certain type of machine learning models, where the underlying optimization strategy allows the system to change the model based on individual training items.
+Figure \ref{fig:velox-work-flow} demonstrates this deployment approach.
 
 \textbf{Example application:} to illustrate this model deployment approach, consider the task of predicting the click through rate (CTR) of online advertisements.
-To maximize benefit, advertisement providers use machine learning models to estimate the expected click rate of different advertisements.
+To maximize benefit, search engine providers show advertisements to their users.
+They use machine learning models to estimate the expected click rate of different advertisements.
 They train machine learning models based on the available data, which typically includes content of the page, search query, user information, content and meta-data of the available advertisements. 
 Once the model is deployed, prediction queries of the form of ad requests arrive at the system.
 The model displays the advertisements that have the highest probabilities of being clicked by the user.
 Based on whether or not advertisements are clicked on, the system sends feedback in the form of new training observations and the model is updated accordingly.
-Furthermore, new batch training datasets in the form of user databases, new advertisements with their metadata and more web pages will become available as more companies employ the service of the advertisement provider.
+Furthermore, new batch training datasets in the form of user databases, new advertisements with their metadata and more web pages will become available as more companies employ the service of the search engine provider.
 In order to leverage the new data and reduce the error introduced by incremental learning, the model is periodically retrained using entire data.
-\todo[inline]{inconsistency, search engine provider, ad provider}
-Figure \ref{fig:click-rate} demonstrates the CTR prediction use case for a search engine provider.
+Figure \ref{fig:click-rate} demonstrates the CTR prediction example for a search engine provider.
 
 \begin{figure}[h]
 \centering
@@ -757,12 +762,6 @@ The running time of the Baseline+ is not included as it is similar to Baseline, 
 \end{figure*}
 
 \section{Related Work} \label{related-work}
-\begin{figure*}[!t]
-\centering
-\includegraphics[scale = 0.5]{../images/velox-1.pdf}
-\caption{Velox Work Flow}
-\label{fig:velox-work-flow}
-\end{figure*}
 Traditional machine learning systems focus on training and management of models and leave the task of deployment and maintenance to the users. 
 It has only been recently that some systems, for example Velox \cite{crankshaw2014missing}, TensorFlow Serving \cite{abadi2016tensorflow}, and LongView \cite{akdere2011case} have proposed architectures to support model deployment and query answering as well. 
 LongView integrates predictive machine learning models into relational databases. 

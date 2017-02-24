@@ -96,10 +96,7 @@ class OnlineSVM(private var stepSize: Double,
       file.getParentFile.mkdirs()
       val fw = new FileWriter(file, true)
       try {
-
-
         fw.write(s"${model.get.weights.toString}\n")
-
       }
       finally fw.close()
     }

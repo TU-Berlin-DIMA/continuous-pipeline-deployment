@@ -49,7 +49,13 @@ object ContinuousClassifier extends SVMClassifier {
   override def run(args: Array[String]): Unit = {
     val (batchDuration, slack, resultRoot, initialDataPath, streamingDataPath,
     testDataPath, tempRoot, incremental, errorType) = parseContinuousArgs(args)
-    val parent = s"batch-$batchDuration-slack-$slack-incremental-${incremental.toString}-error-$errorType"
+    var testType = ""
+    if (testDataPath == "prequential"){
+      testType = "prequential"
+    } else {
+      testType = "dataset"
+    }
+    val parent = s"$getExperimentName/batch-$batchDuration-slack-$slack-incremental-${incremental.toString}-error-$errorType-$testType"
     val resultPath = experimentResultPath(resultRoot, parent)
     val tempDirectory = experimentResultPath(tempRoot, parent)
     createTempFolders(tempDirectory)

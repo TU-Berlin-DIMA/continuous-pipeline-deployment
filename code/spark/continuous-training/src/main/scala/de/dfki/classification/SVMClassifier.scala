@@ -129,10 +129,11 @@ abstract class SVMClassifier extends Serializable {
   }
 
   private def mappingFunc(key: String, value: Option[(Double, Double)], state: State[(Double, Double)]): (Double, Double) = {
+   //val alpha = 0.6
     val currentState = state.getOption().getOrElse(0.0, 0.0)
     val currentTuple = value.getOrElse(0.0, 0.0)
-    val error = currentTuple._1 + currentState._1
-    val sum = currentTuple._2 + currentState._2
+    val error = currentTuple._1 + currentState._1 //* alpha
+    val sum = currentTuple._2 + currentState._2 //* alpha
     state.update(error, sum)
     (error, sum)
   }
@@ -215,9 +216,9 @@ abstract class SVMClassifier extends Serializable {
     * @param initialDataDirectories directory of initial data
     * @return Online SVM Model
     */
-  def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String, numIterations: Int = 100): OnlineSVM = {
+  def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String, numIterations: Int = 500): OnlineSVM = {
     val model = trainModel(ssc.sparkContext, initialDataDirectories, numIterations)
-    new OnlineSVM().setInitialModel(model).setNumIterations(10).setStepSize(0.001)
+    new OnlineSVM().setInitialModel(model).setNumIterations(1).setStepSize(0.001)
   }
 
   /**
@@ -228,7 +229,7 @@ abstract class SVMClassifier extends Serializable {
     * @param numIterations num of iterations for the training process
     * @return SVMModel
     */
-  def trainModel(sc: SparkContext, trainingPath: String, numIterations: Int = 10): SVMModel = {
+  def trainModel(sc: SparkContext, trainingPath: String, numIterations: Int = 500): SVMModel = {
     trainModel(sc.textFile(trainingPath).map(parsePoint).cache(), numIterations)
   }
 
