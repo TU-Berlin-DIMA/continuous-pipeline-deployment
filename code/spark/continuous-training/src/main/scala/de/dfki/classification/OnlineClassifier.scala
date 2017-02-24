@@ -24,7 +24,7 @@ object OnlineClassifier extends SVMClassifier {
     val ssc = initializeSpark(Seconds(batchDuration))
     var testType = ""
     if (testDataPath == "prequential") {
-      testType = "prequential"
+      testType = s"prequential-$fadingFactor"
     } else {
       testType = "dataset"
     }

@@ -52,6 +52,7 @@ abstract class SVMClassifier extends Serializable {
   val INITIAL_TRAINING = "initial-training"
   val STREAM_TRAINING = "stream-training"
   val TEST_DATA = "test"
+  var fadingFactor = 1.0
 
   var streamingModel: OnlineSVM = _
 
@@ -129,11 +130,10 @@ abstract class SVMClassifier extends Serializable {
   }
 
   private def mappingFunc(key: String, value: Option[(Double, Double)], state: State[(Double, Double)]): (Double, Double) = {
-   //val alpha = 0.6
     val currentState = state.getOption().getOrElse(0.0, 0.0)
     val currentTuple = value.getOrElse(0.0, 0.0)
-    val error = currentTuple._1 + currentState._1 //* alpha
-    val sum = currentTuple._2 + currentState._2 //* alpha
+    val error = currentTuple._1 + currentState._1 * fadingFactor
+    val sum = currentTuple._2 + currentState._2 * fadingFactor
     state.update(error, sum)
     (error, sum)
   }
@@ -203,6 +203,9 @@ abstract class SVMClassifier extends Serializable {
     val testDataPath = parser.get("test-path", "prequential")
     // cumulative test error
     val errorType = parser.get("error-type", "cumulative")
+
+    //TODO fix this later
+    fadingFactor = parser.getDouble("fading-factor", 1.0)
 
     (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath, errorType)
 

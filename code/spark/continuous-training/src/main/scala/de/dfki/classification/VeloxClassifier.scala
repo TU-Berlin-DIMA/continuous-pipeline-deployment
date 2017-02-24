@@ -50,7 +50,7 @@ object VeloxClassifier extends SVMClassifier {
     streamingDataPath, testDataPath, tempRoot, incremental, errorType) = parseVeloxArgs(args)
     var testType = ""
     if (testDataPath == "prequential"){
-      testType = "prequential"
+      testType = s"prequential-$fadingFactor"
     } else {
       testType = "dataset"
     }

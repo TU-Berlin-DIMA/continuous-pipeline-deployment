@@ -51,7 +51,7 @@ object ContinuousClassifier extends SVMClassifier {
     testDataPath, tempRoot, incremental, errorType) = parseContinuousArgs(args)
     var testType = ""
     if (testDataPath == "prequential"){
-      testType = "prequential"
+      testType = s"prequential-$fadingFactor"
     } else {
       testType = "dataset"
     }
