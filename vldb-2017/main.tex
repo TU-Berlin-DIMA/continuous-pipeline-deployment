@@ -153,13 +153,13 @@ Furthermore, models can adopt faster to changes in data distribution using our d
 \keywords{Machine Learning Model Management; Stochastic Gradient Descent; Machine Learning Systems}
 
 \section{Introduction} \label{introduction}
-%\todo[inline]{POLISH}
-%\todo[inline]{Remove mentions of MNIST}
-%\todo[inline]{CRITEO Dataset experiments}
-%\todo[inline]{mention retraining points in the experiments}
-%\todo[inline]{Remove image classifier mention from conclusion}
-%\todo[inline]{Make sure there are no repetitions in the paper}
-%\todo[inline]{Add BBDC and streamline funding id}
+\todo[inline]{POLISH}
+\todo[inline]{Remove mentions of MNIST}
+\todo[inline]{CRITEO Dataset experiments}
+\todo[inline]{mention retraining points in the experiments}
+\todo[inline]{Remove image classifier mention from conclusion}
+\todo[inline]{Make sure there are no repetitions in the paper}
+\todo[inline]{Add BBDC and streamline funding id}
 % Problem
 Deploying and maintaining machine learning (ML) models is a crucial step in the lifecycle of a machine learning application. 
 %Volker
@@ -833,15 +833,16 @@ Retraining is a resource intensive process which completely neglects any updates
 
 We propose a system for deploying and maintaining machine learning models that are trained using stochastic gradient descent optimization (SGD).
 SGD is an iterative optimization process where in each iteration a sample of the data is used to update the machine learning model.
-Although SGD is typically used to train models on static datasets, our proposed system uses it to both perform incremental and batch updates to the deployed model.
+Although SGD is typically used to train models on static datasets, our proposed system uses it to perform both incremental and batch updates to the deployed model.
 Every successive iteration of SGD is scheduled to run while the machine learning model is also answering prediction queries.
 After every iteration, the model is updated with the new parameters.
+
 SGD is one of the most common optimization techniques for large datasets and has been successfully used in different domains such as neural networks, recommender systems, regression, and clustering models. 
-This makes our system applicable to a large range of machine learning models beyond the ones demonstrated in our evaluation.
+This makes our system applicable to a wide range of machine learning models beyond the ones demonstrated in our evaluation section.
 
 To demonstrate our system's ability to incorporate different machine learning models and workloads, we implement two use cases: recommender system and logistic regression classifier.
 The recommender system is tested on different workloads and the results show that not only it scales well but also it adopts to changes in data distribution by continuously updating the model.
-\todo[inline]{the other experiments}
+\todo[inline]{explain the result of the other experiments}
 Our experiments also shows the continuous training of the machine learning models is much faster than full retraining of them, which is the most common approach in deployment and maintenance of machine learning models. We showed that not only continuous training requires less resources but it also produces models with lower error rates that adopt faster to changes in the dataset.
 Moreover, comparing to simple techniques such incremental learning or initial batch training it produces a model with higher quality.
 

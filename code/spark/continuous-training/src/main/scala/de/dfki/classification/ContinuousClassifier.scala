@@ -4,7 +4,6 @@ import java.util.concurrent.{Executors, TimeUnit}
 
 import de.dfki.utils.CommandLineParser
 import de.dfki.utils.MLUtils.parsePoint
-import org.apache.log4j.Logger
 import org.apache.spark.streaming.Seconds
 
 /**
@@ -22,7 +21,6 @@ import org.apache.spark.streaming.Seconds
   * @author Behrouz Derakhshan
   */
 object ContinuousClassifier extends SVMClassifier {
-  @transient val logger = Logger.getLogger(getClass.getName)
 
   /**
     * @param args arguments to the main class should be a set of key, value pairs in the format of key=value

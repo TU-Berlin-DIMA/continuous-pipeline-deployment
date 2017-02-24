@@ -13,6 +13,7 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.io.{LongWritable, NullWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat
+import org.apache.log4j.Logger
 import org.apache.spark.mllib.classification.{SVMModel, SVMWithSGD}
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
@@ -41,6 +42,7 @@ abstract class SVMClassifier extends Serializable {
 
   @transient var future: ScheduledFuture[_] = _
   @transient var execService: ScheduledExecutorService = _
+  @transient val logger = Logger.getLogger(getClass.getName)
 
   // time captured at the beginning of the experiments. Used for generating unique ids
   private val experimentTime = Calendar.getInstance().getTime
@@ -52,7 +54,7 @@ abstract class SVMClassifier extends Serializable {
   val INITIAL_TRAINING = "initial-training"
   val STREAM_TRAINING = "stream-training"
   val TEST_DATA = "test"
-  var fadingFactor = 1.0
+  var fadingFactor = 0.0
 
   var streamingModel: OnlineSVM = _
 
@@ -97,6 +99,8 @@ abstract class SVMClassifier extends Serializable {
         }
       })
 
+    logger.warn(s"Fading Factor: $fadingFactor")
+    println(s"Fading Factor: $fadingFactor")
     if (errorType == "cumulative") {
       predictions
         .map(p => ("e", p))
@@ -132,6 +136,7 @@ abstract class SVMClassifier extends Serializable {
   private def mappingFunc(key: String, value: Option[(Double, Double)], state: State[(Double, Double)]): (Double, Double) = {
     val currentState = state.getOption().getOrElse(0.0, 0.0)
     val currentTuple = value.getOrElse(0.0, 0.0)
+    // TODO: This is not working fix it 
     val error = currentTuple._1 + currentState._1 * fadingFactor
     val sum = currentTuple._2 + currentState._2 * fadingFactor
     state.update(error, sum)

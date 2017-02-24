@@ -11,7 +11,6 @@ import org.apache.spark.streaming.Seconds
   * @author Behrouz Derakhshan
   */
 object OnlineClassifier extends SVMClassifier {
-  @transient val logger = Logger.getLogger(getClass.getName)
 
   def main(args: Array[String]): Unit = {
     run(args)

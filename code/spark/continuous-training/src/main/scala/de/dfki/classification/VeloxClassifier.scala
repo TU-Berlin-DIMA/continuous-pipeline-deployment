@@ -21,7 +21,7 @@ import org.apache.spark.streaming.Seconds
   * @author Behrouz Derakhshan
   */
 object VeloxClassifier extends SVMClassifier {
-  @transient private val logger = Logger.getLogger(getClass.getName)
+
 
   /**
     * @param args arguments to the main class should be a set of key, value pairs in the format of key=value
