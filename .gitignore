@@ -6,6 +6,7 @@
 *.idea
 *.iml
 *.RData
+*.Rhistory
 
 
 # Latex files
@@ -15,3 +16,10 @@
 *.log
 *.synctex.gz
 
+# Folders:
+vldb-2017/figures/
+sigmod-2017/figures/
+*/target/
+code/spark/continuous-training/data/
+code/spark/continuous-training/checkpoints/
+code/python/continuous-training/datasets/

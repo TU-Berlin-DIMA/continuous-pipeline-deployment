@@ -17,10 +17,10 @@ object InitialClassifier extends SVMClassifier {
 
   override def run(args: Array[String]): Unit = {
     val (batchDuration, resultRoot, initialDataPath,
-    streamingDataPath, testDataPath, errorType) = parseArgs(args)
+    streamingDataPath, testDataPath, errorType, fadingFactor) = parseArgs(args)
     val ssc = initializeSpark(Seconds(batchDuration))
     var testType = ""
-    if (testDataPath == "prequential"){
+    if (testDataPath == "prequential") {
       testType = s"prequential-$fadingFactor"
     } else {
       testType = "dataset"
@@ -34,7 +34,7 @@ object InitialClassifier extends SVMClassifier {
 
     // evaluate the stream
     if (testDataPath == "prequential") {
-      evaluateStream(streamingSource.map(_._2.toString).map(parsePoint), resultPath, errorType)
+      evaluateStream(streamingSource.map(_._2.toString).map(parsePoint), resultPath, errorType, fadingFactor)
     } else {
       evaluateStream(testData, resultPath, errorType)
     }

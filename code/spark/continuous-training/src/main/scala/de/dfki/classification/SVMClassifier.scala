@@ -54,7 +54,6 @@ abstract class SVMClassifier extends Serializable {
   val INITIAL_TRAINING = "initial-training"
   val STREAM_TRAINING = "stream-training"
   val TEST_DATA = "test"
-  var fadingFactor = 0.0
 
   var streamingModel: OnlineSVM = _
 
@@ -86,7 +85,7 @@ abstract class SVMClassifier extends Serializable {
     * @param testData   test Data DStream
     * @param resultPath directory for writing the error rate results
     */
-  def evaluateStream(testData: DStream[LabeledPoint], resultPath: String, errorType: String = "cumulative") {
+  def evaluateStream(testData: DStream[LabeledPoint], resultPath: String, errorType: String = "cumulative", fadingFactor: Double = 1.0) {
 
     // periodically check test error
     val predictions = streamingModel.predictOnValues(testData.map(lp => (lp.label, lp.features)))
@@ -99,11 +98,9 @@ abstract class SVMClassifier extends Serializable {
         }
       })
 
-    logger.warn(s"Fading Factor: $fadingFactor")
-    println(s"Fading Factor: $fadingFactor")
     if (errorType == "cumulative") {
       predictions
-        .map(p => ("e", p))
+        .map(p => (fadingFactor, p))
         .mapWithState(StateSpec.function(mappingFunc _))
         .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
         .map(item => item._1 / item._2)
@@ -133,12 +130,12 @@ abstract class SVMClassifier extends Serializable {
     finally fw.close()
   }
 
-  private def mappingFunc(key: String, value: Option[(Double, Double)], state: State[(Double, Double)]): (Double, Double) = {
+  private def mappingFunc(key: Double, value: Option[(Double, Double)], state: State[(Double, Double)]): (Double, Double) = {
     val currentState = state.getOption().getOrElse(0.0, 0.0)
     val currentTuple = value.getOrElse(0.0, 0.0)
-    // TODO: This is not working fix it 
-    val error = currentTuple._1 + currentState._1 * fadingFactor
-    val sum = currentTuple._2 + currentState._2 * fadingFactor
+    // TODO: Very hacky solution .. fading factor is passed as the key
+    val error = currentTuple._1 + currentState._1 * key
+    val sum = currentTuple._2 + currentState._2 * key
     state.update(error, sum)
     (error, sum)
   }
@@ -194,7 +191,7 @@ abstract class SVMClassifier extends Serializable {
   //    evaluateStream(observations, resultPath)
   //  }
 
-  def parseArgs(args: Array[String]): (Long, String, String, String, String, String) = {
+  def parseArgs(args: Array[String]): (Long, String, String, String, String, String, Double) = {
     val parser = new CommandLineParser(args).parse()
     // spark streaming batch duration
     val batchDuration = parser.getLong("batch-duration", defaultBatchDuration)
@@ -208,11 +205,10 @@ abstract class SVMClassifier extends Serializable {
     val testDataPath = parser.get("test-path", "prequential")
     // cumulative test error
     val errorType = parser.get("error-type", "cumulative")
-
     //TODO fix this later
-    fadingFactor = parser.getDouble("fading-factor", 1.0)
+    val fadingFactor = parser.getDouble("fading-factor", 1.0)
 
-    (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath, errorType)
+    (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath, errorType, fadingFactor)
 
   }
 

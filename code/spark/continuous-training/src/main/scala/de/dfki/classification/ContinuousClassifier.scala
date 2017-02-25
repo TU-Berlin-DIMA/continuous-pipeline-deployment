@@ -34,21 +34,21 @@ object ContinuousClassifier extends SVMClassifier {
     run(args)
   }
 
-  def parseContinuousArgs(args: Array[String]): (Long, Long, String, String, String, String, String, Boolean, String) = {
+  def parseContinuousArgs(args: Array[String]): (Long, Long, String, String, String, String, String, Boolean, String, Double) = {
     val parser = new CommandLineParser(args).parse()
-    val (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath, errorType) = parseArgs(args)
+    val (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath, errorType, fadingFactor) = parseArgs(args)
     val slack = parser.getLong("slack", defaultTrainingSlack)
     val tempDirectory = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
     val incremental = parser.getBoolean("incremental", true)
     (batchDuration, slack, resultPath, initialDataPath, streamingDataPath,
-      testDataPath, tempDirectory, incremental, errorType)
+      testDataPath, tempDirectory, incremental, errorType, fadingFactor)
   }
 
   override def run(args: Array[String]): Unit = {
     val (batchDuration, slack, resultRoot, initialDataPath, streamingDataPath,
-    testDataPath, tempRoot, incremental, errorType) = parseContinuousArgs(args)
+    testDataPath, tempRoot, incremental, errorType, fadingFactor) = parseContinuousArgs(args)
     var testType = ""
-    if (testDataPath == "prequential"){
+    if (testDataPath == "prequential") {
       testType = s"prequential-$fadingFactor"
     } else {
       testType = "dataset"
@@ -69,7 +69,7 @@ object ContinuousClassifier extends SVMClassifier {
 
     // evaluate the stream and incrementally update the model
     if (testDataPath == "prequential") {
-      evaluateStream(streamingSource.map(_._2.toString).map(parsePoint), resultPath, errorType)
+      evaluateStream(streamingSource.map(_._2.toString).map(parsePoint), resultPath, errorType, fadingFactor)
     } else {
       evaluateStream(testData, resultPath, errorType)
     }
