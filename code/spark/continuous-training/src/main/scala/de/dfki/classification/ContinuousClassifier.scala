@@ -34,7 +34,7 @@ object ContinuousClassifier extends SVMClassifier {
     run(args)
   }
 
-  def parseContinuousArgs(args: Array[String]): (Long, Long, String, String, String, String, String, Boolean, String, Double) = {
+  def parseContinuousArgs(args: Array[String]): (Long, Long, String, String, String, String, String, Boolean, String, Double, Int) = {
     val parser = new CommandLineParser(args).parse()
     val (batchDuration, resultPath, initialDataPath, streamingDataPath,
     testDataPath, errorType, fadingFactor, numIterations) = parseArgs(args)
@@ -54,7 +54,8 @@ object ContinuousClassifier extends SVMClassifier {
     } else {
       testType = "dataset"
     }
-    val parent = s"$getExperimentName/batch-$batchDuration-slack-$slack-incremental-${incremental.toString}-error-$errorType-$testType"
+    val parent = s"$getExperimentName/batch-$batchDuration-slack-$slack-incremental-${incremental.toString}" +
+      s"-error-$errorType-$testType-$numIterations"
     val resultPath = experimentResultPath(resultRoot, parent)
     val tempDirectory = experimentResultPath(tempRoot, parent)
     createTempFolders(tempDirectory)

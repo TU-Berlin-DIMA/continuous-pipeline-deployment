@@ -56,7 +56,8 @@ object VeloxClassifier extends SVMClassifier {
     } else {
       testType = "dataset"
     }
-    val parent = s"$getExperimentName/batch-$batchDuration-slack-$slack-incremental-${incremental.toString}-error-$errorType-$testType"
+    val parent = s"$getExperimentName/batch-$batchDuration-slack-$slack-incremental-${incremental.toString}" +
+      s"-error-$errorType-$testType-$numIterations"
     val resultPath = experimentResultPath(resultRoot, parent)
     val tempDirectory = experimentResultPath(tempRoot, parent)
     createTempFolders(tempDirectory)

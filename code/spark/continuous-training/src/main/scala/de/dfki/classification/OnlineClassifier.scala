@@ -26,7 +26,8 @@ object OnlineClassifier extends SVMClassifier {
     } else {
       testType = "dataset"
     }
-    val parent = s"$getExperimentName/batch-$batchDuration-slack-none-incremental-true-error-$errorType-$testType"
+    val parent = s"$getExperimentName/batch-$batchDuration-slack-none-incremental-true" +
+      s"-error-$errorType-$testType-$numIterations"
     val resultPath = experimentResultPath(resultRoot, parent)
     streamingModel = createInitialStreamingModel(ssc, initialDataPath, numIterations)
     val streamingSource = streamSource(ssc, streamingDataPath)
