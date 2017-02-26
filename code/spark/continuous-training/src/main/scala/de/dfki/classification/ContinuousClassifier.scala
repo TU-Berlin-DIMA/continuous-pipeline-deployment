@@ -36,17 +36,18 @@ object ContinuousClassifier extends SVMClassifier {
 
   def parseContinuousArgs(args: Array[String]): (Long, Long, String, String, String, String, String, Boolean, String, Double) = {
     val parser = new CommandLineParser(args).parse()
-    val (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath, errorType, fadingFactor) = parseArgs(args)
+    val (batchDuration, resultPath, initialDataPath, streamingDataPath,
+    testDataPath, errorType, fadingFactor, numIterations) = parseArgs(args)
     val slack = parser.getLong("slack", defaultTrainingSlack)
     val tempDirectory = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
-    val incremental = parser.getBoolean("incremental", true)
+    val incremental = parser.getBoolean("incremental", default = true)
     (batchDuration, slack, resultPath, initialDataPath, streamingDataPath,
-      testDataPath, tempDirectory, incremental, errorType, fadingFactor)
+      testDataPath, tempDirectory, incremental, errorType, fadingFactor, numIterations)
   }
 
   override def run(args: Array[String]): Unit = {
     val (batchDuration, slack, resultRoot, initialDataPath, streamingDataPath,
-    testDataPath, tempRoot, incremental, errorType, fadingFactor) = parseContinuousArgs(args)
+    testDataPath, tempRoot, incremental, errorType, fadingFactor, numIterations) = parseContinuousArgs(args)
     var testType = ""
     if (testDataPath == "prequential") {
       testType = s"prequential-$fadingFactor"
@@ -60,7 +61,7 @@ object ContinuousClassifier extends SVMClassifier {
     val ssc = initializeSpark(Seconds(batchDuration))
 
     // train initial model
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory, numIterations)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 

@@ -131,11 +131,15 @@ abstract class SVMClassifier extends Serializable {
   }
 
   private def mappingFunc(key: Double, value: Option[(Double, Double)], state: State[(Double, Double)]): (Double, Double) = {
+    println(s"Fading Factor: $key")
     val currentState = state.getOption().getOrElse(0.0, 0.0)
     val currentTuple = value.getOrElse(0.0, 0.0)
+    println(s"Current State: (${currentState._1} : ${currentState._2}")
+    println(s"Current Tuple: (${currentTuple._1} : ${currentTuple._2}")
     // TODO: Very hacky solution .. fading factor is passed as the key
     val error = currentTuple._1 + currentState._1 * key
     val sum = currentTuple._2 + currentState._2 * key
+    println(s"New State: ($error : $sum)")
     state.update(error, sum)
     (error, sum)
   }
@@ -191,7 +195,7 @@ abstract class SVMClassifier extends Serializable {
   //    evaluateStream(observations, resultPath)
   //  }
 
-  def parseArgs(args: Array[String]): (Long, String, String, String, String, String, Double) = {
+  def parseArgs(args: Array[String]): (Long, String, String, String, String, String, Double, Int) = {
     val parser = new CommandLineParser(args).parse()
     // spark streaming batch duration
     val batchDuration = parser.getLong("batch-duration", defaultBatchDuration)
@@ -207,8 +211,10 @@ abstract class SVMClassifier extends Serializable {
     val errorType = parser.get("error-type", "cumulative")
     //TODO fix this later
     val fadingFactor = parser.getDouble("fading-factor", 1.0)
+    // number of iterations
+    val numIterations = parser.getInteger("num-iterations", 500)
 
-    (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath, errorType, fadingFactor)
+    (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath, errorType, fadingFactor, numIterations)
 
   }
 
@@ -222,7 +228,7 @@ abstract class SVMClassifier extends Serializable {
     */
   def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String, numIterations: Int = 500): OnlineSVM = {
     val model = trainModel(ssc.sparkContext, initialDataDirectories, numIterations)
-    new OnlineSVM().setInitialModel(model).setNumIterations(1).setStepSize(0.001)
+    new OnlineSVM().setInitialModel(model).setNumIterations(10).setStepSize(0.001)
   }
 
   /**

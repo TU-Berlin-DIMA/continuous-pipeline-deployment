@@ -35,19 +35,21 @@ object VeloxClassifier extends SVMClassifier {
     run(args)
   }
 
-  def parseVeloxArgs(args: Array[String]): (Long, Long, String, String, String, String, String, Boolean, String, Double) = {
+  def parseVeloxArgs(args: Array[String]): (Long, Long, String, String, String, String, String,
+    Boolean, String, Double, Int) = {
     val parser = new CommandLineParser(args).parse()
-    val (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath, errorType, fadingFactor) = parseArgs(args)
+    val (batchDuration, resultPath, initialDataPath, streamingDataPath,
+    testDataPath, errorType, fadingFactor, numIterations) = parseArgs(args)
     val slack = parser.getLong("slack", defaultTrainingSlack)
     val tempDirectory = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
     val incremental = parser.getBoolean("incremental", default = true)
     (batchDuration, slack, resultPath, initialDataPath, streamingDataPath,
-      testDataPath, tempDirectory, incremental, errorType, fadingFactor)
+      testDataPath, tempDirectory, incremental, errorType, fadingFactor, numIterations)
   }
 
   override def run(args: Array[String]): Unit = {
     val (batchDuration, slack, resultRoot, initialDataPath,
-    streamingDataPath, testDataPath, tempRoot, incremental, errorType, fadingFactor) = parseVeloxArgs(args)
+    streamingDataPath, testDataPath, tempRoot, incremental, errorType, fadingFactor, numIterations) = parseVeloxArgs(args)
     var testType = ""
     if (testDataPath == "prequential") {
       testType = s"prequential-$fadingFactor"
@@ -61,7 +63,7 @@ object VeloxClassifier extends SVMClassifier {
     val ssc = initializeSpark(Seconds(batchDuration))
 
     // train initial model
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory, numIterations)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
@@ -89,7 +91,7 @@ object VeloxClassifier extends SVMClassifier {
         streamingSource.pause()
 
         val startTime = System.currentTimeMillis()
-        val model = trainModel(ssc.sparkContext, initialDataPath + "," + tempDirectory, 100)
+        val model = trainModel(ssc.sparkContext, initialDataPath + "," + tempDirectory, numIterations)
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)
         streamingModel.setInitialModel(model)
