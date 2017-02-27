@@ -2,9 +2,9 @@ package de.dfki.preprocessing
 
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.SparkConf
+import org.apache.spark.ml.feature.{StandardScaler, VectorAssembler}
+import org.apache.spark.ml.linalg.{DenseVector, SparseVector}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-
-import scala.util.Random
 
 
 /**
@@ -66,28 +66,63 @@ object CriteoFeatureEngineering {
       .config(conf)
       .getOrCreate()
 
-    val df = spark.read.format("csv").option("delimiter", "\t").option("header", "false").load(data)
+    val df = spark.read
+      .format("csv")
+      .option("delimiter", "\t")
+      .option("header", "false")
+      .option("inferSchema", "true")
+      .load(data)
 
     val numerical = getNumericalFeatures(df)
-    val splits = numerical.randomSplit(Array(0.1, 0.9))
-    implicit val myObjEncoder = org.apache.spark.sql.Encoders.kryo[Row]
 
-    // shuffling the partitions are necessary since random split function internally sorts each partition
-    splits(0).rdd
-      .map(row => row.toString.substring(1, row.toString.length - 1))
-      .mapPartitions(partition => Random.shuffle(partition))
-      .saveAsTextFile(s"$result/initial-training/")
 
-    splits(1).rdd
-      .map(row => row.toString.substring(1, row.toString.length - 1))
-      .repartition(fileCount)
-      .mapPartitions(partition => Random.shuffle(partition))
-      .saveAsTextFile(s"$result/stream-training/")
+    val assembler = new VectorAssembler()
+      .setInputCols(Array("_c1", "_c2", "_c3", "_c4", "_c5", "_c6",
+        "_c7", "_c8", "_c9", "_c10", "_c11", "_c12", "_c13"))
+      .setOutputCol("features")
+
+
+    val vectorNumerical = assembler
+      .transform(numerical)
+      .select("_c0", "features")
+      .rdd
+      .map(r => Row(r.get(0), r.get(1))
+      .collect()
+
+    //val d = vectorNumerical.select("features").asInstanceOf[SparseVector]
+
+    //    //for (c <- cols) {
+    //    val scaler = new StandardScaler()
+    //      .setWithMean(true)
+    //      .setWithStd(true)
+    //      .setInputCol("features")
+    //      .setOutputCol("features-transformed")
+    //      .fit(vectorNumerical)
+    //
+    //    val scaledData = scaler.transform(vectorNumerical)
+    //
+    //    // }
+    //
+    //
+    //    val splits = scaledData.select("_c0", "features-transformed").randomSplit(Array(0.1, 0.9))
+    //    implicit val myObjEncoder = org.apache.spark.sql.Encoders.kryo[Row]
+    //
+    //    // shuffling the partitions are necessary since random split function internally sorts each partition
+    //    splits(0).rdd
+    //      .map(row => row.toString.substring(1, row.toString.length - 1))
+    //      //.mapPartitions(partition => Random.shuffle(partition))
+    //      .saveAsTextFile(s"$result/initial-training/")
+    //
+    //    splits(1).rdd
+    //      .map(row => row.toString.substring(1, row.toString.length - 1))
+    //      //.repartition(fileCount)
+    //      //.mapPartitions(partition => Random.shuffle(partition))
+    //      .saveAsTextFile(s"$result/stream-training/")
   }
 
   def getNumericalFeatures(df: DataFrame): DataFrame = {
     df.select("_c0", "_c1", "_c2", "_c3", "_c4", "_c5", "_c6", "_c7", "_c8", "_c9", "_c10", "_c11", "_c12", "_c13")
-      .na.fill("0")
+      .na.fill(0.0)
   }
 
   def trialIterator(row: Iterator[Row]): Iterator[Row] = {

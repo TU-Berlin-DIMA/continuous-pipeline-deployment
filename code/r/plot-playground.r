@@ -56,24 +56,53 @@ df = data.frame(time = 1:nrow(continuous),
   
   
 # Plot cover type Results
-continuous = read.csv('cover-types/continuous/batch-1-slack-4-incremental-true-error-cumulative-prequential-1.0/2017-02-25-12-45/error-rates.txt', header = FALSE, col.names = 'continuous')
+continuous = read.csv('criteo-sample/continuous/batch-1-slack-4-incremental-true-error-cumulative-prequential-1.0-200/2017-02-26-14-40/error-rates.txt', header = FALSE, col.names = 'continuous')
 
-velox = read.csv('cover-types/velox/batch-1-slack-20-incremental-true-error-cumulative-prequential-1.0/2017-02-25-12-47/error-rates.txt', header = FALSE, col.names = 'velox')
+velox = read.csv('criteo-sample/velox/batch-1-slack-20-incremental-true-error-cumulative-prequential-1.0-200/2017-02-26-14-36/error-rates.txt', header = FALSE, col.names = 'velox')
 
-#baselinePlus = read.csv('cover-types/baseline-plus/batch-1-slack-none-incremental-true-error-cumulative-prequential-1.0/2017-02-25-12-30/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+baselinePlus = read.csv('criteo-sample/baseline-plus/batch-1-slack-none-incremental-true-error-cumulative-prequential-1.0-200/2017-02-26-14-43/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 
-#baseline= read.csv('cover-types/baseline/batch-1-slack-none-incremental-false-error-cumulative-prequential-1.0/2017-02-25-12-28/error-rates.txt', header = FALSE, col.names = 'baseline')
+baseline= read.csv('criteo-sample/baseline/batch-1-slack-none-incremental-false-error-cumulative-prequential-1.0-200/2017-02-26-15-08/error-rates.txt', header = FALSE, col.names = 'baseline')
 
 #m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
 #continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))
 #velox = rbind(velox, data.frame(velox = rep(NA, m - nrow(velox))))
 #baseline = rbind(baseline, data.frame(baseline = rep(NA, m - nrow(baseline))))
 #baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(NA, m - nrow(baselinePlus))))
+
 df = data.frame(time = 1:nrow(continuous),
                 continuous = continuous, 
-                velox = velox)
-               # baseline = baseline,
-                #baselinePlus = baselinePlus)
+                velox = velox,
+                baseline = baseline,
+                baselinePlus = baselinePlus)
+
+ml = melt(df, id.vars = 'time' )
+ggplot(data = ml, aes(x = time, y = value, group = variable)) + 
+  geom_line(aes( colour = variable)) + 
+  xlab("Time") + ylab("Mean Squared Error") 
+
+
+# Plot Criteo cluster
+continuous = read.csv('criteo/continuous/batch-2-slack-20-incremental-true-error-cumulative-prequential-1.0-200/2017-02-26-17-23/error-rates.txt', header = FALSE, col.names = 'continuous')
+
+velox = read.csv('criteo/velox/batch-2-slack-400-incremental-true-error-cumulative-prequential-1.0-200/2017-02-26-15-24/error-rates.txt', header = FALSE, col.names = 'velox')
+
+baselinePlus = read.csv('criteo/baseline-plus/batch-1-slack-none-incremental-true-error-cumulative-prequential-1.0-200/2017-02-26-19-39/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+
+baseline= read.csv('criteo/baseline/batch-1-slack-none-incremental-false-error-cumulative-prequential-1.0-200/2017-02-26-21-18/error-rates.txt', header = FALSE, col.names = 'baseline')
+
+#m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
+#continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))
+#velox = rbind(velox, data.frame(velox = rep(NA, m - nrow(velox))))
+#baseline = rbind(baseline, data.frame(baseline = rep(NA, m - nrow(baseline))))
+#baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(NA, m - nrow(baselinePlus))))
+
+df = data.frame(time = 1:nrow(velox),
+                continuous = continuous, 
+                velox = velox, 
+                baseline = baseline,
+                baselinePlus = baselinePlus)
+
 ml = melt(df, id.vars = 'time' )
 ggplot(data = ml, aes(x = time, y = value, group = variable)) + 
   geom_line(aes( colour = variable)) + 

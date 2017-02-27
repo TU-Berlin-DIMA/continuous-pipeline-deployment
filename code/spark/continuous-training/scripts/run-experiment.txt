@@ -35,4 +35,6 @@ clean up temp files:
 /share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rmr hdfs://cloud-11:44000/user/behrouz/criteo/temp-data
 
 
+Copy results to local machine:
+scp -r behrouz@cloud-11.dima.tu-berlin.de:/share/hadoop/behrouz/experiments/criteo ./
 
