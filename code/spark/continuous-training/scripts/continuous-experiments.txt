@@ -3,7 +3,7 @@
 CLUSTER :
 
 CRITEO:
-/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.classification.ContinuousClassifier --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "batch-duration=2" "slack=20" "incremental=true" "error-type=cumulative"  "initial-training-path=hdfs://cloud-11:44000/user/behrouz/criteo/initial-training" "streaming-path=hdfs://cloud-11:44000/user/behrouz/criteo/stream-training" "temp-path=hdfs://cloud-11:44000/user/behrouz/criteo/temp-data" "result-path=/share/hadoop/behrouz/experiments/criteo/" "num-iterations=200"
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.classification.ContinuousClassifier --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "batch-duration=2" "slack=10" "incremental=true" "error-type=cumulative"  "initial-training-path=hdfs://cloud-11:44000/user/behrouz/criteo/initial-training" "streaming-path=hdfs://cloud-11:44000/user/behrouz/criteo/stream-training" "temp-path=hdfs://cloud-11:44000/user/behrouz/criteo/temp-data" "result-path=/share/hadoop/behrouz/experiments/criteo/" "num-iterations=500"
 
 
 Local: 

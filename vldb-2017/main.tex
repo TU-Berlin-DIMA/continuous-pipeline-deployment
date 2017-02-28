@@ -142,11 +142,11 @@ However, retraining of models is a time consuming and resource intensive process
 
 In this paper, we propose a novel deployment method for stochastic gradient descent (SGD)-based machine learning models.
 SGD is an iterative process, which works well with large data sets.
-During each iteration, SGD updates the model based on one or sample of the training items.
+In each iteration, SGD updates the model based on a set of training items.
 Using this property, we eliminate the need for complete retraining by replacing it with a series of consecutive SGD iterations.
-We show that individual iterations of SGD are light weight and can be executed while the system is answering prediction queries.
+We show that individual iterations of SGD are light-weight and can be executed while the system is answering prediction queries.
 Our experiments show that our deployment method updates models an order of magnitude faster, without degrading the quality of the model.
-Furthermore, models can adopt faster to changes in data distribution using our deployment method.
+Furthermore, models adopt faster to changes in data distribution using our deployment method.
 \end{abstract}
 
 
@@ -155,9 +155,7 @@ Furthermore, models can adopt faster to changes in data distribution using our d
 \section{Introduction} \label{introduction}
 \todo[inline]{POLISH}
 \todo[inline]{CRITEO Dataset experiments}
-\todo[inline]{mention retraining points in the experiments}
-\todo[inline]{Make sure there are no repetitions in the paper}
-\todo[inline]{Add BBDC and streamline funding id}
+%\todo[inline]{Add BBDC and streamline funding id}
 % Problem
 Deploying and maintaining machine learning (ML) models is a crucial step in the lifecycle of a machine learning application. 
 %Volker
@@ -166,7 +164,7 @@ Despite the fact that deployment and serving of ML models puts learning into pra
 % Specific problem
 In order to sustain the performance of a model in a dynamic environment, where data and thus models may change, we have to monitor the performance of the model in real-time during its deployment and update the model when necessary.
 
-However, Incremental updates alone are not enough to maintain model quality. 
+However, incremental updates alone are not enough to maintain model quality. 
 When the data distribution changes quickly, the model will not adjust in a timely fashion. 
 Furthermore, new batch datasets from external sources may become available while the system is running.
 Lastly, incrementally updating may not arrive at the same quality of model as a complete batch training.
@@ -181,16 +179,18 @@ Moreover, systems with support for model deployment are still lacking constant m
 The whole process of training and deployment of models is usually performed manually.
 \begin{figure*}[t]
 \centering
-\includegraphics[scale = 0.5]{../images/velox-1.pdf}
+\includegraphics[width=.8\textwidth]{../images/velox-1.pdf}
 \caption{Current Model Deployment Method}
 \label{fig:velox-work-flow}
 \end{figure*}
-The most common approach is as follows; first a model is trained based on an existing dataset residing on disk, this model serves as the initial model.
+
+Figure \ref{fig:velox-work-flow} demonstrates the most common model deployment approach.
+First, a model is trained based on an existing dataset residing on disk, this model serves as the initial model.
 This model is then deployed to an environment where it can answer prediction queries arriving at the system.
 The system also receives feedback in the form of new training observations.
 Upon receiving a training observation, the model is updated incrementally.
 Incremental updates are only supported by certain type of machine learning models, where the underlying optimization strategy allows the system to change the model based on individual training items.
-Figure \ref{fig:velox-work-flow} demonstrates this deployment approach.
+
 
 \textbf{Example application:} to illustrate this model deployment approach, consider the task of predicting the click through rate (CTR) of online advertisements.
 To maximize benefit, search engine providers show advertisements to their users.
@@ -824,22 +824,18 @@ Our system, on the contrary, is designed for deployment and maintenance of alrea
 
 \section{Conclusions} \label{conclusion}
 This paper presents an architecture for serving and continuous training of machine learning models.
-Model deployment and serving is an important part of the data analytics pipeline.
-In order for the deployed models to adapt to changes in the data distribution, they are incrementally updated.
-However, incremental updates alone is not always sufficient and to maintain model quality, periodic retraining is required. 
 Most of the existing ML model serving systems do not provide support for continuous update \cite{abadi2016tensorflow,crankshaw2016clipper}.
-Some systems \cite{crankshaw2014missing} perform incremental update and periodic retraining to ensure the quality of the model does not decrease.
-Retraining is a resource intensive process which completely neglects any updates made to the model so far.
+To ensure high quality models, some systems \cite{crankshaw2014missing} perform incremental update and periodic retraining to ensure the quality of the model does not decrease.
+However, retraining is a resource intensive process which completely neglects any updates made to the model so far.
 
-We propose a system for deploying and maintaining machine learning models that are trained using stochastic gradient descent optimization (SGD).
-SGD is an iterative optimization process where in each iteration a sample of the data is used to update the machine learning model.
+We propose a system for deploying and maintaining machine learning models that are trained using stochastic gradient descent optimization.
 In our system, we schedule iterations of SGD to run while the machine learning model is also answering prediction queries.
 After every iteration, the model is updated with the new parameters.
-SGD is one of the most common optimization techniques for large datasets and has been successfully used in different domains such as neural networks, recommender systems, regression, and clustering models. 
-This makes our system applicable to a wide range of machine learning models beyond the ones demonstrated in our evaluation section.
+The frequent updates, helps in adapting the model to the changes in data distribution.
+Moreover, our system is applicable to a wide range of machine learning models as demonstrated in our evaluation section.
 
 Our experiments shows the continuous training of the machine learning models is much faster than full retraining of them, which is the most common approach in deployment and maintenance of machine learning models. 
-We show that not only continuous training requires less resources but it also produces models with lower error rates that adopt faster to changes in the data.
+We show that not only continuous training requires less resources but it also produces models with lower error rates that adapt to the changes in data faster.
 Moreover, comparing to simple techniques such incremental learning or initial batch training it produces a model with higher quality.
 
 In future work, we will explore other optimization strategies such as batching of prediction queries, caching of query results, and more advanced methods for sampling of historical data in order to investigate their effect on the performance of the system.

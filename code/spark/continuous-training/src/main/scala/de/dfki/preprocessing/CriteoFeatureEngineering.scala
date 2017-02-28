@@ -98,7 +98,7 @@ object CriteoFeatureEngineering {
     //
     //    val d = spark.createDataFrame(vectorNumerical, innerStruct)
 
-    val scaler = new StandardScaler(withMean = false, withStd = true)
+    val scaler = new StandardScaler(withMean = true, withStd = true)
       .fit(vectorNumerical.map(_._2.asInstanceOf[Vector]))
     //      .setInputCol("features")
     //      .setOutputCol("features-transformed")

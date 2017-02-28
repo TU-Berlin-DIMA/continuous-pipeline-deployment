@@ -215,18 +215,17 @@ runningTimePlot =
             size = 8, 
             vjust = -0.1) +
   xlab("") + ylab("Time (s) in Log Scale") + 
-  ylim(c(0,15000))+
   scale_y_log10() +
-  scale_fill_discrete(name = "", labels = c("MNIST","movie_lens_100k", "movie_lens_1M")) + 
+  scale_fill_discrete(name = "Workloads", labels = c("MNIST","movie_lens_100k", "movie_lens_1M")) + 
   theme_bw() + 
-  theme(legend.title = element_text(size = 30),
-        legend.text = element_text(size = 30), 
+  theme(legend.title = element_text(size = 28),
+        legend.text = element_text(size = 28), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.key.size  = unit(1.0, "cm"),
         legend.background = element_rect(colour = "black", fill = "transparent"), 
         axis.text=element_text(size=30),
         axis.title=element_text(size=32),  
-        legend.position=c(0.5,0.9)) 
+        legend.position=c(0.395,0.88)) 
 
 ggsave(runningTimePlot , filename = 'times-log-scale-improved.eps', 
        device = 'eps', dpi = 1000, 
