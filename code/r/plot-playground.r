@@ -127,10 +127,10 @@ p =
   geom_line(aes(x = time, y  = continuous, colour = "c"), size = 1.5) + 
   geom_line(aes(x = time, y  = velox, colour = "d"), size = 1.5) + 
   # plot retraining points
-  #geom_point(data = df[retrainings,c(1,3)], 
-  #           aes(x=time, y = velox, colour="e", fill = "Retraining"), 
-  #           shape = 24, 
-  #           lwd = 7 ) + 
+  geom_point(data = df[retrainings,c(1,3)], 
+             aes(x=time, y = velox, colour="e", fill = "Retraining"), 
+             shape = 2, 
+             lwd = 5 ) + 
   # x and y labels
   xlab("Test Cycle") + ylab("Mean Squared Error") + 
   # legend themes
@@ -144,9 +144,9 @@ p =
                      labels = c("Baseline   ", "Baseline+    ", "Continuous    ", "Velox    ", ""), 
                      values = c("a" = "green", "b" = "orange", "c" = "blue","d" = "red", "e" = "red"))  
 # legend for retraining point
-#scale_fill_manual(name = "", values = c("Retraining" = "red")) + 
+scale_fill_manual(name = "", values = c("Retraining" = "red")) + 
 # guides for enhancing legend
-#guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,NA),linetype=c(1,1,1,1,0)))) 
+guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,NA),linetype=c(1,1,1,1,0)))) 
 
 
 ggsave(p , filename = 'criteo/crite-quality.eps', 
