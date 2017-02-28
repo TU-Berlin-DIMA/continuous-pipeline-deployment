@@ -3,7 +3,7 @@ package de.dfki.preprocessing
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.SparkConf
 import org.apache.spark.ml.feature.VectorAssembler
-import org.apache.spark.mllib.feature.StandardScaler
+import org.apache.spark.mllib.feature.{Normalizer, StandardScaler}
 import org.apache.spark.mllib.linalg.{DenseVector, Vector}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -98,13 +98,15 @@ object CriteoFeatureEngineering {
     //
     //    val d = spark.createDataFrame(vectorNumerical, innerStruct)
 
+    val normalizedData = vectorNumerical.map(d => (d._1, new Normalizer().transform(d._2.asInstanceOf[Vector])))
+
     val scaler = new StandardScaler(withMean = true, withStd = true)
-      .fit(vectorNumerical.map(_._2.asInstanceOf[Vector]))
+      .fit(normalizedData.map(_._2.asInstanceOf[Vector]))
     //      .setInputCol("features")
     //      .setOutputCol("features-transformed")
     //      .fit(d)
 
-    val scaledData = vectorNumerical
+    val scaledData = normalizedData
       .map(d => (d._1, scaler.transform(d._2.asInstanceOf[Vector]).toArray.mkString(",")))
 
 

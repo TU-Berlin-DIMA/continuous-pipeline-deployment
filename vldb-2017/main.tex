@@ -286,8 +286,9 @@ In our CTR prediction example described in Section \ref{introduction}, the logis
 Logistic regression models typically output a probability instead of a class label that indicates how likely an item belongs to a specific class \cite{hosmer2013applied}.
 In our example, for every available advertisement, the click probability is predicted and depending on how many advertisements will be displayed, the ones with highest probabilities are selected.
 Support vector machines (SVM) represent another common class of classification models \cite{steinwart2008support}.
-While logistic regression models aim to find parameters of a function that accurately fit the data points to the labels, SVM tries to find a hyperplane that separates the data points belonging to different classes. 
-In many cases, both type of models work equally well, but depending the data and its complexity one method may be preferred to the other. \todo[inline]{Too generic, can we be more specific?}
+While logistic regression models aim to find parameters of a function that accurately fit the data points to the labels, SVM tries to separate the data points belonging to different classes. 
+In many cases, both type of models work equally well, but depending the data and its complexity one method may be preferred to the other.
+\todo[inline]{Too generic, can we be more specific?}
 
 \textbf{Matrix Factorization} is a common method used in recommender systems \cite{koren2009matrix}. 
 Matrix factorization is used to derive the latent factors (e.g., for users and items) for recommender systems.
@@ -302,8 +303,8 @@ However, due to the slow training process and the lack of large amount of traini
 In the last decade, there was a drastic change due to several seminal publications.
 Hinton et al. proposed methods for speeding up the training of neural networks \cite{hinton2006fast}.
 The ImageNet competition \cite{ILSVRC15} in 2012 was won by a neural network proposed by Krizhevsky et al. where they significantly reduced the error rate \cite{krizhevsky2012imagenet}. 
-The success of the Google Brain team was also instrumental to popularizing neural networks in the machine learning community \cite{sutskever2014sequence, mikolov2013efficient}.
-\todo[inline]{Can we add info on their success?}
+The success of the Google's Deepmind team in achieving Neural Networks that were capable of defeating humans in the game of Go \cite{silver2016mastering} and mastering Atari games \cite{mnih2013playing} was also instrumental in popularizing neural networks in the machine learning community.
+
 SGD is the ideal optimization algorithm for training neural networks since it works very well with large datasets (which are required for training neural networks).
 In fact, almost all of the recent work on neural networks use SGD for training them.
 
@@ -459,9 +460,8 @@ def error_rate(X_test, Y_test): Double
 
 The \textit{error\_rate} method returns the error rate of the model using the provided test dataset.
 As described earlier, constant monitoring of the quality is required in order to adjust the scheduling and sampling rate.
-When the error rate is stagnating, this could mean that the model has converged using the existing data, therefore, the model manager informs scheduler not to schedule any new iterations until new training observations have arrived at the system.
-\todo[inline]{Why could?}
-Similarly as explained in Section \ref{data-manager}, an increase in the error rate could indicate a change in distribution of the data.
+When the error rate is stagnating, this mean that the model has converged using the existing data, therefore, the model manager informs scheduler not to schedule any new iterations until new training observations have arrived at the system.
+Similarly as explained in Section \ref{data-manager}, an increase in the error rate may indicate a change in distribution of the data.
 As a result, reducing the sampling rate will put more emphasis on recent data (in the intermediate buffer) and help adopt the model to the changes in the distribution.
 
 The model manager also keeps track of the changes that are made to the model.
