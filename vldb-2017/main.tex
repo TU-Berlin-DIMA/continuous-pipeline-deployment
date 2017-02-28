@@ -154,10 +154,8 @@ Furthermore, models can adopt faster to changes in data distribution using our d
 
 \section{Introduction} \label{introduction}
 \todo[inline]{POLISH}
-\todo[inline]{Remove mentions of MNIST}
 \todo[inline]{CRITEO Dataset experiments}
 \todo[inline]{mention retraining points in the experiments}
-\todo[inline]{Remove image classifier mention from conclusion}
 \todo[inline]{Make sure there are no repetitions in the paper}
 \todo[inline]{Add BBDC and streamline funding id}
 % Problem
@@ -433,7 +431,6 @@ In our current prototype, new data sets first have to be stored on disk, and dat
 Newly available data sets are used in the subsequent SGD iterations.
 
 \subsection{Model Manager} \label{model-manager} 
-%\todo[inline]{is the listing really required}
 An important part of the system is the model manager component.
 It is responsible for storing the model, answering prediction queries and performing incremental and batch updates to the model.
 Listing \ref{model-manager-api} shows the APIs of the model manager.
@@ -537,7 +534,7 @@ Static training is only used to establish a baseline for comparison of the runni
 It is only applicable in cases where the entire dataset is available.
 
 \subsection{Implementation of ML Models}
-We have implemented two different machine learning models to evaluate our deployment method.
+We have implemented three different machine learning models to evaluate our deployment method.
 In this section, we briefly explain each implemented methods.
 
 \textbf{Recommender system:} we implement a recommender system based on the matrix factorization using SGD \cite{funk2006netflix}.
@@ -559,8 +556,8 @@ The training observations are of the form of \textit{\((X,y)\)}, where X is a ve
 
 \subsection{Tuning parameters} \label{tuning}
 In section \ref{continious-training-serving}, we discussed how system parameters such as sampling and scheduling rate affect the performance and quality of the system.
-In this section, we analyze the effects of different sampling and scheduling rate on the system.
-Our goal, is to make these parameters adaptive, but for now we analyze their effect on the running time and mean squared error. 
+In this section, we analyze the effects of different sampling and scheduling rates on the system.
+Our goal, is to make these parameters adaptive, but for now we analyze their effects on the running time and quality. 
 
 \textbf{Scheduling rate:} This parameter specifies how often a new iteration of SGD should be scheduled. 
 In our prototype, the scheduling rate is governed by a parameter called buffer size, which dictates how many new items should be stored in the buffer before a new iteration of SGD is executed. 
@@ -576,7 +573,7 @@ This results in a paradigm where both training and serving can happen simultaneo
 \end{figure}
 
 Figure \ref{fig:movie-lens-100k-buffer-size-mse} shows the mean squared error for different buffer sizes for \textit{movie-lens-100k} dataset. 
-An smaller buffer size causes the scheduler to initiate training iterations more frequently.
+A smaller buffer size causes the scheduler to initiate training iterations more frequently.
 As a result, the underlying model is updated faster.
 However, the error rate is not decreasing linearly with the buffer size.
 Further analysis show that once the model is update more frequently, it slowly starts to converge and any further training has little to no effect on the overall quality of the model
@@ -609,7 +606,7 @@ This is again, caused by the same phenomena, where the model after training on b
 \label{fig:movie-lens-100k-sample-rate}
 \end{figure}
 
-Figure \ref{fig:movie-lens-100k-sample-rate-time} shows that effect of increasing sampling rate on running time.
+Figure \ref{fig:movie-lens-100k-sample-rate-time} shows the effect of increasing sampling rate on running time.
 Using the entire historical data (sampling rate = 1.0) increases the running time 5 fold. 
 Therefore, similar to scheduling rate, setting the sampling rate to smaller values will increase the performance substantially, while only slightly affecting the quality of the model.
 
@@ -624,9 +621,9 @@ Therefore, similar to scheduling rate, setting the sampling rate to smaller valu
 \textbf{Tuning parameters based on error rate:} As described earlier, tuning the parameters are heavily influenced by application type.
 Both the underlying machine learning model and the dataset can have a big effect on the selection of sampling rate and scheduling rate.
 In the recommender system use case, due to changes in incoming data distribution, we saw that bigger sample rates and higher scheduling rates have an effect (although small) on the quality of the model.
-This, however, may not be the case for other use cases.
+This, however, may not be the case for other applications.
 To demonstrate this, we perform the same set of experiments on the \textit{MNIST} dataset.
-Figure \ref{fig:mnist-sample-rate} shows the effect of different sampling rates on the neural network model for \textit{MNIST} data.
+Figure \ref{fig:mnist-sample-rate} shows the effect of different sampling rates on the neural network classifer model for \textit{MNIST} data.
 Interestingly and contrary to the results we achieved for \textit{movie-lens-100k} the difference in error rates for different sampling rates are almost indistinguishable from each other.
 While the difference in error rates for \textit{movie-lens-100k} was small, but it is still much greater than the difference in error rates for neural networks.
 We believe this is caused by how neural networks behave.
@@ -641,13 +638,13 @@ This causes the neural work to converge faster and, therefore, it is not affecte
 \label{fig:mnist-sample-rate}
 \end{figure}
 
-Figure \ref{fig:mnist-buffer-size} shows how buffer size affects the overall quality of the neural network models achieved.
-Similar to sampling rate case, the error rates of the models are not affected by the scheduling rate.
+Figure \ref{fig:mnist-buffer-size} shows how buffer size affects the overall quality of the neural network model.
+Similar to the sampling rate case, the error rates of the models are not affected by the scheduling rate.
 New training observations that exist in the buffer have the maximum effect on the model's quality, since they are becoming available to the model for the first time.
 As the scheduling rate increases, the number of new training observations remain the same, and only the historical data is used more frequently to train the model.
 Since neural networks do not gain much benefit by revisiting the same items, increasing scheduling rate has no effect on the overall quality.
 
-Based on our findings, we conclude that increasing the sampling and scheduling rate does not always have an effect on the quality.
+Based on our findings, we conclude that increasing the sampling and scheduling rate does not always affect the quality.
 In both the \textit{movie-lens-100k} and \textit{MNIST} use cases the change in scheduling and sampling rate has small to no effect on the overall quality.
 However, the running time of the methods are heavily influenced by these parameters.
 Setting these parameters to small values decreases the running time considerably and save computation resources regardless of the type of model the system is serving.
@@ -659,8 +656,6 @@ Setting these parameters to small values decreases the running time considerably
 \caption{MNIST buffer size vs error rate}
 \label{fig:mnist-buffer-size}
 \end{figure}
-
-
 
 \subsection{Comparison Under Constrained Resources }
 Both, the velox and the continuous model use different strategies to update the model.
@@ -718,15 +713,15 @@ Similar to \textit{movie-lens-100k} dataset, the error rate of Baseline is highe
 Figure \ref{fig:mnist-quality} shows the error rate (misclassification rate) of the implemented methods on \textit{MNIST} dataset.
 For this workload, the implemented methods behave quite differently from previous experiments and that is due to dataset characteristics and the underling model properties.
 In order to achieve a high accuracy, neural networks require a lot of training data.
-This explains why the naive method performs poorly.
+This explains why the Baseline method performs poorly.
 Its error rate starts to decrease as more training data becomes available, but it is still far inferior to all the other methods.
-The gap in error rate between offline+online and offline-only methods is much smaller than that of movie lens datasets.
-Unlike the movie lens datasets, \textit{MNIST} does not contain a shift in distribution and that is why both the offline+online and offline-only methods' performance is rather similar.
+The gap in error rate between Baseline+ and Baseline methods is much smaller than that of movie lens datasets.
+Unlike the movie lens datasets, \textit{MNIST} does not contain a shift in distribution and that is why both the Baseline+ and Baseline methods' performance is rather similar.
 The Baseline+ method performs slightly better because of the extra training items that the underlying neural network is exposed to.
-Velox and Continuous methods behave similarly as well and unlike Movie Lens datasets, Velox has a consistent error rate, that is the error rate does not decrease after a retraining of the model.
-Similar to offline+online's case, since there is no change in the distribution of the data, the error rate does not degrade after a retraining.
-The continuous method manages to decrease the error rate as more training iterations are performed.
-As more training iterations are executed, the underlying neural network's parameters converge and as a result the error rate on the test set decreases.
+Velox and Continuous methods behave similarly as well and unlike \textit{movie-lens} datasets, Velox has a consistent error rate, that is the error rate does not decrease after a retraining of the model.
+Similar to Baseline+'s case, since there is no change in the distribution of the data, the error rate does not decrease after a retraining.
+The Continuous method manages to decrease the error rate as more training iterations are performed.
+The training iterations are executed, the faster the underlying neural network's parameters converge and as a result the error rate on the test set decreases.
 Both Continuous and Velox start to perform better than the baseline after a few training iterations (retraining in Velox's case).
 This is, as explained earlier because of neural network's ability to perform better when more training data are available to it.
 
@@ -823,6 +818,7 @@ They provide a range of training algorithms to create machine learning models an
 They focus on training high quality models by performing automatic feature engineering and hyper-parameter search.
 However, they only work with batch datasets and once models are trained, they have to be deployed and used for serving manually by the users.
 Our system, on the contrary, is designed for deployment and maintenance of already trained models.
+
 
 \section{Conclusions} \label{conclusion}
 This paper presents an architecture for serving and continuous training of machine learning models.
