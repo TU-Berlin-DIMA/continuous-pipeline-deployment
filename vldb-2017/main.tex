@@ -668,28 +668,30 @@ Both, the velox and the continuous model use different strategies to update the 
 To perform a fair comparison of the two, we are evaluating them under similar resource constraints.
 We configured both of the methods' frequency of training in such a way that the total running time on the \textit{movie-lens} and \textit{MNIST} datasets are similar.
 To achieve this, we have fixed the total number of epochs (SGD iterations) for both methods.
-For velox, this value is equal to the number of retraining multiplied by number of iterations in each retraining. 
+For Velox, this value is equal to the number of retraining multiplied by number of iterations in each retraining. 
 For the continuous model, it is total number of scheduled iterations throughout the lifetime of the system.
-Therefore, the continuous method schedules a new iteration every 500 items for \textit{movie-lens-100k} and 5,000 items for \textit{movie-lens-1M} and velox method schedules a retraining every 15,000 items for \textit{movie-lens-100k} and 150,000 items for \textit{movie-lens-1M}.
+Therefore, the continuous method schedules a new iteration every 500 items for \textit{movie-lens-100k} and 5,000 items for \textit{movie-lens-1M} and Velox method schedules a retraining every 15,000 items for \textit{movie-lens-100k} and 150,000 items for \textit{movie-lens-1M}.
 \begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-quality-improved.eps}
 \caption{Mean squared error on MovieLens 100k}
 \label{fig:movie-lens-100k-score}
 \end{figure}
-Figure \ref{fig:movie-lens-100k-score} shows the mean squared error of the continuous, velox, and several other methods on \textit{movie-lens-100k} dataset.
-Baseline model achieves the worst performance among all the existing methods.
-Baseline model's quality is similar to Baseline+, Continuous, and Velox methods in the beginning. 
-Since all four methods perform an initial retraining, the error rate stays low in the beginning, but Baseline quality starts to degrade since it does not include any incremental or batch retraining.
-Baseline+ continuous to perform better than naive method until 3,000 test cycles.
-However, afterwards a small change in distribution of the data causes the model trained using Baseline method to perform worst since it cannot adopt to changes in the data and the quality continues to degrade as more new test items are examined.
-Velox method performs similar to Baseline+ method until the first retraining is executed.
-There is a sudden drop in the error rate after the first retraining.
-For the remainder of the data points, Velox performs as expected, once there is a retraining, the error rate immediately decreases.
-This decrease in error rate, however, is followed by a slow increase due the fact that only incremental updates are being made to the model.
-Finally, Continuous method has the lowest error rate among all the implemented methods.
-It consistently manages to adopt to the changes and decrease the error rate where the distribution of the incoming data is stable.
+Figure \ref{fig:movie-lens-100k-score} shows the mean squared error of the continuous, Velox, and several other methods on \textit{movie-lens-100k} dataset.
+All four methods perform an initial training, therefore, they have similar error rates in the beginning.
+However, the error rate of Baseline method starts to increase since it does not incrementally update the model.
+Baseline+ incrementally updates the model.
+As a result, it performs better than Baseline method overall.
+The error rate of Velox is similar to Baseline+ until the first scheduled retraining for Velox.
+After the retraining, there is a sudden drop in the error rate.
+For the remainder of the data, Velox performs as expected, once there is a retraining, the error rate immediately decreases.
+This decrease in error rate, is followed by a slow increase due the fact that Velox only incrementally updates the model until the next scheduled retraining, which as discussed earlier is not handling the change in the data distribution gracefully.
+Initial error rate of Continuous is similar to other methods.
+However, the error rate starts to decrease rapidly.
+The reason for the fast decrease in error rate is that immediately after the deployment of the model, Continuous method executes iterations of SGD.
+It consistently manages to adopt to the changes in data and decrease the error rate where the distribution of the incoming data is stable.
 As expected, except for immediately after a full retraining, the Continuous method always performs better than Velox.
+
 
 \begin{figure}[h]
 \centering
@@ -701,13 +703,10 @@ As expected, except for immediately after a full retraining, the Continuous meth
 Figure \ref{fig:movie-lens-1M-score} shows the mean squared error rate achieved by the implemented methods on \textit{movie-lens-1M}.
 Similar to \textit{movie-lens-100k}, the Continuous method has the lowest error rate among all the implemented methods.
 The difference in error rate between Continuous and Velox is even greater than the error rate for \textit{movie-lens-100k}.
-We believe a bigger shift in data distribution (data in \textit{movie-lens-1M} is gathered from a longer period of time) makes the Continuous method to consistently adopt faster to the changes in data distribution.
+We believe a bigger shift in data distribution (data in \textit{movie-lens-1M} is gathered from a longer period of time) and Continuous method can adopt the changes in data distribution faster than other methods.
 Velox's error rate follows the same trend as in the case of \textit{movie-lens-100k}. 
 After every retraining, the error rate first drops then slowly increases until the next retraining.
-Similar to \textit{movie-lens-100k} dataset, the error rate of Baseline is highest among all the implemented methods, followed by Baseline+ , where due to the incremental updates of the model the error rate is consistently lower.
-
-
-
+Similar to \textit{movie-lens-100k} dataset, the error rate of Baseline is highest among all the implemented methods, followed by Baseline+ , where due to the incremental updates of the model the error rate is lower.
 
 \begin{figure}[h]
  \centering
@@ -718,17 +717,14 @@ Similar to \textit{movie-lens-100k} dataset, the error rate of Baseline is highe
  
 Figure \ref{fig:mnist-quality} shows the error rate (misclassification rate) of the implemented methods on \textit{MNIST} dataset.
 For this workload, the implemented methods behave quite differently from previous experiments and that is due to dataset characteristics and the underling model properties.
-In order to achieve a high accuracy, neural networks require a lot of training data.
-This explains why the Baseline method performs poorly.
-Its error rate starts to decrease as more training data becomes available, but it is still far inferior to all the other methods.
 The gap in error rate between Baseline+ and Baseline methods is much smaller than that of movie lens datasets.
 Unlike the movie lens datasets, \textit{MNIST} does not contain a shift in distribution and that is why both the Baseline+ and Baseline methods' performance is rather similar.
 The Baseline+ method performs slightly better because of the extra training items that the underlying neural network is exposed to.
 Velox and Continuous methods behave similarly as well and unlike \textit{movie-lens} datasets, Velox has a consistent error rate, that is the error rate does not decrease after a retraining of the model.
 Similar to Baseline+'s case, since there is no change in the distribution of the data, the error rate does not decrease after a retraining.
 The Continuous method manages to decrease the error rate as more training iterations are performed.
-The training iterations are executed, the faster the underlying neural network's parameters converge and as a result the error rate on the test set decreases.
-Both Continuous and Velox start to perform better than the baseline after a few training iterations (retraining in Velox's case).
+The more training iterations are executed, the faster the underlying neural network's parameters converge and as a result the error rate on the test set decreases.
+Both Continuous and Velox start to perform better than the Baseline and Baseline+ after a few training iterations (retraining in Velox's case).
 This is, as explained earlier because of neural network's ability to perform better when more training data are available to it.
 
 \begin{figure}[h]
@@ -737,17 +733,17 @@ This is, as explained earlier because of neural network's ability to perform bet
  \caption{Running time on different Workloads}
  \label{fig:running-time}
  \end{figure}
-Figure \ref{fig:running-time} shows the running time of the implemented methods on \textit{movie-lens-100k}, \textit{movie-lens-1M} and \textit{MNIST}.
-As expected, Baseline have the lowest running times on both datasets.
-This is because they do not support batch updates to the model.
+Figure \ref{fig:running-time} shows the total training time of the implemented methods on \textit{movie-lens-100k}, \textit{movie-lens-1M} and \textit{MNIST}.
+To measure this value, we calculated the total time that each method spent in training the model.
+We excluded the incremental training as the time is negligible.
 Static training method's running time is only affected by data size.
 When dataset size big, each iteration of SGD will examine more data and the model will converge slower as there are a lot more data to examine.
-Continuous method's running time is smaller than Velox by almost an order of magnitude in all workloads.
+Continuous method's total training time is 2 to 5 times smaller than Velox.
 Although we have configured both methods to use similar amount of resources (same number of iterations), continuous method still manages to achieve a consistent and lower error rate in a much faster time.
 This is because a full retraining incurs a much higher overhead than continuously training the method.
-Another reason for the difference in running time is that as the size of the data increases the time for running a new iteration in continuous method stays roughly the same where as the time for a full retraining increases exponentially.
-The running time of the Baseline+ is not included as it is similar to Baseline, since they both have include initial training and have to examine individual items arriving at the system one at a time.
-
+Another reason for the difference in training time is that as the size of the data increases the time for running a new iteration in continuous method stays roughly the same where as the time for a full retraining increases exponentially.
+\subsection{Distributed Environment}
+\subsection{Discussion}
 \begin{figure*}[h]
 \begin{subfigure}{.5\textwidth}
   \includegraphics[width=\linewidth]{../images/experiment-results/movie-lens-100k-systems.eps}

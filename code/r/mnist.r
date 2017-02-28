@@ -110,6 +110,7 @@ samplingRatePlot =
         axis.title=element_text(size=32),  
         legend.position=c(0.85,0.7))
 
+de01
 
 ggsave(samplingRatePlot , filename = 'mnist/nn/buffer-size/mnist-buffersize-improved.eps', 
        device = cairo_ps, dpi = 1000, 

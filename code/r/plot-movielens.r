@@ -198,24 +198,26 @@ ggsave(bufferVsTimePlot , filename = 'movie-lens-100k/sampling/movie-lens-100k-s
        
 
 # Plot running time of different work loads
-time_100k = c(128.7379, 506.1425, 854.3796, 187.6295)
-time_1M = c(235.8159, 4608.0255, 9610.6307, 1825.9909)
-# time_MNIST = c(2.3790788650512695, 8.481926918029785, 244.62878799438477, 1569.8254868984222, 56.363343954086304)
-models = c('Baseline', 'Continuous', 'Velox', 'Static Training')
+time_100k = c( 506.1425, 854.3796, 187.6295)
+time_1M = c( 4608.0255, 9610.6307, 1825.9909)
+time_MNIST = c( 244.62878799438477, 1569.8254868984222, 56.363343954086304)
+models = c('Continuous', 'Velox', 'Static Training')
 library(reshape)
 
-df = data.frame("models" = models, "movie_lens_100k"=time_100k, "movie_lens_1M"=time_1M)
+df = data.frame("models" = models, "MNIST"=time_MNIST, "movie_lens_100k"=time_100k, "movie_lens_1M"=time_1M)
 melted = melt(df, id.vars = 'models')
 colnames(melted) = c("models", "data_sets", "value")
 
-runningTimePlot = ggplot(melted, aes(x = models, y = value, label = sprintf("%4.0f", value))) +   
+runningTimePlot = 
+  ggplot(melted, aes(x = models, y = value, label = sprintf("%4.0f", value))) +   
   geom_bar(aes(fill = data_sets), position = position_dodge(width = NULL), stat="identity", width = 0.5) + 
   geom_text(aes(x = models, y = value, group = data_sets), position = position_dodge(width = 0.5), 
             size = 8, 
             vjust = -0.1) +
   xlab("") + ylab("Time (s) in Log Scale") + 
+  ylim(c(0,15000))+
   scale_y_log10() +
-  scale_fill_discrete(name = "", labels = c("movie_lens_100k", "movie_lens_1M")) + 
+  scale_fill_discrete(name = "", labels = c("MNIST","movie_lens_100k", "movie_lens_1M")) + 
   theme_bw() + 
   theme(legend.title = element_text(size = 30),
         legend.text = element_text(size = 30), 
@@ -224,7 +226,7 @@ runningTimePlot = ggplot(melted, aes(x = models, y = value, label = sprintf("%4.
         legend.background = element_rect(colour = "black", fill = "transparent"), 
         axis.text=element_text(size=30),
         axis.title=element_text(size=32),  
-        legend.position=c(0.2,0.9)) 
+        legend.position=c(0.5,0.9)) 
 
 ggsave(runningTimePlot , filename = 'times-log-scale-improved.eps', 
        device = 'eps', dpi = 1000, 
@@ -296,6 +298,7 @@ velox1m = loadData('movie-lens-1m/50000/velox-error.txt')
 
 time_100k = c(128.7379, 506.1425, 854.3796, 187.6295)/60.0
 time_1M = c(235.8159, 4608.0255, 9610.6307, 1825.9909)/60.0
+
 
 df = data.frame('error'=c(mean(continuous100k), mean(velox100k), 0.7362879642607749), 
                 'time' = c(506.1425/60, 854.3796/60, 187.6295/60), 
