@@ -2,9 +2,12 @@ package de.dfki.preprocessing
 
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.SparkConf
-import org.apache.spark.ml.feature.{StandardScaler, VectorAssembler}
-import org.apache.spark.ml.linalg.{DenseVector, SparseVector}
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.ml.feature.VectorAssembler
+import org.apache.spark.mllib.feature.StandardScaler
+import org.apache.spark.mllib.linalg.{DenseVector, Vector}
+import org.apache.spark.sql.{DataFrame, SparkSession}
+
+import scala.util.Random
 
 
 /**
@@ -49,8 +52,9 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
   */
 object CriteoFeatureEngineering {
   val INPUT_PATH = "data/criteo-sample/raw/"
-  val OUTPUT_PATH = "data/criteo-sample/processed/"
-  val NUMBER_OF_STREAMING_FILES = 500
+  val OUTPUT_PATH = "data/criteo-sample/"
+  val NUMBER_OF_STREAMING_FILES = 100
+
 
   def main(args: Array[String]): Unit = {
     val parser = new CommandLineParser(args).parse()
@@ -75,7 +79,6 @@ object CriteoFeatureEngineering {
 
     val numerical = getNumericalFeatures(df)
 
-
     val assembler = new VectorAssembler()
       .setInputCols(Array("_c1", "_c2", "_c3", "_c4", "_c5", "_c6",
         "_c7", "_c8", "_c9", "_c10", "_c11", "_c12", "_c13"))
@@ -86,46 +89,43 @@ object CriteoFeatureEngineering {
       .transform(numerical)
       .select("_c0", "features")
       .rdd
-      .map(r => Row(r.get(0), r.get(1))
-      .collect()
+      .map(r => (r.get(0), new DenseVector(r.getAs[org.apache.spark.ml.linalg.Vector](1).toArray)))
 
-    //val d = vectorNumerical.select("features").asInstanceOf[SparseVector]
+    //    val innerStruct =
+    //      StructType(
+    //        StructField("label", IntegerType) ::
+    //          StructField("features", new VectorUDT()) :: Nil)
+    //
+    //    val d = spark.createDataFrame(vectorNumerical, innerStruct)
 
-    //    //for (c <- cols) {
-    //    val scaler = new StandardScaler()
-    //      .setWithMean(true)
-    //      .setWithStd(true)
+    val scaler = new StandardScaler(withMean = false, withStd = true)
+      .fit(vectorNumerical.map(_._2.asInstanceOf[Vector]))
     //      .setInputCol("features")
     //      .setOutputCol("features-transformed")
-    //      .fit(vectorNumerical)
-    //
-    //    val scaledData = scaler.transform(vectorNumerical)
-    //
-    //    // }
-    //
-    //
-    //    val splits = scaledData.select("_c0", "features-transformed").randomSplit(Array(0.1, 0.9))
-    //    implicit val myObjEncoder = org.apache.spark.sql.Encoders.kryo[Row]
-    //
-    //    // shuffling the partitions are necessary since random split function internally sorts each partition
-    //    splits(0).rdd
-    //      .map(row => row.toString.substring(1, row.toString.length - 1))
-    //      //.mapPartitions(partition => Random.shuffle(partition))
-    //      .saveAsTextFile(s"$result/initial-training/")
-    //
-    //    splits(1).rdd
-    //      .map(row => row.toString.substring(1, row.toString.length - 1))
-    //      //.repartition(fileCount)
-    //      //.mapPartitions(partition => Random.shuffle(partition))
-    //      .saveAsTextFile(s"$result/stream-training/")
+    //      .fit(d)
+
+    val scaledData = vectorNumerical
+      .map(d => (d._1, scaler.transform(d._2.asInstanceOf[Vector]).toArray.mkString(",")))
+
+
+    val splits = scaledData.randomSplit(Array(0.1, 0.9))
+    println(s"file-count = $fileCount")
+
+    // shuffling the partitions are necessary since random split function internally sorts each partition
+    splits(0)
+      .map(row => row.toString.substring(1, row.toString.length - 1))
+      .mapPartitions(partition => Random.shuffle(partition))
+      .saveAsTextFile(s"$result/initial-training/")
+
+    splits(1)
+      .map(row => row.toString.substring(1, row.toString.length - 1))
+      .repartition(fileCount)
+      .mapPartitions(partition => Random.shuffle(partition))
+      .saveAsTextFile(s"$result/stream-training/")
   }
 
   def getNumericalFeatures(df: DataFrame): DataFrame = {
     df.select("_c0", "_c1", "_c2", "_c3", "_c4", "_c5", "_c6", "_c7", "_c8", "_c9", "_c10", "_c11", "_c12", "_c13")
       .na.fill(0.0)
-  }
-
-  def trialIterator(row: Iterator[Row]): Iterator[Row] = {
-    row
   }
 }

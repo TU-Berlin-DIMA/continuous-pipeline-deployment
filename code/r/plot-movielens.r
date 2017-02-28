@@ -55,36 +55,25 @@ df = data.frame(time = 1:length(continuous),
 
 retrainings = c(830,1699,2485,3355,4204,5000)
 
+ml = melt(df, id.vars = 'time' )
 p = 
-  # data frame
-  ggplot(data = df) + 
-  # plot lines
-  geom_line(aes(x = time, y  = baseline, colour = "a"), size = 1.5) + 
-  geom_line(aes(x = time, y  = baselinePlus, colour = "b"), size = 1.5) + 
-  geom_line(aes(x = time, y  = continuous, colour = "c"), size = 1.5) + 
-  geom_line(aes(x = time, y  = velox, colour = "d"), size = 1.5) + 
-  # plot retraining points
+  ggplot() + 
+  geom_line(data = ml , aes( x = time, y = value, group = variable, colour = variable) , size = 1.5) + 
   geom_point(data = df[retrainings,c(1,3)], 
-             aes(x=time, y = velox, colour="e", fill = "Retraining"), 
-             shape = 24, 
-             lwd = 7 ) + 
-  # x and y labels
-  xlab("Test Cycle") + ylab("Mean Squared Error") + 
-  # legend themes
+             aes(x=time, y = velox, fill = "retraining"), 
+             shape = 2, 
+             lwd = 5 ) +
+  xlab("Testing Increments") + ylab("Mean Squared Error") + 
+  scale_color_discrete("", labels =c("continuous", "velox", "baseline", "baseline+")) + 
+  scale_fill_discrete("") + 
   theme_bw() + 
-  theme(legend.text = element_text(size = 26), legend.key = element_rect(colour = "transparent", fill = alpha('white', 0.0)) ,
-        legend.position="bottom") +
+  theme(legend.text = element_text(size = 26), 
+        legend.title = element_text(size = 26), 
+        legend.key.size  = unit(1.0, "cm")) +
   theme(axis.text=element_text(size=26),
         axis.title=element_text(size=28)) + 
-  # legend for line graph   
-  scale_color_manual(name ="",  # Name,
-                     labels = c("Baseline   ", "Baseline+    ", "Continuous    ", "Velox    ", ""), 
-                     values = c("a" = "green", "b" = "orange", "c" = "blue","d" = "red", "e" = "red"))  +
-  # legend for retraining point
-  scale_fill_manual(name = "", values = c("Retraining" = "red")) + 
-  # guides for enhancing legend
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,NA),linetype=c(1,1,1,1,0)))) 
-
+  theme(legend.text = element_text(size = 26), legend.key = element_rect(colour = "transparent", fill = alpha('white', 0.0)) ,
+        legend.position="bottom") 
 
 ggsave(p , filename = 'movie-lens-100k/5000/movie-lens-100k-quality-improved.eps', 
        device = 'eps', dpi = 1000,
@@ -106,38 +95,26 @@ df = data.frame(time = 1:length(continuous),
                 baselinePlus = baselinePlus)
 
 retrainings = c(8379,16706,25075,33345,41765,50000)
-
-library(ggplot2)
+ml = melt(df, id.vars = 'time' )
 
 p = 
-  # data frame
-  ggplot(data = df) + 
-  # plot lines
-  geom_line(aes(x = time, y  = baseline, colour = "a"), size = 1.5) + 
-  geom_line(aes(x = time, y  = baselinePlus, colour = "b"), size = 1.5) + 
-  geom_line(aes(x = time, y  = continuous, colour = "c"), size = 1.5) + 
-  geom_line(aes(x = time, y  = velox, colour = "d"), size = 1.5) + 
-  # plot retraining points
+  ggplot() + 
+  geom_line(data = ml , aes( x = time, y = value, group = variable, colour = variable), size = 1.5) + 
   geom_point(data = df[retrainings,c(1,3)], 
-             aes(x=time, y = velox, colour="e", fill = "Retraining"), 
-             shape = 24, 
-             lwd = 7 ) + 
-  # x and y labels
-  xlab("Test Cycle") + ylab("Mean Squared Error") + 
-  # legend themes
+             aes(x=time, y = velox, fill = "retraining"), 
+             shape = 2, 
+             lwd = 5 ) +
+  xlab("Testing Increments") + ylab("Mean Squared Error") + 
+  scale_color_discrete("", labels =c("continuous", "velox", "baseline", "baseline+")) + 
+  scale_fill_discrete("") + 
   theme_bw() + 
-  theme(legend.text = element_text(size = 26), legend.key = element_rect(colour = "transparent", fill = alpha('white', 0.0)) ,
-        legend.position="bottom") +
+  theme(legend.text = element_text(size = 26), 
+        legend.title = element_text(size = 26), 
+        legend.key.size  = unit(1.0, "cm")) +
   theme(axis.text=element_text(size=26),
         axis.title=element_text(size=28)) + 
-  # legend for line graph   
-  scale_color_manual(name ="",  # Name,
-                     labels = c("Baseline   ", "Baseline+    ", "Continuous    ", "Velox    ", ""), 
-                     values = c("a" = "green", "b" = "orange", "c" = "blue","d" = "red", "e" = "red"))  +
-  # legend for retraining point
-  scale_fill_manual(name = "", values = c("Retraining" = "red")) + 
-  # guides for enhancing legend
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,NA),linetype=c(1,1,1,1,0)))) 
+  theme(legend.text = element_text(size = 26), legend.key = element_rect(colour = "transparent", fill = alpha('white', 0.0)) ,
+        legend.position="bottom") 
 
 
 ggsave(p , filename = 'movie-lens-1M/50000/movie-lens-1m-quality-improved.eps', 
@@ -224,47 +201,26 @@ ggsave(runningTimePlot , filename = 'times-log-scale-improved.eps',
 
 # Plot quality vs buffer size
 data = loadQuality('movie-lens-100k/buffer-size/buffers.txt')
-df = data.frame(ind = 1:5001, one = data$one , two = data$two, 
-                three = data$three , four = data$four, 
-                five = data$five , six = data$six, 
-                seven = data$seven , eight = data$eight, 
-                nine = data$nine , ten = data$ten)
+df = data.frame(ind = 1:5001, b5000 = data$ten , b2500 = data$five,  b500 = data$one)
+ml = melt(df, id.vars = 'ind')
 
 bufferSizePlot = 
-  ggplot(data = df, aes(x = ind)) +
-  geom_ribbon(aes(ymin = one, ymax = two, fill = "500")) + 
-  geom_ribbon(aes(ymin = two, ymax = three, fill =  "b" )) + 
-  geom_ribbon(aes(ymin = three, ymax = four , fill = "c")) + 
-  geom_ribbon(aes(ymin = four, ymax = five, fill ="d") )+ 
-  geom_ribbon(aes(ymin = five, ymax = six , fill = "2500")) + 
-  geom_ribbon(aes(ymin = six, ymax = seven, fill = "f")) + 
-  geom_ribbon(aes(ymin = seven, ymax = eight , fill = "g")) + 
-  geom_ribbon(aes(ymin = eight, ymax = nine, fill ="h")) + 
-  geom_ribbon(aes(ymin = nine, ymax = ten,  fill = "5000")) + 
-  
-  scale_fill_manual(name = "Buffer Size", breaks = c("5000","2500","500"), 
-                    values = c(
-                      "500"= rgb(0.0, 0.0, 1.0) ,
-                      "b" =rgb(0.0, 0.25, 1.0)  ,
-                      "c" =rgb(0.0, 0.35, 1.0) ,
-                      "d" =rgb(0.0, 0.45, 1.0) ,
-                      "2500" =rgb(0.0, 0.55, 1.0) ,
-                      "f" =rgb(0.0, 0.6, 1.0) ,
-                      "g" =rgb(0.0, 0.65, 1.0) ,
-                      "h" =rgb(0.0, 0.80, 1.0) ,
-                      "5000"= rgb(0.0, 0.90, 1.0))) + 
-  xlab("Test Cycle") + ylab("Mean Squared Error") + 
-  # legend themes
+  ggplot(data = ml, aes(x = ind, y = value, group = variable), size = 1.5) + 
+  geom_line(aes( colour = variable), size = 1.5) + 
+  xlab("Testing Increments") + ylab("Mean Squared Error")  + 
+  scale_color_discrete("Buffer Size", labels = c("5000", "2500", "500")) + 
   theme_bw() + 
   theme(legend.text = element_text(size = 26), 
-        legend.title= element_text(size = 26), 
+        legend.title = element_text(size = 26), 
         legend.key.size  = unit(1.0, "cm")) +
   theme(axis.text=element_text(size=26),
-        axis.title=element_text(size=28)) 
+        axis.title=element_text(size=28)) + 
+  theme(legend.text = element_text(size = 26), legend.key = element_rect(colour = "transparent", fill = alpha('white', 0.0)) ,
+        legend.position="bottom") 
 
-ggsave(bufferSizePlot , filename = 'movie-lens-100k/buffer-size/movie-lens-100k-buffer-size-improved.eps', 
-       device = cairo_ps, 
-       dpi = 1000, 
+
+ggsave(bufferSizePlot , filename = 'movie-lens-100k/buffer-size/movie-lens-buffer-quality-improved.eps', 
+       device = cairo_ps, dpi = 1000, 
        width = 16, height = 9, 
        units = "in")
 
@@ -272,45 +228,25 @@ ggsave(bufferSizePlot , filename = 'movie-lens-100k/buffer-size/movie-lens-100k-
 
 # Plot quality vs Sampling rate
 data = loadQuality('movie-lens-100k/sampling/samples.txt')
-df = data.frame(ind = 1:5001, one = data$ten , two = data$nine, 
-                three = data$eight , four = data$seven, 
-                five = data$six , six = data$five, 
-                seven = data$four , eight = data$three, 
-                nine = data$two , ten = data$one)
+df = data.frame(ind = 1:5001 ,  s0.1 = data$one, s0.5 = data$five, s1.0 = data$ten)
 
+ml = melt(df, id.vars = 'ind')
 samplingRatePlot = 
-  ggplot(data = df, aes(x = ind)) +
-  geom_ribbon(aes(ymin = one, ymax = two, fill = "1.0")) + 
-  geom_ribbon(aes(ymin = two, ymax = three, fill =  "b" )) + 
-  geom_ribbon(aes(ymin = three, ymax = four , fill = "c")) + 
-  geom_ribbon(aes(ymin = four, ymax = five, fill ="d"))+ 
-  geom_ribbon(aes(ymin = five, ymax = six , fill = "0.5")) + 
-  geom_ribbon(aes(ymin = six, ymax = seven, fill = "f")) + 
-  geom_ribbon(aes(ymin = seven, ymax = eight , fill = "g")) + 
-  geom_ribbon(aes(ymin = eight, ymax = nine, fill ="h")) + 
-  geom_ribbon(aes(ymin = nine, ymax = ten,  fill = "0.1")) + 
-  
-  scale_fill_manual(name = "Sampling Rate", breaks = c("0.1","0.5","1.0"), 
-                      values = c(
-                        "1.0"= rgb(0.0, 0.0, 1.0) ,
-                        "b" =rgb(0.0, 0.25, 1.0)  ,
-                        "c" =rgb(0.0, 0.35, 1.0) ,
-                        "d" =rgb(0.0, 0.45, 1.0) ,
-                        "0.5" =rgb(0.0, 0.55, 1.0) ,
-                        "f" =rgb(0.0, 0.6, 1.0) ,
-                        "g" =rgb(0.0, 0.65, 1.0) ,
-                        "h" =rgb(0.0, 0.80, 1.0) ,
-                        "0.1"= rgb(0.0, 0.90, 1.0))) + 
-  xlab("Test Cycle") + ylab("Mean Squared Error") + 
-  # legend themes
+  ggplot(data = ml, aes(x = ind, y = value, group = variable), size = 1.5) + 
+  geom_line(aes( colour = variable), size = 1.5) + 
+  xlab("Testing Increments") + ylab("Mean Squared Error")  + 
+  scale_color_discrete("Sampling Rate", labels = c("0.1", "0.5", "1.0")) + 
   theme_bw() + 
   theme(legend.text = element_text(size = 26), 
         legend.title = element_text(size = 26), 
         legend.key.size  = unit(1.0, "cm")) +
   theme(axis.text=element_text(size=26),
-        axis.title=element_text(size=28)) 
+        axis.title=element_text(size=28)) + 
+  theme(legend.text = element_text(size = 26), legend.key = element_rect(colour = "transparent", fill = alpha('white', 0.0)) ,
+        legend.position="bottom") 
 
-ggsave(samplingRatePlot , filename = 'movie-lens-100k/sampling/movie-lens-100k-sampling-rate-improved.eps', 
+
+ggsave(samplingRatePlot , filename = 'movie-lens-100k/sampling/movie-lens-sampling-quality-improved.eps', 
        device = cairo_ps, dpi = 1000, 
        width = 16, height = 9, 
        units = "in")
@@ -369,105 +305,3 @@ ggsave(p , filename = 'movie-lens-1m/movie-lens-1m-systems.eps',
        width = 16, height = 9, 
        units = "in")
 
-
-# Plot CRITEO Results
-continuous = read.csv('criteo/continuous/batch-2-slack-50/2017-02-21-14-27/error-rates.txt', header = FALSE, col.names = 'continuous')
-velox = read.csv('criteo/velox/batch-2-slack-500/2017-02-21-19-44/error-rates.txt', header = FALSE, col.names = 'velox')
-baselinePlus = read.csv('criteo/baseline-plus/batch-2/2017-02-22-13-35/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
-baseline= read.csv('criteo/baseline/batch-1/2017-02-22-11-06/error-rates.txt', header = FALSE, col.names = 'baseline')
-
-
-df = data.frame(time = 1:nrow(continuous),
-                continuous = continuous, 
-                velox = velox,
-                baseline = baseline,
-                baselinePlus = baselinePlus)
-
-#retrainings = c(830,1699,2485,3355,4204,5000)
-
-p = 
-  # data frame
-  ggplot(data = df) + 
-  # plot lines
-  geom_line(aes(x = time, y  = baseline, colour = "a"), size = 1.5) + 
-  geom_line(aes(x = time, y  = baselinePlus, colour = "b"), size = 1.5) + 
-  geom_line(aes(x = time, y  = continuous, colour = "c"), size = 1.5) + 
-  geom_line(aes(x = time, y  = velox, colour = "d"), size = 1.5) + 
-  # plot retraining points
-  #geom_point(data = df[retrainings,c(1,3)], 
-  #           aes(x=time, y = velox, colour="e", fill = "Retraining"), 
-  #           shape = 24, 
-  #           lwd = 7 ) + 
-  # x and y labels
-  xlab("Test Cycle") + ylab("Mean Squared Error") + 
-  # legend themes
-  theme_bw() + 
-  theme(legend.text = element_text(size = 26), legend.key = element_rect(colour = "transparent", fill = alpha('white', 0.0)) ,
-        legend.position="bottom") +
-  theme(axis.text=element_text(size=26),
-        axis.title=element_text(size=28)) + 
-  # legend for line graph   
-  scale_color_manual(name ="",  # Name,
-                     labels = c("Baseline   ", "Baseline+    ", "Continuous    ", "Velox    ", ""), 
-                     values = c("a" = "green", "b" = "orange", "c" = "blue","d" = "red", "e" = "red"))  
-  # legend for retraining point
-  #scale_fill_manual(name = "", values = c("Retraining" = "red")) + 
-  # guides for enhancing legend
-  #guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,NA),linetype=c(1,1,1,1,0)))) 
-
-
-ggsave(p , filename = 'criteo/crite-quality.eps', 
-       device = 'eps', dpi = 1000,
-       width = 16, height = 9, 
-       units = "in")
-
-
-# Plot CRITEO Sample Results
-continuous = read.csv('criteo-small/continuous/2017-02-06-17-00/error-rates.txt', header = FALSE, col.names = 'continuous')
-velox = read.csv('criteo-small/velox/2017-02-23-11-18/error-rates.txt', header = FALSE, col.names = 'velox')
-baselinePlus = read.csv('criteo-small/online/2017-02-06-17-34/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
-baseline= read.csv('criteo-small/initial-only/2017-02-06-17-52/error-rates.txt', header = FALSE, col.names = 'baseline')
-
-df = data.frame(time = 1:nrow(continuous),
-                continuous = continuous, 
-                velox = velox,
-                baseline = baseline,
-                baselinePlus = baselinePlus)
-
-#retrainings = c(830,1699,2485,3355,4204,5000)
-
-p = 
-  # data frame
-  ggplot(data = df) + 
-  # plot lines
-  geom_line(aes(x = time, y  = baseline, colour = "a"), size = 1.5) + 
-  geom_line(aes(x = time, y  = baselinePlus, colour = "b"), size = 1.5) + 
-  geom_line(aes(x = time, y  = continuous, colour = "c"), size = 1.5) + 
-  geom_line(aes(x = time, y  = velox, colour = "d"), size = 1.5) + 
-  # plot retraining points
-  #geom_point(data = df[retrainings,c(1,3)], 
-  #           aes(x=time, y = velox, colour="e", fill = "Retraining"), 
-  #           shape = 24, 
-  #           lwd = 7 ) + 
-  # x and y labels
-  xlab("Test Cycle") + ylab("Mean Squared Error") + 
-  # legend themes
-  theme_bw() + 
-  theme(legend.text = element_text(size = 26), legend.key = element_rect(colour = "transparent", fill = alpha('white', 0.0)) ,
-        legend.position="bottom") +
-  theme(axis.text=element_text(size=26),
-        axis.title=element_text(size=28)) + 
-  # legend for line graph   
-  scale_color_manual(name ="",  # Name,
-                     labels = c("Baseline   ", "Baseline+    ", "Continuous    ", "Velox    ", ""), 
-                     values = c("a" = "green", "b" = "orange", "c" = "blue","d" = "red", "e" = "red"))  
-  # legend for retraining point
-  #scale_fill_manual(name = "", values = c("Retraining" = "red")) + 
-  # guides for enhancing legend
-  #guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,NA),linetype=c(1,1,1,1,0)))) 
-  
-  
-  ggsave(p , filename = 'criteo-small/crite-small-quality.eps', 
-         device = 'eps', dpi = 1000,
-         width = 16, height = 9, 
-         units = "in")

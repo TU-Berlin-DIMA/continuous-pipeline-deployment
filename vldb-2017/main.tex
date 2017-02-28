@@ -433,7 +433,7 @@ In our current prototype, new data sets first have to be stored on disk, and dat
 Newly available data sets are used in the subsequent SGD iterations.
 
 \subsection{Model Manager} \label{model-manager} 
-\todo[inline]{is the listing really required}
+%\todo[inline]{is the listing really required}
 An important part of the system is the model manager component.
 It is responsible for storing the model, answering prediction queries and performing incremental and batch updates to the model.
 Listing \ref{model-manager-api} shows the APIs of the model manager.
@@ -441,7 +441,7 @@ They are used to both interact with other components as well as end-users of the
 The scheduler component uses \textit{update} and \textit{update\_iteration} to instruct the model manager to perform incremental or batch updates (one iteration of SGD) to the model.
 Upon a new prediction query, the \textit{predict} method is called to provide the end-user with the label of the given input.\\
 \noindent\hspace{-0.1\linewidth}\begin{minipage}[t]{\linewidth}
-\begin{lstlisting}[language=Scala, basicstyle=\small\ttfamily, frame=tb ,columns=fullflexible,
+\begin{lstlisting}[language=java, basicstyle=\small\ttfamily, frame=tb ,columns=fullflexible,
 showstringspaces=false,label=model-manager-api,caption=Model Manager API, numberstyle=\tiny]
 def update(x,y)
 
@@ -485,15 +485,6 @@ Both Flink and Spark provide out-of-the-box support for HDFS.
 In this section, we evaluate the performance of our system using various datasets. 
 We report both the quality (error rate) and performance of our proposed method. 
 
-
-\subsection{Machine learning models}
-\todo[inline]{explain the details of the models implemented}
-In our prototype, we used the SGD implementation of matrix factorization by Simon Funk \cite{funk2006netflix}. 
-SGD is the core run-time of our model deployment system.
-SGD's near constant runtime per iteration and its fast adaptation to changes in data distribution makes it ideal for both large datasets and real-time environments.
-In our prototype, we are using a simple implementation of distributed SGD with synchronization and a constant learning rate.
-However, the SGD run-time is decoupled from the rest of the components as will be explained in section \ref{sec:system-architecutre}, therefore more robust versions of distributed SGD and learning rate adaption methods can be used in the system without affecting other components.
-
 \subsection{Experimental setup}
 We run our experiments on a single node with a quad-core Intel i7 and 16 GB of RAM. 
 To evaluate our proposed method, we are using 2 different datasets.
@@ -509,12 +500,19 @@ For \textit{movie-lens-100k}, the total size of the test set is 5,000 and for \t
 We start with an empty test set, when we reach the index of a test item, we add that to the current test set and calculate the error rate based on the current test set.
 Each error calculation (called a test cycle), as a result captures the degree to which the models are adopting to the changes in the dataset.
 
+\textbf{Criteo \cite{criteo-kaggle}}: to implement our CTR prediction example we use Criteo's Kaggle advertising challenge dataset.
+The dataset includes both categorical and numerical features.
+However, in our evaluations we only used the numerical features.
+Similar to MovieLens datasets, we use 10\% of the data for initial training and the rest is streamed to the system.
+The training data consists of a sample of Criteo's traffic over a period of 7 days.
+We use prequential evaluation \cite{gama2009issues} to calculate the misclassification rate of the implemented deployment methods.
+
 \textbf{MNIST \cite{lecun-mnist}}: MNIST is a dataset of handwritten digits.
 it consists of 60000 28x28 color images in 10 classes. We use a neural network to train a model to classify the images in the data set. 
 Similar to MovieLens, 10\% are used for initial training and 90\% for online learning. 
 Note that, in this dataset, the order is irrelevant and we assume no change in distribution of the data occurs throughout the system's lifetime. 
 
-\subsection{Methods}
+\subsection{Deployment methods}
 In this section, we briefly describe the methods we have implemented.
 
 \textbf{Baseline} is the naive and simplest deployment model. 
@@ -539,16 +537,20 @@ Static training is only used to establish a baseline for comparison of the runni
 It is only applicable in cases where the entire dataset is available.
 
 \subsection{Implementation of ML Models}
-We have implemented two different machine learning models to evaluate our system.
+We have implemented two different machine learning models to evaluate our deployment method.
 In this section, we briefly explain each implemented methods.
 
-\textbf{Recommender system:} we have implemented a recommender system based on the matrix factorization method described in Section \ref{sgd}.
-Based on our initial experiments, we have set the number of latent factors to 40.
-A model is first trained from the static data.
+\textbf{Recommender system:} we implement a recommender system based on the matrix factorization using SGD \cite{funk2006netflix}.
+Based on our initial experiments, we set the number of latent factors to 40.
+First, we train a model using the initial static data.
 To produce more accurate predictions, we have also included user, item, and global bias values as described in \cite{koren2009matrix}.
-After the initial model is trained and deployed, any new training observations incrementally update the model.
+After the initial training, we deploy the model and use any new training observation to incrementally update the model.
 Training observations are of the form \textit{\((user\_id, item\_id, rating\))}.
 Based on the training observation, the bias values as well as the factors are updated for the specified user and item.
+
+\textbf{SVM Classifier:} we implement a simple SVM classifier by extending the existing SVM classifier of Apache Spark.
+We implement the necessary methods described in section \ref{sec:system-architecutre} for the SVM classifier to work with our deployment method.
+The extra methods are \textit{update} which takes one (or a micro-batch in Spark Streaming) and incrementally update the model and \textit{update\_iteration} which takes a dataset and executes one iteration of SGD on the given data.
 
 \textbf{Neural Network:} to evaluate our system on an image classification task, we implemented a multi-layer perceptron neural network using back propagation \cite{collobert2004links}.
 We set the number of hidden layers to 50 and use a softmax output function \cite{bishop2006pattern}.
@@ -557,7 +559,7 @@ The training observations are of the form of \textit{\((X,y)\)}, where X is a ve
 
 \subsection{Tuning parameters} \label{tuning}
 In section \ref{continious-training-serving}, we discussed how system parameters such as sampling and scheduling rate affect the performance and quality of the system.
-In this section, we are analyzing the effects of different values of sampling and scheduling rate on the system.
+In this section, we analyze the effects of different sampling and scheduling rate on the system.
 Our goal, is to make these parameters adaptive, but for now we analyze their effect on the running time and mean squared error. 
 
 \textbf{Scheduling rate:} This parameter specifies how often a new iteration of SGD should be scheduled. 
@@ -568,7 +570,7 @@ This results in a paradigm where both training and serving can happen simultaneo
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-buffer-size-improved.eps}
+\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-buffer-quality-improved.eps}
 \caption{Movie Lens 100k buffer size vs mean squared error}
 \label{fig:movie-lens-100k-buffer-size-mse}
 \end{figure}
@@ -602,7 +604,7 @@ This is again, caused by the same phenomena, where the model after training on b
  
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-sampling-rate-improved.eps}
+\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-sampling-quality-improved.eps}
 \caption{Movie Lens 100k sample rate vs mean squared error}
 \label{fig:movie-lens-100k-sample-rate}
 \end{figure}
@@ -634,7 +636,7 @@ This causes the neural work to converge faster and, therefore, it is not affecte
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/mnist-sampling.eps}
+\includegraphics[width=\columnwidth]{../images/experiment-results/mnist-sampling-improved.eps}
 \caption{MNIST sample rate vs error rate}
 \label{fig:mnist-sample-rate}
 \end{figure}
@@ -653,7 +655,7 @@ Setting these parameters to small values decreases the running time considerably
 
 \begin{figure}[!ht]
 \centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/mnist-buffer-size}
+\includegraphics[width=\columnwidth]{../images/experiment-results/mnist-buffersize-improved.eps}
 \caption{MNIST buffer size vs error rate}
 \label{fig:mnist-buffer-size}
 \end{figure}
