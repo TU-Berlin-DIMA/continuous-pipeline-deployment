@@ -18,7 +18,11 @@ delete criteo files:
 /share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rmr hdfs://cloud-11:44000/user/behrouz/criteo/initial-training
 
 run criteo preprocessing:
-/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.CriteoFeatureEngineering --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/user/behrouz/criteo/raw/" "output-path=hdfs://cloud-11:44000/user/behrouz/criteo/" "file-count=2000"
+training data:
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.CriteoFeatureEngineering --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/user/behrouz/criteo/raw/" "output-path=hdfs://cloud-11:44000/user/behrouz/criteo/" "file-count=500"
+
+test data:
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.CriteoFeatureEngineering --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/user/behrouz/criteo/test/" "output-path=hdfs://cloud-11:44000/user/behrouz/criteo/test-processed/" "split=false"
 
 
 run continuous classifer:
