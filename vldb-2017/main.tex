@@ -264,7 +264,7 @@ This synchronization step slows down the SGD process, because after every iterat
 Experiments on distributed, asynchronous SGD show that the quality of the final model is not worse than the synchronized approach \cite{recht2011hogwild, dean2012large}. 
 
 \subsection{Learning Rate Tuning} \label{learning-rate}
-\todo[inline]{How is the info in this subsection ever used again?}
+\todo[inline]{If we decide to go with April submission, try different learning rate tuning techniques}
 The learning rate or step size is a parameter of SGD, which controls the amount of change in model parameters during each iteration of SGD.
 It plays an important role in the convergence of SGD.
 The most common technique is to set the learning rate to a small value, and slowly decrease the value in every iteration until the model converges.
@@ -285,8 +285,7 @@ Logistic regression models typically output a probability instead of a class lab
 In our example, for every available advertisement, the click probability is predicted and depending on how many advertisements will be displayed, the ones with highest probabilities are selected.
 Support vector machines (SVM) represent another common class of classification models \cite{steinwart2008support}.
 While logistic regression models aim to find parameters of a function that accurately fit the data points to the labels, SVM tries to separate the data points belonging to different classes. 
-In many cases, both type of models work equally well, but depending the data and its complexity one method may be preferred to the other.
-\todo[inline]{Too generic, can we be more specific?}
+In many cases, both type of models work equally well, but depending on the data (whether it is linearly separable or not) and result requirements (predictions should be probabilities instead of the class labels) one method may be preferred to the other.
 
 \textbf{Matrix Factorization} is a common method used in recommender systems \cite{koren2009matrix}. 
 Matrix factorization is used to derive the latent factors (e.g., for users and items) for recommender systems.
