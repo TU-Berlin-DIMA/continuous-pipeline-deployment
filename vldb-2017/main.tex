@@ -134,10 +134,9 @@ Many scientific and business applications rely on methods from machine learning 
 A data analytics process is a pipeline comprised of several steps, from source selection, data preparation, feature engineering, model building/training, to the deployment of the model in a production environment. 
 Many of these steps are not automated, but require manual configuration by a data scientist or are semi-automatic at best.
 %Volker
-Once a machine learning model is trained on an initial dataset it is deployed into a system where it can answer prediction queries in a real-time and reliable fashion.
-When new training data becomes available while the system is running, the model is updated.
-These updates are typically applied incrementally.
-Furthermore, to ensure higher quality of prediction and better adaptation to changes in data distribution, models are retrained periodically.
+Once a machine learning model is trained on a dataset it is deployed into a system where it can answer prediction queries in a real-time and reliable fashion.
+While the system is running, new training data may become available, and the system incrementally updates the model.
+Furthermore, to ensure higher quality of prediction and better adaptation to changes in data distribution, the system also periodically retrain the model.
 However, retraining of models is a time consuming and resource intensive process.
 
 In this paper, we propose a novel deployment method for stochastic gradient descent (SGD)-based machine learning models.
@@ -153,13 +152,12 @@ Furthermore, models adopt faster to changes in data distribution using our deplo
 \keywords{Machine Learning Model Management; Stochastic Gradient Descent; Machine Learning Systems}
 
 \section{Introduction} \label{introduction}
-\todo[inline]{POLISH}
-\todo[inline]{CRITEO Dataset experiments}
+%\todo[inline]{CRITEO Dataset experiments}
 %\todo[inline]{Add BBDC and streamline funding id}
 % Problem
-Deploying and maintaining machine learning (ML) models is a crucial step in the lifecycle of a machine learning application. 
+Deploying and maintaining models is a crucial step in the lifecycle of a machine learning (ML) application. 
 %Volker
-Despite the fact that deployment and serving of ML models puts learning into practice and thus is the aspect that provides the actual (business) value, it has received very little attention.
+The deployment and serving of ML models in production has received very little attention by the research community despite the fact that it is the aspect that delivers the actual (business) value.
 %Volker
 % Specific problem
 In order to sustain the performance of a model in a dynamic environment, where data and thus models may change, we have to monitor the performance of the model in real-time during its deployment and update the model when necessary.
@@ -167,16 +165,16 @@ In order to sustain the performance of a model in a dynamic environment, where d
 However, incremental updates alone are not enough to maintain model quality. 
 When the data distribution changes quickly, the model will not adjust in a timely fashion. 
 Furthermore, new batch datasets from external sources may become available while the system is running.
-Lastly, incrementally updating may not arrive at the same quality of model as a complete batch training.
+Lastly, incrementally updating may not arrive at the same quality of model as a complete batch retraining.
 Therefore, in order to prevent the model's quality from degrading, periodic retraining should be performed to better fit the model with the data that has arrived at the system since the last training.
 
 % How is it different from prior work
 Most of the current machine learning research focuses on training and providing tools to make model training and search easier. 
 Kumar et al. \cite{kumar2015survey} provided an overview of landscape of existing machine learning systems. 
-Most of the surveyed systems focus on training of machine learning models and provide little to no support after the model has been trained.
-Only few systems \cite{akdere2011case, crankshaw2014missing}, support deploying and maintaining the models as well.
+Most of the surveyed systems provide little to no support after the model has been trained.
+Only few systems \cite{akdere2011case, crankshaw2014missing} support deploying and maintaining the models.
 Moreover, systems with support for model deployment are still lacking constant monitoring and fast and accurate updates of the machine learning models.
-The whole process of training and deployment of models is usually performed manually.
+Deployment and training of models is usually a manual process.
 \begin{figure*}[t]
 \centering
 \includegraphics[width=.8\textwidth]{../images/velox-1.pdf}
@@ -188,19 +186,19 @@ Figure \ref{fig:velox-work-flow} demonstrates the most common model deployment a
 First, a model is trained based on an existing dataset residing on disk, this model serves as the initial model.
 This model is then deployed to an environment where it can answer prediction queries arriving at the system.
 The system also receives feedback in the form of new training observations.
-Upon receiving a training observation, the model is updated incrementally.
-Incremental updates are only supported by certain type of machine learning models, where the underlying optimization strategy allows the system to change the model based on individual training items.
+Upon receiving a training observation, the system updates the model incrementally.
+Not all of machine learning models support incremental updates.
+The ability to perform incremental updates is determined by the underlying optimization strategy and whether it allows incremental changes to the parameter of the model based on individual training items.
 
 
 \textbf{Example application:} to illustrate this model deployment approach, consider the task of predicting the click through rate (CTR) of online advertisements.
-To maximize benefit, search engine providers show advertisements to their users.
-They use machine learning models to estimate the expected click rate of different advertisements.
+Search engine providers use machine learning models to estimate the expected click rate of different advertisements.
 They train machine learning models based on the available data, which typically includes content of the page, search query, user information, content and meta-data of the available advertisements. 
 Once the model is deployed, prediction queries of the form of ad requests arrive at the system.
-The model displays the advertisements that have the highest probabilities of being clicked by the user.
+The model determines the advertisements that have the highest probabilities of being clicked by the user.
 Based on whether or not advertisements are clicked on, the system sends feedback in the form of new training observations and the model is updated accordingly.
 Furthermore, new batch training datasets in the form of user databases, new advertisements with their metadata and more web pages will become available as more companies employ the service of the search engine provider.
-In order to leverage the new data and reduce the error introduced by incremental learning, the model is periodically retrained using entire data.
+In order to leverage the new data and reduce the error introduced by incremental learning, the model is periodically retrained using the entire data.
 Figure \ref{fig:click-rate} demonstrates the CTR prediction example for a search engine provider.
 
 \begin{figure}[h]
@@ -220,19 +218,19 @@ As a result, they miss many opportunities for optimizing the training and deploy
 %real-time query support as well incremental and fast batch updates to the machine learning models.
 
 Our key observation is that, by exploiting the iterative nature of the underlying optimization algorithm, i.e., stochastic gradient descent (SGD), the model training process can be seamlessly executed with the serving and query answering component.
-Based on this observation, we present a new model for a system, that supports deployment, maintenance, and incremental and fast batch updates of machine learning models.
+Based on this observation, we present a system, that supports deployment, maintenance, and incremental and fast batch updates of machine learning models.
 We are making the following contributions: 
 \begin{itemize}
-\item we define a system for machine learning models deployment and maintenance and provide a prototypical implementation
+\item We define a system for machine learning models deployment and maintenance and provide a prototypical implementation
 %Volker
-\item we allow for incremental updates to the model, thus handling changes in the data distribution
+\item We allow for incremental updates to the model, thus handling changes in the data distribution
 %Volker
-\item we eliminate offline batch retraining and replace it with a series of single iteration of SGD
+\item We eliminate offline batch retraining and replace it with a series of single iteration of SGD
 \end{itemize}
 %Volker
 Our experiments show that our approach improves the runtime of model training and deployment by an order of magnitude over the state of the art while retaining the quality of the model. 
 %Volker
-This is due to the fact that we are able to completely eliminate batch retraining. 
+The speedup is due to the fact that we are able to completely eliminate batch retraining. 
 Our method can also adapt to changes in the distribution faster than the existing methods.
 
 % Outline: The rest of this document is structured as follows. ...
