@@ -5,8 +5,8 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
+import de.dfki.preprocessing.{CSVParser, DataParser, SVMParser}
 import de.dfki.streaming.models.OnlineSVM
-import de.dfki.utils.MLUtils.parsePoint
 import de.dfki.utils.{BatchFileInputDStream, CommandLineParser}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
@@ -56,6 +56,7 @@ abstract class SVMClassifier extends Serializable {
   val TEST_DATA = "test"
 
   var streamingModel: OnlineSVM = _
+  var dataParser: DataParser = _
 
   def experimentResultPath(root: String, parent: String): String = {
     val dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm")
@@ -85,7 +86,7 @@ abstract class SVMClassifier extends Serializable {
     * @param testData   test Data DStream
     * @param resultPath directory for writing the error rate results
     */
-  def evaluateStream(testData: DStream[LabeledPoint], resultPath: String, errorType: String = "cumulative", fadingFactor: Double = 1.0) {
+  def evaluateStream(testData: DStream[LabeledPoint], resultPath: String, errorType: String = "cumulative") {
 
     // periodically check test error
     val predictions = streamingModel.predictOnValues(testData.map(lp => (lp.label, lp.features)))
@@ -100,7 +101,7 @@ abstract class SVMClassifier extends Serializable {
 
     if (errorType == "cumulative") {
       predictions
-        .map(p => (fadingFactor, p))
+        .map(p => ("e", p))
         .mapWithState(StateSpec.function(mappingFunc _))
         .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
         .map(item => item._1 / item._2)
@@ -130,15 +131,11 @@ abstract class SVMClassifier extends Serializable {
     finally fw.close()
   }
 
-  private def mappingFunc(key: Double, value: Option[(Double, Double)], state: State[(Double, Double)]): (Double, Double) = {
-    println(s"Fading Factor: $key")
+  private def mappingFunc(key: String, value: Option[(Double, Double)], state: State[(Double, Double)]): (Double, Double) = {
     val currentState = state.getOption().getOrElse(0.0, 0.0)
     val currentTuple = value.getOrElse(0.0, 0.0)
-    println(s"Current State: (${currentState._1} : ${currentState._2}")
-    println(s"Current Tuple: (${currentTuple._1} : ${currentTuple._2}")
-    // TODO: Very hacky solution .. fading factor is passed as the key
-    val error = currentTuple._1 + currentState._1 * key
-    val sum = currentTuple._2 + currentState._2 * key
+    val error = currentTuple._1 + currentState._1
+    val sum = currentTuple._2 + currentState._2
     println(s"New State: ($error : $sum)")
     state.update(error, sum)
     (error, sum)
@@ -195,7 +192,7 @@ abstract class SVMClassifier extends Serializable {
   //    evaluateStream(observations, resultPath)
   //  }
 
-  def parseArgs(args: Array[String]): (Long, String, String, String, String, String, Double, Int) = {
+  def parseArgs(args: Array[String]): (Long, String, String, String, String, String, Int) = {
     val parser = new CommandLineParser(args).parse()
     // spark streaming batch duration
     val batchDuration = parser.getLong("batch-duration", defaultBatchDuration)
@@ -209,12 +206,16 @@ abstract class SVMClassifier extends Serializable {
     val testDataPath = parser.get("test-path", "prequential")
     // cumulative test error
     val errorType = parser.get("error-type", "cumulative")
-    //TODO fix this later
-    val fadingFactor = parser.getDouble("fading-factor", 1.0)
     // number of iterations
     val numIterations = parser.getInteger("num-iterations", 500)
 
-    (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath, errorType, fadingFactor, numIterations)
+    if (parser.get("input-format", "text") == "text"){
+      dataParser = new CSVParser()
+    } else {
+      dataParser = new SVMParser(parser.getInteger("feature-size"))
+    }
+
+    (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath, errorType, numIterations)
 
   }
 
@@ -240,7 +241,7 @@ abstract class SVMClassifier extends Serializable {
     * @return SVMModel
     */
   def trainModel(sc: SparkContext, trainingPath: String, numIterations: Int = 500): SVMModel = {
-    trainModel(sc.textFile(trainingPath).map(parsePoint).cache(), numIterations)
+    trainModel(sc.textFile(trainingPath).map(dataParser.parsePoint).cache(), numIterations)
   }
 
   /**
@@ -274,7 +275,7 @@ abstract class SVMClassifier extends Serializable {
     * @return DStream object
     */
   def constantInputDStreaming(ssc: StreamingContext, path: String): DStream[LabeledPoint] = {
-    val rdd = ssc.sparkContext.textFile(path).map(parsePoint)
+    val rdd = ssc.sparkContext.textFile(path).map(dataParser.parsePoint)
     new ConstantInputDStream[LabeledPoint](ssc, rdd)
   }
 

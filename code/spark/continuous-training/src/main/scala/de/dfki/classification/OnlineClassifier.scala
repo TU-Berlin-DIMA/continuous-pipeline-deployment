@@ -1,6 +1,5 @@
 package de.dfki.classification
 
-import de.dfki.utils.MLUtils.parsePoint
 import org.apache.spark.streaming.Seconds
 
 /**
@@ -17,12 +16,12 @@ object OnlineClassifier extends SVMClassifier {
 
   override def run(args: Array[String]): Unit = {
     val (batchDuration, resultRoot, initialDataPath, streamingDataPath,
-    testDataPath, errorType, fadingFactor, numIterations) = parseArgs(args)
+    testDataPath, errorType, numIterations) = parseArgs(args)
 
     val ssc = initializeSpark(Seconds(batchDuration))
     var testType = ""
     if (testDataPath == "prequential") {
-      testType = s"prequential-$fadingFactor"
+      testType = "prequential"
     } else {
       testType = "dataset"
     }
@@ -35,12 +34,12 @@ object OnlineClassifier extends SVMClassifier {
 
     // evaluate the stream and incrementally update the model
     if (testDataPath == "prequential") {
-      evaluateStream(streamingSource.map(_._2.toString).map(parsePoint), resultPath, errorType, fadingFactor)
+      evaluateStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint), resultPath, errorType)
     } else {
       evaluateStream(testData, resultPath, errorType)
     }
 
-    trainOnStream(streamingSource.map(_._2.toString).map(parsePoint))
+    trainOnStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint))
 
 
     ssc.start()

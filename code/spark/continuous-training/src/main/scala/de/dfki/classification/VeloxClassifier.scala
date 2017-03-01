@@ -3,8 +3,6 @@ package de.dfki.classification
 import java.util.concurrent.{Executors, TimeUnit}
 
 import de.dfki.utils.CommandLineParser
-import de.dfki.utils.MLUtils._
-import org.apache.log4j.Logger
 import org.apache.spark.streaming.Seconds
 
 /**
@@ -36,23 +34,23 @@ object VeloxClassifier extends SVMClassifier {
   }
 
   def parseVeloxArgs(args: Array[String]): (Long, Long, String, String, String, String, String,
-    Boolean, String, Double, Int) = {
+    Boolean, String, Int) = {
     val parser = new CommandLineParser(args).parse()
     val (batchDuration, resultPath, initialDataPath, streamingDataPath,
-    testDataPath, errorType, fadingFactor, numIterations) = parseArgs(args)
+    testDataPath, errorType, numIterations) = parseArgs(args)
     val slack = parser.getLong("slack", defaultTrainingSlack)
     val tempDirectory = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
     val incremental = parser.getBoolean("incremental", default = true)
     (batchDuration, slack, resultPath, initialDataPath, streamingDataPath,
-      testDataPath, tempDirectory, incremental, errorType, fadingFactor, numIterations)
+      testDataPath, tempDirectory, incremental, errorType, numIterations)
   }
 
   override def run(args: Array[String]): Unit = {
     val (batchDuration, slack, resultRoot, initialDataPath,
-    streamingDataPath, testDataPath, tempRoot, incremental, errorType, fadingFactor, numIterations) = parseVeloxArgs(args)
+    streamingDataPath, testDataPath, tempRoot, incremental, errorType, numIterations) = parseVeloxArgs(args)
     var testType = ""
     if (testDataPath == "prequential") {
-      testType = s"prequential-$fadingFactor"
+      testType = "prequential"
     } else {
       testType = "dataset"
     }
@@ -72,13 +70,13 @@ object VeloxClassifier extends SVMClassifier {
 
     // evaluate the stream and incrementally update the model
     if (testDataPath == "prequential") {
-      evaluateStream(streamingSource.map(_._2.toString).map(parsePoint), resultPath, errorType, fadingFactor)
+      evaluateStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint), resultPath, errorType)
     } else {
       evaluateStream(testData, resultPath, errorType)
     }
 
     if (incremental) {
-      trainOnStream(streamingSource.map(_._2.toString).map(parsePoint))
+      trainOnStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint))
     }
 
     // periodically retrain the model from scratch using the historical data

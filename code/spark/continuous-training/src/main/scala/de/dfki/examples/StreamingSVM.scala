@@ -1,5 +1,6 @@
 package de.dfki.examples
 
+import de.dfki.preprocessing.CSVParser
 import de.dfki.streaming.models.OnlineSVM
 import org.apache.spark.SparkConf
 import org.apache.spark.mllib.classification.SVMWithSGD
@@ -8,7 +9,6 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 
 import scala.collection.mutable.Queue
-import de.dfki.utils.MLUtils.parsePoint
 
 
 /**
@@ -25,7 +25,7 @@ object StreamingSVM {
     val ssc = new StreamingContext(conf, Seconds(4))
     val sc = ssc.sparkContext
     val data = sc.textFile("data/test/")
-      .map(parsePoint)
+      .map(new CSVParser().parsePoint)
 
 
 
@@ -39,7 +39,7 @@ object StreamingSVM {
     //sc.stop()
 
     val streamingModel = new OnlineSVM().setInitialModel(model)
-    val testRdd = ssc.sparkContext.textFile("data/test/").map(parsePoint)
+    val testRdd = ssc.sparkContext.textFile("data/test/").map(new CSVParser().parsePoint)
     val rddQueue = new Queue[RDD[LabeledPoint]]()
 
     val testData = ssc.queueStream(rddQueue, true, testRdd)

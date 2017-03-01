@@ -3,7 +3,6 @@ package de.dfki.preprocessing
 import java.io.{File, PrintWriter}
 
 import de.dfki.classification.ContinuousClassifier
-import de.dfki.utils.MLUtils
 import org.apache.spark.SparkContext
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
@@ -19,7 +18,7 @@ class DataSplitter(sc: SparkContext = null, ratio: List[Double] = List(0.1, 0.8)
 
 
   def fromFile(path: String): (RDD[LabeledPoint], RDD[LabeledPoint]) = {
-    val rdd = sc.textFile(path).map(MLUtils.parsePoint)
+    val rdd = sc.textFile(path).map(new CSVParser().parsePoint)
     fromRDD(rdd)
   }
 

@@ -1,6 +1,5 @@
 package de.dfki.classification
 
-import de.dfki.utils.MLUtils.parsePoint
 import org.apache.spark.mllib.classification.SVMWithSGD
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -16,13 +15,13 @@ object BatchClassifier extends SVMClassifier {
   }
 
   override def run(args: Array[String]): Unit = {
-    val (_, _, initialDataPath, streamingDataPath, testDataPath, _, _, _) = parseArgs(args)
+    val (_, _, initialDataPath, streamingDataPath, testDataPath, _, _) = parseArgs(args)
     val conf = new SparkConf().setMaster("local[*]").setAppName("Batch SVM Classifier")
     val sc = new SparkContext(conf)
 
-    val trainingRDD = sc.textFile(initialDataPath + "," + streamingDataPath).map(parsePoint).cache()
+    val trainingRDD = sc.textFile(initialDataPath + "," + streamingDataPath).map(dataParser.parsePoint).cache()
 
-    val testRDD = sc.textFile(testDataPath).map(parsePoint)
+    val testRDD = sc.textFile(testDataPath).map(dataParser.parsePoint)
 
     val model = SVMWithSGD.train(trainingRDD, 100)
 

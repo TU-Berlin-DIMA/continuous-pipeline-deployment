@@ -3,7 +3,6 @@ package de.dfki.classification
 import java.util.concurrent.{Executors, TimeUnit}
 
 import de.dfki.utils.CommandLineParser
-import de.dfki.utils.MLUtils.parsePoint
 import org.apache.spark.streaming.Seconds
 
 /**
@@ -34,23 +33,23 @@ object ContinuousClassifier extends SVMClassifier {
     run(args)
   }
 
-  def parseContinuousArgs(args: Array[String]): (Long, Long, String, String, String, String, String, Boolean, String, Double, Int) = {
+  def parseContinuousArgs(args: Array[String]): (Long, Long, String, String, String, String, String, Boolean, String, Int) = {
     val parser = new CommandLineParser(args).parse()
     val (batchDuration, resultPath, initialDataPath, streamingDataPath,
-    testDataPath, errorType, fadingFactor, numIterations) = parseArgs(args)
+    testDataPath, errorType, numIterations) = parseArgs(args)
     val slack = parser.getLong("slack", defaultTrainingSlack)
     val tempDirectory = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
     val incremental = parser.getBoolean("incremental", default = true)
     (batchDuration, slack, resultPath, initialDataPath, streamingDataPath,
-      testDataPath, tempDirectory, incremental, errorType, fadingFactor, numIterations)
+      testDataPath, tempDirectory, incremental, errorType, numIterations)
   }
 
   override def run(args: Array[String]): Unit = {
     val (batchDuration, slack, resultRoot, initialDataPath, streamingDataPath,
-    testDataPath, tempRoot, incremental, errorType, fadingFactor, numIterations) = parseContinuousArgs(args)
+    testDataPath, tempRoot, incremental, errorType, numIterations) = parseContinuousArgs(args)
     var testType = ""
     if (testDataPath == "prequential") {
-      testType = s"prequential-$fadingFactor"
+      testType = s"prequential"
     } else {
       testType = "dataset"
     }
@@ -71,13 +70,13 @@ object ContinuousClassifier extends SVMClassifier {
 
     // evaluate the stream and incrementally update the model
     if (testDataPath == "prequential") {
-      evaluateStream(streamingSource.map(_._2.toString).map(parsePoint), resultPath, errorType, fadingFactor)
+      evaluateStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint), resultPath, errorType)
     } else {
       evaluateStream(testData, resultPath, errorType)
     }
 
     if (incremental) {
-      trainOnStream(streamingSource.map(_._2.toString).map(parsePoint))
+      trainOnStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint))
     }
 
     // periodically schedule one iteration of the SGD
@@ -89,7 +88,7 @@ object ContinuousClassifier extends SVMClassifier {
         logger.info("schedule an iteration of SGD")
         streamingSource.pause()
         val startTime = System.currentTimeMillis()
-        val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(parsePoint).cache()
+        val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(dataParser.parsePoint).cache()
         streamingModel.trainOn(historicalDataRDD)
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)
