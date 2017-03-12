@@ -97,7 +97,7 @@ object VeloxClassifier extends SVMClassifier {
         logger.info("Model was re-trained ...")
 
 
-        if (streamingSource.isCompleted()) {
+        if (streamingSource.isCompleted) {
           logger.warn("stopping the program")
           ssc.stop(stopSparkContext = true, stopGracefully = true)
           future.cancel(true)

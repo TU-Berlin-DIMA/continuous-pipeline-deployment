@@ -17,9 +17,17 @@ delete criteo files:
 /share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rmr hdfs://cloud-11:44000/user/behrouz/criteo/stream-training
 /share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rmr hdfs://cloud-11:44000/user/behrouz/criteo/initial-training
 
+delete url-reputation files:
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rmr hdfs://cloud-11:44000/user/behrouz/url-reputation/stream-training
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rmr hdfs://cloud-11:44000/user/behrouz/url-reputation/initial-training
+
 run criteo preprocessing:
 training data:
 /share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.CriteoFeatureEngineering --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/user/behrouz/criteo/raw/" "output-path=hdfs://cloud-11:44000/user/behrouz/criteo/" "file-count=500"
+
+run url-reputation preprocessing:
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.URLRepData --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/user/behrouz/url-reputation/raw" "output-path=hdfs://cloud-11:44000/user/behrouz/url-reputation" "file-count=20"
+
 
 test data:
 /share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.CriteoFeatureEngineering --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/user/behrouz/criteo/test/" "output-path=hdfs://cloud-11:44000/user/behrouz/criteo/test-processed/" "split=false"

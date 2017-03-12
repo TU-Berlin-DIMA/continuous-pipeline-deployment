@@ -24,9 +24,9 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
   @transient private val logger = Logger.getLogger(getClass.getName)
 
 
-  @transient private var _path: Path = null
-  @transient private var _fs: FileSystem = null
-  @transient private var _files: Array[String] = null
+  @transient private var _path: Path = _
+  @transient private var _fs: FileSystem = _
+  @transient private var _files: Array[String] = _
   @transient private var lastProcessedFileIndex = 0
   @transient private var isPaused = false
 
@@ -85,7 +85,7 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
     }
   }
 
-  def isCompleted(): Boolean = {
+  def isCompleted: Boolean = {
     lastProcessedFileIndex >= files.length
   }
 
@@ -104,7 +104,11 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
     fs.delete(new Path(s), true)
   }
 
-  private def listFiles(): Array[String] = {
+  def sortByFolderName(p1: Path, p2: Path) = {
+    p1.getName > p2.getName
+  }
+
+  def listFiles(): Array[String] = {
 
     val directoryFilter = new PathFilter {
       override def accept(path: Path): Boolean = fs.getFileStatus(path).isDirectory
@@ -115,7 +119,7 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
     }
     val directories = fs.globStatus(directoryPath, directoryFilter).map(_.getPath)
 
-    val allFiles = directories.flatMap(dir =>
+    val allFiles = directories.sortWith(sortByFolderName).flatMap(dir =>
       fs.listStatus(dir, pathFilter).map(_.getPath.toString))
     allFiles
   }
@@ -125,5 +129,5 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
 object BatchFileInputDStream {
 
   // skip files starting with . and _ (for success)
-  def defaultFilter(path: Path): Boolean = !path.getName().startsWith(".") && !path.getName().startsWith("_")
+  def defaultFilter(path: Path): Boolean = !path.getName.startsWith(".") && !path.getName.startsWith("_")
 }

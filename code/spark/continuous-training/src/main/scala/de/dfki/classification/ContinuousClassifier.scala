@@ -93,7 +93,7 @@ object ContinuousClassifier extends SVMClassifier {
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)
         logger.info("model was updated")
-        if (streamingSource.isCompleted()) {
+        if (streamingSource.isCompleted) {
           logger.warn("stopping the program")
           ssc.stop(stopSparkContext = true, stopGracefully = true)
           future.cancel(true)

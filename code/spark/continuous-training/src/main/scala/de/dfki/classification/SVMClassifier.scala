@@ -113,7 +113,7 @@ abstract class SVMClassifier extends Serializable {
         .foreachRDD(rdd => storeErrorRate(rdd, resultPath))
     }
 
-    streamingModel.writeToDisk(testData, resultPath)
+    //streamingModel.writeToDisk(testData, resultPath)
   }
 
 

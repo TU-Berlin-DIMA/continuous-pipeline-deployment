@@ -5,6 +5,9 @@ CLUSTER :
 CRITEO:
 /share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.classification.VeloxClassifier --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "batch-duration=1" "slack=750" "incremental=true" "error-type=cumulative"  "initial-training-path=hdfs://cloud-11:44000/user/behrouz/criteo/initial-training" "streaming-path=hdfs://cloud-11:44000/user/behrouz/criteo/stream-training" "temp-path=hdfs://cloud-11:44000/user/behrouz/criteo/temp-data" "result-path=/share/hadoop/behrouz/experiments/criteo/" "num-iterations=100"
 
+URL:
+/share/hadoop/behrouz/spark/stable/bin/spark-submit  --class de.dfki.classification.VeloxClassifier --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "batch-duration=3" "slack=600" "incremental=true" "error-type=cumulative" "initial-training-path=hdfs://cloud-11:44000/user/behrouz/url-reputation/initial-training" "streaming-path=hdfs://cloud-11:44000/user/behrouz/url-reputation/stream-training" "temp-path=hdfs://cloud-11:44000/user/behrouz/url-reputation/temp-data" "result-path=/share/hadoop/behrouz/experiments/url-reputation/" "num-iterations=100" "input-format=svm" "feature-size=3231961"
+
 
 
 Local: 

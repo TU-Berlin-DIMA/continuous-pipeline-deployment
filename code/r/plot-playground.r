@@ -38,13 +38,13 @@ ggplot(data = ml, aes(x = time, y = value, group = variable)) +
 
 
 # Plot Criteo cluster
-continuous = read.csv('criteo/continuous/batch-2-slack-20-incremental-true-error-cumulative-prequential-1.0-200/2017-02-26-17-23/error-rates.txt', header = FALSE, col.names = 'continuous')
+continuous = read.csv('criteo/continuous/batch-2-slack-40-incremental-true-error-cumulative-prequential-1.0-200/2017-02-27-21-46/error-rates.txt', header = FALSE, col.names = 'continuous')
 
-velox = read.csv('criteo/velox/batch-2-slack-400-incremental-true-error-cumulative-prequential-1.0-200/2017-02-26-15-24/error-rates.txt', header = FALSE, col.names = 'velox')
+velox = read.csv('criteo/velox/batch-2-slack-400-incremental-true-error-cumulative-prequential-1.0-200/2017-02-27-23-11/error-rates.txt', header = FALSE, col.names = 'velox')
 
-baselinePlus = read.csv('criteo/baseline-plus/batch-1-slack-none-incremental-true-error-cumulative-prequential-1.0-200/2017-02-26-19-39/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+baselinePlus = read.csv('criteo/baseline-plus/batch-2-slack-none-incremental-true-error-cumulative-prequential-1.0-200/2017-02-28-10-21/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 
-baseline= read.csv('criteo/baseline/batch-1-slack-none-incremental-false-error-cumulative-prequential-1.0-200/2017-02-26-21-18/error-rates.txt', header = FALSE, col.names = 'baseline')
+baseline= read.csv('criteo/baseline/batch-2-slack-none-incremental-false-error-cumulative-prequential-1.0-200/2017-02-28-00-49/error-rates.txt', header = FALSE, col.names = 'baseline')
 
 #m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
 #continuous = rbind(continuous, data.frame(continuous = rep(tail(continuous, n = 1), m - nrow(continuous))))
@@ -55,8 +55,8 @@ baseline= read.csv('criteo/baseline/batch-1-slack-none-incremental-false-error-c
 df = data.frame(time = 1:nrow(velox),
                 continuous = continuous, 
                 velox = velox,
-                baseline = baseline,
-                baselinePlus = baselinePlus)
+                baseline = baseline)
+                #baselinePlus = baselinePlus)
 
 ml = melt(df, id.vars = 'time')
 ggplot(data = ml, aes(x = time, y = value, group = variable)) + 
@@ -116,3 +116,32 @@ ml = melt(df, id.vars = 'time' )
 ggplot(data = ml, aes(x = time, y = value, group = variable)) + 
   geom_line(aes( colour = variable)) + 
   xlab("Time") + ylab("Mean Squared Error")
+
+
+
+#URL 
+continuous = read.csv('url-reputation/continuous/batch-5-slack-50-incremental-true-error-cumulative-prequential-100/2017-03-10-16-24/error-rates.txt', header = FALSE, col.names = 'continuous')
+
+velox = read.csv('url-reputation/velox/batch-3-slack-600-incremental-true-error-cumulative-prequential-100/2017-03-11-13-40/error-rates.txt', header = FALSE, col.names = 'velox')
+
+#baselinePlus = read.csv('criteo-sample/baseline-plus/batch-1-slack-none-incremental-true-error-cumulative-prequential-1.0-200/2017-02-26-14-43/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+
+#baseline= read.csv('criteo-sample/baseline/batch-1-slack-none-incremental-false-error-cumulative-prequential-1.0-200/2017-02-26-15-08/error-rates.txt', header = FALSE, col.names = 'baseline')
+
+m = max(nrow(continuous), nrow(velox), 0, 0)
+continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))
+velox = rbind(velox, data.frame(velox = rep(NA, m - nrow(velox))))
+#baseline = rbind(baseline, data.frame(baseline = rep(NA, m - nrow(baseline))))
+#baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(NA, m - nrow(baselinePlus))))
+
+df = data.frame(time = 1:nrow(continuous),
+                continuous = continuous, 
+                velox = velox)
+               # baseline = baseline,
+                #baselinePlus = baselinePlus)
+
+ml = melt(df, id.vars = 'time' )
+ggplot(data = ml, aes(x = time, y = value, group = variable)) + 
+  geom_line(aes( colour = variable)) + 
+  xlab("Time") + ylab("Mean Squared Error") 
+
