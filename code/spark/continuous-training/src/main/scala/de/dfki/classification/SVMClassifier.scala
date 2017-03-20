@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
-import de.dfki.preprocessing.{CSVParser, DataParser, SVMParser}
+import de.dfki.preprocessing.parsers.{CSVParser, DataParser, SVMParser}
 import de.dfki.streaming.models.OnlineSVM
 import de.dfki.utils.{BatchFileInputDStream, CommandLineParser}
 import org.apache.hadoop.conf.Configuration
@@ -229,7 +229,7 @@ abstract class SVMClassifier extends Serializable {
     */
   def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String, numIterations: Int = 500): OnlineSVM = {
     val model = trainModel(ssc.sparkContext, initialDataDirectories, numIterations)
-    new OnlineSVM().setInitialModel(model).setNumIterations(1).setStepSize(0.001)
+    new OnlineSVM().setInitialModel(model).setNumIterations(10).setStepSize(0.001)
   }
 
   /**

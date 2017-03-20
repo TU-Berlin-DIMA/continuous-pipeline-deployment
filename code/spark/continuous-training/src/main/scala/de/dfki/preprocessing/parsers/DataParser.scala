@@ -1,4 +1,4 @@
-package de.dfki.preprocessing
+package de.dfki.preprocessing.parsers
 
 import org.apache.spark.mllib.regression.LabeledPoint
 
@@ -8,4 +8,5 @@ import org.apache.spark.mllib.regression.LabeledPoint
 trait DataParser extends Serializable {
   def parsePoint(p: String): LabeledPoint
 
+  def unparsePoint(p: LabeledPoint): String
 }

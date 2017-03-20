@@ -1,4 +1,4 @@
-package de.dfki.preprocessing
+package de.dfki.preprocessing.parsers
 
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.regression.LabeledPoint
@@ -32,6 +32,16 @@ class SVMParser(featureSize: Int) extends DataParser {
     }
     new LabeledPoint(label, Vectors.sparse(featureSize, indices, values))
   }
+
+  override def unparsePoint(p: LabeledPoint): String = {
+    val sb = new StringBuilder(p.label.toString)
+    p.features.foreachActive { case (i, v) =>
+      sb += ' '
+      sb ++= s"${i + 1}:$v"
+    }
+    sb.mkString
+  }
+
 }
 
 

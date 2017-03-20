@@ -1,8 +1,9 @@
-package de.dfki.preprocessing
+package de.dfki.preprocessing.datasets
 
 import java.io.{File, PrintWriter}
 
 import de.dfki.classification.ContinuousClassifier
+import de.dfki.preprocessing.parsers.CSVParser
 import org.apache.spark.SparkContext
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD

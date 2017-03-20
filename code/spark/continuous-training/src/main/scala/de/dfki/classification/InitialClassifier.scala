@@ -24,8 +24,8 @@ object InitialClassifier extends SVMClassifier {
     } else {
       testType = "dataset"
     }
-    val parent = s"$getExperimentName/batch-$batchDuration-slack-none-incremental-false" +
-      s"-error-$errorType-$testType-$numIterations"
+    val parent = s"$getExperimentName/batch-$batchDuration/slack-none/incremental-false" +
+      s"/error-$errorType-$testType/num-iterations-$numIterations"
     val resultPath = experimentResultPath(resultRoot, parent)
     // train initial model
     streamingModel = createInitialStreamingModel(ssc, initialDataPath, numIterations)

@@ -124,21 +124,76 @@ continuous = read.csv('url-reputation/continuous/batch-5-slack-50-incremental-tr
 
 velox = read.csv('url-reputation/velox/batch-3-slack-600-incremental-true-error-cumulative-prequential-100/2017-03-11-13-40/error-rates.txt', header = FALSE, col.names = 'velox')
 
-#baselinePlus = read.csv('criteo-sample/baseline-plus/batch-1-slack-none-incremental-true-error-cumulative-prequential-1.0-200/2017-02-26-14-43/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+baselinePlus = read.csv('url-reputation/baseline-plus/batch-3-slack-none-incremental-true-error-cumulative-prequential-100/2017-03-12-16-34/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 
-#baseline= read.csv('criteo-sample/baseline/batch-1-slack-none-incremental-false-error-cumulative-prequential-1.0-200/2017-02-26-15-08/error-rates.txt', header = FALSE, col.names = 'baseline')
+baseline= read.csv('url-reputation/baseline/batch-2-slack-none-incremental-false-error-cumulative-prequential-100/2017-03-12-15-02/error-rates.txt', header = FALSE, col.names = 'baseline')
 
-m = max(nrow(continuous), nrow(velox), 0, 0)
+m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
 continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))
 velox = rbind(velox, data.frame(velox = rep(NA, m - nrow(velox))))
-#baseline = rbind(baseline, data.frame(baseline = rep(NA, m - nrow(baseline))))
-#baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(NA, m - nrow(baselinePlus))))
+baseline = rbind(baseline, data.frame(baseline = rep(NA, m - nrow(baseline))))
+baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(NA, m - nrow(baselinePlus))))
 
 df = data.frame(time = 1:nrow(continuous),
                 continuous = continuous, 
-                velox = velox)
-               # baseline = baseline,
-                #baselinePlus = baselinePlus)
+                velox = velox, 
+                baseline = baseline,
+                baselinePlus = baselinePlus)
+
+ml = melt(df, id.vars = 'time' )
+ggplot(data = ml, aes(x = time, y = value, group = variable)) + 
+  geom_line(aes( colour = variable)) + 
+  xlab("Time") + ylab("Mean Squared Error") 
+
+
+#URL SAMPLE 
+continuous = read.csv('url-reputation-sample/continuous/batch-2/slack-4/incremental-true/error-cumulative-prequential/num-iterations-200/2017-03-15-17-19/error-rates.txt', header = FALSE, col.names = 'continuous')
+
+velox = read.csv('url-reputation-sample/velox/batch-1/slack-70/incremental-true/error-cumulative-prequential/num-iterations-200/2017-03-14-15-23/error-rates.txt', header = FALSE, col.names = 'velox')
+
+baselinePlus = read.csv('url-reputation-sample/baseline-plus/batch-1/slack-none/incremental-true/error-cumulative-prequential/num-iterations-200/2017-03-15-17-08/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+
+baseline = read.csv('url-reputation-sample/baseline/batch-1/slack-none/incremental-false/error-cumulative-prequential/num-iterations-200/2017-03-14-15-14/error-rates.txt', header = FALSE, col.names = 'baseline')
+
+m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
+continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))
+velox = rbind(velox, data.frame(velox = rep(NA, m - nrow(velox))))
+baseline = rbind(baseline, data.frame(baseline = rep(NA, m - nrow(baseline))))
+baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(NA, m - nrow(baselinePlus))))
+
+df = data.frame(time = 1:nrow(continuous),
+                continuous = continuous,
+                velox = velox,
+                baseline = baseline,
+                baselinePlus = baselinePlus)
+
+ml = melt(df, id.vars = 'time' )
+ggplot(data = ml, aes(x = time, y = value, group = variable)) + 
+  geom_line(aes( colour = variable)) + 
+  xlab("Time") + ylab("Mean Squared Error") 
+
+
+
+#HIGGS
+continuous = read.csv('higgs-sample/continuous/batch-1/slack-2/incremental-true/error-cumulative-prequential/num-iterations-300/2017-03-20-10-26/error-rates.txt', header = FALSE, col.names = 'continuous')
+
+velox = read.csv('higgs-sample/velox/batch-1/slack-50/incremental-true/error-cumulative-prequential/num-iterations-300/2017-03-20-10-37/error-rates.txt', header = FALSE, col.names = 'velox')
+
+baselinePlus = read.csv('higgs-sample/baseline-plus/batch-1/slack-none/incremental-true/error-cumulative-prequential/num-iterations-300/2017-03-20-10-43/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+
+baseline = read.csv('higgs-sample/baseline/batch-1/slack-none/incremental-false/error-cumulative-prequential/num-iterations-300/2017-03-20-10-48/error-rates.txt', header = FALSE, col.names = 'baseline')
+
+m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
+continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))
+velox = rbind(velox, data.frame(velox = rep(NA, m - nrow(velox))))
+baseline = rbind(baseline, data.frame(baseline = rep(NA, m - nrow(baseline))))
+baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(NA, m - nrow(baselinePlus))))
+
+df = data.frame(time = 1:nrow(continuous),
+                continuous = continuous,
+                velox = velox,
+                baseline = baseline,
+                baselinePlus = baselinePlus)
 
 ml = melt(df, id.vars = 'time' )
 ggplot(data = ml, aes(x = time, y = value, group = variable)) + 

@@ -1,6 +1,6 @@
 package de.dfki.examples
 
-import de.dfki.preprocessing.CSVParser
+import de.dfki.preprocessing.parsers.CSVParser
 import de.dfki.streaming.models.OnlineSVM
 import org.apache.spark.SparkConf
 import org.apache.spark.mllib.classification.SVMWithSGD

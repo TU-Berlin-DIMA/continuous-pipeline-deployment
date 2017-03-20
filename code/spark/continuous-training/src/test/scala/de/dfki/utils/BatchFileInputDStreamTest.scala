@@ -31,4 +31,7 @@ class BatchFileInputDStreamTest extends FunSuite with BeforeAndAfterEach {
     source.listFiles().foreach(println)
   }
 
+  test("dummy") {
+    
+  }
 }

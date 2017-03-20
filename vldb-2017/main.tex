@@ -440,7 +440,7 @@ The API is used to interact with other components as well as end-users of the sy
 The scheduler component uses \textit{update} and \textit{update\_iteration} to instruct the model manager to perform incremental or batch updates (one iteration of SGD) to the model.
 Upon a new prediction query, the \textit{predict} method is called to provide the end-user with the label of the given input.
 
-\noindent\hspace{-0.1\linewidth}\begin{minipage}[t]{\linewidth}
+\noindent\begin{minipage}[t]{\linewidth}
 \begin{lstlisting}[language=java, basicstyle=\small\ttfamily, frame=tb ,columns=fullflexible,
 showstringspaces=false,label=model-manager-api,caption=Model Manager API, numberstyle=\tiny]
 def update(x,y)

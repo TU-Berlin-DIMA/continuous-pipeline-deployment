@@ -1,4 +1,4 @@
-package de.dfki.preprocessing
+package de.dfki.preprocessing.datasets
 
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.SparkConf
@@ -50,7 +50,7 @@ import scala.util.Random
   *
   * @author bede01.
   */
-object CriteoFeatureEngineering {
+object CriteoPreprocessing {
   val INPUT_PATH = "data/criteo-sample/raw/"
   val OUTPUT_PATH = "data/criteo-sample/"
   val NUMBER_OF_STREAMING_FILES = 100

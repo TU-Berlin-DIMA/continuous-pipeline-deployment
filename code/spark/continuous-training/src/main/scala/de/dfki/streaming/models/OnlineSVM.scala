@@ -83,11 +83,6 @@ class OnlineSVM(private var stepSize: Double,
       throw new IllegalArgumentException("Model must be initialized before starting training.")
     }
     model = Some(algorithm.run(data, model.get.weights))
-    val display = model.get.weights.size match {
-      case x if x > 100 => model.get.weights.toArray.take(100).mkString("[", ",", "...")
-      case _ => model.get.weights.toArray.mkString("[", ",", "]")
-    }
-    logInfo(s"Current model: weights, ${display}")
   }
 
   def writeToDisk(data: DStream[LabeledPoint], resultPath: String): Unit = {
