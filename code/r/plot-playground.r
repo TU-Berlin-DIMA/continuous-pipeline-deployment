@@ -11,19 +11,19 @@ loadData <- function(file){
   return(as.numeric(data[[1]]))
 }
 # Plot cover type Results
-continuous = read.csv('criteo-sample/continuous/batch-1-slack-4-incremental-true-error-cumulative-prequential-1.0-200/2017-02-26-14-40/error-rates.txt', header = FALSE, col.names = 'continuous')
+continuous = read.csv('cover-types/continuous/batch-1/slack-10/incremental-true/error-cumulative-prequential/num-iterations-200/2017-03-20-15-01/error-rates.txt', header = FALSE, col.names = 'continuous')
 
-velox = read.csv('criteo-sample/velox/batch-1-slack-20-incremental-true-error-cumulative-prequential-1.0-200/2017-02-26-14-36/error-rates.txt', header = FALSE, col.names = 'velox')
+velox = read.csv('cover-types/velox/batch-1/slack-40/incremental-true/error-cumulative-prequential/num-iterations-200/2017-03-20-13-46/error-rates.txt', header = FALSE, col.names = 'velox')
 
-baselinePlus = read.csv('criteo-sample/baseline-plus/batch-1-slack-none-incremental-true-error-cumulative-prequential-1.0-200/2017-02-26-14-43/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+baselinePlus = read.csv('cover-types/baseline-plus/batch-1/slack-none/incremental-true/error-cumulative-prequential/num-iterations-200/2017-03-20-13-52/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 
-baseline= read.csv('criteo-sample/baseline/batch-1-slack-none-incremental-false-error-cumulative-prequential-1.0-200/2017-02-26-15-08/error-rates.txt', header = FALSE, col.names = 'baseline')
+baseline= read.csv('cover-types/baseline/batch-1/slack-none/incremental-false/error-cumulative-prequential/num-iterations-200/2017-03-20-13-54/error-rates.txt', header = FALSE, col.names = 'baseline')
 
-#m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
-#continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))
-#velox = rbind(velox, data.frame(velox = rep(NA, m - nrow(velox))))
-#baseline = rbind(baseline, data.frame(baseline = rep(NA, m - nrow(baseline))))
-#baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(NA, m - nrow(baselinePlus))))
+m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
+continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))
+velox = rbind(velox, data.frame(velox = rep(NA, m - nrow(velox))))
+baseline = rbind(baseline, data.frame(baseline = rep(NA, m - nrow(baseline))))
+baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(NA, m - nrow(baselinePlus))))
 
 df = data.frame(time = 1:nrow(continuous),
                 continuous = continuous, 
@@ -175,13 +175,13 @@ ggplot(data = ml, aes(x = time, y = value, group = variable)) +
 
 
 #HIGGS
-continuous = read.csv('higgs-sample/continuous/batch-1/slack-2/incremental-true/error-cumulative-prequential/num-iterations-300/2017-03-20-10-26/error-rates.txt', header = FALSE, col.names = 'continuous')
+continuous = read.csv('higgs-sample/continuous/batch-1/slack-10/incremental-true/error-cumulative-prequential/num-iterations-300/2017-03-21-14-14/error-rates.txt', header = FALSE, col.names = 'continuous')
 
-velox = read.csv('higgs-sample/velox/batch-1/slack-50/incremental-true/error-cumulative-prequential/num-iterations-300/2017-03-20-10-37/error-rates.txt', header = FALSE, col.names = 'velox')
+velox = read.csv('higgs-sample/velox/batch-1/slack-50/incremental-true/error-cumulative-prequential/num-iterations-300/2017-03-21-14-26/error-rates.txt', header = FALSE, col.names = 'velox')
 
-baselinePlus = read.csv('higgs-sample/baseline-plus/batch-1/slack-none/incremental-true/error-cumulative-prequential/num-iterations-300/2017-03-20-10-43/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+baselinePlus = read.csv('higgs-sample/baseline-plus/batch-1/slack-none/incremental-true/error-cumulative-prequential/num-iterations-300/2017-03-21-14-19/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 
-baseline = read.csv('higgs-sample/baseline/batch-1/slack-none/incremental-false/error-cumulative-prequential/num-iterations-300/2017-03-20-10-48/error-rates.txt', header = FALSE, col.names = 'baseline')
+baseline = read.csv('higgs-sample/baseline/batch-1/slack-none/incremental-false/error-cumulative-prequential/num-iterations-300/2017-03-21-13-54/error-rates.txt', header = FALSE, col.names = 'baseline')
 
 m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
 continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))

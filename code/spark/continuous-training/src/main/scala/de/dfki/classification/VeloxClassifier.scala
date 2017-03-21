@@ -3,6 +3,7 @@ package de.dfki.classification
 import java.util.concurrent.{Executors, TimeUnit}
 
 import de.dfki.utils.CommandLineParser
+import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.streaming.Seconds
 
 /**
@@ -90,11 +91,13 @@ object VeloxClassifier extends SVMClassifier {
         streamingSource.pause()
 
         val startTime = System.currentTimeMillis()
+        val before = streamingModel.latestModel().weights
         val model = trainModel(ssc.sparkContext, initialDataPath + "," + tempDirectory, numIterations)
+        val after = streamingModel.latestModel().weights
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)
         streamingModel.setInitialModel(model)
-        logger.info("Model was re-trained ...")
+        logger.info(s"Delta: ${Vectors.sqdist(before, after)}")
 
 
         if (streamingSource.isCompleted) {

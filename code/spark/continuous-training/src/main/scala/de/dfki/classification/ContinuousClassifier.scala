@@ -3,6 +3,7 @@ package de.dfki.classification
 import java.util.concurrent.{Executors, TimeUnit}
 
 import de.dfki.utils.CommandLineParser
+import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.streaming.Seconds
 
 /**
@@ -89,10 +90,12 @@ object ContinuousClassifier extends SVMClassifier {
         streamingSource.pause()
         val startTime = System.currentTimeMillis()
         val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(dataParser.parsePoint).cache()
+        val before = streamingModel.latestModel().weights
         streamingModel.trainOn(historicalDataRDD)
+        val after = streamingModel.latestModel().weights
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)
-        logger.info("model was updated")
+        logger.info(s"Delta: ${Vectors.sqdist(before, after)}")
         if (streamingSource.isCompleted) {
           logger.warn("stopping the program")
           ssc.stop(stopSparkContext = true, stopGracefully = true)

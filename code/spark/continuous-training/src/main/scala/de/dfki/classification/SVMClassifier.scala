@@ -209,7 +209,7 @@ abstract class SVMClassifier extends Serializable {
     // number of iterations
     val numIterations = parser.getInteger("num-iterations", 500)
 
-    if (parser.get("input-format", "text") == "text"){
+    if (parser.get("input-format", "text") == "text") {
       dataParser = new CSVParser()
     } else {
       dataParser = new SVMParser(parser.getInteger("feature-size"))
@@ -229,7 +229,7 @@ abstract class SVMClassifier extends Serializable {
     */
   def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String, numIterations: Int = 500): OnlineSVM = {
     val model = trainModel(ssc.sparkContext, initialDataDirectories, numIterations)
-    new OnlineSVM().setInitialModel(model).setNumIterations(10).setStepSize(0.001)
+    new OnlineSVM().setInitialModel(model).setNumIterations(1).setStepSize(0.0001)
   }
 
   /**
