@@ -228,7 +228,7 @@ abstract class SVMClassifier extends Serializable {
     * @return Online SVM Model
     */
   def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String): OnlineSVM = {
-    val model = trainModel(ssc.sparkContext, initialDataDirectories, numIterations)
+    val model = trainModel(ssc.sparkContext, initialDataDirectories)
     new OnlineSVM().setInitialModel(model).setNumIterations(1).setStepSize(onlineStepSize)
   }
 
@@ -237,21 +237,19 @@ abstract class SVMClassifier extends Serializable {
     *
     * @param sc            SparkContext object
     * @param trainingPath  list of directories separated by comma
-    * @param numIterations num of iterations for the training process
     * @return SVMModel
     */
-  def trainModel(sc: SparkContext, trainingPath: String, numIterations: Int = 500): SVMModel = {
-    trainModel(sc.textFile(trainingPath).map(dataParser.parsePoint).cache(), numIterations)
+  def trainModel(sc: SparkContext, trainingPath: String): SVMModel = {
+    trainModel(sc.textFile(trainingPath).map(dataParser.parsePoint).cache())
   }
 
   /**
     * Train a SVM Model from the RDD
     *
     * @param data          rdd
-    * @param numIterations number of iterations for the training process
     * @return SVMModel
     */
-  def trainModel(data: RDD[LabeledPoint], numIterations: Int): SVMModel = {
+  def trainModel(data: RDD[LabeledPoint]): SVMModel = {
     SVMWithSGD.train(data, numIterations, offlineStepSize, 0.01)
   }
 

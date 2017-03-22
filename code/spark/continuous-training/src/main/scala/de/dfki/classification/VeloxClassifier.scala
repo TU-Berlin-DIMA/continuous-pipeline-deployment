@@ -90,7 +90,7 @@ object VeloxClassifier extends SVMClassifier {
 
         val startTime = System.currentTimeMillis()
         val before = streamingModel.latestModel().weights
-        val model = trainModel(ssc.sparkContext, initialDataPath + "," + tempDirectory, numIterations)
+        val model = trainModel(ssc.sparkContext, initialDataPath + "," + tempDirectory)
         val after = streamingModel.latestModel().weights
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)

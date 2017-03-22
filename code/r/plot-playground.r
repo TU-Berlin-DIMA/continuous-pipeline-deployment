@@ -11,13 +11,13 @@ loadData <- function(file){
   return(as.numeric(data[[1]]))
 }
 # Plot cover type Results
-continuous = read.csv('cover-types/continuous/batch-1/slack-10/incremental-true/error-cumulative-prequential/num-iterations-200/2017-03-20-15-01/error-rates.txt', header = FALSE, col.names = 'continuous')
+continuous = read.csv('cover-types/continuous/num-iterations-300/slack-4/offline-step-1.0/online-step-1.0/2017-03-22-14-31/error-rates.txt', header = FALSE, col.names = 'continuous')
 
-velox = read.csv('cover-types/velox/batch-1/slack-40/incremental-true/error-cumulative-prequential/num-iterations-200/2017-03-20-13-46/error-rates.txt', header = FALSE, col.names = 'velox')
+velox = read.csv('cover-types/velox/num-iterations-300/slack-32/offline-step-1.0/online-step-1.0/2017-03-22-14-35/error-rates.txt', header = FALSE, col.names = 'velox')
 
-baselinePlus = read.csv('cover-types/baseline-plus/batch-1/slack-none/incremental-true/error-cumulative-prequential/num-iterations-200/2017-03-20-13-52/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+baselinePlus = read.csv('cover-types/baseline-plus/num-iterations-300/slack-none/offline-step-1.0/online-step-1.0/2017-03-22-14-39/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 
-baseline= read.csv('cover-types/baseline/batch-1/slack-none/incremental-false/error-cumulative-prequential/num-iterations-200/2017-03-20-13-54/error-rates.txt', header = FALSE, col.names = 'baseline')
+baseline= read.csv('cover-types/baseline/num-iterations-300/slack-none/offline-step-1.0/online-step-1.0/2017-03-22-14-42/error-rates.txt', header = FALSE, col.names = 'baseline')
 
 m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
 continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))
@@ -46,11 +46,11 @@ baselinePlus = read.csv('criteo/baseline-plus/batch-2-slack-none-incremental-tru
 
 baseline= read.csv('criteo/baseline/batch-2-slack-none-incremental-false-error-cumulative-prequential-1.0-200/2017-02-28-00-49/error-rates.txt', header = FALSE, col.names = 'baseline')
 
-#m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
-#continuous = rbind(continuous, data.frame(continuous = rep(tail(continuous, n = 1), m - nrow(continuous))))
-#velox = rbind(velox, data.frame(velox = rep(tail(velox, n = 1), m - nrow(velox))))
-#baseline = rbind(baseline, data.frame(baseline = rep(tail(baseline), m - nrow(baseline))))
-#baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(tail(baselinePlus, n = 1), m - nrow(baselinePlus))))
+m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
+continuous = rbind(continuous, data.frame(continuous = rep(tail(continuous, n = 1), m - nrow(continuous))))
+velox = rbind(velox, data.frame(velox = rep(tail(velox, n = 1), m - nrow(velox))))
+baseline = rbind(baseline, data.frame(baseline = rep(tail(baseline), m - nrow(baseline))))
+baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(tail(baselinePlus, n = 1), m - nrow(baselinePlus))))
 
 df = data.frame(time = 1:nrow(velox),
                 continuous = continuous, 
@@ -147,13 +147,13 @@ ggplot(data = ml, aes(x = time, y = value, group = variable)) +
 
 
 #URL SAMPLE 
-continuous = read.csv('url-reputation-sample/continuous/batch-2/slack-4/incremental-true/error-cumulative-prequential/num-iterations-200/2017-03-15-17-19/error-rates.txt', header = FALSE, col.names = 'continuous')
+continuous = read.csv('url-reputation-sample/continuous/num-iterations-300/slack-4/offline-step-0.1/online-step-0.1/2017-03-22-16-13/error-rates.txt', header = FALSE, col.names = 'continuous')
 
-velox = read.csv('url-reputation-sample/velox/batch-1/slack-70/incremental-true/error-cumulative-prequential/num-iterations-200/2017-03-14-15-23/error-rates.txt', header = FALSE, col.names = 'velox')
+velox = read.csv('url-reputation-sample/velox/num-iterations-300/slack-75/offline-step-0.1/online-step-0.1/2017-03-22-16-29/error-rates.txt', header = FALSE, col.names = 'velox')
 
-baselinePlus = read.csv('url-reputation-sample/baseline-plus/batch-1/slack-none/incremental-true/error-cumulative-prequential/num-iterations-200/2017-03-15-17-08/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+baselinePlus = read.csv('url-reputation-sample/continuous/num-iterations-300/slack-4/offline-step-0.5/online-step-0.5/2017-03-22-16-00/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 
-baseline = read.csv('url-reputation-sample/baseline/batch-1/slack-none/incremental-false/error-cumulative-prequential/num-iterations-200/2017-03-14-15-14/error-rates.txt', header = FALSE, col.names = 'baseline')
+baseline = read.csv('url-reputation-sample/continuous/num-iterations-300/slack-4/offline-step-1.0/online-step-1.0/2017-03-22-16-09/error-rates.txt', header = FALSE, col.names = 'baseline')
 
 m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
 continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))

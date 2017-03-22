@@ -668,12 +668,21 @@ To achieve this, we have fixed the total number of epochs (SGD iterations) for b
 For Velox, this value is equal to the number of retraining multiplied by number of iterations in each retraining. 
 For the continuous model, it is total number of scheduled iterations throughout the lifetime of the system.
 Therefore, the continuous method schedules a new iteration every 500 items for \textit{movie-lens-100k} and 5,000 items for \textit{movie-lens-1M} and Velox method schedules a retraining every 15,000 items for \textit{movie-lens-100k} and 150,000 items for \textit{movie-lens-1M}.
+
 \begin{figure}[h]
-\centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-quality-improved.eps}
-\caption{Mean squared error on MovieLens 100k}
-\label{fig:movie-lens-100k-score}
+\begin{subfigure}{.5\columnwidth}
+	\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-quality-improved.eps}
+	\caption{MovieLens 100k}
+	\label{fig:movie-lens-100k-score}
+\end{subfigure}%
+\begin{subfigure}{0.5\columnwidth}
+  \includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-1m-quality-improved.eps}
+\caption{MovieLens 1M}
+\label{fig:movie-lens-1M-score}
+\end{subfigure}
+\caption{Recommender Systems}
 \end{figure}
+
 Figure \ref{fig:movie-lens-100k-score} shows the mean squared error of the continuous, Velox, and several other methods on \textit{movie-lens-100k} dataset.
 All four methods perform an initial training, therefore, they have similar error rates in the beginning.
 However, the error rate of Baseline method starts to increase since it does not incrementally update the model.
@@ -690,12 +699,6 @@ It consistently manages to adopt to the changes in data and decrease the error r
 As expected, except for immediately after a full retraining, the Continuous method always performs better than Velox.
 
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-1m-quality-improved.eps}
-\caption{Mean squared error on Movie Lens 1M}
-\label{fig:movie-lens-1M-score}
-\end{figure}
 
 Figure \ref{fig:movie-lens-1M-score} shows the mean squared error rate achieved by the implemented methods on \textit{movie-lens-1M}.
 Similar to \textit{movie-lens-100k}, the Continuous method has the lowest error rate among all the implemented methods.

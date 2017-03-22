@@ -69,15 +69,17 @@ p = ggplot(data = df) +
              lwd = 5 ) + 
   # x and y labels
   xlab("Testing Increment") + ylab("Mean Squared Error") + 
+  ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
-  theme(legend.text = element_text(size = 30), 
+  theme(legend.text = element_text(size = 28), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.key.size  = unit(1.0, "cm"),
-        legend.background = element_rect(colour = "black", fill = "transparent"), 
-        axis.text=element_text(size=30),
-        axis.title=element_text(size=32),  
-        legend.position=c(0.85,0.2)) + 
+        legend.background = element_rect(colour = "transparent", fill = "transparent"), 
+        axis.text.y=element_text(size=28),
+        axis.text.x=element_text(size=28,angle = 90, hjust = 1 ),
+        axis.title=element_text(size=28),  
+        legend.position=c(0.85,0.25)) + 
   scale_color_manual(name ="",  # Name,
                      labels = c("baseline", "baseline+", "continuous", "velox", "retraining"), 
                      values = c("a" = "green", "b" = "orange", "c" = "blue","d" = "red", "e" = "black"))  + 
@@ -85,8 +87,8 @@ p = ggplot(data = df) +
 
  
 ggsave(p , filename = 'movie-lens-100k/5000/movie-lens-100k-quality-improved.eps', 
-       device = 'eps', dpi = 1000,
-       width = 16, height = 9, 
+       device = 'eps', 
+       width = 10, height = 7, 
        units = "in")
 
 
@@ -120,15 +122,17 @@ p =
              lwd = 5 ) + 
   # x and y labels
   xlab("Testing Increment") + ylab("Mean Squared Error") + 
+  ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
-  theme(legend.text = element_text(size = 30), 
+  theme(legend.text = element_text(size = 28), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.key.size  = unit(1.0, "cm"),
-        legend.background = element_rect(colour = "black", fill = "transparent"), 
-        axis.text=element_text(size=30),
-        axis.title=element_text(size=32),  
-        legend.position=c(0.85,0.2)) + 
+        legend.background = element_rect(colour = "transparent", fill = "transparent"), 
+        axis.text.y=element_text(size=28),
+        axis.text.x=element_text(size=28,angle = 90, hjust = 1 ),
+        axis.title=element_text(size=28),  
+        legend.position=c(0.85,0.25)) + 
   scale_color_manual(name ="",  # Name,
                      labels = c("baseline", "baseline+", "continuous", "velox", "retraining"), 
                      values = c("a" = "green", "b" = "orange", "c" = "blue","d" = "red", "e" = "black"))  + 
@@ -136,8 +140,8 @@ p =
 
 
 ggsave(p , filename = 'movie-lens-1M/50000/movie-lens-1m-quality-improved.eps', 
-       device = 'eps', dpi = 1000,
-       width = 16, height = 9, 
+       device = 'eps',
+       width = 10, height = 7, 
        units = "in")
 
 
