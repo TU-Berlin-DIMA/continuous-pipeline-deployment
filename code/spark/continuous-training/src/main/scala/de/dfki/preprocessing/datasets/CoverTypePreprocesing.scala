@@ -8,11 +8,11 @@ import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
-  * @author bede01.
+  * @author behrouz derakhshan
   */
 object CoverTypePreprocesing {
   val INPUT_PATH = "data/cover-types/libsvm"
-  val OUTPUT_PATH = "data/cover-types/preprocessed"
+  val OUTPUT_PATH = "data/cover-types"
 
   def main(args: Array[String]): Unit = {
     val parser = new CommandLineParser(args).parse()

@@ -64,18 +64,55 @@ abstract class SVMClassifier extends Serializable {
     s"$root/$parent/$experimentId"
   }
 
+  var numIterations: Int = _
+  var errorType: String = _
+  var batchDuration: Long = _
+  var offlineStepSize: Double = _
+  var onlineStepSize: Double = _
+
+
+  def parseArgs(args: Array[String]): (String, String, String, String) = {
+    val parser = new CommandLineParser(args).parse()
+    // spark streaming batch duration
+    batchDuration = parser.getLong("batch-duration", defaultBatchDuration)
+    // path for storing experiments results
+    val resultRoot = parser.get("result-path", s"results/$DATA_SET/$getExperimentName")
+    // folder path for initial training data
+    val initialDataPath = parser.get("initial-training-path", s"$BASE_DATA_DIRECTORY/$INITIAL_TRAINING")
+    // folder path for data to be streamed
+    val streamingDataPath = parser.get("streaming-path", s"$BASE_DATA_DIRECTORY/$STREAM_TRAINING")
+    // folder (file) for test data
+    val testDataPath = parser.get("test-path", "prequential")
+    // cumulative test error
+    errorType = parser.get("error-type", "cumulative")
+    // number of iterations
+    numIterations = parser.getInteger("num-iterations", 500)
+    // offline learner step size
+    offlineStepSize = parser.getDouble("offline-step-size", 1.0)
+    // online learner step size
+    onlineStepSize = parser.getDouble("online-step-size", 1.0)
+
+
+    if (parser.get("input-format", "text") == "text") {
+      dataParser = new CSVParser()
+    } else {
+      dataParser = new SVMParser(parser.getInteger("feature-size"))
+    }
+
+    (resultRoot, initialDataPath, streamingDataPath, testDataPath)
+  }
 
   /**
     * Initialization of spark streaming context and checkpointing of stateful operators
     *
     * @return Spark Streaming Context object
     */
-  def initializeSpark(batchDuration: Duration = Seconds(1)): StreamingContext = {
+  def initializeSpark(): StreamingContext = {
     val conf = new SparkConf().setAppName(getApplicationName)
     // if master is not set run in local mode
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
-    val ssc = new StreamingContext(conf, batchDuration)
+    val ssc = new StreamingContext(conf, Seconds(batchDuration))
     ssc.checkpoint("checkpoints/")
     ssc
   }
@@ -83,10 +120,9 @@ abstract class SVMClassifier extends Serializable {
   /**
     * Store the cumulative error rate of the incoming stream in the given result directory
     *
-    * @param testData   test Data DStream
-    * @param resultPath directory for writing the error rate results
+    * @param testData test Data DStream
     */
-  def evaluateStream(testData: DStream[LabeledPoint], resultPath: String, errorType: String = "cumulative") {
+  def evaluateStream(testData: DStream[LabeledPoint], resultPath: String) {
 
     // periodically check test error
     val predictions = streamingModel.predictOnValues(testData.map(lp => (lp.label, lp.features)))
@@ -113,7 +149,6 @@ abstract class SVMClassifier extends Serializable {
         .foreachRDD(rdd => storeErrorRate(rdd, resultPath))
     }
 
-    //streamingModel.writeToDisk(testData, resultPath)
   }
 
 
@@ -183,41 +218,6 @@ abstract class SVMClassifier extends Serializable {
     fw.close()
   }
 
-  //  /**
-  //    * Prequential Evaluation of the stream. First use the data to predict and train the model
-  //    *
-  //    * @param observations training data
-  //    */
-  //  def prequentialStreamEvaluation(observations: DStream[LabeledPoint], resultPath: String): Unit = {
-  //    evaluateStream(observations, resultPath)
-  //  }
-
-  def parseArgs(args: Array[String]): (Long, String, String, String, String, String, Int) = {
-    val parser = new CommandLineParser(args).parse()
-    // spark streaming batch duration
-    val batchDuration = parser.getLong("batch-duration", defaultBatchDuration)
-    // path for storing experiments results
-    val resultPath = parser.get("result-path", s"results/$DATA_SET/$getExperimentName")
-    // folder path for initial training data
-    val initialDataPath = parser.get("initial-training-path", s"$BASE_DATA_DIRECTORY/$INITIAL_TRAINING")
-    // folder path for data to be streamed
-    val streamingDataPath = parser.get("streaming-path", s"$BASE_DATA_DIRECTORY/$STREAM_TRAINING")
-    // folder (file) for test data
-    val testDataPath = parser.get("test-path", "prequential")
-    // cumulative test error
-    val errorType = parser.get("error-type", "cumulative")
-    // number of iterations
-    val numIterations = parser.getInteger("num-iterations", 500)
-
-    if (parser.get("input-format", "text") == "text") {
-      dataParser = new CSVParser()
-    } else {
-      dataParser = new SVMParser(parser.getInteger("feature-size"))
-    }
-
-    (batchDuration, resultPath, initialDataPath, streamingDataPath, testDataPath, errorType, numIterations)
-
-  }
 
   /**
     * Initialize an Online SVM model by first using the data in the given directory to train a static model
@@ -227,9 +227,9 @@ abstract class SVMClassifier extends Serializable {
     * @param initialDataDirectories directory of initial data
     * @return Online SVM Model
     */
-  def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String, numIterations: Int = 500): OnlineSVM = {
+  def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String): OnlineSVM = {
     val model = trainModel(ssc.sparkContext, initialDataDirectories, numIterations)
-    new OnlineSVM().setInitialModel(model).setNumIterations(1).setStepSize(0.0001)
+    new OnlineSVM().setInitialModel(model).setNumIterations(1).setStepSize(onlineStepSize)
   }
 
   /**
@@ -252,7 +252,7 @@ abstract class SVMClassifier extends Serializable {
     * @return SVMModel
     */
   def trainModel(data: RDD[LabeledPoint], numIterations: Int): SVMModel = {
-    SVMWithSGD.train(data, numIterations)
+    SVMWithSGD.train(data, numIterations, offlineStepSize, 0.01)
   }
 
 

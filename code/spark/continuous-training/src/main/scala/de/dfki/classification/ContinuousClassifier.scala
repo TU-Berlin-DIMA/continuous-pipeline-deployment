@@ -4,7 +4,6 @@ import java.util.concurrent.{Executors, TimeUnit}
 
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.mllib.linalg.Vectors
-import org.apache.spark.streaming.Seconds
 
 /**
   * Novel training and testing model
@@ -34,35 +33,33 @@ object ContinuousClassifier extends SVMClassifier {
     run(args)
   }
 
-  def parseContinuousArgs(args: Array[String]): (Long, Long, String, String, String, String, String, Boolean, String, Int) = {
+  def parseContinuousArgs(args: Array[String]): (String, Long, String, String, String, String, Boolean) = {
     val parser = new CommandLineParser(args).parse()
-    val (batchDuration, resultPath, initialDataPath, streamingDataPath,
-    testDataPath, errorType, numIterations) = parseArgs(args)
+    val (resultRoot, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
     val slack = parser.getLong("slack", defaultTrainingSlack)
-    val tempDirectory = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
+    val tempRoot = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
     val incremental = parser.getBoolean("incremental", default = true)
-    (batchDuration, slack, resultPath, initialDataPath, streamingDataPath,
-      testDataPath, tempDirectory, incremental, errorType, numIterations)
+    (resultRoot, slack, initialDataPath, streamingDataPath, testDataPath, tempRoot, incremental)
   }
 
   override def run(args: Array[String]): Unit = {
-    val (batchDuration, slack, resultRoot, initialDataPath, streamingDataPath,
-    testDataPath, tempRoot, incremental, errorType, numIterations) = parseContinuousArgs(args)
+    val (resultRoot, slack, initialDataPath, streamingDataPath, testDataPath, tempRoot, incremental) = parseContinuousArgs(args)
     var testType = ""
     if (testDataPath == "prequential") {
       testType = s"prequential"
     } else {
       testType = "dataset"
     }
-    val parent = s"$getExperimentName/batch-$batchDuration/slack-$slack/incremental-${incremental.toString}" +
-      s"/error-$errorType-$testType/num-iterations-$numIterations"
+    val parent = s"$getExperimentName/num-iterations-$numIterations/" +
+      s"slack-$slack/offline-step-$offlineStepSize/online-step-$onlineStepSize"
+
     val resultPath = experimentResultPath(resultRoot, parent)
     val tempDirectory = experimentResultPath(tempRoot, parent)
     createTempFolders(tempDirectory)
-    val ssc = initializeSpark(Seconds(batchDuration))
+    val ssc = initializeSpark()
 
     // train initial model
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory, numIterations)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
@@ -71,9 +68,9 @@ object ContinuousClassifier extends SVMClassifier {
 
     // evaluate the stream and incrementally update the model
     if (testDataPath == "prequential") {
-      evaluateStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint), resultPath, errorType)
+      evaluateStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint), resultPath)
     } else {
-      evaluateStream(testData, resultPath, errorType)
+      evaluateStream(testData, resultPath)
     }
 
     if (incremental) {

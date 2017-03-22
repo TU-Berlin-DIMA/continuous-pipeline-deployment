@@ -34,36 +34,34 @@ object VeloxClassifier extends SVMClassifier {
     run(args)
   }
 
-  def parseVeloxArgs(args: Array[String]): (Long, Long, String, String, String, String, String,
-    Boolean, String, Int) = {
+  def parseVeloxArgs(args: Array[String]): (Long, String, String, String, String, String, Boolean) = {
     val parser = new CommandLineParser(args).parse()
-    val (batchDuration, resultPath, initialDataPath, streamingDataPath,
-    testDataPath, errorType, numIterations) = parseArgs(args)
+    val (resultPath, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
     val slack = parser.getLong("slack", defaultTrainingSlack)
     val tempDirectory = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
     val incremental = parser.getBoolean("incremental", default = true)
-    (batchDuration, slack, resultPath, initialDataPath, streamingDataPath,
-      testDataPath, tempDirectory, incremental, errorType, numIterations)
+    (slack, resultPath, initialDataPath, streamingDataPath,
+      testDataPath, tempDirectory, incremental)
   }
 
   override def run(args: Array[String]): Unit = {
-    val (batchDuration, slack, resultRoot, initialDataPath,
-    streamingDataPath, testDataPath, tempRoot, incremental, errorType, numIterations) = parseVeloxArgs(args)
+    val (slack, resultRoot, initialDataPath, streamingDataPath, testDataPath, tempRoot, incremental) = parseVeloxArgs(args)
     var testType = ""
     if (testDataPath == "prequential") {
       testType = "prequential"
     } else {
       testType = "dataset"
     }
-    val parent = s"$getExperimentName/batch-$batchDuration/slack-$slack/incremental-${incremental.toString}" +
-      s"/error-$errorType-$testType/num-iterations-$numIterations"
+    val parent = s"$getExperimentName/num-iterations-$numIterations/" +
+      s"slack-$slack/offline-step-$offlineStepSize/online-step-$onlineStepSize"
+
     val resultPath = experimentResultPath(resultRoot, parent)
     val tempDirectory = experimentResultPath(tempRoot, parent)
     createTempFolders(tempDirectory)
-    val ssc = initializeSpark(Seconds(batchDuration))
+    val ssc = initializeSpark()
 
     // train initial model
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory, numIterations)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
@@ -71,9 +69,9 @@ object VeloxClassifier extends SVMClassifier {
 
     // evaluate the stream and incrementally update the model
     if (testDataPath == "prequential") {
-      evaluateStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint), resultPath, errorType)
+      evaluateStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint), resultPath)
     } else {
-      evaluateStream(testData, resultPath, errorType)
+      evaluateStream(testData, resultPath)
     }
 
     if (incremental) {

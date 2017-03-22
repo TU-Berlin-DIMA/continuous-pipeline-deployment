@@ -175,13 +175,13 @@ ggplot(data = ml, aes(x = time, y = value, group = variable)) +
 
 
 #HIGGS
-continuous = read.csv('higgs-sample/continuous/batch-1/slack-10/incremental-true/error-cumulative-prequential/num-iterations-300/2017-03-21-14-14/error-rates.txt', header = FALSE, col.names = 'continuous')
+continuous = read.csv('higgs-sample/continuous/num-iterations-300/slack-4/offline-step-1.0/online-step-1.0/2017-03-22-14-05/error-rates.txt', header = FALSE, col.names = 'continuous')
 
-velox = read.csv('higgs-sample/velox/batch-1/slack-50/incremental-true/error-cumulative-prequential/num-iterations-300/2017-03-21-14-26/error-rates.txt', header = FALSE, col.names = 'velox')
+velox = read.csv('higgs-sample/velox/num-iterations-300/slack-50/offline-step-1.0/online-step-1.0/2017-03-21-21-01/error-rates.txt', header = FALSE, col.names = 'velox')
 
-baselinePlus = read.csv('higgs-sample/baseline-plus/batch-1/slack-none/incremental-true/error-cumulative-prequential/num-iterations-300/2017-03-21-14-19/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+baselinePlus = read.csv('higgs-sample/baseline-plus/num-iterations-300/slack-none/offline-step-1.0/online-step-1.0/2017-03-21-21-15/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 
-baseline = read.csv('higgs-sample/baseline/batch-1/slack-none/incremental-false/error-cumulative-prequential/num-iterations-300/2017-03-21-13-54/error-rates.txt', header = FALSE, col.names = 'baseline')
+baseline = read.csv('higgs-sample/baseline/num-iterations-300/slack-none/offline-step-1.0/online-step-1.0/2017-03-21-21-07/error-rates.txt', header = FALSE, col.names = 'baseline')
 
 m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
 continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))
@@ -198,5 +198,43 @@ df = data.frame(time = 1:nrow(continuous),
 ml = melt(df, id.vars = 'time' )
 ggplot(data = ml, aes(x = time, y = value, group = variable)) + 
   geom_line(aes( colour = variable)) + 
+  xlab("Time") + ylab("Mean Squared Error")
+
+
+#HIGGS-SAMPLE-GRIDSEARCH
+continuous02 = read.csv('higgs-sample/continuous/num-iterations-300/slack-2/offline-step-1.0/online-step-1.0/2017-03-22-13-55/error-rates.txt', header = FALSE, col.names = 'continuous02')
+continuous04 = read.csv('higgs-sample/continuous/num-iterations-300/slack-4/offline-step-1.0/online-step-1.0/2017-03-22-14-05/error-rates.txt', header = FALSE, col.names = 'continuous04')
+continuous05 = read.csv('higgs-sample/continuous/num-iterations-300/slack-5/offline-step-1.0/online-step-1.0/2017-03-22-14-12/error-rates.txt', header = FALSE, col.names = 'continuous05')
+continuous10 = read.csv('higgs-sample/continuous/num-iterations-300/slack-10/offline-step-1.0/online-step-1.0/2017-03-22-10-58/error-rates.txt', header = FALSE, col.names = 'continuous10')
+
+m = max(
+        nrow(continuous02), 
+      
+        nrow(continuous04), 
+       
+        nrow(continuous05), 
+        
+        nrow(continuous10))
+
+continuous02 = rbind(continuous02, data.frame(continuous02 = rep(NA, m - nrow(continuous02))))
+
+continuous04 = rbind(continuous04, data.frame(continuous04 = rep(NA, m - nrow(continuous04))))
+
+continuous06 = rbind(continuous05, data.frame(continuous05 = rep(NA, m - nrow(continuous05))))
+
+continuous10 = rbind(continuous10, data.frame(continuous10 = rep(NA, m - nrow(continuous10))))
+
+
+df = data.frame(time = 1:nrow(continuous02),
+                continuous02 = continuous02,
+                continuous04 = continuous04,
+                continuous05 = continuous05,
+                continuous10 = continuous10)
+
+ml = melt(df, id.vars = 'time' )
+ggplot(data = ml, aes(x = time, y = value, group = variable)) + 
+  geom_line(aes( colour = variable)) + 
   xlab("Time") + ylab("Mean Squared Error") 
+
+
 
