@@ -61,7 +61,10 @@ object VeloxClassifier extends SVMClassifier {
     val ssc = initializeSpark()
 
     // train initial model
+    val startTime = System.currentTimeMillis()
     streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory)
+    val endTime = System.currentTimeMillis()
+    storeTrainingTimes(endTime - startTime, resultPath)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 

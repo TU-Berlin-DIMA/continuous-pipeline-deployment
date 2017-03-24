@@ -16,8 +16,7 @@ class Preprocessor {
   }
 
   def scale(data: RDD[LabeledPoint]): RDD[LabeledPoint] = {
-    val scaler = new StandardScaler(withMean = true, withStd = true)
-      .fit(data.map(a => a.features))
+    val scaler = new StandardScaler(withMean = true, withStd = true).fit(data.map(a => a.features))
     data.map(d => new LabeledPoint(d.label, scaler.transform(d.features)))
   }
 

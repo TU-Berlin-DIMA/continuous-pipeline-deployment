@@ -169,8 +169,8 @@ bufferVsTimePlot = ggplot(data = df) +
   guides(colour=FALSE)
 
 ggsave(bufferVsTimePlot , filename = 'movie-lens-100k/buffer-size/movie-lens-100k-buffer-time-improved.eps', 
-       device = 'eps', dpi = 1000,
-       width = 16, height = 9, 
+       device = 'eps',
+       width = 10, height = 7, 
        units = "in")
 
 # Plot sampling rate vs time
@@ -196,10 +196,75 @@ bufferVsTimePlot = ggplot(data = df) +
   guides(colour=FALSE)
 
 ggsave(bufferVsTimePlot , filename = 'movie-lens-100k/sampling/movie-lens-100k-sampling-time-improved.eps', 
-       device = 'eps', dpi = 1000,
-       width = 16, height = 9, 
+       device = 'eps', 
+       width = 10, height = 7, 
        units = "in")
-       
+  
+## MOVIE LENS 100K times    
+continuous = 506
+velox = 854
+baseline = 187
+methods = c('Baseline', 'Continuous', 'Velox')
+df = data.frame(methods = methods, time = c(baseline, continuous, velox)/60)
+melted = melt(df, id.vars = 'methods', variable.names = "methods")
+
+movielens100kTimes = 
+  ggplot(melted, aes(x = methods, y = value, fill = methods)) +
+  geom_bar(stat='identity') + 
+  xlab("") + ylab("Time (m)") + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 30)) +
+  scale_fill_manual("", values = c("Baseline"="green", "Continuous"="blue", "Velox" = "red")) + 
+  theme_bw() + 
+  theme(legend.title = element_text(size = 28),
+        legend.text = element_text(size = 28), 
+        legend.key = element_rect(colour = "transparent", fill = "transparent"), 
+        legend.key.size  = unit(1.0, "cm"),
+        legend.background = element_rect(colour = "transparent", fill = "transparent"), 
+        axis.text.y=element_text(size=28),
+        axis.title.y=element_text(size=28),  
+        legend.position=c(0.25,0.88), 
+        axis.title.x = element_blank(), 
+        axis.text.x = element_blank(), 
+        plot.margin = unit(c(0.5, 0.0, 0.5, 0.2), "cm"))
+
+ggsave(movielens100kTimes , filename = 'movie-lens-100k/movie-lens-100k-times.eps', 
+       device = 'eps',
+       width = 7, height = 5, 
+       units = "in")
+
+## MOVIE LENS 100K times    
+
+continuous =4608
+velox = 9610
+baseline = 1825
+methods = c('Baseline', 'Continuous', 'Velox')
+df = data.frame(methods = methods, time = c(baseline, continuous, velox)/60)
+melted = melt(df, id.vars = 'methods', variable.names = "methods")
+
+
+movielens1MTimes = 
+  ggplot(melted, aes(x = methods, y = value, fill = methods)) +
+  geom_bar(stat='identity') + 
+  xlab("") + ylab("Time (m)") + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 250)) +
+  scale_fill_manual("", values = c("Baseline"="green", "Continuous"="blue", "Velox" = "red")) + 
+  theme_bw() + 
+  theme(legend.title = element_text(size = 28),
+        legend.text = element_text(size = 28), 
+        legend.key = element_rect(colour = "transparent", fill = "transparent"), 
+        legend.key.size  = unit(1.0, "cm"),
+        legend.background = element_rect(colour = "transparent", fill = "transparent"), 
+        axis.text.y=element_text(size=28),
+        axis.title.y=element_text(size=28),  
+        legend.position=c(0.25,0.88), 
+        axis.title.x = element_blank(), 
+        axis.text.x = element_blank(), 
+        plot.margin = unit(c(0.5, 0.0, 0.5, 0.2), "cm"))
+
+ggsave(movielens1MTimes , filename = 'movie-lens-1M/movie-lens-1M-times.eps', 
+       device = 'eps',
+       width = 7, height = 5, 
+       units = "in")
 
 # Plot running time of different work loads
 time_100k = c( 506.1425, 854.3796, 187.6295)
@@ -245,21 +310,21 @@ bufferSizePlot =
   ggplot(data = ml, aes(x = ind, y = value, group = variable), size = 1.5) + 
   geom_line(aes( colour = variable), size = 1.5) + 
   xlab("Testing Increments") + ylab("Mean Squared Error")  + 
-  scale_color_discrete("Buffer Size", labels = c("5000", "2500", "500")) + 
+  scale_color_manual("Buffer Size", labels = c("5000", "2500", "500") , values = c("b5000"="green", "b2500"="red", "b500"="blue")) + 
   theme_bw() + 
   theme(legend.title = element_text(size = 30),
         legend.text = element_text(size = 30), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.key.size  = unit(1.0, "cm"),
-        legend.background = element_rect(colour = "black", fill = "transparent"), 
+        legend.background = element_rect(colour = "transparent", fill = "transparent"), 
         axis.text=element_text(size=30),
         axis.title=element_text(size=32),  
         legend.position=c(0.85,0.2)) 
 
 
 ggsave(bufferSizePlot , filename = 'movie-lens-100k/buffer-size/movie-lens-buffer-quality-improved.eps', 
-       device = cairo_ps, dpi = 1000, 
-       width = 16, height = 9, 
+       device = cairo_ps, 
+       width = 14, height = 5, 
        units = "in")
 
 
@@ -273,13 +338,13 @@ samplingRatePlot =
   ggplot(data = ml, aes(x = ind, y = value, group = variable), size = 1.5) + 
   geom_line(aes( colour = variable), size = 1.5) + 
   xlab("Testing Increments") + ylab("Mean Squared Error")  + 
-  scale_color_discrete("Sampling Rate", labels = c("0.1", "0.5", "1.0")) + 
+  scale_color_manual("Sampling Rate", labels = c("0.1", "0.5", "1.0") , values = c("s0.1"="green", "s0.5"="red", "s1.0"="blue")) + 
   theme_bw() + 
   theme(legend.title = element_text(size = 30),
         legend.text = element_text(size = 30), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.key.size  = unit(1.0, "cm"),
-        legend.background = element_rect(colour = "black", fill = "transparent"), 
+        legend.background = element_rect(colour = "transparent", fill = "transparent"), 
         axis.text=element_text(size=30),
         axis.title=element_text(size=32),  
         legend.position=c(0.85,0.2)) 
@@ -287,8 +352,8 @@ samplingRatePlot =
 
 
 ggsave(samplingRatePlot , filename = 'movie-lens-100k/sampling/movie-lens-sampling-quality-improved.eps', 
-       device = cairo_ps, dpi = 1000, 
-       width = 16, height = 9, 
+       device = cairo_ps, 
+       width = 14, height = 5, 
        units = "in")
 
 

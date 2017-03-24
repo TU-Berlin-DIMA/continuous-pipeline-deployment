@@ -17,6 +17,7 @@ import org.apache.log4j.Logger
 import org.apache.spark.mllib.classification.{SVMModel, SVMWithSGD}
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming._
 import org.apache.spark.streaming.dstream.{ConstantInputDStream, DStream}
 import org.apache.spark.{SparkConf, SparkContext}
@@ -69,6 +70,7 @@ abstract class SVMClassifier extends Serializable {
   var batchDuration: Long = _
   var offlineStepSize: Double = _
   var onlineStepSize: Double = _
+  var defaultParallelism: Int = _
 
 
   def parseArgs(args: Array[String]): (String, String, String, String) = {
@@ -113,6 +115,7 @@ abstract class SVMClassifier extends Serializable {
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
     val ssc = new StreamingContext(conf, Seconds(batchDuration))
+    defaultParallelism = ssc.sparkContext.defaultParallelism
     ssc.checkpoint("checkpoints/")
     ssc
   }
@@ -235,22 +238,26 @@ abstract class SVMClassifier extends Serializable {
   /**
     * Train a SVM Model from the data in the specified directories separated by comma
     *
-    * @param sc            SparkContext object
-    * @param trainingPath  list of directories separated by comma
+    * @param sc           SparkContext object
+    * @param trainingPath list of directories separated by comma
     * @return SVMModel
     */
   def trainModel(sc: SparkContext, trainingPath: String): SVMModel = {
-    trainModel(sc.textFile(trainingPath).map(dataParser.parsePoint).cache())
+    trainModel(sc.textFile(trainingPath).map(dataParser.parsePoint))
   }
 
   /**
     * Train a SVM Model from the RDD
     *
-    * @param data          rdd
+    * @param data rdd
     * @return SVMModel
     */
   def trainModel(data: RDD[LabeledPoint]): SVMModel = {
-    SVMWithSGD.train(data, numIterations, offlineStepSize, 0.01)
+    data.cache()
+    data.count()
+    val model = SVMWithSGD.train(data, numIterations, offlineStepSize, 0.01)
+    data.unpersist(false)
+    model
   }
 
 

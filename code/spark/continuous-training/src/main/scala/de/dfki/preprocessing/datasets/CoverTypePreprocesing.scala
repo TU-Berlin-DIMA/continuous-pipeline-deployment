@@ -28,9 +28,9 @@ object CoverTypePreprocesing {
 
     val preprocessor = new Preprocessor()
     val scaledData = preprocessor.scale(trainData.map(a => new LabeledPoint(a.label, new DenseVector(a.features.toArray))))
-    val splits = preprocessor.split(scaledData, Array(0.2, 0.8))
+    val splits = preprocessor.split(scaledData, Array(0.1, 0.9))
     preprocessor.convertToCSV(splits._1).saveAsTextFile(s"$output/initial-training/")
-    preprocessor.convertToCSV(splits._2).saveAsTextFile(s"$output/stream-training/")
+    preprocessor.convertToCSV(splits._2).repartition(100).saveAsTextFile(s"$output/stream-training/")
 
   }
 

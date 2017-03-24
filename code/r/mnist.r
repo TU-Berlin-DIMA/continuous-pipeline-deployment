@@ -41,12 +41,13 @@ loadQuality <- function(file){
               ten = as.numeric(ten[[1]]))) 
 }
 
-# Plot Movie lens 100 K data
+# Plot MNIST 
+
+FIX THIS
 continuous = loadData('mnist/nn/500/continuous-error.txt')
 velox = loadData('mnist/nn/500/velox-error.txt')
 baselinePlus = loadData('mnist/nn/500/offline-online.txt')
 baseline= loadData('mnist/nn/500/offline-only.txt')
-
 
 df = data.frame(time = 1:length(continuous),
                 continuous = continuous, 

@@ -50,9 +50,10 @@
 \usepackage{graphicx}% http://ctan.org/pkg/graphicx
 \usepackage{float}
 \usepackage{todonotes}
-\usepackage{color}
 \usepackage[outdir=./figures/]{epstopdf}
 \usepackage{listings}
+\PassOptionsToPackage{table}{colorx}
+\usepackage{booktabs}
 \usepackage{subcaption}
 \usepackage[blocks]{authblk}
 \begin{document}
@@ -152,7 +153,6 @@ Furthermore, models adopt faster to changes in data distribution using our deplo
 \keywords{Machine Learning Model Management; Stochastic Gradient Descent; Machine Learning Systems}
 
 \section{Introduction} \label{introduction}
-%\todo[inline]{CRITEO Dataset experiments}
 %\todo[inline]{Add BBDC and streamline funding id}
 % Problem
 Deploying and maintaining models is a crucial step in the lifecycle of a machine learning (ML) application. 
@@ -485,9 +485,49 @@ Both Flink and Spark provide out-of-the-box support for HDFS.
 In this section, we evaluate the performance of our system using various datasets. 
 We report both the quality (error rate) and performance of our proposed method. 
 
-\subsection{Experimental setup}
-We run our experiments on a single node with a quad-core Intel i7 and 16 GB of RAM. 
+\subsection{Setup}
+\textbf{Environments:} We evaluated our deployment method on two environments; local and distributed.
+We use a single node OS X machine with  a quad-core Intel i7 and 16 GB of RAM for our local experiments.
+The distributed environment consists of 11 nodes (1 master, 10 slaves).
+Each node is running on a Intel Xeon 2.40 GHz 16 core processor and has 28 GB for dedicated memory for running our prototype.
+
+\textbf{Prototypes:} we implemented two versions of our deployment method.
+Version 1 is implemented using python and uses some of the libraries available in scikit-learn \cite{sklearn_api}.
+This version is designed to work on a local environment.
+It gives a greater control over tuning the parameters of the system, since we are able to perform incremental updates one item at a time (as opposed to Spark's micro-batching).
+Version 2 is implemented on top of Apache Spark \cite{zaharia2010spark}.
+It is using the SGD class of Spark's machine learning library, to execute the initial and incremental training.
+This version works in both local and cluster environment.
+\todo[inline]{Complete this section}
 To evaluate our proposed method, we are using 2 different datasets.
+
+\begin{table}\centering
+\begin{tabular}{lrrr}
+ \toprule
+Name & \#Users & \#Items & \#Ratings
+\\\midrule 
+Movie Lens 1M \cite{harper2016movielens} & 6000 & 4000 & 1000000 \\
+Movie Lens 100k \cite{harper2016movielens} & 1000 & 1700 & 100000 
+\\\bottomrule 
+\end{tabular}
+\caption{Recommender System Datasets}
+\end{table}
+
+\begin{table}\centering
+\begin{tabular}{lrr}
+ \toprule
+Name & \#Features  & \#Instances 
+\\\midrule 
+Higgs \cite{baldi2014searching} & 28 & 11000000 \\
+SUSY  \cite{baldi2014searching} & 18 & 5000000 \\ 
+URL Reputation \cite{ma2009identifying} & 3231961 & 2396130 \\
+Cover Type \cite{collobert2002parallel} & 52 & 581012 \\
+MNIST \cite{lecun-mnist} & 784 & 60000 
+\\\bottomrule 
+\end{tabular}
+\caption{Classification Datasets}
+\end{table}
+
 
 \textbf{MovieLens \cite{harper2016movielens}}: to analyze the performance of our method on time varying datasets, we use the MovieLens 100K and 1M datasets. 
 They consists of movie ratings by users during different time periods. 
@@ -568,11 +608,20 @@ Ultimately, the decision to schedule new iterations is made by the system based 
 Executing one iteration of SGD even using the entire data is not a resource heavy process, and can easily be done in parallel with the serving component of the system. 
 This results in a paradigm where both training and serving can happen simultaneously. 
 
-\begin{figure}[H]
+\begin{figure}[h]
+\begin{subfigure}{\columnwidth}
 \centering
 \includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-buffer-quality-improved.eps}
-\caption{Movie Lens 100k buffer size vs mean squared error}
+\caption{Buffer size}
 \label{fig:movie-lens-100k-buffer-size-mse}
+\end{subfigure}
+\begin{subfigure}{\columnwidth}
+\centering
+\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-sampling-quality-improved.eps}
+\caption{Sampling rate}
+\label{fig:movie-lens-100k-sample-rate}
+\end{subfigure}
+\caption{Parameters effect on quality (Movie Lens 100K)}
 \end{figure}
 
 Figure \ref{fig:movie-lens-100k-buffer-size-mse} shows the mean squared error for different buffer sizes for \textit{movie-lens-100k} dataset. 
@@ -587,10 +636,17 @@ Increasing the buffer size from 500 to 5000 decreases the running time by a fact
 Therefore, depending on the application, we can set the buffer size to bigger values in order to increase the performance of the system without affecting the quality of the final model substantially.
 
 \begin{figure}[H]
-\centering
+\begin{subfigure}{0.5\columnwidth}
 \includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-buffer-time-improved.eps}
-\caption{Movie Lens 100k buffer size vs time}
+\caption{}
 \label{fig:movie-lens-100k-buffer-size-time}
+\end{subfigure}%
+\begin{subfigure}{0.5\columnwidth}
+\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-sampling-time-improved.eps}
+\caption{}
+\label{fig:movie-lens-100k-sample-rate-time}
+\end{subfigure}
+\caption{Parameters effects on run time}
 \end{figure}
 
 \textit{Dynamic scheduling:} In production environments, the load on the system varies throughout the day. 
@@ -602,24 +658,9 @@ In this section, we investigate the effect of the sampling rate on the model qua
 Figure \ref{fig:movie-lens-100k-sample-rate} shows that larger sampling rate increases the quality of the model, but similar to scheduling rate, the decrease in error rate is negligible considering the effect it has on running time. 
 This is again, caused by the same phenomena, where the model after training on bigger sample rates start to converge faster and as a result bigger sample sizes will not have an effect on the quality.
  
-\begin{figure}[!ht]
-\centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-sampling-quality-improved.eps}
-\caption{Movie Lens 100k sample rate vs mean squared error}
-\label{fig:movie-lens-100k-sample-rate}
-\end{figure}
-
 Figure \ref{fig:movie-lens-100k-sample-rate-time} shows the effect of increasing sampling rate on running time.
 Using the entire historical data (sampling rate = 1.0) increases the running time 5 fold. 
 Therefore, similar to scheduling rate, setting the sampling rate to smaller values will increase the performance substantially, while only slightly affecting the quality of the model.
-
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-sampling-time-improved.eps}
-\caption{Movie Lens 100k sampling rate vs time}
-\label{fig:movie-lens-100k-sample-rate-time}
-\end{figure}
 
 \textbf{Tuning parameters based on error rate:} As described earlier, tuning the parameters are heavily influenced by application type.
 Both the underlying machine learning model and the dataset can have a big effect on the selection of sampling rate and scheduling rate.
@@ -634,11 +675,20 @@ Increasing sampling rate, causes similar data items to be used repeatedly in eac
 Moreover, in this experiment, the number of parameters of multi-layer perceptron is far less than the number of parameters of the matrix factorization model for \textit{movie-lens-100k}.
 This causes the neural work to converge faster and, therefore, it is not affected by more training, unless new training observations arrive at the system.
 
-\begin{figure}[!ht]
+\begin{figure}[h]
+\begin{subfigure}{\columnwidth}
 \centering
 \includegraphics[width=\columnwidth]{../images/experiment-results/mnist-sampling-improved.eps}
-\caption{MNIST sample rate vs error rate}
+\caption{Buffer size}
+\label{fig:mnist-buffer-size}
+\end{subfigure}
+\begin{subfigure}{\columnwidth}
+\centering
+\includegraphics[width=\columnwidth]{../images/experiment-results/mnist-buffersize-improved.eps}
+\caption{Sampling rate}
 \label{fig:mnist-sample-rate}
+\end{subfigure}
+\caption{Parameters effect on quality (MNIST)}
 \end{figure}
 
 Figure \ref{fig:mnist-buffer-size} shows how buffer size affects the overall quality of the neural network model.
@@ -652,14 +702,6 @@ In both the \textit{movie-lens-100k} and \textit{MNIST} use cases the change in 
 However, the running time of the methods are heavily influenced by these parameters.
 Setting these parameters to small values decreases the running time considerably and save computation resources regardless of the type of model the system is serving.
 
-
-\begin{figure}[!ht]
-\centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/mnist-buffersize-improved.eps}
-\caption{MNIST buffer size vs error rate}
-\label{fig:mnist-buffer-size}
-\end{figure}
-
 \subsection{Comparison Under Constrained Resources }
 Both, the velox and the continuous model use different strategies to update the model.
 To perform a fair comparison of the two, we are evaluating them under similar resource constraints.
@@ -669,6 +711,7 @@ For Velox, this value is equal to the number of retraining multiplied by number 
 For the continuous model, it is total number of scheduled iterations throughout the lifetime of the system.
 Therefore, the continuous method schedules a new iteration every 500 items for \textit{movie-lens-100k} and 5,000 items for \textit{movie-lens-1M} and Velox method schedules a retraining every 15,000 items for \textit{movie-lens-100k} and 150,000 items for \textit{movie-lens-1M}.
 
+\todo[inline]{make it into two rows instead of two columns}
 \begin{figure}[h]
 \begin{subfigure}{.5\columnwidth}
 	\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-quality-improved.eps}
@@ -698,8 +741,6 @@ The reason for the fast decrease in error rate is that immediately after the dep
 It consistently manages to adopt to the changes in data and decrease the error rate where the distribution of the incoming data is stable.
 As expected, except for immediately after a full retraining, the Continuous method always performs better than Velox.
 
-
-
 Figure \ref{fig:movie-lens-1M-score} shows the mean squared error rate achieved by the implemented methods on \textit{movie-lens-1M}.
 Similar to \textit{movie-lens-100k}, the Continuous method has the lowest error rate among all the implemented methods.
 The difference in error rate between Continuous and Velox is even greater than the error rate for \textit{movie-lens-100k}.
@@ -709,31 +750,76 @@ After every retraining, the error rate first drops then slowly increases until t
 Similar to \textit{movie-lens-100k} dataset, the error rate of Baseline is highest among all the implemented methods, followed by Baseline+ , where due to the incremental updates of the model the error rate is lower.
 
 \begin{figure}[h]
- \centering
- \includegraphics[width=\columnwidth]{../images/experiment-results/mnist-quality.eps}
- \caption{Error rate on MNIST}
- \label{fig:mnist-quality}
- \end{figure}
- 
-Figure \ref{fig:mnist-quality} shows the error rate (misclassification rate) of the implemented methods on \textit{MNIST} dataset.
-For this workload, the implemented methods behave quite differently from previous experiments and that is due to dataset characteristics and the underling model properties.
-The gap in error rate between Baseline+ and Baseline methods is much smaller than that of movie lens datasets.
-Unlike the movie lens datasets, \textit{MNIST} does not contain a shift in distribution and that is why both the Baseline+ and Baseline methods' performance is rather similar.
-The Baseline+ method performs slightly better because of the extra training items that the underlying neural network is exposed to.
-Velox and Continuous methods behave similarly as well and unlike \textit{movie-lens} datasets, Velox has a consistent error rate, that is the error rate does not decrease after a retraining of the model.
-Similar to Baseline+'s case, since there is no change in the distribution of the data, the error rate does not decrease after a retraining.
-The Continuous method manages to decrease the error rate as more training iterations are performed.
-The more training iterations are executed, the faster the underlying neural network's parameters converge and as a result the error rate on the test set decreases.
-Both Continuous and Velox start to perform better than the Baseline and Baseline+ after a few training iterations (retraining in Velox's case).
-This is, as explained earlier because of neural network's ability to perform better when more training data are available to it.
+	\centering
+\begin{subfigure}[b]{\columnwidth}
+	\includegraphics[width=1\linewidth]{../images/experiment-results/cover-types-quality.eps}
+	\caption{Cover Types}
+	\label{fig:cover-types-quality}
+\end{subfigure}
+\begin{subfigure}[b]{\columnwidth}
+  	\includegraphics[width=1\linewidth]{../images/experiment-results/higgs-sample-quality.eps}
+	\caption{Higgs Sample}
+	\label{fig:higgs-sample-quality}
+\end{subfigure}
+\begin{subfigure}[b]{\columnwidth}
+  	\includegraphics[width=\columnwidth,height=0.4\columnwidth]{../images/experiment-results/susy-sample-quality.eps}
+	\caption{SUSY Sample}
+	\label{fig:susy-sample-quality}
+\end{subfigure}
+\caption{Classification Datasets }
+\label{fig:local-classification-results}
+\end{figure}
+
+Figure \ref{fig:local-classification-results} shows the misclassification rate over time of the deployment methods on several classification datasets.
+Contrary to the recommender system use case, the data used in these experiments is not time dependent and as a result the deployment methods behave differently.
+For Cover type (figure \ref{fig:cover-types-quality}), Continuous achieves the lowest error rate overall, although the difference with baseline+ is very small.
+Baseline method has the highest error rate overall because it is not performing incremental updates on the model.
+Interestingly, velox starts to perform worst after each retraining.
+This increase in error rate is the result of overfitting the model to the existing data. 
+Higgs sample (figure \ref{fig:higgs-sample-quality}) error rate follows the same pattern as cover type.
+Continuous deployment achieves the lowest error rate followed by baseline+.
+After each retraining Velox's error rate slightly increases due to overfitting.
 
 \begin{figure}[h]
-\centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/times-log-scale-improved.eps}
- \caption{Running time on different Workloads}
- \label{fig:running-time}
- \end{figure}
-Figure \ref{fig:running-time} shows the total training time of the implemented methods on \textit{movie-lens-100k}, \textit{movie-lens-1M} and \textit{MNIST}.
+	\centering
+\begin{subfigure}[b]{0.5\columnwidth}
+	\includegraphics[width=1\linewidth]{../images/experiment-results/cover-types-times.eps}
+	\caption{Cover Types}
+	\label{fig:cover-types-times}
+\end{subfigure}%
+\begin{subfigure}[b]{0.5\columnwidth}
+  	\includegraphics[width=1\linewidth]{../images/experiment-results/higgs-sample-times.eps}
+	\caption{Higgs Sample}
+	\label{fig:higgs-sample-times}
+\end{subfigure}
+\begin{subfigure}[b]{\columnwidth}
+	\centering
+  	\includegraphics[width=0.5\columnwidth]{../images/experiment-results/susy-sample-times.eps}
+	\caption{SUSY Sample}
+	\label{fig:susy-sample-times}
+\end{subfigure}
+ \caption{Total training time for classification datasets}
+ \label{fig:classification-running-time}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+\begin{subfigure}[b]{0.5\columnwidth}
+	\includegraphics[width=1\linewidth]{../images/experiment-results/movie-lens-100k-times.eps}
+	\caption{Movie Lens 100k}
+	\label{fig:movie-lens-100k-times}
+\end{subfigure}%
+\begin{subfigure}[b]{0.5\columnwidth}
+  	\includegraphics[width=1\linewidth]{../images/experiment-results/higgs-sample-times.eps}
+	\caption{Movie Lens 1M}
+	\label{fig:movie-lens-1M}
+\end{subfigure}
+\caption{Total training time for Recommender Systems}
+ \label{fig:movielens-running-time}
+\end{figure}
+
+Figure \ref{fig:classification-running-time} shows the total training time of deployment methods on local classification datasets.
+Figure \ref{fig:movielens-running-time} shows the total training time of deployment methods on local classification datasets.
 To measure this value, we calculated the total time that each method spent in training the model.
 We excluded the incremental training as the time is negligible.
 Static training method's running time is only affected by data size.
@@ -743,15 +829,74 @@ Although we have configured both methods to use similar amount of resources (sam
 This is because a full retraining incurs a much higher overhead than continuously training the method.
 Another reason for the difference in training time is that as the size of the data increases the time for running a new iteration in continuous method stays roughly the same where as the time for a full retraining increases exponentially.
 \subsection{Distributed Environment}
+We evaluated our deployment system on larger workloads in a cluster environment.
+\begin{figure}[h]
+	\centering
+\begin{subfigure}[b]{\columnwidth}
+	\includegraphics[width=\columnwidth,height=0.4\columnwidth]{../images/experiment-results/placeholder.jpg}
+	\caption{URL Dataset}
+	\label{fig:cover-types-quality}
+\end{subfigure}
+\begin{subfigure}[b]{\columnwidth}
+  	\includegraphics[width=\columnwidth,height=0.4\columnwidth]{../images/experiment-results/placeholder.jpg}
+	\caption{Higgs}
+	\label{fig:higgs-sample-quality}
+\end{subfigure}
+\begin{subfigure}[b]{\columnwidth}
+  	\includegraphics[width=\columnwidth,height=0.4\columnwidth]{../images/experiment-results/placeholder.jpg}
+	\caption{SUSY}
+	\label{fig:susy-sample-quality}
+\end{subfigure}
+\caption{Large Classification Datasets}
+\label{fig:cluster-classification-results}
+\end{figure}
+
+
 \subsection{Discussion}
 \begin{figure*}[h]
-\begin{subfigure}{.5\textwidth}
-  \includegraphics[width=\linewidth]{../images/experiment-results/movie-lens-100k-systems.eps}
+\begin{subfigure}{0.33\textwidth}
+  \centering
+  \includegraphics[width=0.7\linewidth]{../images/experiment-results/placeholder.jpg}
+  \caption{URL}
+  \label{fig:sfig2}
+\end{subfigure}%
+\begin{subfigure}{0.33\textwidth}
+ \centering
+  \includegraphics[width=0.7\linewidth]{../images/experiment-results/placeholder.jpg}
+  \caption{Higgs}
+\end{subfigure}%
+\begin{subfigure}{0.33\textwidth}
+ \centering
+  \includegraphics[width=0.7\linewidth]{../images/experiment-results/placeholder.jpg}
+  \caption{Susy}
+\end{subfigure}
+
+\begin{subfigure}{0.33\textwidth}
+  \centering
+  \includegraphics[width=0.7\linewidth]{../images/experiment-results/placeholder.jpg}
+  \caption{Cover Type}
+  \label{fig:sfig2}
+\end{subfigure}%
+\begin{subfigure}{0.33\textwidth}
+ \centering
+  \includegraphics[width=0.7\linewidth]{../images/experiment-results/placeholder.jpg}
+  \caption{Higgs Sample}
+\end{subfigure}%
+\begin{subfigure}{0.33\textwidth}
+ \centering
+  \includegraphics[width=0.7\linewidth]{../images/experiment-results/placeholder.jpg}
+  \caption{Susy Sample}
+\end{subfigure}
+\centering
+\begin{subfigure}{.30\textwidth}
+ 
+  \includegraphics[width=0.7\linewidth, height=0.7\linewidth, keepaspectratio]{../images/experiment-results/movie-lens-100k-systems.eps}
   \caption{Movie Lens 100K}
   \label{fig:sfig2}
 \end{subfigure}%
-\begin{subfigure}{0.5\textwidth}
-  \includegraphics[width=\linewidth]{../images/experiment-results/movie-lens-1m-systems.eps}
+\begin{subfigure}{0.30\textwidth}
+
+  \includegraphics[width=0.7\linewidth, height=0.7\linewidth, keepaspectratio]{../images/experiment-results/movie-lens-1m-systems.eps}
   \caption{Movie Lens 1M}
   \label{fig:sfig1}
 \end{subfigure}
@@ -842,5 +987,5 @@ In future work, we will explore other optimization strategies such as batching o
 %ACKNOWLEDGMENTS are optional
 %\section{Acknowledgments}
 \bibliographystyle{plain}
-\bibliography{main}
+{\footnotesize\bibliography{main}}
 \end{document}

@@ -15,7 +15,7 @@ import scala.io.Source
   *
   */
 
-class DataSplitter(sc: SparkContext = null, ratio: List[Double] = List(0.1, 0.8)) {
+class SeaPreprocessing(sc: SparkContext = null, ratio: List[Double] = List(0.1, 0.9)) {
 
 
   def fromFile(path: String): (RDD[LabeledPoint], RDD[LabeledPoint]) = {
@@ -32,7 +32,6 @@ class DataSplitter(sc: SparkContext = null, ratio: List[Double] = List(0.1, 0.8)
     val lines = Source.fromFile(path).getLines().toList
     val initialCutOff = 6000
     val (initial, streaming) = lines.splitAt(initialCutOff)
-    print(initial.size)
     val f = new File(s"${ContinuousClassifier.BASE_DATA_DIRECTORY}/${ContinuousClassifier.INITIAL_TRAINING}/init")
     f.getParentFile.mkdirs()
     val writer = new PrintWriter(f)
@@ -55,9 +54,9 @@ class DataSplitter(sc: SparkContext = null, ratio: List[Double] = List(0.1, 0.8)
 
 }
 
-object DataSplitter {
+object SeaPreprocessing {
   def main(args: Array[String]): Unit = {
-    val d = new DataSplitter()
+    val d = new SeaPreprocessing()
     d.sequentialSplitter("data/sea/raw/sea.data")
 
   }

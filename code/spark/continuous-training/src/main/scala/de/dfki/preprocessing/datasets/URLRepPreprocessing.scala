@@ -15,7 +15,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 object URLRepPreprocessing {
   val INPUT_PATH = "data/url-reputation/raw"
   val OUTPUT_PATH = "data/url-reputation-sample"
-  val FILE_COUNT = 2
+  val FILE_COUNT = 1
   val SAMPLING_RATE = 0.05
 
   def main(args: Array[String]): Unit = {
@@ -30,10 +30,15 @@ object URLRepPreprocessing {
     val outputPath = parser.get("output-path", OUTPUT_PATH)
     val fileCount = parser.getInteger("file-count", FILE_COUNT)
     val samplingRate = parser.getDouble("sampling-rate", SAMPLING_RATE)
-    val data = MLUtils.loadLibSVMFile(sc, s"$inputPath/Day0.svm")
-      .sample(withReplacement = false, fraction = samplingRate, seed = 42)
-      .map(l => new LabeledPoint(if (l.label == -1.0) 0 else 1.0, l.features))
-    preprocessor.convertToSVM(data).saveAsTextFile(s"$outputPath/initial-training/")
+
+    val data = if (samplingRate < 1.0)
+      MLUtils.loadLibSVMFile(sc, s"$inputPath/Day0.svm").sample(withReplacement = false, fraction = samplingRate, seed = 42)
+    else
+      MLUtils.loadLibSVMFile(sc, s"$inputPath/Day0.svm")
+
+
+    data.map(l => new LabeledPoint(if (l.label == -1.0) 0 else 1.0, l.features))
+    preprocessor.convertToSVM(data).repartition(sc.defaultParallelism).saveAsTextFile(s"$outputPath/initial-training/")
 
 
     for (i <- 1 until 120) {
@@ -41,9 +46,14 @@ object URLRepPreprocessing {
         .map(l => new LabeledPoint(if (l.label == -1.0) 0 else 1.0, l.features))
       val hadoopConf = new Configuration()
       hadoopConf.set("mapreduce.output.basename", s"day${"%05d".format(i)}")
-      preprocessor.convertToSVM(data).repartition(fileCount)
-        .sample(withReplacement = false, fraction = samplingRate, seed = 42)
-        .map(str => (null, str)).saveAsNewAPIHadoopFile(s"$outputPath/stream-training/", classOf[NullWritable], classOf[String],
+      val processed =
+        if (samplingRate < 1.0)
+          preprocessor.convertToSVM(data).repartition(fileCount)
+            .sample(withReplacement = false, fraction = samplingRate, seed = 42)
+        else
+          preprocessor.convertToSVM(data).repartition(fileCount)
+
+      processed.map(str => (null, str)).saveAsNewAPIHadoopFile(s"$outputPath/stream-training/", classOf[NullWritable], classOf[String],
         classOf[TextOutputFormat[NullWritable, String]], hadoopConf)
     }
   }
