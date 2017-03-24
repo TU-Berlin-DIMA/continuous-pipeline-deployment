@@ -43,13 +43,19 @@ loadQuality <- function(file){
 
 # Plot MNIST 
 
-FIX THIS
-continuous = loadData('mnist/nn/500/continuous-error.txt')
-velox = loadData('mnist/nn/500/velox-error.txt')
-baselinePlus = loadData('mnist/nn/500/offline-online.txt')
-baseline= loadData('mnist/nn/500/offline-only.txt')
 
-df = data.frame(time = 1:length(continuous),
+continuous = read.csv(file = 'mnist/nn/500/continuous-error.txt', header = FALSE, col.names = 'continuous')
+velox =  read.csv('mnist/nn/500/velox-error.txt',  header = FALSE, col.names = 'velox')
+baselinePlus =  read.csv('mnist/nn/500/offline-online.txt',  header = FALSE, col.names = 'baselinePlus')
+baseline=  read.csv('mnist/nn/500/offline-only.txt',  header = FALSE, col.names = 'baseline')
+
+m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
+continuous = rbind(continuous, data.frame(continuous = rep(tail(continuous[[1]], 1), m - nrow(continuous))))
+velox = rbind(velox, data.frame(velox = rep(tail(velox[[1]], 1), m - nrow(velox))))
+baseline = rbind(baseline, data.frame(baseline = rep(tail(baseline[[1]], 1), m - nrow(baseline))))
+baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(tail(baselinePlus[[1]], 1), m - nrow(baselinePlus))))
+
+df = data.frame(time = 1:nrow(continuous),
                 continuous = continuous, 
                 velox = velox,
                 baseline = baseline,
@@ -98,24 +104,23 @@ df = data.frame(ind = 1:501, b5000 = data$ten , b2500 = data$five,  b500 = data$
 ml = melt(df, id.vars = 'ind')
 samplingRatePlot = 
   ggplot(data = ml, aes(x = ind, y = value, group = variable)) + 
-  geom_line(aes( colour = variable)) + 
+  geom_line(aes( colour = variable), size = 1.5) + 
   xlab("Testing Increments") + ylab("Error Rate")  + 
-  scale_color_discrete("Buffer Size", labels = c("5000", "2500", "500")) + 
+  scale_color_manual("Buffer Size", labels = c("5000", "2500", "500") , values = c("b5000"="darkgreen", "b2500"="darkred", "b500"="darkblue")) + 
   theme_bw() + 
   theme(legend.title = element_text(size = 30),
         legend.text = element_text(size = 30), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.key.size  = unit(1.0, "cm"),
-        legend.background = element_rect(colour = "black", fill = "transparent"), 
+        legend.background = element_rect(colour = "transparent", fill = "transparent"), 
         axis.text=element_text(size=30),
         axis.title=element_text(size=32),  
         legend.position=c(0.85,0.7))
 
-de01
 
 ggsave(samplingRatePlot , filename = 'mnist/nn/buffer-size/mnist-buffersize-improved.eps', 
-       device = cairo_ps, dpi = 1000, 
-       width = 16, height = 9, 
+       device = cairo_ps, 
+       width = 14, height = 5, 
        units = "in")
 
 
@@ -127,21 +132,21 @@ df = data.frame(ind = 1:501 ,  s0.1 = data$one, s0.5 = data$five, s1.0 = data$te
 ml = melt(df, id.vars = 'ind')
 samplingRatePlot = 
   ggplot(data = ml, aes(x = ind, y = value, group = variable)) + 
-  geom_line(aes( colour = variable)) + 
+  geom_line(aes( colour = variable), size = 1.5) + 
   xlab("Testing Increments") + ylab("Error Rate")  + 
-  scale_color_discrete("Sampling Rate", labels = c("0.1", "0.5", "1.0")) + 
+  scale_color_manual("Sampling Rate", labels = c("0.1", "0.5", "1.0") , values = c("s0.1"="darkgreen", "s0.5"="darkred", "s1.0"="darkblue")) + 
   theme_bw() + 
   theme(legend.title = element_text(size = 30),
         legend.text = element_text(size = 30), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.key.size  = unit(1.0, "cm"),
-        legend.background = element_rect(colour = "black", fill = "transparent"), 
+        legend.background = element_rect(colour = "transparent", fill = "transparent"), 
         axis.text=element_text(size=30),
         axis.title=element_text(size=32),  
         legend.position=c(0.85,0.7))
 
 
 ggsave(samplingRatePlot , filename = 'mnist/nn/sampling/mnist-sampling-improved.eps', 
-       device = cairo_ps, dpi = 1000, 
-       width = 16, height = 9, 
+       device = cairo_ps,
+       width = 14, height = 5, 
        units = "in")

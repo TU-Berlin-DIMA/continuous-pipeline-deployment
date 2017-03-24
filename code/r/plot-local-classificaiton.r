@@ -62,7 +62,7 @@ p = ggplot(data = df) +
         legend.position=c(0.85,0.67)) + 
   scale_color_manual(name ="",  # Name,
                      labels = c("baseline", "baseline+", "continuous", "velox", "retraining"), 
-                     values = c("a" = "green", "b" = "orange", "c" = "blue","d" = "red", "e" = "black"))  + 
+                     values = c("a" = "darkgreen", "b" = "darkorange", "c" = "darkblue","d" = "darkred", "e" = "black"))  + 
   guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(1,1,1,1,0)))) 
 
 ggsave(p , filename = 'cover-types/cover-types-quality.eps', 
@@ -120,7 +120,7 @@ p = ggplot(data = df) +
         legend.position=c(0.25,0.27)) + 
   scale_color_manual(name ="",  # Name,
                      labels = c("baseline", "baseline+", "continuous", "velox", "retraining"), 
-                     values = c("a" = "green", "b" = "orange", "c" = "blue","d" = "red", "e" = "black"))  + 
+                     values = c("a" = "darkgreen", "b" = "darkorange", "c" = "darkblue","d" = "darkred", "e" = "black"))  + 
   guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(1,1,1,1,0)))) 
 
 ggsave(p , filename = 'higgs-sample/higgs-sample-quality.eps', 
@@ -179,7 +179,7 @@ p = ggplot(data = df) +
         legend.position=c(0.85,0.67)) + 
   scale_color_manual(name ="",  # Name,
                      labels = c("baseline", "baseline+", "continuous", "velox", "retraining"), 
-                     values = c("a" = "green", "b" = "orange", "c" = "blue","d" = "red", "e" = "black"))  + 
+                     values = c("a" = "darkgreen", "b" = "darkorange", "c" = "darkblue","d" = "darkred", "e" = "black"))  + 
   guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(1,1,1,1,0)))) 
 
 ggsave(p , filename = 'susy-sample/susy-sample-quality.eps', 
@@ -201,14 +201,13 @@ df = data.frame(methods = methods, time = c(baseline, continuous, velox)/1000)
 melted = melt(df, id.vars = 'methods', variable.names = "methods")
 melted$methods = factor(as.character(melted$methods), 
                     levels=c("Baseline","Continuous","Velox"))
-methodColours = c(baseline="green", continuous="blue", velox="red")
 
 coverTypeTime = 
   ggplot(melted, aes(x = methods, y = value, fill = methods)) +
   geom_bar(stat='identity') + 
   xlab("") + ylab("Time (s)") + 
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 130)) +
-  scale_fill_manual("", values = c("Baseline"="green", "Continuous"="blue", "Velox" = "red")) + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 150)) +
+  scale_fill_manual("", values = c("Baseline"="darkgreen", "Continuous"="darkblue", "Velox" = "darkred")) + 
   theme_bw() + 
   theme(legend.title = element_text(size = 28),
         legend.text = element_text(size = 28), 
@@ -220,7 +219,7 @@ coverTypeTime =
         legend.position=c(0.25,0.88), 
         axis.title.x = element_blank(), 
         axis.text.x = element_blank(), 
-        plot.margin = unit(c(0.1, 0.0, 0.5, 0.2), "cm"))
+        plot.margin = unit(c(0.4, 0.0, 0.5, 0.2), "cm"))
 
 ggsave(coverTypeTime , filename = 'cover-types/cover-types-times.eps', 
        device = 'eps',
@@ -239,14 +238,13 @@ df = data.frame(methods = methods, time = c(baseline, continuous, velox)/1000)
 melted = melt(df, id.vars = 'methods', variable.names = "methods")
 melted$methods = factor(as.character(melted$methods), 
                         levels=c("Baseline","Continuous","Velox"))
-methodColours = c(baseline="green", continuous="blue", velox="red")
 
 susyTime = 
   ggplot(melted, aes(x = methods, y = value, fill = methods)) +
   geom_bar(stat='identity') + 
   xlab("") + ylab("Time (s)") + 
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 130)) +
-  scale_fill_manual("", values = c("Baseline"="green", "Continuous"="blue", "Velox" = "red")) + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 150)) +
+  scale_fill_manual("", values = c("Baseline"="darkgreen", "Continuous"="darkblue", "Velox" = "darkred")) + 
   theme_bw() + 
   theme(legend.title = element_text(size = 28),
         legend.text = element_text(size = 28), 
@@ -258,7 +256,7 @@ susyTime =
         legend.position=c(0.25,0.88), 
         axis.title.x = element_blank(), 
         axis.text.x = element_blank(), 
-        plot.margin = unit(c(0.1, 0.0, 0.5, 0.2), "cm"))
+        plot.margin = unit(c(0.4, 0.0, 0.5, 0.2), "cm"))
 
 ggsave(susyTime , filename = 'susy-sample/susy-sample-times.eps', 
        device = 'eps',
@@ -276,14 +274,14 @@ df = data.frame(methods = methods, time = c(baseline, continuous, velox)/1000)
 melted = melt(df, id.vars = 'methods', variable.names = "methods")
 melted$methods = factor(as.character(melted$methods), 
                         levels=c("Baseline","Continuous","Velox"))
-methodColours = c(baseline="green", continuous="blue", velox="red")
+
 
 higgsTime = 
   ggplot(melted, aes(x = methods, y = value, fill = methods)) +
   geom_bar(stat='identity') + 
   xlab("") + ylab("Time (s)") + 
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 130)) +
-  scale_fill_manual("", values = c("Baseline"="green", "Continuous"="blue", "Velox" = "red")) + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 150)) +
+  scale_fill_manual("", values = c("Baseline"="darkgreen", "Continuous"="darkblue", "Velox" = "darkred")) + 
   theme_bw() + 
   theme(legend.title = element_text(size = 28),
         legend.text = element_text(size = 28), 
@@ -295,7 +293,7 @@ higgsTime =
         legend.position=c(0.25,0.88), 
         axis.title.x = element_blank(), 
         axis.text.x = element_blank(), 
-        plot.margin = unit(c(0.1, 0.0, 0.5, 0.2), "cm"))
+        plot.margin = unit(c(0.4, 0.0, 0.5, 0.2), "cm"))
 
 ggsave(higgsTime , filename = 'higgs-sample/higgs-sample-times.eps', 
        device = 'eps',

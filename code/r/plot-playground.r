@@ -257,13 +257,13 @@ ggplot(data = ml, aes(x = time, y = value, group = variable)) +
 
 
 #SUSY Cluster
-continuous = read.csv('susy/continuous/num-iterations-1000/slack-10/offline-step-1.0/online-step-1.0/2017-03-23-20-38/error-rates.txt', header = FALSE, col.names = 'continuous')
+continuous = read.csv('susy/continuous/num-iterations-500/slack-10/offline-step-1.0/online-step-1.0/2017-03-24-11-44/error-rates.txt', header = FALSE, col.names = 'continuous')
 
-velox = read.csv('susy/velox/num-iterations-300/slack-320/offline-step-1.0/online-step-1.0/2017-03-23-19-09/error-rates.txt', header = FALSE, col.names = 'velox')
+velox = read.csv('susy/velox/num-iterations-500/slack-320/offline-step-1.0/online-step-1.0/2017-03-24-00-07/error-rates.txt', header = FALSE, col.names = 'velox')
 
-baselinePlus = read.csv('susy/baseline-plus/num-iterations-300/slack-none/offline-step-1.0/online-step-1.0/2017-03-23-19-49/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+baselinePlus = read.csv('susy/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-03-24-09-04/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 
-baseline = read.csv('susy/baseline-plus/num-iterations-300/slack-none/offline-step-1.0/online-step-1.0/2017-03-23-19-49/error-rates.txt', header = FALSE, col.names = 'baseline')
+baseline = read.csv('susy/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-03-24-09-04/error-rates.txt', header = FALSE, col.names = 'baseline')
 
 m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
 continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))

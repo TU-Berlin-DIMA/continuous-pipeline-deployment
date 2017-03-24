@@ -702,7 +702,8 @@ In both the \textit{movie-lens-100k} and \textit{MNIST} use cases the change in 
 However, the running time of the methods are heavily influenced by these parameters.
 Setting these parameters to small values decreases the running time considerably and save computation resources regardless of the type of model the system is serving.
 
-\subsection{Comparison Under Constrained Resources }
+\subsection{Experiments in Local Environment}
+\todo[inline]{fix the text to reflect the new title}
 Both, the velox and the continuous model use different strategies to update the model.
 To perform a fair comparison of the two, we are evaluating them under similar resource constraints.
 We configured both of the methods' frequency of training in such a way that the total running time on the \textit{movie-lens} and \textit{MNIST} datasets are similar.
@@ -711,14 +712,13 @@ For Velox, this value is equal to the number of retraining multiplied by number 
 For the continuous model, it is total number of scheduled iterations throughout the lifetime of the system.
 Therefore, the continuous method schedules a new iteration every 500 items for \textit{movie-lens-100k} and 5,000 items for \textit{movie-lens-1M} and Velox method schedules a retraining every 15,000 items for \textit{movie-lens-100k} and 150,000 items for \textit{movie-lens-1M}.
 
-\todo[inline]{make it into two rows instead of two columns}
 \begin{figure}[h]
-\begin{subfigure}{.5\columnwidth}
+\begin{subfigure}{\columnwidth}
 	\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-quality-improved.eps}
 	\caption{MovieLens 100k}
 	\label{fig:movie-lens-100k-score}
-\end{subfigure}%
-\begin{subfigure}{0.5\columnwidth}
+\end{subfigure}
+\begin{subfigure}{\columnwidth}
   \includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-1m-quality-improved.eps}
 \caption{MovieLens 1M}
 \label{fig:movie-lens-1M-score}
@@ -810,7 +810,7 @@ After each retraining Velox's error rate slightly increases due to overfitting.
 	\label{fig:movie-lens-100k-times}
 \end{subfigure}%
 \begin{subfigure}[b]{0.5\columnwidth}
-  	\includegraphics[width=1\linewidth]{../images/experiment-results/higgs-sample-times.eps}
+  	\includegraphics[width=1\linewidth]{../images/experiment-results/movie-lens-1M-times.eps}
 	\caption{Movie Lens 1M}
 	\label{fig:movie-lens-1M}
 \end{subfigure}
@@ -828,7 +828,7 @@ Continuous method's total training time is 2 to 5 times smaller than Velox.
 Although we have configured both methods to use similar amount of resources (same number of iterations), continuous method still manages to achieve a consistent and lower error rate in a much faster time.
 This is because a full retraining incurs a much higher overhead than continuously training the method.
 Another reason for the difference in training time is that as the size of the data increases the time for running a new iteration in continuous method stays roughly the same where as the time for a full retraining increases exponentially.
-\subsection{Distributed Environment}
+\subsection{Experiments in Distributed Environment}
 We evaluated our deployment system on larger workloads in a cluster environment.
 \begin{figure}[h]
 	\centering
