@@ -37,7 +37,7 @@ object URLRepPreprocessing {
       else
         MLUtils.loadLibSVMFile(sc, s"$inputPath/Day0.svm")
     }.map(l => new LabeledPoint(if (l.label == -1.0) 0 else 1.0, l.features))
-    
+
     preprocessor.convertToSVM(data).repartition(sc.defaultParallelism).saveAsTextFile(s"$outputPath/initial-training/")
 
 

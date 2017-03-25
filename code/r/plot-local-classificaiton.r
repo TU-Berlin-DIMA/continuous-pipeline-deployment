@@ -115,7 +115,7 @@ p =
         axis.text.y=element_text(size=28),
         axis.text.x=element_text(size=28 ),
         axis.title=element_text(size=28),  
-        legend.position=c(0.25,0.2), 
+        legend.position=c(0.25,0.28), 
         legend.key.width = unit(2.5, "cm"), 
         legend.key.height = unit(1.0, "cm")) + 
   scale_linetype_discrete(guide=FALSE) + 
