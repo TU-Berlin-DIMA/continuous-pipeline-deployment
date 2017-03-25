@@ -208,23 +208,14 @@ df = data.frame(methods = methods, time = c(baseline, continuous, velox)/60)
 melted = melt(df, id.vars = 'methods', variable.names = "methods")
 
 movielens100kTimes = 
-  ggplot(melted, aes(x = methods, y = value, fill = methods)) +
+  ggplot(melted, aes(x = methods, y = value)) +
   geom_bar(stat='identity') + 
   xlab("") + ylab("Time (m)") + 
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 15)) +
-  scale_fill_manual("", values = c("Baseline"="darkgreen", "Continuous"="darkblue", "Velox" = "darkred")) + 
   theme_bw() + 
-  theme(legend.title = element_text(size = 28),
-        legend.text = element_text(size = 28), 
-        legend.key = element_rect(colour = "transparent", fill = "transparent"), 
-        legend.key.size  = unit(1.0, "cm"),
-        legend.background = element_rect(colour = "transparent", fill = "transparent"), 
-        axis.text.y=element_text(size=28),
-        axis.title.y=element_text(size=28),  
-        legend.position=c(0.25,0.88), 
-        axis.title.x = element_blank(), 
-        axis.text.x = element_blank(), 
-        plot.margin = unit(c(0.5, 0.0, 0.5, 0.2), "cm"))
+  theme(legend.position="none",
+        axis.text=element_text(size=28, color = "black"),
+        axis.title=element_text(size=28, color = "black"),  
+        plot.margin = unit(c(0.4, 0.0, -0.80, 0.2), "cm"))
 
 ggsave(movielens100kTimes , filename = 'movie-lens-100k/movie-lens-100k-times.eps', 
        device = 'eps',
@@ -241,23 +232,15 @@ melted = melt(df, id.vars = 'methods', variable.names = "methods")
 
 
 movielens1MTimes = 
-  ggplot(melted, aes(x = methods, y = value, fill = methods)) +
+  ggplot(melted, aes(x = methods, y = value)) +
   geom_bar(stat='identity') + 
   xlab("") + ylab("Time (m)") + 
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 170)) +
-  scale_fill_manual("", values = c("Baseline"="darkgreen", "Continuous"="darkblue", "Velox" = "darkred")) + 
   theme_bw() + 
-  theme(legend.title = element_text(size = 28),
-        legend.text = element_text(size = 28), 
-        legend.key = element_rect(colour = "transparent", fill = "transparent"), 
-        legend.key.size  = unit(1.0, "cm"),
-        legend.background = element_rect(colour = "transparent", fill = "transparent"), 
-        axis.text.y=element_text(size=28),
-        axis.title.y=element_text(size=28),  
-        legend.position=c(0.25,0.88), 
-        axis.title.x = element_blank(), 
-        axis.text.x = element_blank(), 
-        plot.margin = unit(c(0.5, 0.0, 0.5, 0.2), "cm"))
+  theme(legend.position="none",
+        axis.text=element_text(size=28, color = "black"),
+        axis.title=element_text(size=28, color = "black"),  
+        plot.margin = unit(c(0.4, 0.0, -0.80, 0.2), "cm"))
+
 
 ggsave(movielens1MTimes , filename = 'movie-lens-1M/movie-lens-1M-times.eps', 
        device = 'eps',

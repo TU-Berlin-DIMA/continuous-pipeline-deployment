@@ -31,13 +31,13 @@ object URLRepPreprocessing {
     val fileCount = parser.getInteger("file-count", FILE_COUNT)
     val samplingRate = parser.getDouble("sampling-rate", SAMPLING_RATE)
 
-    val data = if (samplingRate < 1.0)
-      MLUtils.loadLibSVMFile(sc, s"$inputPath/Day0.svm").sample(withReplacement = false, fraction = samplingRate, seed = 42)
-    else
-      MLUtils.loadLibSVMFile(sc, s"$inputPath/Day0.svm")
-
-
-    data.map(l => new LabeledPoint(if (l.label == -1.0) 0 else 1.0, l.features))
+    val data = {
+      if (samplingRate < 1.0)
+        MLUtils.loadLibSVMFile(sc, s"$inputPath/Day0.svm").sample(withReplacement = false, fraction = samplingRate, seed = 42)
+      else
+        MLUtils.loadLibSVMFile(sc, s"$inputPath/Day0.svm")
+    }.map(l => new LabeledPoint(if (l.label == -1.0) 0 else 1.0, l.features))
+    
     preprocessor.convertToSVM(data).repartition(sc.defaultParallelism).saveAsTextFile(s"$outputPath/initial-training/")
 
 

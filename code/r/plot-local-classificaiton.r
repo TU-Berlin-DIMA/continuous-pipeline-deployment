@@ -36,17 +36,15 @@ df = data.frame(time = 1:nrow(continuous),
 retrainings = c(32,63,96)
 
 # data frame
-p = ggplot(data = df) + 
+p = 
+  ggplot(data = df) + 
   # plot lines
-  geom_line(aes(x = time, y  = baseline, colour = "a"), size = 1.5) + 
-  geom_line(aes(x = time, y  = baselinePlus, colour = "b"), size = 1.5) + 
-  geom_line(aes(x = time, y  = continuous, colour = "c"), size = 1.5) + 
-  geom_line(aes(x = time, y  = velox, colour = "d"), size = 1.5) + 
+  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1, linetype = "dotted") + 
+  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1) + 
+  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1) + 
+  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1) + 
   # plot retraining points
-  geom_point(data = df[retrainings,c(1,3)], 
-             aes(x=time, y = velox, colour="e"), 
-             shape = 17, 
-             lwd = 5 ) + 
+  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 4, shape = 17 ) + 
   # x and y labels
   xlab("Time") + ylab("Misclassification Rate") + 
   #ylim(c(0.1,1.5)) + 
@@ -54,17 +52,20 @@ p = ggplot(data = df) +
   theme_bw() + 
   theme(legend.text = element_text(size = 28), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
-        legend.key.size  = unit(1.0, "cm"),
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
         axis.text.y=element_text(size=28),
         axis.text.x=element_text(size=28 ),
         axis.title=element_text(size=28),  
-        legend.position=c(0.85,0.67)) + 
-  scale_color_manual(name ="",  # Name,
-                     labels = c("baseline", "baseline+", "continuous", "velox", "retraining"), 
-                     values = c("a" = "darkgreen", "b" = "darkorange", "c" = "darkblue","d" = "darkred", "e" = "black"))  + 
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(1,1,1,1,0)))) 
-
+        legend.position=c(0.85,0.67), 
+        legend.key.width = unit(2.5, "cm"), 
+        legend.key.height = unit(1.0, "cm")) + 
+  scale_linetype_discrete(guide=FALSE) + 
+  scale_shape_discrete(guide=FALSE) + 
+  scale_color_manual(name = "", 
+                     labels = c("baseline", "baseline+", "continuous","velox", "retraining"),
+                     values = c("a"="black", "b"="black","c"="black","d"="black", "e"="black"))+
+  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(3,4,1,5,0)))) 
+  
 ggsave(p , filename = 'cover-types/cover-types-quality.eps', 
        device = 'eps', 
        width = 14, height = 5, 
@@ -94,17 +95,15 @@ df = data.frame(time = 1:nrow(continuous),
 retrainings = c(32,66,98)
 
 # data frame
-p = ggplot(data = df) + 
+p = 
+  ggplot(data = df) + 
   # plot lines
-  geom_line(aes(x = time, y  = baseline, colour = "a"), size = 1.5) + 
-  geom_line(aes(x = time, y  = baselinePlus, colour = "b"), size = 1.5) + 
-  geom_line(aes(x = time, y  = continuous, colour = "c"), size = 1.5) + 
-  geom_line(aes(x = time, y  = velox, colour = "d"), size = 1.5) + 
+  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1, linetype = "dotted") + 
+  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1) + 
+  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1) + 
+  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1) + 
   # plot retraining points
-  geom_point(data = df[retrainings,c(1,3)], 
-             aes(x=time, y = velox, colour="e"), 
-             shape = 17, 
-             lwd = 5 ) + 
+  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 4, shape = 17 ) + 
   # x and y labels
   xlab("Time") + ylab("Misclassification Rate") + 
   #ylim(c(0.1,1.5)) + 
@@ -112,16 +111,20 @@ p = ggplot(data = df) +
   theme_bw() + 
   theme(legend.text = element_text(size = 28), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
-        legend.key.size  = unit(1.0, "cm"),
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
         axis.text.y=element_text(size=28),
         axis.text.x=element_text(size=28 ),
         axis.title=element_text(size=28),  
-        legend.position=c(0.25,0.27)) + 
-  scale_color_manual(name ="",  # Name,
-                     labels = c("baseline", "baseline+", "continuous", "velox", "retraining"), 
-                     values = c("a" = "darkgreen", "b" = "darkorange", "c" = "darkblue","d" = "darkred", "e" = "black"))  + 
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(1,1,1,1,0)))) 
+        legend.position=c(0.25,0.2), 
+        legend.key.width = unit(2.5, "cm"), 
+        legend.key.height = unit(1.0, "cm")) + 
+  scale_linetype_discrete(guide=FALSE) + 
+  scale_shape_discrete(guide=FALSE) + 
+  scale_color_manual(name = "", 
+                     labels = c("baseline", "baseline+", "continuous","velox", "retraining"),
+                     values = c("a"="black", "b"="black","c"="black","d"="black", "e"="black"))+
+  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(3,4,1,5,0)))) 
+
 
 ggsave(p , filename = 'higgs-sample/higgs-sample-quality.eps', 
        device = 'eps', 
@@ -153,34 +156,35 @@ df = data.frame(time = 1:nrow(continuous),
 retrainings = c(32,66,98)
 
 # data frame
-p = ggplot(data = df) + 
+p =
+  ggplot(data = df) + 
   # plot lines
-  geom_line(aes(x = time, y  = baseline, colour = "a"), size = 1.5) + 
-  geom_line(aes(x = time, y  = baselinePlus, colour = "b"), size = 1.5) + 
-  geom_line(aes(x = time, y  = continuous, colour = "c"), size = 1.5) + 
-  geom_line(aes(x = time, y  = velox, colour = "d"), size = 1.5) + 
+  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1, linetype = "dotted") + 
+  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1) + 
+  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1) + 
+  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1) + 
   # plot retraining points
-  geom_point(data = df[retrainings,c(1,3)], 
-             aes(x=time, y = velox, colour="e"), 
-             shape = 17, 
-             lwd = 5 ) + 
+  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 4, shape = 17 ) + 
   # x and y labels
-  xlab("Testing Increment") + ylab("Misclassification Error") + 
+  xlab("Time") + ylab("Misclassification Rate") + 
   #ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
   theme(legend.text = element_text(size = 28), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
-        legend.key.size  = unit(1.0, "cm"),
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
         axis.text.y=element_text(size=28),
         axis.text.x=element_text(size=28 ),
         axis.title=element_text(size=28),  
-        legend.position=c(0.85,0.67)) + 
-  scale_color_manual(name ="",  # Name,
-                     labels = c("baseline", "baseline+", "continuous", "velox", "retraining"), 
-                     values = c("a" = "darkgreen", "b" = "darkorange", "c" = "darkblue","d" = "darkred", "e" = "black"))  + 
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(1,1,1,1,0)))) 
+        legend.position=c(0.85,0.67), 
+        legend.key.width = unit(2.5, "cm"), 
+        legend.key.height = unit(1.0, "cm")) + 
+  scale_linetype_discrete(guide=FALSE) + 
+  scale_shape_discrete(guide=FALSE) + 
+  scale_color_manual(name = "", 
+                     labels = c("baseline", "baseline+", "continuous","velox", "retraining"),
+                     values = c("a"="black", "b"="black","c"="black","d"="black", "e"="black"))+
+  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(3,4,1,5,0)))) 
 
 ggsave(p , filename = 'susy-sample/susy-sample-quality.eps', 
        device = 'eps', 
@@ -203,23 +207,15 @@ melted$methods = factor(as.character(melted$methods),
                     levels=c("Baseline","Continuous","Velox"))
 
 coverTypeTime = 
-  ggplot(melted, aes(x = methods, y = value, fill = methods)) +
+  ggplot(melted, aes(x = methods, y = value)) +
   geom_bar(stat='identity') + 
   xlab("") + ylab("Time (s)") + 
   scale_y_continuous(expand = c(0, 0), limits = c(0, 150)) +
-  scale_fill_manual("", values = c("Baseline"="darkgreen", "Continuous"="darkblue", "Velox" = "darkred")) + 
   theme_bw() + 
-  theme(legend.title = element_text(size = 28),
-        legend.text = element_text(size = 28), 
-        legend.key = element_rect(colour = "transparent", fill = "transparent"), 
-        legend.key.size  = unit(1.0, "cm"),
-        legend.background = element_rect(colour = "transparent", fill = "transparent"), 
-        axis.text.y=element_text(size=28),
-        axis.title.y=element_text(size=28),  
-        legend.position=c(0.25,0.88), 
-        axis.title.x = element_blank(), 
-        axis.text.x = element_blank(), 
-        plot.margin = unit(c(0.4, 0.0, 0.5, 0.2), "cm"))
+  theme(legend.position="none",
+        axis.text=element_text(size=28, color = "black"),
+        axis.title=element_text(size=28, color = "black"),  
+        plot.margin = unit(c(0.4, 0.0, -0.80, 0.2), "cm"))
 
 ggsave(coverTypeTime , filename = 'cover-types/cover-types-times.eps', 
        device = 'eps',
@@ -240,23 +236,15 @@ melted$methods = factor(as.character(melted$methods),
                         levels=c("Baseline","Continuous","Velox"))
 
 susyTime = 
-  ggplot(melted, aes(x = methods, y = value, fill = methods)) +
+  ggplot(melted, aes(x = methods, y = value)) +
   geom_bar(stat='identity') + 
   xlab("") + ylab("Time (s)") + 
   scale_y_continuous(expand = c(0, 0), limits = c(0, 150)) +
-  scale_fill_manual("", values = c("Baseline"="darkgreen", "Continuous"="darkblue", "Velox" = "darkred")) + 
   theme_bw() + 
-  theme(legend.title = element_text(size = 28),
-        legend.text = element_text(size = 28), 
-        legend.key = element_rect(colour = "transparent", fill = "transparent"), 
-        legend.key.size  = unit(1.0, "cm"),
-        legend.background = element_rect(colour = "transparent", fill = "transparent"), 
-        axis.text.y=element_text(size=28),
-        axis.title.y=element_text(size=28),  
-        legend.position=c(0.25,0.88), 
-        axis.title.x = element_blank(), 
-        axis.text.x = element_blank(), 
-        plot.margin = unit(c(0.4, 0.0, 0.5, 0.2), "cm"))
+  theme(legend.position="none",
+        axis.text=element_text(size=28, color = "black"),
+        axis.title=element_text(size=28, color = "black"),  
+        plot.margin = unit(c(0.4, 0.0, -0.80, 0.2), "cm"))
 
 ggsave(susyTime , filename = 'susy-sample/susy-sample-times.eps', 
        device = 'eps',
@@ -277,23 +265,15 @@ melted$methods = factor(as.character(melted$methods),
 
 
 higgsTime = 
-  ggplot(melted, aes(x = methods, y = value, fill = methods)) +
+  ggplot(melted, aes(x = methods, y = value)) +
   geom_bar(stat='identity') + 
   xlab("") + ylab("Time (s)") + 
   scale_y_continuous(expand = c(0, 0), limits = c(0, 150)) +
-  scale_fill_manual("", values = c("Baseline"="darkgreen", "Continuous"="darkblue", "Velox" = "darkred")) + 
   theme_bw() + 
-  theme(legend.title = element_text(size = 28),
-        legend.text = element_text(size = 28), 
-        legend.key = element_rect(colour = "transparent", fill = "transparent"), 
-        legend.key.size  = unit(1.0, "cm"),
-        legend.background = element_rect(colour = "transparent", fill = "transparent"), 
-        axis.text.y=element_text(size=28),
-        axis.title.y=element_text(size=28),  
-        legend.position=c(0.25,0.88), 
-        axis.title.x = element_blank(), 
-        axis.text.x = element_blank(), 
-        plot.margin = unit(c(0.4, 0.0, 0.5, 0.2), "cm"))
+  theme(legend.position="none",
+        axis.text=element_text(size=28, color = "black"),
+        axis.title=element_text(size=28, color = "black"),  
+        plot.margin = unit(c(0.4, 0.0, -0.80, 0.2), "cm"))
 
 ggsave(higgsTime , filename = 'higgs-sample/higgs-sample-times.eps', 
        device = 'eps',
