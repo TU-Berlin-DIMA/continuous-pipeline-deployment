@@ -46,6 +46,7 @@
 % For tracking purposes - this is V2.0 - May 2012
 
 \documentclass{vldb}
+\usepackage{url}
 \usepackage{lipsum}% http://ctan.org/pkg/lipsum
 \usepackage{graphicx}% http://ctan.org/pkg/graphicx
 \usepackage{float}
@@ -495,22 +496,22 @@ Each node is running on a Intel Xeon 2.40 GHz 16 core processor and has 28 GB fo
 Version 1 is implemented using python and uses some of the libraries available in scikit-learn \cite{sklearn_api}.
 This version is designed to work on a local environment.
 It gives a greater control over tuning the parameters of the system, since we are able to perform incremental updates one item at a time (as opposed to Spark's micro-batching).
+Version 1 supports neural networks (multi-layer perceptron) and recommender system (matrix factorization).
 Version 2 is implemented on top of Apache Spark \cite{zaharia2010spark}.
 It is using the SGD class of Spark's machine learning library, to execute the initial and incremental training.
-This version works in both local and cluster environment.
-\todo[inline]{Complete this section}
-To evaluate our proposed method, we are using 2 different datasets.
+Version 2 works in both local and cluster environment and supports different types of linear models (SVM, Logistic Regression and Linear Regression).
 
 \begin{table}\centering
 \begin{tabular}{lrrr}
  \toprule
 Name & \#Users & \#Items & \#Ratings
 \\\midrule 
-Movie Lens 1M \cite{harper2016movielens} & 6000 & 4000 & 1000000 \\
-Movie Lens 100k \cite{harper2016movielens} & 1000 & 1700 & 100000 
+Movie Lens 1M  & 6000 & 4000 & 1000000 \\
+Movie Lens 100k & 1000 & 1700 & 100000 
 \\\bottomrule 
 \end{tabular}
 \caption{Recommender System Datasets}
+\label{table:recommender-systems}
 \end{table}
 
 \begin{table}\centering
@@ -518,42 +519,49 @@ Movie Lens 100k \cite{harper2016movielens} & 1000 & 1700 & 100000
  \toprule
 Name & \#Features  & \#Instances 
 \\\midrule 
-Higgs \cite{baldi2014searching} & 28 & 11000000 \\
-SUSY  \cite{baldi2014searching} & 18 & 5000000 \\ 
-URL Reputation \cite{ma2009identifying} & 3231961 & 2396130 \\
-Cover Type \cite{collobert2002parallel} & 52 & 581012 \\
+Higgs  & 28 & 11000000 \\
+Susy & 18 & 5000000 \\ 
+URL Reputation & 3231961 & 2396130 \\
+Cover Type & 52 & 581012 \\
 MNIST \cite{lecun-mnist} & 784 & 60000 
 \\\bottomrule 
 \end{tabular}
 \caption{Classification Datasets}
 \end{table}
 
-
-\textbf{MovieLens \cite{harper2016movielens}}: to analyze the performance of our method on time varying datasets, we use the MovieLens 100K and 1M datasets. 
-They consists of movie ratings by users during different time periods. 
-For both of the datasets, we use 10\% for initial learning and 90\% for online learning. 
-We have set the learning rate to 0.001 for all of the experiments on MovieLens dataset.
+\textbf{Datasets:} we use two different types of datasets in our experiments.
+To evaluate the recommender system we use Movie Lens \cite{harper2016movielens} datasets, which are a collection of movie ratings.
+We use two versions of this dataset (100k and 1M), each with varying number of users, movies and ratings.
+Table \ref{table:recommender-systems} shows the details of Movie Lens dataset.
 We have sorted the MovieLens data set based on the ratings timestamp and items are examined one by one according to their timestamp.
 This is to evaluate how each of the implemented methods react to changes in the distribution of the data.
+For these two datasets, we used an evolving test set to evaluate the performance of the deployment methods.
 An evolving test set was also created, where the index of the test items are first drawn uniformly at random from the entire data set.
-For \textit{movie-lens-100k}, the total size of the test set is 5,000 and for \textit{movie-lens-1M} it is 50,000.
+For Movie Lens 100k, the total size of the test set is 5,000 and for Movie Lens 1M it is 50,000. 
 We start with an empty test set, when we reach the index of a test item, we add that to the current test set and calculate the error rate based on the current test set.
-Each error calculation (called a test cycle), as a result captures the degree to which the models are adopting to the changes in the dataset.
+Each error calculation, as a result captures the degree to which the models are adopting to the changes in the dataset.
+%We have set the learning rate to 0.001 for all of the experiments on MovieLens dataset.
 
-\textbf{Criteo \cite{criteo-kaggle}}: to implement our CTR prediction example we use Criteo's Kaggle advertising challenge dataset.
-The dataset includes both categorical and numerical features.
-However, in our evaluations we only used the numerical features.
-Similar to MovieLens datasets, we use 10\% of the data for initial training and the rest is streamed to the system.
-The training data consists of a sample of Criteo's traffic over a period of 7 days.
-We use prequential evaluation \cite{gama2009issues} to calculate the misclassification rate of the implemented deployment methods.
+To evaluate the classifier, we use a collection of binary classification datasets (mostly from UCI Machine Learning Repository\footnote{\url{http://archive.ics.uci.edu/ml/}}).
+Higgs and Susy \cite{baldi2014searching} are physics datasets which are produced using Monte Carlo simulations.
+For these two datasets, the task is to distinguish between a signal process that produces a target particle (Higgs bosons particle for Higgs and supersymmetric particle for Susy) and a background process which does not.
+Cover Type \cite{collobert2002parallel} is a dataset used for predicting forest cover types from cartographic variables only.
+We use a binary class version of this dataset\footnote{\url{https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/}}.
+URL Reputation \cite{ma2009identifying} is an collection of URLs and whether they are malicious or not.
+This dataset is collected over 120 days and features are anonymized, but correspond to lexical and host-based information gathered for each URL.
+MNIST \cite{lecun-mnist} is a dataset of handwritten digits.
+Each image has 28x28 pixels and the labels are the 10 digits (0 to 9) the images are representing.
 
-\textbf{MNIST \cite{lecun-mnist}}: MNIST is a dataset of handwritten digits.
-it consists of 60000 28x28 color images in 10 classes. We use a neural network to train a model to classify the images in the data set. 
-Similar to MovieLens, 10\% are used for initial training and 90\% for online learning. 
-Note that, in this dataset, the order is irrelevant and we assume no change in distribution of the data occurs throughout the system's lifetime. 
+For all of the datasets we use 10\% for initial training and 90\% for online prediction/training.
+Except for URL Reputation and Movie Lens datasets that are timestamped, the order of the incoming data are arbitrary for the rest of the datasets.
+%\textbf{Criteo \cite{criteo-kaggle}}: to implement our CTR prediction example we use Criteo's Kaggle advertising challenge dataset.
+%The dataset includes both categorical and numerical features.
+%However, in our evaluations we only used the numerical features.
+%Similar to MovieLens datasets, we use 10\% of the data for initial training and the rest is streamed to the system.
+%The training data consists of a sample of Criteo's traffic over a period of 7 days.
+%We use prequential evaluation \cite{gama2009issues} to calculate the misclassification rate of the implemented deployment methods.
 
-\subsection{Deployment methods}
-In this section, we briefly describe the methods we have implemented.
+\textbf{Deployment methods:} In this section, we briefly describe the methods we have implemented.
 
 \textbf{Baseline} is the naive and simplest deployment model. 
 After a model is a trained from the initial data, it is used throughout the lifetime of the application without any incremental or batch learning.

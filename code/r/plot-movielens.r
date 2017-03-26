@@ -152,7 +152,8 @@ buffer = seq(500, 5000, 500)
 
 df = data.frame(buffer, times = times/60)
 
-bufferVsTimePlot = ggplot(data = df) + 
+bufferVsTimePlot = 
+  ggplot(data = df) + 
   aes(x = buffer, y = times, colour = "black") + 
   geom_line(size = 1.5) + 
   geom_point(lwd = 4)  + 
@@ -161,8 +162,8 @@ bufferVsTimePlot = ggplot(data = df) +
   theme_bw() + 
   theme(legend.text = element_text(size = 30, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
-        legend.key.size  = unit(1.0, "cm"),
-        legend.background = element_rect(colour = "black", fill = "transparent"), 
+        legend.background = element_rect(colour = "black", fill = "transparent"),
+        
         axis.text=element_text(size=30, color = "black"),
         axis.title=element_text(size=32, color = "black")) +
   guides(color=FALSE)
@@ -178,7 +179,7 @@ buffer = seq(0.1, 1.0, 0.1)
 
 df = data.frame(buffer, times = times/60)
 
-bufferVsTimePlot = 
+sampleVsTimePlot = 
   ggplot(data = df) + 
   aes(x = buffer, y = times, colour = "black") + 
   geom_line(size = 1.5) + 
@@ -194,7 +195,7 @@ bufferVsTimePlot =
         axis.title=element_text(size=32, color = "black")) + 
   guides(color=FALSE)
 
-ggsave(bufferVsTimePlot , filename = 'movie-lens-100k/sampling/movie-lens-100k-sampling-time-improved.eps', 
+ggsave(sampleVsTimePlot , filename = 'movie-lens-100k/sampling/movie-lens-100k-sampling-time-improved.eps', 
        device = 'eps', 
        width = 10, height = 7, 
        units = "in")
@@ -254,15 +255,16 @@ df = data.frame(ind = 1:5001, b5000 = data$ten , b2500 = data$five,  b500 = data
 ml = melt(df, id.vars = 'ind')
 
 bufferSizePlot = 
-  ggplot(data = ml, aes(x = ind, y = value, group = variable), size = 1.5) + 
-  geom_line(aes( linetype = variable), size = 1.5) + 
+  ggplot(data = ml, aes(x = ind, y = value, group = variable), size = 1) + 
+  geom_line(aes( linetype = variable), size = 1) + 
   xlab("Testing Increments") + ylab("Mean Squared Error")  + 
   scale_linetype_manual("Buffer Size", labels = c("5000", "2500", "500") , values = c("b5000"=3, "b2500"=5, "b500"=1)) + 
   theme_bw() + 
   theme(legend.title = element_text(size = 30, color = "black"),
         legend.text = element_text(size = 30, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
-        legend.key.size  = unit(1.0, "cm"),
+        legend.key.width = unit(2.5, "cm"), 
+        legend.key.height = unit(1.0, "cm"),
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
         axis.text=element_text(size=30, color = "black"),
         axis.title=element_text(size=32, color = "black"),  
@@ -290,7 +292,8 @@ samplingRatePlot =
   theme(legend.title = element_text(size = 30, color = "black"),
         legend.text = element_text(size = 30, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
-        legend.key.size  = unit(1.0, "cm"),
+        legend.key.width = unit(2.5, "cm"), 
+        legend.key.height = unit(1.0, "cm"),
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
         axis.text=element_text(size=30, color = "black"),
         axis.title=element_text(size=32, color = "black"),  
