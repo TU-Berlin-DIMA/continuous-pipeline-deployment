@@ -533,7 +533,7 @@ MNIST \cite{lecun-mnist} & 784 & 60000
 To evaluate the recommender system we use Movie Lens \cite{harper2016movielens} datasets, which are a collection of movie ratings.
 We use two versions of this dataset (100k and 1M), each with varying number of users, movies and ratings.
 Table \ref{table:recommender-systems} shows the details of Movie Lens dataset.
-We have sorted the MovieLens data set based on the ratings timestamp and items are examined one by one according to their timestamp.
+We have sorted the Movie Lens data set based on the ratings timestamp and items are examined one by one according to their timestamp.
 This is to evaluate how each of the implemented methods react to changes in the distribution of the data.
 For these two datasets, we used an evolving test set to evaluate the performance of the deployment methods.
 An evolving test set was also created, where the index of the test items are first drawn uniformly at random from the entire data set.
@@ -632,14 +632,14 @@ This results in a paradigm where both training and serving can happen simultaneo
 \caption{Parameters effect on quality (Movie Lens 100K)}
 \end{figure}
 
-Figure \ref{fig:movie-lens-100k-buffer-size-mse} shows the mean squared error for different buffer sizes for \textit{movie-lens-100k} dataset. 
+Figure \ref{fig:movie-lens-100k-buffer-size-mse} shows the mean squared error for different buffer sizes for Movie Lens 100k dataset. 
 A smaller buffer size causes the scheduler to initiate training iterations more frequently.
 As a result, the underlying model is updated faster.
 However, the error rate is not decreasing linearly with the buffer size.
 Further analysis show that once the model is update more frequently, it slowly starts to converge and any further training has little to no effect on the overall quality of the model
 Therefore, increasing the scheduling rate only decreases the error rate up to a point, after which increasing the scheduling rate has no effect on the overall quality of the model.
 This is extremely important, specially when considering the effect the buffer size has on the running time.
-Figure \ref{fig:movie-lens-100k-buffer-size-time} shows the running time on \textit{movie-lens-100k} dataset using different buffer sizes. 
+Figure \ref{fig:movie-lens-100k-buffer-size-time} shows the running time on Movie Lens 100k dataset using different buffer sizes. 
 Increasing the buffer size from 500 to 5000 decreases the running time by a factor of 5 while as described before the error rate is only increased slightly.
 Therefore, depending on the application, we can set the buffer size to bigger values in order to increase the performance of the system without affecting the quality of the final model substantially.
 
@@ -674,13 +674,13 @@ Therefore, similar to scheduling rate, setting the sampling rate to smaller valu
 Both the underlying machine learning model and the dataset can have a big effect on the selection of sampling rate and scheduling rate.
 In the recommender system use case, due to changes in incoming data distribution, we saw that bigger sample rates and higher scheduling rates have an effect (although small) on the quality of the model.
 This, however, may not be the case for other applications.
-To demonstrate this, we perform the same set of experiments on the \textit{MNIST} dataset.
+To demonstrate this, we perform the same set of experiments on the MNIST dataset.
 Figure \ref{fig:mnist-sample-rate} shows the effect of different sampling rates on the neural network classifer model for \textit{MNIST} data.
-Interestingly and contrary to the results we achieved for \textit{movie-lens-100k} the difference in error rates for different sampling rates are almost indistinguishable from each other.
-While the difference in error rates for \textit{movie-lens-100k} was small, but it is still much greater than the difference in error rates for neural networks.
+Interestingly and contrary to the results we achieved for Movie Lens 100k the difference in error rates for different sampling rates are almost indistinguishable from each other.
+While the difference in error rates for Movie Lens 100k was small, but it is still much greater than the difference in error rates for neural networks.
 We believe this is caused by how neural networks behave.
 Increasing sampling rate, causes similar data items to be used repeatedly in each training iteration and based on our experiments neural networks are not affected by this oversampling and, therefore, the results are almost similar with different sampling rates.
-Moreover, in this experiment, the number of parameters of multi-layer perceptron is far less than the number of parameters of the matrix factorization model for \textit{movie-lens-100k}.
+Moreover, in this experiment, the number of parameters of multi-layer perceptron is far less than the number of parameters of the matrix factorization model for Movie Lens 100k.
 This causes the neural work to converge faster and, therefore, it is not affected by more training, unless new training observations arrive at the system.
 
 \begin{figure}[h]
@@ -706,35 +706,38 @@ As the scheduling rate increases, the number of new training observations remain
 Since neural networks do not gain much benefit by revisiting the same items, increasing scheduling rate has no effect on the overall quality.
 
 Based on our findings, we conclude that increasing the sampling and scheduling rate does not always affect the quality.
-In both the \textit{movie-lens-100k} and \textit{MNIST} use cases the change in scheduling and sampling rate has small to no effect on the overall quality.
+In both the Movie Lens 100k and MNIST use cases the change in scheduling and sampling rate has small to no effect on the overall quality.
 However, the running time of the methods are heavily influenced by these parameters.
 Setting these parameters to small values decreases the running time considerably and save computation resources regardless of the type of model the system is serving.
 
 \subsection{Experiments in Local Environment}
-\todo[inline]{fix the text to reflect the new title}
-Both, the velox and the continuous model use different strategies to update the model.
-To perform a fair comparison of the two, we are evaluating them under similar resource constraints.
-We configured both of the methods' frequency of training in such a way that the total running time on the \textit{movie-lens} and \textit{MNIST} datasets are similar.
-To achieve this, we have fixed the total number of epochs (SGD iterations) for both methods.
-For Velox, this value is equal to the number of retraining multiplied by number of iterations in each retraining. 
-For the continuous model, it is total number of scheduled iterations throughout the lifetime of the system.
-Therefore, the continuous method schedules a new iteration every 500 items for \textit{movie-lens-100k} and 5,000 items for \textit{movie-lens-1M} and Velox method schedules a retraining every 15,000 items for \textit{movie-lens-100k} and 150,000 items for \textit{movie-lens-1M}.
+We evaluated our deployment method on the datasets described in this chapter.
+Our prototypes support two different methods of specifying the scheduling rate; buffer size and scheduling period.
+For recommender system experiments we use the buffer size to specify the scheduling rate (in Velox's case scheduling rate corresponds to offline retraining frequency).
+%Both, the velox and the continuous deployment methods use different strategies to update the model.
+%To perform a fair comparison of the two, we are evaluating them under similar resource constraints.
+%We configured both of the methods' frequency of training in such a way that the total running time on the \textit{movie-lens} and \textit{MNIST} datasets are similar.
+%To achieve this, we have fixed the total number of epochs (SGD iterations) for both methods.
+%For Velox, this value is equal to the number of retraining multiplied by number of iterations in each retraining. 
+%For the continuous model, it is total number of scheduled iterations throughout the lifetime of the system.
+%Therefore, the continuous method schedules a new iteration every 500 items for \textit{movie-lens-100k} and 5,000 items for \textit{movie-lens-1M} and %Velox method schedules a retraining every 15,000 items for \textit{movie-lens-100k} and 150,000 items for \textit{movie-lens-1M}.
 
 \begin{figure}[h]
 \begin{subfigure}{\columnwidth}
 	\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-quality-improved.eps}
-	\caption{MovieLens 100k}
+	\caption{Movie Lens 100k}
 	\label{fig:movie-lens-100k-score}
 \end{subfigure}
 \begin{subfigure}{\columnwidth}
   \includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-1m-quality-improved.eps}
-\caption{MovieLens 1M}
+\caption{Movie Lens 1M}
 \label{fig:movie-lens-1M-score}
 \end{subfigure}
 \caption{Recommender Systems}
 \end{figure}
 
-Figure \ref{fig:movie-lens-100k-score} shows the mean squared error of the continuous, Velox, and several other methods on \textit{movie-lens-100k} dataset.
+Figure \ref{fig:movie-lens-100k-score} shows the mean squared error of the continuous, Velox, and several other methods on Movie Lens 100k dataset.
+The scheduling rate (buffer size) is set to 500 for Continuous method and 15,000 for Velox.
 All four methods perform an initial training, therefore, they have similar error rates in the beginning.
 However, the error rate of Baseline method starts to increase since it does not incrementally update the model.
 Baseline+ incrementally updates the model.
@@ -749,28 +752,28 @@ The reason for the fast decrease in error rate is that immediately after the dep
 It consistently manages to adopt to the changes in data and decrease the error rate where the distribution of the incoming data is stable.
 As expected, except for immediately after a full retraining, the Continuous method always performs better than Velox.
 
-Figure \ref{fig:movie-lens-1M-score} shows the mean squared error rate achieved by the implemented methods on \textit{movie-lens-1M}.
-Similar to \textit{movie-lens-100k}, the Continuous method has the lowest error rate among all the implemented methods.
-The difference in error rate between Continuous and Velox is even greater than the error rate for \textit{movie-lens-100k}.
-We believe a bigger shift in data distribution (data in \textit{movie-lens-1M} is gathered from a longer period of time) and Continuous method can adopt the changes in data distribution faster than other methods.
-Velox's error rate follows the same trend as in the case of \textit{movie-lens-100k}. 
+Figure \ref{fig:movie-lens-1M-score} shows the mean squared error rate achieved by the implemented methods on Movie Lens 1M.
+Similar to Movie Lens 100k, the Continuous method has the lowest error rate among all the implemented methods.
+The difference in error rate between Continuous and Velox is even greater than the error rate for Movie Lens 100k.
+We believe a bigger shift in data distribution (data in Movie Lens 1M is gathered from a longer period of time) and Continuous method can adopt the changes in data distribution faster than other methods.
+Velox's error rate follows the same trend as in the case of Movie Lens 100k. 
 After every retraining, the error rate first drops then slowly increases until the next retraining.
-Similar to \textit{movie-lens-100k} dataset, the error rate of Baseline is highest among all the implemented methods, followed by Baseline+ , where due to the incremental updates of the model the error rate is lower.
+Similar to Movie Lens 100k dataset, the error rate of Baseline is highest among all the implemented methods, followed by Baseline+ , where due to the incremental updates of the model the error rate is lower.
 
 \begin{figure}[h]
 	\centering
 \begin{subfigure}[b]{\columnwidth}
-	\includegraphics[width=1\linewidth]{../images/experiment-results/cover-types-quality.eps}
+	\includegraphics[width=\columnwidth]{../images/experiment-results/cover-types-quality.eps}
 	\caption{Cover Types}
 	\label{fig:cover-types-quality}
 \end{subfigure}
 \begin{subfigure}[b]{\columnwidth}
-  	\includegraphics[width=1\linewidth]{../images/experiment-results/higgs-sample-quality.eps}
+  	\includegraphics[width=\columnwidth]{../images/experiment-results/higgs-sample-quality.eps}
 	\caption{Higgs Sample}
 	\label{fig:higgs-sample-quality}
 \end{subfigure}
 \begin{subfigure}[b]{\columnwidth}
-  	\includegraphics[width=\columnwidth,height=0.4\columnwidth]{../images/experiment-results/susy-sample-quality.eps}
+  	\includegraphics[width=\columnwidth]{../images/experiment-results/susy-sample-quality.eps}
 	\caption{SUSY Sample}
 	\label{fig:susy-sample-quality}
 \end{subfigure}
@@ -791,19 +794,19 @@ After each retraining Velox's error rate slightly increases due to overfitting.
 \begin{figure}[h]
 	\centering
 \begin{subfigure}[b]{0.5\columnwidth}
-	\includegraphics[width=1\linewidth]{../images/experiment-results/cover-types-times.eps}
+	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/cover-types-times.eps}
 	\caption{Cover Types}
 	\label{fig:cover-types-times}
 \end{subfigure}%
 \begin{subfigure}[b]{0.5\columnwidth}
-  	\includegraphics[width=1\linewidth]{../images/experiment-results/higgs-sample-times.eps}
+  	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/higgs-sample-times.eps}
 	\caption{Higgs Sample}
 	\label{fig:higgs-sample-times}
 \end{subfigure}
-\begin{subfigure}[b]{\columnwidth}
+\begin{subfigure}[b]{0.5\columnwidth}
 	\centering
-  	\includegraphics[width=0.5\columnwidth]{../images/experiment-results/susy-sample-times.eps}
-	\caption{SUSY Sample}
+  	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/susy-sample-times.eps}
+	\caption{Susy Sample}
 	\label{fig:susy-sample-times}
 \end{subfigure}
  \caption{Total training time for classification datasets}
@@ -813,12 +816,12 @@ After each retraining Velox's error rate slightly increases due to overfitting.
 \begin{figure}[h]
 	\centering
 \begin{subfigure}[b]{0.5\columnwidth}
-	\includegraphics[width=1\linewidth]{../images/experiment-results/movie-lens-100k-times.eps}
+	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/movie-lens-100k-times.eps}
 	\caption{Movie Lens 100k}
 	\label{fig:movie-lens-100k-times}
 \end{subfigure}%
 \begin{subfigure}[b]{0.5\columnwidth}
-  	\includegraphics[width=1\linewidth]{../images/experiment-results/movie-lens-1M-times.eps}
+  	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/movie-lens-1M-times.eps}
 	\caption{Movie Lens 1M}
 	\label{fig:movie-lens-1M}
 \end{subfigure}
