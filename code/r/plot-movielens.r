@@ -305,9 +305,11 @@ ggsave(samplingRatePlot , filename = 'movie-lens-100k/sampling/movie-lens-sampli
 
 
 # Meta graph: performance, quality model type
+baseline100k = loadData('movie-lens-100k/5000/offline-only.txt')
 continuous100k = loadData('movie-lens-100k/5000/continuous-error.txt')
 velox100k = loadData('movie-lens-100k/5000/velox-error.txt')
 
+baseline1m= loadData('movie-lens-1M/50000/offline-only.txt')
 continuous1m = loadData('movie-lens-1m/50000/continuous-error.txt')
 velox1m = loadData('movie-lens-1m/50000/velox-error.txt')
 
@@ -315,46 +317,56 @@ time_100k = c(128.7379, 506.1425, 854.3796, 187.6295)/60.0
 time_1M = c(235.8159, 4608.0255, 9610.6307, 1825.9909)/60.0
 
 
-df = data.frame('error'=c(mean(continuous100k), mean(velox100k), 0.7362879642607749), 
+df = data.frame('error'=c(mean(continuous100k), mean(velox100k), mean(baseline100k)), 
                 'time' = c(506.1425/60, 854.3796/60, 187.6295/60), 
-                'models'=c('Continuous', 'Velox', 'Static'))
-p = ggplot(data = df, aes(x = time, y = error)) + 
-  geom_point(alpha = 0) + 
-  geom_text(aes(label = models, colour = models), size = 14, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
-  xlab("Time (m)") + ylab("Mean Squared Error") + 
-  ylim(c(0.5, 1.0)) + 
+                'models'=c('Continuous', 'Velox', 'Baseline'))
+p = 
+  ggplot(data = df, aes(x = time, y = error)) + 
+  geom_point(aes(shape = models),  lwd = 12) + 
+  #geom_text(aes(label = models, colour = models), size = 5, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
+  xlab("Time (m)") + ylab("Avg MSE") + 
+  ylim(c(0.5, 1.5)) + 
   theme_bw() + 
-  theme(legend.text = element_text(size = 26), 
-        legend.title = element_text(size = 26), 
-        legend.key.size  = unit(1.0, "cm")) +
-  theme(axis.text=element_text(size=40),
-        axis.title=element_text(size=40)) +
-  scale_colour_manual(values = c("Static" = "black", "Continuous" = "green", "Velox" = "red"))
+  theme(legend.text = element_text(size = 30, color = "black"), 
+        legend.title = element_text(size = 30, color = "black"),
+        legend.key = element_rect(colour = "transparent", fill = "transparent"), 
+        legend.background = element_rect(colour = "transparent", fill = "transparent"),
+        legend.key.width  = unit(1.0, "cm"), 
+        legend.key.height  = unit(1.0, "cm"), 
+        legend.position=c(0.75,0.85)) +
+  theme(axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=32, color = "black")) + 
+  scale_shape_manual("", values = c("Baseline" = 4, "Continuous" = 8, "Velox" = 13))
 
-ggsave(p , filename = 'movie-lens-100k/movie-lens-100k-systems.eps', 
-       device = cairo_ps, dpi = 1000, 
-       width = 16, height = 9, 
+ggsave(p , filename = 'movie-lens-100k/movie-lens-100k-meta-performance.eps', 
+       device = cairo_ps,
+       width = 7, height = 5, 
        units = "in")
 
 
-df = data.frame('error'=c(mean(continuous1m), mean(velox1m), 0.5392938220858208), 
+df = data.frame('error'=c(mean(continuous1m), mean(velox1m),mean(baseline1m)), 
                 'time' = c(4608.0255/60, 9610.6307/60, 1825.9909/60), 
-                'models'=c('Continuous', 'Velox', 'Static'))
-p = ggplot(data = df, aes(x = time, y = error)) + 
-  geom_point(alpha = 0) + 
-  geom_text(aes(label = models, colour = models), size = 14, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
-  xlab("Time (m)") + ylab("") + 
-  ylim(c(0.5, 1.0)) + 
+                'models'=c('Continuous', 'Velox', 'Baseline'))
+p = 
+  ggplot(data = df, aes(x = time, y = error)) + 
+  geom_point(aes(shape = models),  lwd = 12) + 
+  #geom_text(aes(label = models, colour = models), size = 5, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
+  xlab("Time (m)") + ylab("Avg MSE") + 
+  ylim(c(0.5, 1.5)) + 
   theme_bw() + 
-  theme(legend.text = element_text(size = 26), 
-        legend.title = element_text(size = 26), 
-        legend.key.size  = unit(1.0, "cm")) +
-  theme(axis.text=element_text(size=40),
-        axis.title=element_text(size=40)) +
-  scale_colour_manual(values = c("Static" = "black", "Continuous" = "Green", "Velox" = "Red"))
+  theme(legend.text = element_text(size = 30, color = "black"), 
+        legend.title = element_text(size = 30, color = "black"),
+        legend.key = element_rect(colour = "transparent", fill = "transparent"), 
+        legend.background = element_rect(colour = "transparent", fill = "transparent"),
+        legend.key.width  = unit(1.0, "cm"), 
+        legend.key.height  = unit(1.0, "cm"), 
+        legend.position=c(0.75,0.85)) +
+  theme(axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=32, color = "black")) + 
+  scale_shape_manual("", values = c("Baseline" = 4, "Continuous" = 8, "Velox" = 13))
 
-ggsave(p , filename = 'movie-lens-1m/movie-lens-1m-systems.eps', 
+ggsave(p , filename = 'movie-lens-1m/movie-lens-1m-meta-performance.eps', 
        device = cairo_ps, dpi = 1000, 
-       width = 16, height = 9, 
+       width = 7, height = 5, 
        units = "in")
 

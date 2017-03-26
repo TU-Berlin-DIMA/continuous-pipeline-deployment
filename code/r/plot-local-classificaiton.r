@@ -275,3 +275,111 @@ ggsave(higgsTime , filename = 'higgs-sample/higgs-sample-times.eps',
        device = 'eps',
        width = 7, height = 5, 
        units = "in")
+
+# Cover Type Meta 
+continuousTime = read.csv('cover-types/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-1.0/2017-03-23-22-33/training-times.txt', header = FALSE)
+veloxTime = read.csv('cover-types/velox/num-iterations-500/slack-32/offline-step-1.0/online-step-1.0/2017-03-23-22-29/training-times.txt', header = FALSE)
+baselineTime = continuousTime[[1]][1]
+
+continuous = read.csv('cover-types/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-1.0/2017-03-23-22-33/error-rates.txt', header = FALSE)
+velox = read.csv('cover-types/velox/num-iterations-500/slack-32/offline-step-1.0/online-step-1.0/2017-03-23-22-29/error-rates.txt', header = FALSE)
+baseline = read.csv('cover-types/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-03-23-22-39/error-rates.txt', header = FALSE)
+
+
+df = data.frame('error'=c(colMeans(continuous), colMeans(velox), colMeans(baseline)), 
+                'time' = c(sum(continuousTime)/1000, sum(veloxTime)/1000, baselineTime/1000), 
+                'models'=c('Continuous', 'Velox', 'Baseline'))
+p = 
+  ggplot(data = df, aes(x = time, y = error)) + 
+  geom_point(aes(shape = models),  lwd = 12) + 
+  #geom_text(aes(label = models, colour = models), size = 5, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
+  xlab("Time (s)") + ylab("Avg Error rate") + 
+  ylim(c(0.24, 0.27)) + 
+  theme_bw() + 
+  theme(legend.text = element_text(size = 30, color = "black"), 
+        legend.title = element_text(size = 30, color = "black"),
+        legend.key = element_rect(colour = "transparent", fill = "transparent"), 
+        legend.background = element_rect(colour = "transparent", fill = "transparent"),
+        legend.key.width  = unit(1.0, "cm"), 
+        legend.key.height  = unit(1.0, "cm"), 
+        legend.position=c(0.75,0.85)) +
+  theme(axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=32, color = "black")) + 
+  scale_shape_manual("", values = c("Baseline" = 4, "Continuous" = 8, "Velox" = 13))
+
+ggsave(p , filename = 'cover-types/cover-types-meta-performance.eps', 
+       device = cairo_ps,
+       width = 7, height = 5, 
+       units = "in")
+
+# HIGGS Sample
+continuousTime = read.csv('higgs-sample/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-1.0/2017-03-23-23-48/training-times.txt', header = FALSE)
+veloxTime = read.csv('higgs-sample/velox/num-iterations-500/slack-32/offline-step-1.0/online-step-1.0/2017-03-23-23-08/training-times.txt', header = FALSE)
+baselineTime = continuousTime[[1]][1]
+
+continuous = read.csv('higgs-sample/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-1.0/2017-03-23-23-48/error-rates.txt', header = FALSE)
+velox = read.csv('higgs-sample/velox/num-iterations-500/slack-32/offline-step-1.0/online-step-1.0/2017-03-23-23-08/error-rates.txt', header = FALSE)
+baseline = read.csv('higgs-sample/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-03-23-23-55/error-rates.txt', header = FALSE)
+
+
+df = data.frame('error'=c(colMeans(continuous), colMeans(velox), colMeans(baseline)), 
+                'time' = c(sum(continuousTime)/1000, sum(veloxTime)/1000, baselineTime/1000), 
+                'models'=c('Continuous', 'Velox', 'Baseline'))
+p = 
+  ggplot(data = df, aes(x = time, y = error)) + 
+  geom_point(aes(shape = models),  lwd = 12) + 
+  #geom_text(aes(label = models, colour = models), size = 5, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
+  xlab("Time (s)") + ylab("Avg Error rate") + 
+  ylim(c(0.372, 0.379)) + 
+  theme_bw() + 
+  theme(legend.text = element_text(size = 30, color = "black"), 
+        legend.title = element_text(size = 30, color = "black"),
+        legend.key = element_rect(colour = "transparent", fill = "transparent"), 
+        legend.background = element_rect(colour = "transparent", fill = "transparent"),
+        legend.key.width  = unit(1.0, "cm"), 
+        legend.key.height  = unit(1.0, "cm"), 
+        legend.position=c(0.75,0.85)) +
+  theme(axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=32, color = "black")) + 
+  scale_shape_manual("", values = c("Baseline" = 4, "Continuous" = 8, "Velox" = 13))
+
+ggsave(p , filename = 'higgs-sample/higgs-sample-meta-performance.eps', 
+       device = cairo_ps,
+       width = 7, height = 5, 
+       units = "in")
+
+# SUSY Sample
+continuousTime = read.csv('susy-sample/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-1.0/2017-03-23-23-23/training-times.txt', header = FALSE)
+veloxTime = read.csv('susy-sample/velox/num-iterations-500/slack-32/offline-step-1.0/online-step-1.0/2017-03-23-22-55/training-times.txt', header = FALSE)
+baselineTime = continuousTime[[1]][1]
+
+continuous = read.csv('susy-sample/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-1.0/2017-03-23-23-23/error-rates.txt', header = FALSE)
+velox = read.csv('susy-sample/velox/num-iterations-500/slack-32/offline-step-1.0/online-step-1.0/2017-03-23-22-55/error-rates.txt', header = FALSE)
+baseline = read.csv('susy-sample/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-03-23-23-42/error-rates.txt', header = FALSE)
+
+
+df = data.frame('error'=c(colMeans(continuous), colMeans(velox), colMeans(baseline)), 
+                'time' = c(sum(continuousTime)/1000, sum(veloxTime)/1000, baselineTime/1000), 
+                'models'=c('Continuous', 'Velox', 'Baseline'))
+p = 
+  ggplot(data = df, aes(x = time, y = error)) + 
+  geom_point(aes(shape = models),  lwd = 12) + 
+  #geom_text(aes(label = models, colour = models), size = 5, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
+  xlab("Time (s)") + ylab("Avg Error rate") + 
+  ylim(c(0.223, 0.227)) + 
+  theme_bw() + 
+  theme(legend.text = element_text(size = 30, color = "black"), 
+        legend.title = element_text(size = 30, color = "black"),
+        legend.key = element_rect(colour = "transparent", fill = "transparent"), 
+        legend.background = element_rect(colour = "transparent", fill = "transparent"),
+        legend.key.width  = unit(1.0, "cm"), 
+        legend.key.height  = unit(1.0, "cm"), 
+        legend.position=c(0.75,0.85)) +
+  theme(axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=32, color = "black")) + 
+  scale_shape_manual("", values = c("Baseline" = 4, "Continuous" = 8, "Velox" = 13))
+
+ggsave(p , filename = 'susy-sample/susy-sample-meta-performance.eps', 
+       device = cairo_ps,
+       width = 7, height = 5, 
+       units = "in")
