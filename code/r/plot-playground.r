@@ -120,13 +120,13 @@ ggplot(data = ml, aes(x = time, y = value, group = variable)) +
 
 
 #URL 
-continuous = read.csv('url-reputation/continuous/batch-5-slack-50-incremental-true-error-cumulative-prequential-100/2017-03-10-16-24/error-rates.txt', header = FALSE, col.names = 'continuous')
+continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-50/offline-step-1.0/online-step-0.1/2017-03-25-17-00/error-rates.txt', header = FALSE, col.names = 'continuous')
 
-velox = read.csv('url-reputation/velox/batch-3-slack-600-incremental-true-error-cumulative-prequential-100/2017-03-11-13-40/error-rates.txt', header = FALSE, col.names = 'velox')
+velox = read.csv('url-reputation/velox/num-iterations-500/slack-400/offline-step-1.0/online-step-0.1/2017-03-25-20-58/error-rates.txt', header = FALSE, col.names = 'velox')
 
-baselinePlus = read.csv('url-reputation/baseline-plus/batch-3-slack-none-incremental-true-error-cumulative-prequential-100/2017-03-12-16-34/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+baselinePlus = read.csv('url-reputation/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-03-26-14-27/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 
-baseline= read.csv('url-reputation/baseline/batch-2-slack-none-incremental-false-error-cumulative-prequential-100/2017-03-12-15-02/error-rates.txt', header = FALSE, col.names = 'baseline')
+baseline= read.csv('url-reputation/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-03-26-14-27/error-rates.txt', header = FALSE, col.names = 'baseline')
 
 m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
 continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))

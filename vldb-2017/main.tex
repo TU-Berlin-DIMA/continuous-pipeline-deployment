@@ -176,12 +176,6 @@ Most of the surveyed systems provide little to no support after the model has be
 Only few systems \cite{akdere2011case, crankshaw2014missing} support deploying and maintaining the models.
 Moreover, systems with support for model deployment are still lacking constant monitoring and fast and accurate updates of the machine learning models.
 Deployment and training of models is usually a manual process.
-\begin{figure*}[t]
-\centering
-\includegraphics[width=.8\textwidth]{../images/velox-1.pdf}
-\caption{Current Model Deployment Method}
-\label{fig:velox-work-flow}
-\end{figure*}
 
 Figure \ref{fig:velox-work-flow} demonstrates the most common model deployment approach.
 First, a model is trained based on an existing dataset residing on disk, this model serves as the initial model.
@@ -190,6 +184,12 @@ The system also receives feedback in the form of new training observations.
 Upon receiving a training observation, the system updates the model incrementally.
 Not all of machine learning models support incremental updates.
 The ability to perform incremental updates is determined by the underlying optimization strategy and whether it allows incremental changes to the parameter of the model based on individual training items.
+\begin{figure}[t]
+\centering
+\includegraphics[width=1\columnwidth]{../images/velox-final.pdf}
+\caption{Current Model Deployment Method}
+\label{fig:velox-work-flow}
+\end{figure}
 
 
 \textbf{Example application:} to illustrate this model deployment approach, consider the task of predicting the click through rate (CTR) of online advertisements.
@@ -204,7 +204,7 @@ Figure \ref{fig:click-rate} demonstrates the CTR prediction example for a search
 
 \begin{figure}[h]
 \centering
-\includegraphics[width=\columnwidth]{../images/use-case-4.pdf}
+\includegraphics[width=\columnwidth]{../images/use-case-final.pdf}
 \caption{Use Case: Click Through Rate Prediction}
 \label{fig:click-rate}
 \end{figure}
@@ -306,12 +306,12 @@ The success of the Google's Deepmind team in achieving Neural Networks that were
 SGD is the ideal optimization algorithm for training neural networks since it works very well with large datasets (which are required for training neural networks).
 In fact, almost all of the recent work on neural networks use SGD for training them.
 
-\begin{figure*}[t]
+\begin{figure}[t]
 \centering
-\includegraphics[width=.6\textwidth]{../images/continuous-1.pdf}
+\includegraphics[width=\columnwidth]{../images/continuous-final.pdf}
 \caption{Continuous Training and Serving}
 \label{fig:cont-training-serving}
-\end{figure*}
+\end{figure}
 
 \section{Continuous Training and Serving} \label{continious-training-serving}
 % Stochastic Gradient System properties
@@ -381,7 +381,7 @@ Any new scheduled iteration of SGD uses the newly introduced dataset to further 
 \section{System Architecture} \label{sec:system-architecutre}
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{../images/system-architecture-6.pdf}
+\includegraphics[width=\columnwidth]{../images/system-architecture-final.pdf}
 \caption{System Architecture}
 \label{fig:system-architecture}
 \end{figure}
