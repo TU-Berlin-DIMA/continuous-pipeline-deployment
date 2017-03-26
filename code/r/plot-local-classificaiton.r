@@ -50,15 +50,14 @@ p =
   #ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
-  theme(legend.text = element_text(size = 28), 
+  theme(legend.text = element_text(size = 20, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
-        axis.text.y=element_text(size=28),
-        axis.text.x=element_text(size=28 ),
-        axis.title=element_text(size=28),  
+        axis.text=element_text(size=28, color = "black"),
+        axis.title=element_text(size=28, color= "black"),  
         legend.position=c(0.85,0.67), 
         legend.key.width = unit(2.5, "cm"), 
-        legend.key.height = unit(1.0, "cm")) + 
+        legend.key.height = unit(0.8, "cm")) + 
   scale_linetype_discrete(guide=FALSE) + 
   scale_shape_discrete(guide=FALSE) + 
   scale_color_manual(name = "", 
@@ -109,15 +108,14 @@ p =
   #ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
-  theme(legend.text = element_text(size = 28), 
+  theme(legend.text = element_text(size = 20, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
-        axis.text.y=element_text(size=28),
-        axis.text.x=element_text(size=28 ),
-        axis.title=element_text(size=28),  
-        legend.position=c(0.25,0.28), 
+        axis.text=element_text(size=28, color = "black"),
+        axis.title=element_text(size=28, color= "black"),  
+        legend.position=c(0.25,0.30), 
         legend.key.width = unit(2.5, "cm"), 
-        legend.key.height = unit(1.0, "cm")) + 
+        legend.key.height = unit(0.8, "cm")) + 
   scale_linetype_discrete(guide=FALSE) + 
   scale_shape_discrete(guide=FALSE) + 
   scale_color_manual(name = "", 
@@ -170,22 +168,20 @@ p =
   #ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
-  theme(legend.text = element_text(size = 28), 
+  theme(legend.text = element_text(size = 20, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
-        axis.text.y=element_text(size=28),
-        axis.text.x=element_text(size=28 ),
-        axis.title=element_text(size=28),  
+        axis.text=element_text(size=28, color = "black"),
+        axis.title=element_text(size=28, color= "black"),  
         legend.position=c(0.85,0.67), 
         legend.key.width = unit(2.5, "cm"), 
-        legend.key.height = unit(1.0, "cm")) + 
+        legend.key.height = unit(0.8, "cm")) + 
   scale_linetype_discrete(guide=FALSE) + 
   scale_shape_discrete(guide=FALSE) + 
   scale_color_manual(name = "", 
                      labels = c("baseline", "baseline+", "continuous","velox", "retraining"),
                      values = c("a"="black", "b"="black","c"="black","d"="black", "e"="black"))+
   guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(3,4,1,5,0)))) 
-
 ggsave(p , filename = 'susy-sample/susy-sample-quality.eps', 
        device = 'eps', 
        width = 14, height = 5, 

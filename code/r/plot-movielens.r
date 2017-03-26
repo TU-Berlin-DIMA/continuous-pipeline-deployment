@@ -56,33 +56,35 @@ df = data.frame(time = 1:length(continuous),
 retrainings = c(830,1699,2485,3355,4204,5000)
 
 # data frame
-p = ggplot(data = df) + 
+p =
+  ggplot(data = df) + 
   # plot lines
-  geom_line(aes(x = time, y  = baseline, colour = "a"), size = 1.5) + 
-  geom_line(aes(x = time, y  = baselinePlus, colour = "b"), size = 1.5) + 
-  geom_line(aes(x = time, y  = continuous, colour = "c"), size = 1.5) + 
-  geom_line(aes(x = time, y  = velox, colour = "d"), size = 1.5) + 
+  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1, linetype = "dotted") + 
+  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1) + 
+  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1) + 
+  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1) + 
   # plot retraining points
-  geom_point(data = df[retrainings,c(1,3)], 
-             aes(x=time, y = velox, colour="e"), 
-             shape = 17, 
-             lwd = 4 ) + 
+  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 4, shape = 17 ) + 
   # x and y labels
-  xlab("Testing Increment") + ylab("Mean Squared Error") + 
+  xlab("Time") + ylab("Misclassification Rate") + 
+  #ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
-  theme(legend.text = element_text(size = 27), 
+  theme(legend.text = element_text(size = 20, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
-        legend.key.size  = unit(1.0, "cm"),
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
-        axis.text.y=element_text(size=28),
-        axis.text.x=element_text(size=28),
-        axis.title=element_text(size=28),  
-        legend.position=c(0.85,0.27)) + 
-  scale_color_manual(name ="",  # Name,
-                     labels = c("baseline", "baseline+", "continuous", "velox", "retraining"), 
-                     values = c("a" = "darkgreen", "b" = "darkorange", "c" = "darkblue","d" = "darkred", "e" = "black"))  + 
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(1,1,1,1,0)))) 
+        axis.text=element_text(size=28, color = "black"),
+        axis.title=element_text(size=28, color= "black"),  
+        legend.position=c(0.85,0.27), 
+        legend.key.width = unit(2.5, "cm"), 
+        legend.key.height = unit(0.8, "cm")) + 
+  scale_linetype_discrete(guide=FALSE) + 
+  scale_shape_discrete(guide=FALSE) + 
+  scale_color_manual(name = "", 
+                     labels = c("baseline", "baseline+", "continuous","velox", "retraining"),
+                     values = c("a"="black", "b"="black","c"="black","d"="black", "e"="black"))+
+  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(3,4,1,5,0)))) 
+
 
  
 ggsave(p , filename = 'movie-lens-100k/5000/movie-lens-100k-quality-improved.eps', 
@@ -107,35 +109,35 @@ df = data.frame(time = 1:length(continuous),
 retrainings = c(8379,16706,25075,33345,41765,50000)
 
 
-p = 
+# data frame
+p =
   ggplot(data = df) + 
   # plot lines
-  geom_line(aes(x = time, y  = baseline, colour = "a"), size = 1.5) + 
-  geom_line(aes(x = time, y  = baselinePlus, colour = "b"), size = 1.5) + 
-  geom_line(aes(x = time, y  = continuous, colour = "c"), size = 1.5) + 
-  geom_line(aes(x = time, y  = velox, colour = "d"), size = 1.5) + 
+  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1, linetype = "dotted") + 
+  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1) + 
+  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1) + 
+  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1) + 
   # plot retraining points
-  geom_point(data = df[retrainings,c(1,3)], 
-             aes(x=time, y = velox, colour="e"), 
-             shape = 17, 
-             lwd = 4 ) + 
+  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 4, shape = 17 ) + 
   # x and y labels
-  xlab("Testing Increment") + ylab("Mean Squared Error") + 
+  xlab("Time") + ylab("Misclassification Rate") + 
+  #ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
-  theme(legend.text = element_text(size = 27), 
+  theme(legend.text = element_text(size = 20, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
-        legend.key.size  = unit(1.0, "cm"),
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
-        axis.text.y=element_text(size=28),
-        axis.text.x=element_text(size=28),
-        axis.title=element_text(size=28),  
-        legend.position=c(0.85,0.27)) + 
-  scale_color_manual(name ="",  # Name,
-                     labels = c("baseline", "baseline+", "continuous", "velox", "retraining"), 
-                     values = c("a" = "darkgreen", "b" = "darkorange", "c" = "darkblue","d" = "darkred", "e" = "black"))  + 
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(1,1,1,1,0)))) 
-
+        axis.text=element_text(size=28, color = "black"),
+        axis.title=element_text(size=28, color= "black"),  
+        legend.position=c(0.85,0.27), 
+        legend.key.width = unit(2.5, "cm"), 
+        legend.key.height = unit(0.8, "cm")) + 
+  scale_linetype_discrete(guide=FALSE) + 
+  scale_shape_discrete(guide=FALSE) + 
+  scale_color_manual(name = "", 
+                     labels = c("baseline", "baseline+", "continuous","velox", "retraining"),
+                     values = c("a"="black", "b"="black","c"="black","d"="black", "e"="black"))+
+  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(3,4,1,5,0)))) 
 
 ggsave(p , filename = 'movie-lens-1M/50000/movie-lens-1m-quality-improved.eps', 
        device = 'eps',
@@ -151,20 +153,19 @@ buffer = seq(500, 5000, 500)
 df = data.frame(buffer, times = times/60)
 
 bufferVsTimePlot = ggplot(data = df) + 
-  aes(x = buffer, y = times, colour = "blue") + 
+  aes(x = buffer, y = times, colour = "black") + 
   geom_line(size = 1.5) + 
   geom_point(lwd = 4)  + 
   xlab("Buffer size") + ylab("Time (m)") + 
-  scale_color_manual(values=c("blue" = "darkblue")) + 
+  scale_color_manual(values=c("black" = "black")) + 
   theme_bw() + 
-  theme(legend.text = element_text(size = 30), 
+  theme(legend.text = element_text(size = 30, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.key.size  = unit(1.0, "cm"),
         legend.background = element_rect(colour = "black", fill = "transparent"), 
-        axis.text=element_text(size=30),
-        axis.title=element_text(size=32),  
-        legend.position=c(0.85,0.2)) + 
-  guides(colour=FALSE)
+        axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=32, color = "black")) +
+  guides(color=FALSE)
 
 ggsave(bufferVsTimePlot , filename = 'movie-lens-100k/buffer-size/movie-lens-100k-buffer-time-improved.eps', 
        device = 'eps',
@@ -179,20 +180,19 @@ df = data.frame(buffer, times = times/60)
 
 bufferVsTimePlot = 
   ggplot(data = df) + 
-  aes(x = buffer, y = times, colour = "blue") + 
+  aes(x = buffer, y = times, colour = "black") + 
   geom_line(size = 1.5) + 
   geom_point(lwd = 4)  + 
   xlab("Sampling Rate") + ylab("Time (m)") + 
-  scale_color_manual(values=c("blue" = "darkblue")) + 
+  scale_color_manual(values=c("black" = "black")) + 
   theme_bw() + 
-  theme(legend.text = element_text(size = 30), 
+  theme(legend.text = element_text(size = 30, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.key.size  = unit(1.0, "cm"),
         legend.background = element_rect(colour = "black", fill = "transparent"), 
-        axis.text=element_text(size=30),
-        axis.title=element_text(size=32),  
-        legend.position=c(0.85,0.2)) + 
-  guides(colour=FALSE)
+        axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=32, color = "black")) + 
+  guides(color=FALSE)
 
 ggsave(bufferVsTimePlot , filename = 'movie-lens-100k/sampling/movie-lens-100k-sampling-time-improved.eps', 
        device = 'eps', 
@@ -255,18 +255,18 @@ ml = melt(df, id.vars = 'ind')
 
 bufferSizePlot = 
   ggplot(data = ml, aes(x = ind, y = value, group = variable), size = 1.5) + 
-  geom_line(aes( colour = variable), size = 1.5) + 
+  geom_line(aes( linetype = variable), size = 1.5) + 
   xlab("Testing Increments") + ylab("Mean Squared Error")  + 
-  scale_color_manual("Buffer Size", labels = c("5000", "2500", "500") , values = c("b5000"="darkgreen", "b2500"="darkred", "b500"="darkblue")) + 
+  scale_linetype_manual("Buffer Size", labels = c("5000", "2500", "500") , values = c("b5000"=3, "b2500"=5, "b500"=1)) + 
   theme_bw() + 
-  theme(legend.title = element_text(size = 30),
-        legend.text = element_text(size = 30), 
+  theme(legend.title = element_text(size = 30, color = "black"),
+        legend.text = element_text(size = 30, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.key.size  = unit(1.0, "cm"),
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
-        axis.text=element_text(size=30),
-        axis.title=element_text(size=32),  
-        legend.position=c(0.85,0.2)) 
+        axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=32, color = "black"),  
+        legend.position=c(0.85,0.27))
 
 
 ggsave(bufferSizePlot , filename = 'movie-lens-100k/buffer-size/movie-lens-buffer-quality-improved.eps', 
@@ -282,19 +282,19 @@ df = data.frame(ind = 1:5001 ,  s0.1 = data$one, s0.5 = data$five, s1.0 = data$t
 
 ml = melt(df, id.vars = 'ind')
 samplingRatePlot = 
-  ggplot(data = ml, aes(x = ind, y = value, group = variable), size = 1.5) + 
-  geom_line(aes( colour = variable), size = 1.5) + 
+  ggplot(data = ml, aes(x = ind, y = value, group = variable)) + 
+  geom_line(aes( linetype = variable), size = 1) + 
   xlab("Testing Increments") + ylab("Mean Squared Error")  + 
-  scale_color_manual("Sampling Rate", labels = c("0.1", "0.5", "1.0") , values = c("s0.1"="darkgreen", "s0.5"="darkred", "s1.0"="darkblue")) + 
+  scale_linetype_manual("Sampling Rate", labels = c("0.1", "0.5", "1.0") , values = c("s0.1"=3, "s0.5"=5, "s1.0"=1)) + 
   theme_bw() + 
-  theme(legend.title = element_text(size = 30),
-        legend.text = element_text(size = 30), 
+  theme(legend.title = element_text(size = 30, color = "black"),
+        legend.text = element_text(size = 30, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.key.size  = unit(1.0, "cm"),
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
-        axis.text=element_text(size=30),
-        axis.title=element_text(size=32),  
-        legend.position=c(0.85,0.2)) 
+        axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=32, color = "black"),  
+        legend.position=c(0.85,0.27))
   
 
 

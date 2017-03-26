@@ -66,34 +66,35 @@ retrainings = c(83,169,248,335,420)
 p = 
   ggplot(data = df) + 
   # plot lines
-  geom_line(aes(x = time, y  = baseline, colour = "a")) + 
-  geom_line(aes(x = time, y  = baselinePlus, colour = "b")) + 
-  geom_line(aes(x = time, y  = continuous, colour = "c")) + 
-  geom_line(aes(x = time, y  = velox, colour = "d")) + 
+  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1, linetype = "dotted") + 
+  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1) + 
+  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1) + 
+  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1) + 
   # plot retraining points
-  geom_point(data = df[retrainings,c(1,3)], 
-             aes(x=time, y = velox, colour="e"), 
-             shape = 17, 
-             lwd = 5 ) + 
+  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 4, shape = 17 ) + 
   # x and y labels
-  xlab("Testing Increment") + ylab("Mean Squared Error") + 
+  xlab("Time") + ylab("Misclassification Rate") + 
+  #ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
-  theme(legend.text = element_text(size = 30), 
+  theme(legend.text = element_text(size = 20, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
-        legend.key.size  = unit(1.0, "cm"),
-        legend.background = element_rect(colour = "black", fill = "transparent"), 
-        axis.text=element_text(size=30),
-        axis.title=element_text(size=32),  
-        legend.position=c(0.85,0.7)) + 
-  scale_color_manual(name ="",  # Name,
-                     labels = c("baseline", "baseline+", "continuous", "velox", "retraining"), 
-                     values = c("a" = "green", "b" = "orange", "c" = "blue","d" = "red", "e" = "black"))  + 
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(1,1,1,1,0)))) 
+        legend.background = element_rect(colour = "transparent", fill = "transparent"), 
+        axis.text=element_text(size=28, color = "black"),
+        axis.title=element_text(size=28, color= "black"),  
+        legend.position=c(0.85,0.7), 
+        legend.key.width = unit(2.5, "cm"), 
+        legend.key.height = unit(0.8, "cm")) + 
+  scale_linetype_discrete(guide=FALSE) + 
+  scale_shape_discrete(guide=FALSE) + 
+  scale_color_manual(name = "", 
+                     labels = c("baseline", "baseline+", "continuous","velox", "retraining"),
+                     values = c("a"="black", "b"="black","c"="black","d"="black", "e"="black"))+
+  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(3,4,1,5,0)))) 
 
 ggsave(p , filename = 'mnist/nn/500/mnist-quality.eps', 
        device = 'eps', dpi = 1000,
-       width = 16, height = 9, 
+       width = 14, height = 5, 
        units = "in")
 
 
@@ -104,17 +105,17 @@ df = data.frame(ind = 1:501, b5000 = data$ten , b2500 = data$five,  b500 = data$
 ml = melt(df, id.vars = 'ind')
 samplingRatePlot = 
   ggplot(data = ml, aes(x = ind, y = value, group = variable)) + 
-  geom_line(aes( colour = variable), size = 1.5) + 
+  geom_line(aes( linetype = variable), size = 1.0) + 
   xlab("Testing Increments") + ylab("Error Rate")  + 
-  scale_color_manual("Buffer Size", labels = c("5000", "2500", "500") , values = c("b5000"="darkgreen", "b2500"="darkred", "b500"="darkblue")) + 
+  scale_linetype_manual("Buffer Size", labels = c("5000", "2500", "500") , values = c("b5000"=3, "b2500"=5, "b500"=1)) + 
   theme_bw() + 
-  theme(legend.title = element_text(size = 30),
-        legend.text = element_text(size = 30), 
+  theme(legend.title = element_text(size = 30, color = "black"),
+        legend.text = element_text(size = 30, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.key.size  = unit(1.0, "cm"),
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
-        axis.text=element_text(size=30),
-        axis.title=element_text(size=32),  
+        axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=32, color = "black"),  
         legend.position=c(0.85,0.7))
 
 
@@ -132,19 +133,18 @@ df = data.frame(ind = 1:501 ,  s0.1 = data$one, s0.5 = data$five, s1.0 = data$te
 ml = melt(df, id.vars = 'ind')
 samplingRatePlot = 
   ggplot(data = ml, aes(x = ind, y = value, group = variable)) + 
-  geom_line(aes( colour = variable), size = 1.5) + 
+  geom_line(aes( linetype = variable), size = 1) + 
   xlab("Testing Increments") + ylab("Error Rate")  + 
-  scale_color_manual("Sampling Rate", labels = c("0.1", "0.5", "1.0") , values = c("s0.1"="darkgreen", "s0.5"="darkred", "s1.0"="darkblue")) + 
+  scale_linetype_manual("Sampling Rate", labels = c("0.1", "0.5", "1.0") , values = c("s0.1"=3, "s0.5"=5, "s1.0"=1)) + 
   theme_bw() + 
-  theme(legend.title = element_text(size = 30),
-        legend.text = element_text(size = 30), 
+  theme(legend.title = element_text(size = 30, color = "black"),
+        legend.text = element_text(size = 30, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.key.size  = unit(1.0, "cm"),
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
-        axis.text=element_text(size=30),
-        axis.title=element_text(size=32),  
+        axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=32, color = "black"),  
         legend.position=c(0.85,0.7))
-
 
 ggsave(samplingRatePlot , filename = 'mnist/nn/sampling/mnist-sampling-improved.eps', 
        device = cairo_ps,
