@@ -92,7 +92,11 @@ object ContinuousClassifier extends SVMClassifier {
         val startTime = System.currentTimeMillis()
         val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(dataParser.parsePoint).cache()
         val before = streamingModel.latestModel().weights
+        streamingModel.setMiniBatchFraction(0.2)
+        streamingModel.setNumIterations(10)
         streamingModel.trainOn(historicalDataRDD)
+        streamingModel.setMiniBatchFraction(1.0)
+        streamingModel.setNumIterations(1)
         val after = streamingModel.latestModel().weights
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)

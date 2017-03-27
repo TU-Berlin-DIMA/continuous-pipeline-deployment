@@ -128,14 +128,9 @@
 
 \maketitle
 \begin{abstract}
-%\todo[inline]{first paragraph too long? get to the point faster}
-%Volker
 Many scientific and business applications rely on methods from machine learning in order to derive novel insight from large data sets.
-%Volker
-%Volker
 A data analytics process is a pipeline comprised of several steps, from source selection, data preparation, feature engineering, model building/training, to the deployment of the model in a production environment. 
 Many of these steps are not automated, but require manual configuration by a data scientist or are semi-automatic at best.
-%Volker
 Once a machine learning model is trained on a dataset it is deployed into a system where it can answer prediction queries in a real-time and reliable fashion.
 While the system is running, new training data may become available, and the system incrementally updates the model.
 Furthermore, to ensure higher quality of prediction and better adaptation to changes in data distribution, the system also periodically retrain the model.
@@ -236,12 +231,72 @@ Our method can also adapt to changes in the distribution faster than the existin
 
 % Outline: The rest of this document is structured as follows. ...
 The rest of this paper is organized as follows. 
-Section \ref{sgd} describes the underlying optimization method.
-Section \ref{continious-training-serving} introduces the design principles of our system. 
-Section \ref{sec:system-architecutre} discusses the architecture and components.
-In Section \ref{evaluation}, we evaluate our system against different workloads and compare the performance of our method to other model deployment and maintenance approaches. 
 Section \ref {related-work} discusses related work.
+In section \ref{sgd}, we describe the underlying optimization method.
+Section \ref{continious-training-serving} and \ref{sec:system-architecutre} introduce the design principles and architecture of our deployment system.
+In Section \ref{evaluation}, we evaluate our system against different workloads and compare the performance of our method to other model deployment and maintenance approaches. 
 Finally, Section \ref{conclusion} presents our conclusion and future work.
+
+\section{Related Work} \label{related-work}
+Traditional machine learning systems focus on training and management of models and leave the task of deployment and maintenance to the users. 
+It has only been recently that some systems, for example Velox \cite{crankshaw2014missing}, TensorFlow Serving \cite{abadi2016tensorflow}, and LongView \cite{akdere2011case} have proposed architectures to support model deployment and query answering as well. 
+LongView integrates predictive machine learning models into relational databases. 
+It answers predictive queries and maintains and manages the models.
+LongView uses techniques such as query optimization and materialized view selection to increase the performance of the system.
+However, it only works with batch data and does not provide support for real-time queries. 
+As a result it does not support incremental learning.
+In contrast, our system is designed to work in a dynamic environment where it answers prediction queries in real-time and incrementally updates the model when required.
+TensorFlow Serving provides mechanisms for real-time queries, deployment and version control of machine learning models.
+It has out-of-the-box support for models created using TensorFlow and it provides several interfaces for users to deploy their custom models.
+However, it does not provide incremental updates to the model.
+Contrary to our system, models have to be retrained outside of the system and redeployed to TensorFlow Serving once the training is done.
+Moreover, TensorFlow is designed to create and train only deep neural network models and does not work with other machine learning models.
+Our system supports incremental and batch updates to the model and automatically applies these updates to the model currently being served.
+Furthermore, our system can work with any machine learning model that uses stochastic gradient descent as optimization algorithm.
+
+%\todo[inline]{FIX THIS}
+%Velox \cite{crankshaw2014missing} is an state of the art system which has implemented this deployment model.
+%It uses Apache Spark to train an initial model using the available training data.
+%Once the model is trained, it is deployed into a distributed environment, where prediction queries are answered in real time.
+%When new training data arrives at the system the model is incrementally updated.
+%The incoming training data is also stored in a persistent storage.
+%To ensure the model is performing well, its quality is monitored over time.
+%Velox periodically retrains the model from scratch. 
+%This retraining can be triggered when the size of new training data has surpasses a predefined limit, or the quality of the model has gone below a user defined threshold or simply after a fixed period of time defined by the user.
+%Figure \ref{fig:velox-work-flow} depicts how Velox works. 
+%A buffer is used to store the incoming training observations, which will be combined with the historical data during the next retraining phase.
+%Although Velox continuously monitors and updates the underlying model, it has 3 drawbacks:\\
+%\begin{itemize}
+%\item Complete retraining discards all the current model parameter
+%\item Process of retraining on full dataset is a time consuming process that requires a lot of resources
+%\item When new datasets are introduced, a complete retraining has to be performed in order to update the model
+%\end{itemize}
+%While the model is being retrained, incremental updates are turned off.
+%Moreover, newly introduced datasets will not have any effect on the model until the next retraining.
+%This negatively affects the quality of the predictions produced by the system.
+%To address these problems, we introduced a new deployment system which we describe next.
+Velox is an implementation of the common machine learning serving practice \cite{crankshaw2014missing}, explained in Section \ref{introduction}.
+Velox supports incremental learning and can answer prediction queries in real-time.
+It also eliminates the need for users to manually retrain the model offline and redeploy it again.
+Velox monitors the quality of the model using a validation set and once the error rate has gone beyond a predefined threshold it initiates a complete retraining of the model using Spark. 
+This deployment method, however, has three drawbacks; retraining discards updates that have been applied to the model so far, the process of retraining on full data set is resource intensive and time consuming and new datasets introduced to the system only influence the model after the next retraining.
+Our system uses the underlying properties of SGD to fully integrate the training process into the system's lifeline and eliminate the need for complete retraining of the model, which both reduces the time spent on training and can produce an updated model swiftly.
+Moreover, our system makes use of new batch datasets as soon as they become available.  
+
+Clipper \cite{crankshaw2016clipper} is another machine learning deployment system that focuses on producing higher quality predictions by maintaining an ensemble of models.
+It constantly examines the confidence of each model and for each prediction request, it uses the model with the highest confidence.
+However, it does not incrementally train the models in production which overtime leads to models becoming outdated.
+Our deployment method on the other hand, focuses on maintenance and constant updates of the models.
+
+Weka \cite{hall2009weka}, Apache Mahout \cite{Owen:2011:MA:2132656}, and Madlib \cite{hellerstein2012madlib} are systems that provide the necessary toolkits to train machine learning models. All of these systems provide a range of machine learning training algorithms. 
+However, they do not provide any management, before or after deployment of these models. 
+Our proposed system focuses on models trainable using stochastic gradient descent and as a result is able to provide management of the models both in training and after deployment.
+
+MLBase \cite{kraska2013mlbase} and TuPaq \cite{sparks2015tupaq} are machine learning model management systems.
+They provide a range of training algorithms to create machine learning models and mechanism for model search as well as model management.
+They focus on training high quality models by performing automatic feature engineering and hyper-parameter search.
+However, they only work with batch datasets and once models are trained, they have to be deployed and used for serving manually by the users.
+Our system, on the contrary, is designed for deployment and maintenance of already trained models.
 
 \section{Stochastic Gradient Descent} \label{sgd}
 Machine learning applies optimization methods in order to find the minimum of an objective function (referred to as the loss function) by calculating the gradient of the function at different data points and update the function parameters based on the gradient values.
@@ -523,7 +578,7 @@ Higgs  & 28 & 11000000 \\
 Susy & 18 & 5000000 \\ 
 URL Reputation & 3231961 & 2396130 \\
 Cover Type & 52 & 581012 \\
-MNIST \cite{lecun-mnist} & 784 & 60000 
+MNIST & 784 & 60000 
 \\\bottomrule 
 \end{tabular}
 \caption{Classification Datasets}
@@ -710,7 +765,7 @@ In both the Movie Lens 100k and MNIST use cases the change in scheduling and sam
 However, the running time of the methods are heavily influenced by these parameters.
 Setting these parameters to small values decreases the running time considerably and save computation resources regardless of the type of model the system is serving.
 
-\subsection{Experiments in Local Environment}
+\subsection{Experiments in Local Environment}\label{subsec:experiment-local}
 We evaluated our deployment method on the datasets described in this chapter.
 Our prototypes support two different methods of specifying the scheduling rate; buffer size and scheduling period.
 For recommender system experiments we use the buffer size to specify the scheduling rate (in Velox's case scheduling rate corresponds to offline retraining frequency).
@@ -864,119 +919,86 @@ We evaluated our deployment system on larger workloads in a cluster environment.
 
 
 \subsection{Discussion}
+Our experiments show that although Continuous deployment method perform differently on different workloads, it always results in the lowest error rate in a much lower total training time than Velox deployment method.
+
+Figure \ref{fig:training-time-vs-quality} shows the total training time and average error rate of each the three different deployment methods (Baseline, Continuous and Velox) on different datasets.
+\ref{subfig:url-meta}--\ref{subfig:susy-meta} \todo[inline]{finish after the experiments are done}
+\ref{subfig:cover-type-meta}--\ref{subfig:susy-sample-meta} shows the trade off between quality and total training time for our local classification datasets.
+In all cases,  Continuous deployment method achieves the lowest average error rate in a reasonable amount of time.
+This is due to two reasons.
+First, it is constantly updating the model with a combination of new and old data.
+Second, contrary to Velox the updates are always incremental and small.
+As we discussed in section \ref{subsec:experiment-local}, a full retraining on a dataset may cause the model to overfit to the training data and cannot generalize well to the incoming data stream.
+
+Figure \ref{subfig:movie-lens-100k-meta} and \ref{subfig:movie-lens-1m-meta} show the trade off between training time and average of mean squared error rate for Movie Lens dataset.
+Here, the characteristics of the data (concept drift and cold start problems) have made online updates necessary.
+Both Velox and Continuous deployment methods achieve similar average mean squared error rate, however, Continuous method has a much smaller training time than that of Velox.
+
+\todo[inline]{Should I include this? if yes, here or in Conclusion}
+One aspect of the deployment systems that we do not tackle in our current prototype is the prediction latency.
+In our current prototype, both prediction and model updates are managed by the same node and as a result the prediction component is paused until the incremental training (or retraining in the case of Velox) is executed.
+Therefore, the system always answer each prediction query using the latest model, although with a much greater delay.
+
+In an actual model deployment system, training and prediction are done on separate nodes (or threads), therefore any prediction request arriving at the system can be answered immediately using the latest available version of the model.
+Since the retraining time for Velox is large, a considerable percentage of prediction requests are always answered by an older version of the model.
+Our continuous deployment method reduces this delay since the it is updating the underlying model constantly.
+We plan to investigate the effect of using older versions of the model to answer prediction requests in our future work.
+
 \begin{figure*}[h]
 \begin{subfigure}{0.33\textwidth}
   \centering
   \includegraphics[width=0.7\linewidth]{../images/experiment-results/placeholder.jpg}
   \caption{URL}
-  \label{fig:sfig2}
+   \label{subfig:url-meta}
 \end{subfigure}%
 \begin{subfigure}{0.33\textwidth}
  \centering
   \includegraphics[width=0.7\linewidth]{../images/experiment-results/placeholder.jpg}
   \caption{Higgs}
+   \label{subfig:higgs-meta}
 \end{subfigure}%
 \begin{subfigure}{0.33\textwidth}
  \centering
   \includegraphics[width=0.7\linewidth]{../images/experiment-results/placeholder.jpg}
   \caption{Susy}
+  \label{subfig:susy-meta}
 \end{subfigure}
 
 \begin{subfigure}{0.33\textwidth}
   \centering
   \includegraphics[width=1\linewidth, height=1\linewidth, keepaspectratio]{../images/experiment-results/cover-type-meta-performance.eps}
   \caption{Cover Type}
-  \label{fig:sfig2}
+  \label{subfig:cover-type-meta}
 \end{subfigure}%
 \begin{subfigure}{0.33\textwidth}
  \centering
   \includegraphics[width=1\linewidth, height=1\linewidth, keepaspectratio]{../images/experiment-results/higgs-sample-meta-performance.eps}
   \caption{Higgs Sample}
+  \label{subfig:higgs-sample-meta}
 \end{subfigure}%
 \begin{subfigure}{0.33\textwidth}
  \centering
   \includegraphics[width=1\linewidth, height=1\linewidth, keepaspectratio]{../images/experiment-results/susy-sample-meta-performance.eps}
   \caption{Susy Sample}
+  \label{subfig:susy-sample-meta}
 \end{subfigure}
 \centering
 \begin{subfigure}{.30\textwidth}
  
   \includegraphics[width=1\linewidth, height=1\linewidth, keepaspectratio]{../images/experiment-results/movie-lens-100k-meta-performance.eps}
   \caption{Movie Lens 100K}
-  \label{fig:sfig2}
+  \label{subfig:movie-lens-100k-meta}
 \end{subfigure}%
 \begin{subfigure}{0.30\textwidth}
 
   \includegraphics[width=1\linewidth, height=1\linewidth, keepaspectratio]{../images/experiment-results/movie-lens-1m-meta-performance.eps}
   \caption{Movie Lens 1M}
-  \label{fig:sfig1}
+  \label{subfig:movie-lens-1m-meta}
 \end{subfigure}
 
-\caption{Performance vs Quality}
-\label{fig:fig}
+\caption{Total Training Time vs Quality}
+\label{fig:training-time-vs-quality}
 \end{figure*}
-
-\section{Related Work} \label{related-work}
-Traditional machine learning systems focus on training and management of models and leave the task of deployment and maintenance to the users. 
-It has only been recently that some systems, for example Velox \cite{crankshaw2014missing}, TensorFlow Serving \cite{abadi2016tensorflow}, and LongView \cite{akdere2011case} have proposed architectures to support model deployment and query answering as well. 
-LongView integrates predictive machine learning models into relational databases. 
-It answers predictive queries and maintains and manages the models.
-LongView uses techniques such as query optimization and materialized view selection to increase the performance of the system.
-However, it only works with batch data and does not provide support for real-time queries. 
-As a result it does not support incremental learning.
-In contrast, our system is designed to work in a dynamic environment where it answers prediction queries in real-time and incrementally updates the model when required.
-TensorFlow Serving provides mechanisms for real-time queries, deployment and version control of machine learning models.
-It has out-of-the-box support for models created using TensorFlow and it provides several interfaces for users to deploy their custom models.
-However, it does not provide incremental updates to the model.
-Contrary to our system, models have to be retrained outside of the system and redeployed to TensorFlow Serving once the training is done.
-Moreover, TensorFlow is designed to create and train only deep neural network models and does not work with other machine learning models.
-Our system supports incremental and batch updates to the model and automatically applies these updates to the model currently being served.
-Furthermore, our system can work with any machine learning model that uses stochastic gradient descent as optimization algorithm.
-
-%\todo[inline]{FIX THIS}
-%Velox \cite{crankshaw2014missing} is an state of the art system which has implemented this deployment model.
-%It uses Apache Spark to train an initial model using the available training data.
-%Once the model is trained, it is deployed into a distributed environment, where prediction queries are answered in real time.
-%When new training data arrives at the system the model is incrementally updated.
-%The incoming training data is also stored in a persistent storage.
-%To ensure the model is performing well, its quality is monitored over time.
-%Velox periodically retrains the model from scratch. 
-%This retraining can be triggered when the size of new training data has surpasses a predefined limit, or the quality of the model has gone below a user defined threshold or simply after a fixed period of time defined by the user.
-%Figure \ref{fig:velox-work-flow} depicts how Velox works. 
-%A buffer is used to store the incoming training observations, which will be combined with the historical data during the next retraining phase.
-%Although Velox continuously monitors and updates the underlying model, it has 3 drawbacks:\\
-%\begin{itemize}
-%\item Complete retraining discards all the current model parameter
-%\item Process of retraining on full dataset is a time consuming process that requires a lot of resources
-%\item When new datasets are introduced, a complete retraining has to be performed in order to update the model
-%\end{itemize}
-%While the model is being retrained, incremental updates are turned off.
-%Moreover, newly introduced datasets will not have any effect on the model until the next retraining.
-%This negatively affects the quality of the predictions produced by the system.
-%To address these problems, we introduced a new deployment system which we describe next.
-Velox is an implementation of the common machine learning serving practice \cite{crankshaw2014missing}, explained in Section \ref{introduction}.
-Velox supports incremental learning and can answer prediction queries in real-time.
-It also eliminates the need for users to manually retrain the model offline and redeploy it again.
-Velox monitors the quality of the model using a validation set and once the error rate has gone beyond a predefined threshold it initiates a complete retraining of the model using Spark. 
-This deployment method, however, has three drawbacks; retraining discards updates that have been applied to the model so far, the process of retraining on full data set is resource intensive and time consuming and new datasets introduced to the system only influence the model after the next retraining.
-Our system uses the underlying properties of SGD to fully integrate the training process into the system's lifeline and eliminate the need for complete retraining of the model, which both reduces the time spent on training and can produce an updated model swiftly.
-Moreover, our system makes use of new batch datasets as soon as they become available.  
-
-Clipper \cite{crankshaw2016clipper} is another machine learning deployment system that focuses on producing higher quality predictions by maintaining an ensemble of models.
-It constantly examines the confidence of each model and for each prediction request, it uses the model with the highest confidence.
-However, it does not incrementally train the models in production which overtime leads to models becoming outdated.
-Our deployment method on the other hand, focuses on maintenance and constant updates of the models.
-
-Weka \cite{hall2009weka}, Apache Mahout \cite{Owen:2011:MA:2132656}, and Madlib \cite{hellerstein2012madlib} are systems that provide the necessary toolkits to train machine learning models. All of these systems provide a range of machine learning training algorithms. 
-However, they do not provide any management, before or after deployment of these models. 
-Our proposed system focuses on models trainable using stochastic gradient descent and as a result is able to provide management of the models both in training and after deployment.
-
-MLBase \cite{kraska2013mlbase} and TuPaq \cite{sparks2015tupaq} are machine learning model management systems.
-They provide a range of training algorithms to create machine learning models and mechanism for model search as well as model management.
-They focus on training high quality models by performing automatic feature engineering and hyper-parameter search.
-However, they only work with batch datasets and once models are trained, they have to be deployed and used for serving manually by the users.
-Our system, on the contrary, is designed for deployment and maintenance of already trained models.
-
 
 \section{Conclusions} \label{conclusion}
 This paper presents an architecture for serving and continuous training of machine learning models.
