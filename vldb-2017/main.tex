@@ -50,7 +50,8 @@
 \usepackage{lipsum}% http://ctan.org/pkg/lipsum
 \usepackage{graphicx}% http://ctan.org/pkg/graphicx
 \usepackage{float}
-\usepackage{todonotes}
+%\usepackage{todonotes}
+\usepackage[disable]{todonotes}
 \usepackage[outdir=./figures/]{epstopdf}
 \usepackage{listings}
 \PassOptionsToPackage{table}{colorx}
@@ -885,8 +886,7 @@ In all of the evaluated datasets, the Continuous method's total training time is
 This is because a full retraining incurs a much higher overhead than continuously training the method.
 Another reason for the difference in training time is that as the size of the data increases the time for running a new iteration in continuous method stays roughly the same where as the time for a full retraining increases exponentially.
 
-\subsection{Experiments in the Distributed Environment}
-\todo[inline]{Incomplete}
+\subsection{Incomplete - Experiments in the Distributed Environment}
 We evaluated our deployment system on larger workloads in a cluster environment.
 \begin{figure}[h]
 	\centering
@@ -910,8 +910,7 @@ We evaluated our deployment system on larger workloads in a cluster environment.
 \end{figure}
 
 
-\subsection{Discussion}
-\todo[inline]{Incomplete}
+\subsection{Incomplete - Discussion}
 Our experiments show that although Continuous deployment method perform differently on different workloads, it always results in the lowest error rate in a much lower total training time than Velox deployment method.
 
 Figure \ref{fig:training-time-vs-quality} shows the total training time and average error rate of each the three different deployment methods (Baseline, Continuous and Velox) on different datasets.
