@@ -12,6 +12,7 @@ loadData <- function(file){
 }
 
 
+
 # Plot cover type Results
 continuous = read.csv('cover-types/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-1.0/2017-03-23-22-33/error-rates.txt', header = FALSE, col.names = 'continuous')
 
@@ -44,17 +45,17 @@ p =
   geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1) + 
   geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1) + 
   # plot retraining points
-  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 4, shape = 17 ) + 
+  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 5, shape = 16 ) + 
   # x and y labels
   xlab("Time") + ylab("Misclassification Rate") + 
   #ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
-  theme(legend.text = element_text(size = 20, color = "black"), 
+  theme(legend.text = element_text(size = 30, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
-        axis.text=element_text(size=28, color = "black"),
-        axis.title=element_text(size=28, color= "black"),  
+        axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=30, color= "black"),  
         legend.position=c(0.85,0.67), 
         legend.key.width = unit(2.5, "cm"), 
         legend.key.height = unit(0.8, "cm")) + 
@@ -63,7 +64,7 @@ p =
   scale_color_manual(name = "", 
                      labels = c("baseline", "baseline+", "continuous","velox", "retraining"),
                      values = c("a"="black", "b"="black","c"="black","d"="black", "e"="black"))+
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(3,4,1,5,0)))) 
+  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,16),linetype=c(3,4,1,5,0)))) 
   
 ggsave(p , filename = 'cover-types/cover-types-quality.eps', 
        device = 'eps', 
@@ -102,17 +103,17 @@ p =
   geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1) + 
   geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1) + 
   # plot retraining points
-  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 4, shape = 17 ) + 
+  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 5, shape = 16 ) + 
   # x and y labels
   xlab("Time") + ylab("Misclassification Rate") + 
   #ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
-  theme(legend.text = element_text(size = 20, color = "black"), 
+  theme(legend.text = element_text(size = 30, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
-        axis.text=element_text(size=28, color = "black"),
-        axis.title=element_text(size=28, color= "black"),  
+        axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=30, color= "black"),  
         legend.position=c(0.25,0.30), 
         legend.key.width = unit(2.5, "cm"), 
         legend.key.height = unit(0.8, "cm")) + 
@@ -121,7 +122,7 @@ p =
   scale_color_manual(name = "", 
                      labels = c("baseline", "baseline+", "continuous","velox", "retraining"),
                      values = c("a"="black", "b"="black","c"="black","d"="black", "e"="black"))+
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(3,4,1,5,0)))) 
+  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,16),linetype=c(3,4,1,5,0)))) 
 
 
 ggsave(p , filename = 'higgs-sample/higgs-sample-quality.eps', 
@@ -162,17 +163,17 @@ p =
   geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1) + 
   geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1) + 
   # plot retraining points
-  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 4, shape = 17 ) + 
+  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 5, shape = 16 ) + 
   # x and y labels
   xlab("Time") + ylab("Misclassification Rate") + 
   #ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
-  theme(legend.text = element_text(size = 20, color = "black"), 
+  theme(legend.text = element_text(size = 30, color = "black"), 
         legend.key = element_rect(colour = "transparent", fill = "transparent"), 
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
-        axis.text=element_text(size=28, color = "black"),
-        axis.title=element_text(size=28, color= "black"),  
+        axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=30, color= "black"),  
         legend.position=c(0.85,0.67), 
         legend.key.width = unit(2.5, "cm"), 
         legend.key.height = unit(0.8, "cm")) + 
@@ -181,7 +182,7 @@ p =
   scale_color_manual(name = "", 
                      labels = c("baseline", "baseline+", "continuous","velox", "retraining"),
                      values = c("a"="black", "b"="black","c"="black","d"="black", "e"="black"))+
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,17),linetype=c(3,4,1,5,0)))) 
+  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,16),linetype=c(3,4,1,5,0)))) 
 ggsave(p , filename = 'susy-sample/susy-sample-quality.eps', 
        device = 'eps', 
        width = 14, height = 5, 
@@ -305,7 +306,7 @@ p =
         legend.position=c(0.75,0.85)) +
   theme(axis.text=element_text(size=30, color = "black"),
         axis.title=element_text(size=32, color = "black")) + 
-  scale_shape_manual("", values = c("Baseline" = 4, "Continuous" = 8, "Velox" = 13))
+  scale_shape_manual("", values = c("Baseline" = 15, "Continuous" = 16, "Velox" = 18))
 
 ggsave(p , filename = 'cover-types/cover-types-meta-performance.eps', 
        device = cairo_ps,
@@ -341,7 +342,7 @@ p =
         legend.position=c(0.75,0.85)) +
   theme(axis.text=element_text(size=30, color = "black"),
         axis.title=element_text(size=32, color = "black")) + 
-  scale_shape_manual("", values = c("Baseline" = 4, "Continuous" = 8, "Velox" = 13))
+  scale_shape_manual("", values = c("Baseline" = 15, "Continuous" = 16, "Velox" = 18))
 
 ggsave(p , filename = 'higgs-sample/higgs-sample-meta-performance.eps', 
        device = cairo_ps,
@@ -377,7 +378,7 @@ p =
         legend.position=c(0.75,0.85)) +
   theme(axis.text=element_text(size=30, color = "black"),
         axis.title=element_text(size=32, color = "black")) + 
-  scale_shape_manual("", values = c("Baseline" = 4, "Continuous" = 8, "Velox" = 13))
+  scale_shape_manual("", values = c("Baseline" = 15, "Continuous" = 16, "Velox" = 18))
 
 ggsave(p , filename = 'susy-sample/susy-sample-meta-performance.eps', 
        device = cairo_ps,

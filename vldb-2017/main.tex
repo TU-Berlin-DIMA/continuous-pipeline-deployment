@@ -166,11 +166,10 @@ Therefore, in order to prevent the model's quality from degrading, periodic retr
 
 % How is it different from prior work
 Most of the current machine learning research focuses on training and providing tools to make model training and search easier. 
-Kumar et al. \cite{kumar2015survey} provided an overview of landscape of existing machine learning systems. 
+Kumar et al. provided an overview of landscape of existing machine learning systems \cite{kumar2015survey}. 
 Most of the surveyed systems provide little to no support after the model has been trained.
 Only few systems \cite{akdere2011case, crankshaw2014missing} support deploying and maintaining the models.
 Moreover, systems with support for model deployment are still lacking constant monitoring and fast and accurate updates of the machine learning models.
-Deployment and training of models is usually a manual process.
 
 Figure \ref{fig:velox-work-flow} demonstrates the most common model deployment approach.
 First, a model is trained based on an existing dataset residing on disk, this model serves as the initial model.
@@ -249,7 +248,7 @@ In contrast, our system is designed to work in a dynamic environment where it an
 TensorFlow Serving provides mechanisms for real-time queries, deployment and version control of machine learning models.
 It has out-of-the-box support for models created using TensorFlow and it provides several interfaces for users to deploy their custom models.
 However, it does not provide incremental updates to the model.
-Contrary to our system, models have to be retrained outside of the system and redeployed to TensorFlow Serving once the training is done.
+Contrary to our system, models have to be retrained outside of the system and have to be redeployed to TensorFlow Serving once the training is done.
 Moreover, TensorFlow is designed to create and train only deep neural network models and does not work with other machine learning models.
 Our system supports incremental and batch updates to the model and automatically applies these updates to the model currently being served.
 Furthermore, our system can work with any machine learning model that uses stochastic gradient descent as optimization algorithm.
@@ -307,28 +306,28 @@ Similar to gradient descent, it is an iterative process but in each iteration it
 It calculates the gradient at a single element and updates the parameters of the model accordingly. 
 Although it converges after a higher number of iterations, the overall convergence time is lower (sometimes by orders of magnitude) than gradient descent. 
 Each iteration of SGD can be executed in a short amount of time because it only works with a sample of the data.
-We are leveraging this property of SGD and design our deployment system so that it executes one iteration of SGD at a time without interrupting the query answering component.
-In Section \ref{evaluation}, we show that the time to execute a single iteration of SGD is insignificant.
+We are leveraging this property of SGD and design our deployment system so that it executes one iteration o	f SGD at a time without interrupting the query answering component.
+In Section \ref{evaluation}, we show that the overhead from executing a single iteration of SGD is very small and it does not affect the query answering component.
 
 \subsection{Distributed SGD}
 To efficiently train machine learning models on large datasets, scalable techniques have to be employed.
-As explained earlier, SGD inherently works well with large amounts of data because it does not need to scan every data point during every iteration.
-However, when the dataset cannot fit into the memory of a single machine, it has to be distributed to multiple machines to run efficiently.
-In this situation, one common method is to distribute the gradient calculation tasks across nodes in a cluster, where each task allocated to a node will work with a different part of the data.
-One problem of this approach is that a synchronization step is required before applying the updates to the model. 
+SGD inherently works well with large amounts of data because it does not need to scan every data point during every iteration.
+However, for very large datasets SGD has to perform many iterations in order to converge.
+To decrease the running time, large datasets can be distributed among multiple nodes, where each node will compute the gradients on a subset of the data in parallel.
+One drawback of this approach is that a synchronization step is required before applying the updates to the model. 
 This synchronization step slows down the SGD process, because after every iteration, all the updates have to be sent to a central process that updates the model.
 Experiments on distributed, asynchronous SGD show that the quality of the final model is not worse than the synchronized approach \cite{recht2011hogwild, dean2012large}. 
 
-\subsection{Learning Rate Tuning} \label{learning-rate}
-\todo[inline]{If we decide to go with April submission, try different learning rate tuning techniques}
-The learning rate or step size is a parameter of SGD, which controls the amount of change in model parameters during each iteration of SGD.
-It plays an important role in the convergence of SGD.
-The most common technique is to set the learning rate to a small value, and slowly decrease the value in every iteration until the model converges.
-However, in continuous and online learning due to possible changes in data distribution the parameters of a model may never converge.
-Adaptive learning rates have been used in online scenarios where the learning rate is adjusted automatically based on different criteria.
-Schaul et al. have proposed one such method were the learning rate can be inferred automatically based on the changes in the parameters of the model \cite{schaul2013no}. 
-One advantage of their method is that it works well with non-stationary problems, where the distribution of the data is constantly changing. 
-Based on observed changes in the data, one can adjust the learning rate to decrease (when approaching the optimum value) or increase (when the distribution of the data has changed).
+%\subsection{Learning Rate Tuning} \label{learning-rate}
+%\todo[inline]{If we decide to go with April submission, try different learning rate tuning techniques}
+%The learning rate or step size is a parameter of SGD, which controls the amount of change in model parameters during each iteration of SGD.
+%It plays an important role in the convergence of SGD.
+%The most common technique is to set the learning rate to a small value, and slowly decrease the value in every iteration until the model converges.
+%However, in continuous and online learning due to possible changes in data distribution the parameters of a model may never converge.
+%Adaptive learning rates have been used in online scenarios where the learning rate is adjusted automatically based on different criteria.
+%Schaul et al. have proposed one such method were the learning rate can be inferred automatically based on the changes in the parameters of the model \cite{schaul2013no}. 
+%One advantage of their method is that it works well with non-stationary problems, where the distribution of the data is constantly changing. 
+%Based on observed changes in the data, one can adjust the learning rate to decrease (when approaching the optimum value) or increase (when the distribution of the data has changed).
 
 \subsection{Machine Learning Models based on SGD}
 SGD is one of the most common optimization methods for training machine learning models on large datasets. 
@@ -360,6 +359,7 @@ The success of the Google's Deepmind team in achieving Neural Networks that were
 
 SGD is the ideal optimization algorithm for training neural networks since it works very well with large datasets (which are required for training neural networks).
 In fact, almost all of the recent work on neural networks use SGD for training them.
+\todo[inline]{TR: I thought this is mostly done on GPU? Do they use SGD on GPU?}
 
 \begin{figure}[t]
 \centering
@@ -392,6 +392,7 @@ In fact, almost all of the recent work on neural networks use SGD for training t
 %Since each iteration of SGD is light and fast, it can be executed while the system is serving prediction requests.
 Our proposed deployment and maintenance system uses SGD as its underlying learning algorithm.
 As a result, it can update the model incrementally (one training item at a time) or use mini-batches of data (1 iteration of SGD).
+\todo[inline]{TR: Do we compare both in the experiments?}
 The core design principles of our deployment system are threefold.
 First, we incrementally update the model so that it can adapt to changes in the distribution of the incoming data.
 Second, we eliminate retraining and replace it with a series of consecutive iterations of SGD.
@@ -399,6 +400,7 @@ And finally, we immediately use new batch datasets that are available to the sys
 Figure \ref{fig:cont-training-serving} shows how our deployment method works.
 First, using the existing data residing on disk, we train an initial model and deploy it into the system.
 The system receives prediction queries and training observations in a streaming fashion.
+\todo[inline]{TR: What about a cold start scenario? I.e., start with no data, would that work?}
 The deployed model answers incoming prediction queries as soon as they are received.
 Once the system receives a training observation it updates the model incrementally.
 The system also keeps track of incoming training observations and adds them to an intermediate buffer.
@@ -468,7 +470,8 @@ Therefore, the scheduler component has to communicate with the model manager in 
 In order to execute an iteration of SGD, we need to combine the training data that arrives at the system in real-time with the data stored on disk.
 The data manager is responsible for storing the incoming training observations in an intermediate buffer.
 When a new training iteration is scheduled, the data manager accesses the historical data stored on disk and provides a sample.
-The data from the sample and the data in the buffer are merged together to create the dataset for next training iteration.
+\todo[inline]{TR: How is the sample generated?}
+The data from the sample and the data in the buffer are merged to create the dataset for next training iteration.
 The data manager provides access to this dataset for the model manager where the actual training and model updates happen.
 The data manager also communicates with the scheduler in order to inform it when the intermediate buffer is becoming full and a new training iteration is required. 
 
@@ -527,21 +530,19 @@ In case of concept drift, new training iterations should be scheduled that only 
 \subsection{SGD Run-Time} 
 All components of our model serving system described so far are not limited to any specific run-time.
 We have decoupled the components from the actual run time of the system.
-As described earlier the underlying optimization method is SGD and any run time capable of performing incremental and batch SGD updates efficiently are suitable options for our system.
+The underlying optimization method is SGD and any run time capable of performing incremental and batch SGD updates efficiently are suitable options for our system.
 Apache Flink \cite{carbone2015apache} and Apache Spark \cite{zaharia2010spark} are distributed data processing platform that work with data in memory and have support for iterative algorithms, which makes both of them ideal options for our SGD run-time.
 In our current prototype, we are using Apache Spark \cite{zaharia2010spark} as our SGD run-time, but we plan incorporate Apache Flink in the complete version of the system.
 The model manager is the component responsible for communicating with the SGD run-time.
 In the current version of our prototype, the model manager requests Spark to perform both incremental and batch updates to the model, both of which are supported by the built in machine learning library of Spark.
 The choice of run-time for SGD slightly influences the data manager as well.
 In our prototype, historical data is stored on Hadoop Distributed File System (HDFS) \cite{shvachko2010hadoop}.
-Therefore, the data manager should have support for HDFS.
-Both Flink and Spark provide out-of-the-box support for HDFS.
 
 \section{Evaluation} \label{evaluation} 
 In this section, we evaluate the performance of our system using various datasets. 
 We report both the quality (error rate) and performance of our proposed method. 
 
-\subsection{Setup}
+\subsection{Setup}\label{subsec:setup}
 \textbf{Environments:} We evaluated our deployment method on two environments; local and distributed.
 We use a single node OS X machine with  a quad-core Intel i7 and 16 GB of RAM for our local experiments.
 The distributed environment consists of 11 nodes (1 master, 10 slaves).
@@ -585,7 +586,7 @@ MNIST & 784 & 60000
 \end{table}
 
 \textbf{Datasets:} we use two different types of datasets in our experiments.
-To evaluate the recommender system we use Movie Lens \cite{harper2016movielens} datasets, which are a collection of movie ratings.
+To evaluate the recommender system we use Movie Lens datasets, which are a collection of movie ratings \cite{harper2016movielens} .
 We use two versions of this dataset (100k and 1M), each with varying number of users, movies and ratings.
 Table \ref{table:recommender-systems} shows the details of Movie Lens dataset.
 We have sorted the Movie Lens data set based on the ratings timestamp and items are examined one by one according to their timestamp.
@@ -641,7 +642,7 @@ It is only applicable in cases where the entire dataset is available.
 
 \subsection{Implementation of ML Models}
 We have implemented three different machine learning models to evaluate our deployment method.
-In this section, we briefly explain each implemented methods.
+In this section, we briefly explain each of the implemented methods.
 
 \textbf{Recommender system:} we implement a recommender system based on the matrix factorization using SGD \cite{funk2006netflix}.
 Based on our initial experiments, we set the number of latent factors to 40.
@@ -652,7 +653,7 @@ Training observations are of the form \textit{\((user\_id, item\_id, rating\))}.
 Based on the training observation, the bias values as well as the factors are updated for the specified user and item.
 
 \textbf{SVM Classifier:} we implement a simple SVM classifier by extending the existing SVM classifier of Apache Spark.
-We implement the necessary methods described in section \ref{sec:system-architecutre} for the SVM classifier to work with our deployment method.
+We implement the necessary methods described in Section \ref{sec:system-architecutre} for the SVM classifier to work with our deployment method.
 The extra methods are \textit{update} which takes one (or a micro-batch in Spark Streaming) and incrementally update the model and \textit{update\_iteration} which takes a dataset and executes one iteration of SGD on the given data.
 
 \textbf{Neural Network:} to evaluate our system on an image classification task, we implemented a multi-layer perceptron neural network using back propagation \cite{collobert2004links}.
@@ -661,7 +662,7 @@ Similar to recommender system case, a network is first trained on the static dat
 The training observations are of the form of \textit{\((X,y)\)}, where X is a vector of 784 dimension (1 for each pixel) and y is the digit the image is representing.
 
 \subsection{Tuning parameters} \label{tuning}
-In section \ref{continious-training-serving}, we discussed how system parameters such as sampling and scheduling rate affect the performance and quality of the system.
+In Section \ref{continious-training-serving}, we discussed how system parameters such as sampling and scheduling rate affect the performance and quality of the system.
 In this section, we analyze the effects of different sampling and scheduling rates on the system.
 Our goal, is to make these parameters adaptive, but for now we analyze their effects on the running time and quality. 
 
@@ -691,7 +692,7 @@ Figure \ref{fig:movie-lens-100k-buffer-size-mse} shows the mean squared error fo
 A smaller buffer size causes the scheduler to initiate training iterations more frequently.
 As a result, the underlying model is updated faster.
 However, the error rate is not decreasing linearly with the buffer size.
-Further analysis show that once the model is update more frequently, it slowly starts to converge and any further training has little to no effect on the overall quality of the model
+Further analysis show that once the model is update more frequently, it slowly starts to converge and any further training has little to no effect on the overall quality of the model.
 Therefore, increasing the scheduling rate only decreases the error rate up to a point, after which increasing the scheduling rate has no effect on the overall quality of the model.
 This is extremely important, specially when considering the effect the buffer size has on the running time.
 Figure \ref{fig:movie-lens-100k-buffer-size-time} shows the running time on Movie Lens 100k dataset using different buffer sizes. 
@@ -717,56 +718,55 @@ Therefore, a dynamic scheduling maximizes the performance of the system, by perf
 Moreover, since training and serving can be done in parallel, we can perform training in the background and only update the weights when the training iteration is over. 
 
 \textbf{Sampling rate:} In each iteration of SGD, as described in Section \ref{continious-training-serving}, the data inside the buffer and a sample of the historical data is used to update the model.
-In this section, we investigate the effect of the sampling rate on the model quality and running time of the system.
-Figure \ref{fig:movie-lens-100k-sample-rate} shows that larger sampling rate increases the quality of the model, but similar to scheduling rate, the decrease in error rate is negligible considering the effect it has on running time. 
-This is again, caused by the same phenomena, where the model after training on bigger sample rates start to converge faster and as a result bigger sample sizes will not have an effect on the quality.
+In this section, we investigate the effect of the sampling rate on the model quality and the running time of the system.
+Figure \ref{fig:movie-lens-100k-sample-rate} shows that a larger sampling rate increases the quality of the model, but similar to scheduling rate, the decrease in error rate is negligible considering the effect it has on running time. 
+This is again, caused by the same phenomena, where the model after training on bigger sample rates start to converge faster and as a result bigger sample sizes do not have an effect on the quality.
  
 Figure \ref{fig:movie-lens-100k-sample-rate-time} shows the effect of increasing sampling rate on running time.
 Using the entire historical data (sampling rate = 1.0) increases the running time 5 fold. 
-Therefore, similar to scheduling rate, setting the sampling rate to smaller values will increase the performance substantially, while only slightly affecting the quality of the model.
+Therefore, similar to the scheduling rate, setting the sampling rate to smaller values will increase the performance substantially, while only slightly affecting the quality of the model.
 
-\textbf{Tuning parameters based on error rate:} As described earlier, tuning the parameters are heavily influenced by application type.
-Both the underlying machine learning model and the dataset can have a big effect on the selection of sampling rate and scheduling rate.
-In the recommender system use case, due to changes in incoming data distribution, we saw that bigger sample rates and higher scheduling rates have an effect (although small) on the quality of the model.
-This, however, may not be the case for other applications.
+\textbf{Tuning parameters based on error rate:} The underlying machine learning model and the dataset have big effects on the selection of sampling rate and scheduling rate.
+In the recommender system use case, due to changes in incoming data distribution, we see that bigger sample rates and higher scheduling rates have an effect (although small) on the quality of the model.
+This, however, is not be the case for every application.
 To demonstrate this, we perform the same set of experiments on the MNIST dataset.
-Figure \ref{fig:mnist-sample-rate} shows the effect of different sampling rates on the neural network classifer model for \textit{MNIST} data.
-Interestingly and contrary to the results we achieved for Movie Lens 100k the difference in error rates for different sampling rates are almost indistinguishable from each other.
-While the difference in error rates for Movie Lens 100k was small, but it is still much greater than the difference in error rates for neural networks.
+Figure \ref{fig:mnist-sample-rate} shows the effect of different sampling rates on the neural network classifier model for \textit{MNIST} data.
+Interestingly and contrary to the results we achieved for Movie Lens 100k the error rates for different sampling rates are very similar.
 We believe this is caused by how neural networks behave.
-Increasing sampling rate, causes similar data items to be used repeatedly in each training iteration and based on our experiments neural networks are not affected by this oversampling and, therefore, the results are almost similar with different sampling rates.
-Moreover, in this experiment, the number of parameters of multi-layer perceptron is far less than the number of parameters of the matrix factorization model for Movie Lens 100k.
+Increasing the sampling rate causes similar data items to be used repeatedly in each training iteration and based on our experiments neural networks are not affected by this oversampling and, therefore, the results are almost similar with different sampling rates.
+\todo[inline]{TR: Is the same sample used over and over again?}
+Moreover, in this experiment, the number of parameters of the multi-layer perceptron is far less than the number of parameters of the matrix factorization model for Movie Lens 100k.
 This causes the neural work to converge faster and, therefore, it is not affected by more training, unless new training observations arrive at the system.
-\todo[inline]{These two figures are just to show that these parameters dont always have the same effect .. should I include them? }
+\todo[inline]{TR: Not sure, is this obvious, otherwise it might be an interesting comparison. Do you ever reference to fig 7b?}
 \begin{figure}[h]
 \begin{subfigure}{\columnwidth}
 \centering
 \includegraphics[width=\columnwidth]{../images/experiment-results/mnist-sampling-improved.eps}
-\caption{Buffer size}
-\label{fig:mnist-buffer-size}
+\caption{Sampling rate}
+\label{fig:mnist-sample-rate}
 \end{subfigure}
 \begin{subfigure}{\columnwidth}
 \centering
 \includegraphics[width=\columnwidth]{../images/experiment-results/mnist-buffersize-improved.eps}
-\caption{Sampling rate}
-\label{fig:mnist-sample-rate}
+\caption{Buffer size}
+\label{fig:mnist-buffer-size}
 \end{subfigure}
 \caption{Parameters effect on quality (MNIST)}
 \end{figure}
 
-Figure \ref{fig:mnist-buffer-size} shows how buffer size affects the overall quality of the neural network model.
+Figure \ref{fig:mnist-buffer-size} shows how the buffer size affects the overall quality of the neural network model.
 Similar to the sampling rate case, the error rates of the models are not affected by the scheduling rate.
 New training observations that exist in the buffer have the maximum effect on the model's quality, since they are becoming available to the model for the first time.
 As the scheduling rate increases, the number of new training observations remain the same, and only the historical data is used more frequently to train the model.
-Since neural networks do not gain much benefit by revisiting the same items, increasing scheduling rate has no effect on the overall quality.
+Since neural networks do not gain much benefit by revisiting the same items, increasing the scheduling rate has no effect on the overall quality.
 
 Based on our findings, we conclude that increasing the sampling and scheduling rate does not always affect the quality.
 In both the Movie Lens 100k and MNIST use cases the change in scheduling and sampling rate has small to no effect on the overall quality.
 However, the running time of the methods are heavily influenced by these parameters.
 Setting these parameters to small values decreases the running time considerably and save computation resources regardless of the type of model the system is serving.
 
-\subsection{Experiments in Local Environment}\label{subsec:experiment-local}
-We evaluated our deployment method on the datasets described in this chapter.
+\subsection{Experiments in the Local Environment}\label{subsec:experiment-local}
+We evaluated our deployment method on the datasets described in Section \ref{subsec:setup}.
 Our prototypes support two different methods of specifying the scheduling rate; buffer size and scheduling period.
 For recommender system experiments we use the buffer size to specify the scheduling rate (in Velox's case scheduling rate corresponds to offline retraining frequency).
 %Both, the velox and the continuous deployment methods use different strategies to update the model.
@@ -803,7 +803,7 @@ For the remainder of the data, Velox performs as expected, once there is a retra
 This decrease in error rate, is followed by a slow increase due the fact that Velox only incrementally updates the model until the next scheduled retraining, which as discussed earlier is not handling the change in the data distribution gracefully.
 Initial error rate of Continuous is similar to other methods.
 However, the error rate starts to decrease rapidly.
-The reason for the fast decrease in error rate is that immediately after the deployment of the model, Continuous method executes iterations of SGD.
+The reason for the fast decrease in error rate is that immediately after the deployment of the model, the Continuous method executes iterations of SGD.
 It consistently manages to adopt to the changes in data and decrease the error rate where the distribution of the incoming data is stable.
 As expected, except for immediately after a full retraining, the Continuous method always performs better than Velox.
 
@@ -838,63 +838,55 @@ Similar to Movie Lens 100k dataset, the error rate of Baseline is highest among 
 
 Figure \ref{fig:local-classification-results} shows the misclassification rate over time of the deployment methods on several classification datasets.
 Contrary to the recommender system use case, the data used in these experiments is not time dependent and as a result the deployment methods behave differently.
-For Cover type (figure \ref{fig:cover-types-quality}), Continuous achieves the lowest error rate overall, although the difference with baseline+ is very small.
+For Cover type (Figure \ref{fig:cover-types-quality}), Continuous method achieves the lowest error rate overall, although the difference with baseline+ is very small.
 Baseline method has the highest error rate overall because it is not performing incremental updates on the model.
-Interestingly, velox starts to perform worst after each retraining.
+Interestingly, Velox starts to perform worst after each retraining.
 This increase in error rate is the result of overfitting the model to the existing data. 
-Higgs sample (figure \ref{fig:higgs-sample-quality}) error rate follows the same pattern as cover type.
-Continuous deployment achieves the lowest error rate followed by baseline+.
+The Higgs sample (Figure \ref{fig:higgs-sample-quality}) error rate follows the same pattern as cover type.
+The Continuous deployment achieves the lowest error rate followed by baseline+.
 After each retraining Velox's error rate slightly increases due to overfitting.
 
-\begin{figure}[h]
-	\centering
-\begin{subfigure}[b]{0.5\columnwidth}
+\begin{figure*}[h]
+\begin{subfigure}[b]{0.2\textwidth}
 	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/cover-types-times.eps}
 	\caption{Cover Types}
 	\label{fig:cover-types-times}
 \end{subfigure}%
-\begin{subfigure}[b]{0.5\columnwidth}
+\begin{subfigure}[b]{0.2\textwidth}
   	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/higgs-sample-times.eps}
 	\caption{Higgs Sample}
 	\label{fig:higgs-sample-times}
-\end{subfigure}
-\begin{subfigure}[b]{0.5\columnwidth}
-	\centering
+\end{subfigure}%
+\begin{subfigure}[b]{0.2\textwidth}
   	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/susy-sample-times.eps}
 	\caption{Susy Sample}
 	\label{fig:susy-sample-times}
-\end{subfigure}
- \caption{Total training time for classification datasets}
- \label{fig:classification-running-time}
-\end{figure}
-
-\begin{figure}[h]
-	\centering
-\begin{subfigure}[b]{0.5\columnwidth}
+\end{subfigure}%
+\begin{subfigure}[b]{0.2\textwidth}
 	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/movie-lens-100k-times.eps}
 	\caption{Movie Lens 100k}
 	\label{fig:movie-lens-100k-times}
 \end{subfigure}%
-\begin{subfigure}[b]{0.5\columnwidth}
+\begin{subfigure}[b]{0.2\textwidth}
   	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/movie-lens-1M-times.eps}
 	\caption{Movie Lens 1M}
-	\label{fig:movie-lens-1M}
-\end{subfigure}
-\caption{Total training time for Recommender Systems}
- \label{fig:movielens-running-time}
-\end{figure}
+	\label{fig:movie-lens-1M-times}
+\end{subfigure}%
+\caption{Total training time for Local Datasets}
+ \label{fig:local-training-time}
+\end{figure*}
 
-Figure \ref{fig:classification-running-time} shows the total training time of deployment methods on local classification datasets.
-Figure \ref{fig:movielens-running-time} shows the total training time of deployment methods on local classification datasets.
+Figure  \ref{fig:local-training-time} shows the total training time for deployment methods on local datasets.
 To measure this value, we calculated the total time that each method spent in training the model.
-We excluded the incremental training as the time is negligible.
-Static training method's running time is only affected by data size.
-When dataset size big, each iteration of SGD will examine more data and the model will converge slower as there are a lot more data to examine.
-Continuous method's total training time is 2 to 5 times smaller than Velox.
-Although we have configured both methods to use similar amount of resources (same number of iterations), continuous method still manages to achieve a consistent and lower error rate in a much faster time.
+We excluded the incremental training time as both Velox and Continuous methods perform incremental training as part of their process.
+The Baseline method's total training time is equal to the initial training time.
+Both Continuous and Velox methods also perform this initial training, as a result, their total training time cannot be smaller the Baseline.
+In all of the evaluated datasets, the Continuous method's total training time is 2 to 5 times smaller than Velox'.
 This is because a full retraining incurs a much higher overhead than continuously training the method.
 Another reason for the difference in training time is that as the size of the data increases the time for running a new iteration in continuous method stays roughly the same where as the time for a full retraining increases exponentially.
-\subsection{Experiments in Distributed Environment}
+
+\subsection{Experiments in the Distributed Environment}
+\todo[inline]{Incomplete}
 We evaluated our deployment system on larger workloads in a cluster environment.
 \begin{figure}[h]
 	\centering
@@ -919,10 +911,11 @@ We evaluated our deployment system on larger workloads in a cluster environment.
 
 
 \subsection{Discussion}
+\todo[inline]{Incomplete}
 Our experiments show that although Continuous deployment method perform differently on different workloads, it always results in the lowest error rate in a much lower total training time than Velox deployment method.
 
 Figure \ref{fig:training-time-vs-quality} shows the total training time and average error rate of each the three different deployment methods (Baseline, Continuous and Velox) on different datasets.
-\ref{subfig:url-meta}--\ref{subfig:susy-meta} \todo[inline]{finish after the experiments are done}
+\ref{subfig:url-meta}--\ref{subfig:susy-meta}
 \ref{subfig:cover-type-meta}--\ref{subfig:susy-sample-meta} shows the trade off between quality and total training time for our local classification datasets.
 In all cases,  Continuous deployment method achieves the lowest average error rate in a reasonable amount of time.
 This is due to two reasons.
@@ -934,7 +927,7 @@ Figure \ref{subfig:movie-lens-100k-meta} and \ref{subfig:movie-lens-1m-meta} sho
 Here, the characteristics of the data (concept drift and cold start problems) have made online updates necessary.
 Both Velox and Continuous deployment methods achieve similar average mean squared error rate, however, Continuous method has a much smaller training time than that of Velox.
 
-\todo[inline]{Should I include this? if yes, here or in Conclusion}
+%\todo[inline]{Should I include this? if yes, here or in Conclusion}
 One aspect of the deployment systems that we do not tackle in our current prototype is the prediction latency.
 In our current prototype, both prediction and model updates are managed by the same node and as a result the prediction component is paused until the incremental training (or retraining in the case of Velox) is executed.
 Therefore, the system always answer each prediction query using the latest model, although with a much greater delay.
@@ -945,52 +938,60 @@ Our continuous deployment method reduces this delay since the it is updating the
 We plan to investigate the effect of using older versions of the model to answer prediction requests in our future work.
 
 \begin{figure*}[h]
-\begin{subfigure}{0.33\textwidth}
+
+\begin{subfigure}{0.30\textwidth}
   \centering
-  \includegraphics[width=0.7\linewidth]{../images/experiment-results/placeholder.jpg}
+  \includegraphics[width=\linewidth]{../images/experiment-results/placeholder.jpg}
   \caption{URL}
    \label{subfig:url-meta}
 \end{subfigure}%
-\begin{subfigure}{0.33\textwidth}
+ \hspace*{10mm}
+\begin{subfigure}{0.30\textwidth}
  \centering
-  \includegraphics[width=0.7\linewidth]{../images/experiment-results/placeholder.jpg}
+  \includegraphics[width=\linewidth]{../images/experiment-results/placeholder.jpg}
   \caption{Higgs}
    \label{subfig:higgs-meta}
 \end{subfigure}%
-\begin{subfigure}{0.33\textwidth}
+ \hspace*{10mm}
+\begin{subfigure}{0.30\textwidth}
  \centering
-  \includegraphics[width=0.7\linewidth]{../images/experiment-results/placeholder.jpg}
+  \includegraphics[width=\linewidth]{../images/experiment-results/placeholder.jpg}
   \caption{Susy}
   \label{subfig:susy-meta}
 \end{subfigure}
+ \vspace*{5mm}
+\centering
 
-\begin{subfigure}{0.33\textwidth}
+\begin{subfigure}{0.30\textwidth}
   \centering
-  \includegraphics[width=1\linewidth, height=1\linewidth, keepaspectratio]{../images/experiment-results/cover-type-meta-performance.eps}
+  \includegraphics[width=\linewidth]{../images/experiment-results/cover-types-meta-performance.eps}
   \caption{Cover Type}
   \label{subfig:cover-type-meta}
 \end{subfigure}%
-\begin{subfigure}{0.33\textwidth}
+  \hspace*{10mm}
+\begin{subfigure}{0.30\textwidth}
  \centering
-  \includegraphics[width=1\linewidth, height=1\linewidth, keepaspectratio]{../images/experiment-results/higgs-sample-meta-performance.eps}
+  \includegraphics[width=\linewidth]{../images/experiment-results/higgs-sample-meta-performance.eps}
   \caption{Higgs Sample}
   \label{subfig:higgs-sample-meta}
 \end{subfigure}%
-\begin{subfigure}{0.33\textwidth}
+ \hspace*{10mm}
+\begin{subfigure}{0.30\textwidth}
  \centering
-  \includegraphics[width=1\linewidth, height=1\linewidth, keepaspectratio]{../images/experiment-results/susy-sample-meta-performance.eps}
+  \includegraphics[width=1\linewidth]{../images/experiment-results/susy-sample-meta-performance.eps}
   \caption{Susy Sample}
   \label{subfig:susy-sample-meta}
 \end{subfigure}
+ \vspace*{5mm}
 \centering
+
 \begin{subfigure}{.30\textwidth}
- 
   \includegraphics[width=1\linewidth, height=1\linewidth, keepaspectratio]{../images/experiment-results/movie-lens-100k-meta-performance.eps}
   \caption{Movie Lens 100K}
   \label{subfig:movie-lens-100k-meta}
 \end{subfigure}%
+ \hspace*{10mm}
 \begin{subfigure}{0.30\textwidth}
-
   \includegraphics[width=1\linewidth, height=1\linewidth, keepaspectratio]{../images/experiment-results/movie-lens-1m-meta-performance.eps}
   \caption{Movie Lens 1M}
   \label{subfig:movie-lens-1m-meta}
@@ -1001,20 +1002,19 @@ We plan to investigate the effect of using older versions of the model to answer
 \end{figure*}
 
 \section{Conclusions} \label{conclusion}
-This paper presents an architecture for serving and continuous training of machine learning models.
-Most of the existing ML model serving systems do not provide support for continuous update \cite{abadi2016tensorflow,crankshaw2016clipper}.
-To ensure high quality models, some systems \cite{crankshaw2014missing} perform incremental update and periodic retraining to ensure the quality of the model does not decrease.
-However, retraining is a resource intensive process which completely neglects any updates made to the model so far.
+To fully benefit from machine learning models, one has to deploy them in a system capable of answering prediction queries in real-time and continuously update the models so they adjust to the changes in the incoming data.
+To continuously update a model, existing deployment systems perform two types of updates to the model; incremental training and full retraining of the model.
+However, full retraining is a resource intensive and time consuming process.
 
 We propose a system for deploying and maintaining machine learning models that are trained using stochastic gradient descent optimization.
 In our system, we schedule iterations of SGD to run while the machine learning model is also answering prediction queries.
-After every iteration, the model is updated with the new parameters.
-The frequent updates, helps in adapting the model to the changes in data distribution.
+After every iteration, the model is updated with new parameters.
+The frequent updates help in adapting the model to changes in the data distribution.
 Moreover, our system is applicable to a wide range of machine learning models as demonstrated in our evaluation section.
 
-Our experiments shows the continuous training of the machine learning models is much faster than full retraining of them, which is the most common approach in deployment and maintenance of machine learning models. 
+Our experiments show the continuous training of the machine learning models is much faster than full retraining, which is the most common approach in deployment and maintenance of machine learning models. 
 We show that not only continuous training requires less resources but it also produces models with lower error rates that adapt to the changes in data faster.
-Moreover, comparing to simple techniques such incremental learning or initial batch training it produces a model with higher quality.
+Comparing to simple techniques such incremental learning or initial batch training, our technique produces a model with higher quality.
 
 In future work, we will explore other optimization strategies such as batching of prediction queries, caching of query results, and more advanced methods for sampling of historical data in order to investigate their effect on the performance of the system.
 %ACKNOWLEDGMENTS are optional

@@ -17,7 +17,6 @@ import org.apache.log4j.Logger
 import org.apache.spark.mllib.classification.{SVMModel, SVMWithSGD}
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
-import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming._
 import org.apache.spark.streaming.dstream.{ConstantInputDStream, DStream}
 import org.apache.spark.{SparkConf, SparkContext}
@@ -253,12 +252,13 @@ abstract class SVMClassifier extends Serializable {
     * @return SVMModel
     */
   def trainModel(data: RDD[LabeledPoint]): SVMModel = {
-    data.cache()
-    data.count()
-    val model = SVMWithSGD.train(data, numIterations, offlineStepSize, 0.01)
-    data.unpersist(false)
+    val cachedData = data.cache()
+    cachedData.count()
+    val model = SVMWithSGD.train(cachedData, numIterations, offlineStepSize, 0.01)
+    cachedData.unpersist(false)
     model
   }
+
 
 
   /**

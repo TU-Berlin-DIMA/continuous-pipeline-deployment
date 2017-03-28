@@ -33,17 +33,19 @@ object ContinuousClassifier extends SVMClassifier {
     run(args)
   }
 
-  def parseContinuousArgs(args: Array[String]): (String, Long, String, String, String, String, Boolean) = {
+  def parseContinuousArgs(args: Array[String]): (String, Long, String, String, String, String, Boolean, Double) = {
     val parser = new CommandLineParser(args).parse()
     val (resultRoot, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
     val slack = parser.getLong("slack", defaultTrainingSlack)
     val tempRoot = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
     val incremental = parser.getBoolean("incremental", default = true)
-    (resultRoot, slack, initialDataPath, streamingDataPath, testDataPath, tempRoot, incremental)
+    // optional parameter for step of size of sgd iterations in continuous deployment method
+    val continuousStepSize = parser.getDouble("continuous-step-size", onlineStepSize)
+    (resultRoot, slack, initialDataPath, streamingDataPath, testDataPath, tempRoot, incremental, continuousStepSize)
   }
 
   override def run(args: Array[String]): Unit = {
-    val (resultRoot, slack, initialDataPath, streamingDataPath, testDataPath, tempRoot, incremental) = parseContinuousArgs(args)
+    val (resultRoot, slack, initialDataPath, streamingDataPath, testDataPath, tempRoot, incremental, continuousStepSize) = parseContinuousArgs(args)
     var testType = ""
     if (testDataPath == "prequential") {
       testType = s"prequential"
@@ -92,11 +94,9 @@ object ContinuousClassifier extends SVMClassifier {
         val startTime = System.currentTimeMillis()
         val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(dataParser.parsePoint).cache()
         val before = streamingModel.latestModel().weights
-        streamingModel.setMiniBatchFraction(0.2)
-        streamingModel.setNumIterations(10)
+        streamingModel.setMiniBatchFraction(0.2).setNumIterations(5)
         streamingModel.trainOn(historicalDataRDD)
-        streamingModel.setMiniBatchFraction(1.0)
-        streamingModel.setNumIterations(1)
+        streamingModel.setMiniBatchFraction(1.0).setNumIterations(1)
         val after = streamingModel.latestModel().weights
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)
