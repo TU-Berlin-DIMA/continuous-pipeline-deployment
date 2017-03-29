@@ -326,7 +326,7 @@ ggsave(p , filename = 'susy-sample/susy-sample-quality.eps',
 ###################### TOTAL TRAINING TIMES #####################
 
 #### COVER TYPES ####
-continuous = read.csv('cover-types/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-1.0/2017-03-23-22-33/training-times.txt', header = FALSE, col.names = 'continuous')
+continuous = read.csv('cover-types/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-1.0/2017-03-29-18-03/training-times.txt', header = FALSE, col.names = 'continuous')
 velox = read.csv('cover-types/velox/num-iterations-500/slack-32/offline-step-1.0/online-step-1.0/2017-03-23-22-29/training-times.txt', header = FALSE, col.names = 'velox')
 baseline = continuous[[1]][1]
 continuous = sum(continuous)
@@ -576,6 +576,78 @@ p =
   scale_shape_manual("", values = c("Baseline" = 15, "Continuous" = 16, "Velox" = 18))
 
 ggsave(p , filename = 'susy-sample/susy-sample-meta-performance.eps', 
+       device = cairo_ps,
+       width = 7, height = 5, 
+       units = "in")
+
+#### ADULT ####
+continuousTime = read.csv('adult/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-0.3/2017-03-29-17-58/training-times.txt', header = FALSE)
+veloxTime = read.csv('adult/velox/num-iterations-500/slack-32/offline-step-1.0/online-step-0.3/2017-03-29-17-23/training-times.txt', header = FALSE)
+baselineTime = continuousTime[[1]][1]
+
+continuous = read.csv('adult/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-0.3/2017-03-29-17-58/error-rates.txt', header = FALSE)
+velox = read.csv('adult/velox/num-iterations-500/slack-32/offline-step-1.0/online-step-0.3/2017-03-29-17-23/error-rates.txt', header = FALSE)
+baseline = read.csv('adult/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-03-29-15-08/error-rates.txt', header = FALSE)
+
+
+df = data.frame('error'=c(colMeans(continuous), colMeans(velox), colMeans(baseline)), 
+                'time' = c(sum(continuousTime)/1000, sum(veloxTime)/1000, baselineTime/1000), 
+                'models'=c('Continuous', 'Velox', 'Baseline'))
+p = 
+  ggplot(data = df, aes(x = time, y = error)) + 
+  geom_point(aes(shape = models),  lwd = 12) + 
+  #geom_text(aes(label = models, colour = models), size = 5, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
+  xlab("Time (s)") + ylab("Avg Error rate") + 
+  ylim(c(0.1580, 0.161)) + 
+  theme_bw() + 
+  theme(legend.text = element_text(size = 30, color = "black"), 
+        legend.title = element_text(size = 30, color = "black"),
+        legend.key = element_rect(colour = "transparent", fill = "transparent"), 
+        legend.background = element_rect(colour = "transparent", fill = "transparent"),
+        legend.key.width  = unit(1.0, "cm"), 
+        legend.key.height  = unit(1.0, "cm"), 
+        legend.position=c(0.75,0.85)) +
+  theme(axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=32, color = "black")) + 
+  scale_shape_manual("", values = c("Baseline" = 15, "Continuous" = 16, "Velox" = 18))
+
+ggsave(p , filename = 'adult/adult-meta-performance.eps', 
+       device = cairo_ps,
+       width = 7, height = 5, 
+       units = "in")
+
+#### SEA ####
+continuous = read.csv('sea/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-0.05/2017-03-29-10-40/training-times.txt', header = FALSE, col.names = 'continuous')
+velox = read.csv('sea/velox/num-iterations-500/slack-32/offline-step-1.0/online-step-0.05/2017-03-29-10-43/training-times.txt', header = FALSE, col.names = 'velox')
+baselineTime = continuousTime[[1]][1]
+
+continuous = read.csv('sea/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-0.05/2017-03-29-10-40/error-rates.txt', header = FALSE, col.names = 'continuous')
+velox = read.csv('sea/velox/num-iterations-500/slack-32/offline-step-1.0/online-step-0.05/2017-03-29-10-43/error-rates.txt', header = FALSE, col.names = 'velox')
+baseline = read.csv('sea/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-03-29-10-29/error-rates.txt', header = FALSE)
+
+
+df = data.frame('error'=c(colMeans(continuous), colMeans(velox), colMeans(baseline)), 
+                'time' = c(sum(continuousTime)/1000, sum(veloxTime)/1000, baselineTime/1000), 
+                'models'=c('Continuous', 'Velox', 'Baseline'))
+p = 
+  ggplot(data = df, aes(x = time, y = error)) + 
+  geom_point(aes(shape = models),  lwd = 12) + 
+  #geom_text(aes(label = models, colour = models), size = 5, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
+  xlab("Time (s)") + ylab("Avg Error rate") + 
+  ylim(c(0.1580, 0.161)) + 
+  theme_bw() + 
+  theme(legend.text = element_text(size = 30, color = "black"), 
+        legend.title = element_text(size = 30, color = "black"),
+        legend.key = element_rect(colour = "transparent", fill = "transparent"), 
+        legend.background = element_rect(colour = "transparent", fill = "transparent"),
+        legend.key.width  = unit(1.0, "cm"), 
+        legend.key.height  = unit(1.0, "cm"), 
+        legend.position=c(0.75,0.85)) +
+  theme(axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=32, color = "black")) + 
+  scale_shape_manual("", values = c("Baseline" = 15, "Continuous" = 16, "Velox" = 18))
+
+ggsave(p , filename = 'sea/sea-meta-performance.eps', 
        device = cairo_ps,
        width = 7, height = 5, 
        units = "in")
