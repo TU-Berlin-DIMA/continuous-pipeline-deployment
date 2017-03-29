@@ -634,7 +634,7 @@ p =
   geom_point(aes(shape = models),  lwd = 12) + 
   #geom_text(aes(label = models, colour = models), size = 5, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
   xlab("Time (s)") + ylab("Avg Error rate") + 
-  ylim(c(0.1580, 0.161)) + 
+  ylim(c(0.270, 0.290)) + 
   theme_bw() + 
   theme(legend.text = element_text(size = 30, color = "black"), 
         legend.title = element_text(size = 30, color = "black"),
