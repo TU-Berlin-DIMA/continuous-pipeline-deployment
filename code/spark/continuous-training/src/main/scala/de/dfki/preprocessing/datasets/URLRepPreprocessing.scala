@@ -24,7 +24,6 @@ object URLRepPreprocessing {
     val masterURL = conf.get("spark.master", "local[*]")
     conf.set("spark.hadoop.validateOutputSpecs", "false")
     conf.setMaster(masterURL)
-    val preprocessor = new Preprocessor()
     val sc = new SparkContext(conf)
     val inputPath = parser.get("input-path", INPUT_PATH)
     val outputPath = parser.get("output-path", OUTPUT_PATH)
@@ -38,7 +37,7 @@ object URLRepPreprocessing {
         MLUtils.loadLibSVMFile(sc, s"$inputPath/Day0.svm")
     }.map(l => new LabeledPoint(if (l.label == -1.0) 0 else 1.0, l.features))
 
-    preprocessor.convertToSVM(data).repartition(sc.defaultParallelism).saveAsTextFile(s"$outputPath/initial-training/")
+    Preprocessor.convertToSVM(data).repartition(sc.defaultParallelism).saveAsTextFile(s"$outputPath/initial-training/")
 
 
     for (i <- 1 until 120) {
@@ -48,10 +47,10 @@ object URLRepPreprocessing {
       hadoopConf.set("mapreduce.output.basename", s"day${"%05d".format(i)}")
       val processed =
         if (samplingRate < 1.0)
-          preprocessor.convertToSVM(data).repartition(fileCount)
+          Preprocessor.convertToSVM(data).repartition(fileCount)
             .sample(withReplacement = false, fraction = samplingRate, seed = 42)
         else
-          preprocessor.convertToSVM(data).repartition(fileCount)
+          Preprocessor.convertToSVM(data).repartition(fileCount)
 
       processed.map(str => (null, str)).saveAsNewAPIHadoopFile(s"$outputPath/stream-training/", classOf[NullWritable], classOf[String],
         classOf[TextOutputFormat[NullWritable, String]], hadoopConf)

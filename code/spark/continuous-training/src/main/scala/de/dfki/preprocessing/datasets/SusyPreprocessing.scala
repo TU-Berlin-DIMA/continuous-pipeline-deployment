@@ -10,8 +10,8 @@ import org.apache.spark.{SparkConf, SparkContext}
   */
 object SusyPreprocessing {
   val INPUT_PATH = "data/susy/raw"
-  val OUTPUT_PATH = "data/susy-test"
-  val FILE_COUNT = 100
+  val OUTPUT_PATH = "data/susy"
+  val FILE_COUNT = 1000
   val SAMPLING_RATE = 1.0
 
   def main(args: Array[String]): Unit = {
@@ -33,11 +33,10 @@ object SusyPreprocessing {
     else
       sc.textFile(input).map(dataParser.parsePoint)
 
-    val preprocessor = new Preprocessor()
-    val scaledData = preprocessor.scale(data)
-    val splits = preprocessor.split(scaledData, Array(0.1,0.9))
-    preprocessor.convertToCSV(splits._1).repartition(sc.defaultParallelism).saveAsTextFile(s"$output/initial-training/")
-    preprocessor.convertToCSV(splits._2.repartition(fileCount)).saveAsTextFile(s"$output/stream-training/")
+    val scaledData = Preprocessor.scale(data)
+    val splits = Preprocessor.split(scaledData, Array(0.1,0.9))
+    Preprocessor.convertToCSV(splits._1).repartition(sc.defaultParallelism).saveAsTextFile(s"$output/initial-training/")
+    Preprocessor.convertToCSV(splits._2.repartition(fileCount)).saveAsTextFile(s"$output/stream-training/")
   }
 
 }

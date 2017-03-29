@@ -50,8 +50,8 @@
 \usepackage{lipsum}% http://ctan.org/pkg/lipsum
 \usepackage{graphicx}% http://ctan.org/pkg/graphicx
 \usepackage{float}
-%\usepackage{todonotes}
-\usepackage[disable]{todonotes}
+\usepackage{todonotes}
+%\usepackage[disable]{todonotes}
 \usepackage[outdir=./figures/]{epstopdf}
 \usepackage{listings}
 \PassOptionsToPackage{table}{colorx}
@@ -580,7 +580,9 @@ Higgs  & 28 & 11000000 \\
 Susy & 18 & 5000000 \\ 
 URL Reputation & 3231961 & 2396130 \\
 Cover Type & 52 & 581012 \\
-MNIST & 784 & 60000 
+MNIST & 784 & 60000 \\
+SEA & 3 & 60000 \\
+Adult & 123 & 48882
 \\\bottomrule 
 \end{tabular}
 \caption{Classification Datasets}
@@ -608,7 +610,10 @@ URL Reputation \cite{ma2009identifying} is an collection of URLs and whether the
 This dataset is collected over 120 days and features are anonymized, but correspond to lexical and host-based information gathered for each URL.
 MNIST \cite{lecun-mnist} is a dataset of handwritten digits.
 Each image has 28x28 pixels and the labels are the 10 digits (0 to 9) the images are representing.
-
+SEA is an artificially generated dataset that has been injected with concept drift (change in data distribution)\cite{street2001streaming}.
+Attributes are floating point values between 0 and 10 and there are a total of 4 concepts (15,000 instances in each concept).
+Adult \cite{platt199912} is a dataset extracted from a census database.
+It contains information such as education level, occupation, relationship status and salary of individuals from multiple countries and the task is to predict whether an individual earns more than \$50K a year. 
 For all of the datasets we use 10\% for initial training and 90\% for online prediction/training.
 Except for URL Reputation and Movie Lens datasets that are timestamped, the order of the incoming data are arbitrary for the rest of the datasets.
 %\textbf{Criteo \cite{criteo-kaggle}}: to implement our CTR prediction example we use Criteo's Kaggle advertising challenge dataset.
@@ -686,6 +691,7 @@ This results in a paradigm where both training and serving can happen simultaneo
 \caption{Sampling rate}
 \label{fig:movie-lens-100k-sample-rate}
 \end{subfigure}
+\vspace{2mm}
 \caption{Parameters effect on quality (Movie Lens 100K)}
 \end{figure}
 
@@ -711,6 +717,7 @@ Therefore, depending on the application, we can set the buffer size to bigger va
 \caption{}
 \label{fig:movie-lens-100k-sample-rate-time}
 \end{subfigure}
+\vspace{2mm}
 \caption{Parameters effects on run time}
 \end{figure}
 
@@ -752,6 +759,7 @@ This causes the neural work to converge faster and, therefore, it is not affecte
 \caption{Buffer size}
 \label{fig:mnist-buffer-size}
 \end{subfigure}
+\vspace{2mm}
 \caption{Parameters effect on quality (MNIST)}
 \end{figure}
 
@@ -789,6 +797,7 @@ For recommender system experiments we use the buffer size to specify the schedul
 \caption{Movie Lens 1M}
 \label{fig:movie-lens-1M-score}
 \end{subfigure}
+\vspace{2mm}
 \caption{Recommender Systems}
 \end{figure}
 
@@ -823,29 +832,42 @@ Similar to Movie Lens 100k dataset, the error rate of Baseline is highest among 
 	\caption{Cover Types}
 	\label{fig:cover-types-quality}
 \end{subfigure}
+%\begin{subfigure}[b]{\columnwidth}
+%  	\includegraphics[width=\columnwidth]{../images/experiment-results/higgs-sample-quality.eps}
+%	\caption{Higgs Sample}
+%	\label{fig:higgs-sample-quality}
+%\end{subfigure}
 \begin{subfigure}[b]{\columnwidth}
-  	\includegraphics[width=\columnwidth]{../images/experiment-results/higgs-sample-quality.eps}
-	\caption{Higgs Sample}
-	\label{fig:higgs-sample-quality}
+  	\includegraphics[width=\columnwidth]{../images/experiment-results/sea-quality.eps}
+	\caption{SEA}
+	\label{fig:sea-quality}
 \end{subfigure}
 \begin{subfigure}[b]{\columnwidth}
-  	\includegraphics[width=\columnwidth]{../images/experiment-results/susy-sample-quality.eps}
-	\caption{SUSY Sample}
-	\label{fig:susy-sample-quality}
+  	\includegraphics[width=\columnwidth]{../images/experiment-results/adult-quality.eps}
+	\caption{Adult}
+	\label{fig:adult-quality}
 \end{subfigure}
+%\begin{subfigure}[b]{\columnwidth}
+%  	\includegraphics[width=\columnwidth]{../images/experiment-results/susy-sample-quality.eps}
+%	\caption{SUSY Sample}
+%	\label{fig:susy-sample-quality}
+%\end{subfigure}
+\vspace{2mm}
 \caption{Classification Datasets }
 \label{fig:local-classification-results}
 \end{figure}
 
 Figure \ref{fig:local-classification-results} shows the misclassification rate over time of the deployment methods on several classification datasets.
-Contrary to the recommender system use case, the data used in these experiments is not time dependent and as a result the deployment methods behave differently.
+Contrary to the recommender system use case, the data used in these experiments is not time dependent (except for SEA) and as a result the deployment methods behave differently.
 For Cover type (Figure \ref{fig:cover-types-quality}), Continuous method achieves the lowest error rate overall, although the difference with baseline+ is very small.
 Baseline method has the highest error rate overall because it is not performing incremental updates on the model.
 Interestingly, Velox starts to perform worst after each retraining.
 This increase in error rate is the result of overfitting the model to the existing data. 
-The Higgs sample (Figure \ref{fig:higgs-sample-quality}) error rate follows the same pattern as cover type.
-The Continuous deployment achieves the lowest error rate followed by baseline+.
-After each retraining Velox's error rate slightly increases due to overfitting.
+The error rate for all of the deployment methods, except for Baseline is very similar on SEA (Figure \ref{fig:sea-quality}).
+The Continuous method still perform slightly better than Baseline+ and Velox, although with a very small margin.
+Figure \ref{fig:adult-quality} shows the error rate of different deployment methods on Adult dataset.
+Both Velox and Baseline+ perform slightly better than the Baseline approach.
+But similar to Sea and Cover Types, the Continuous approach has the lowest error rate among all methods.
 
 \begin{figure*}[h]
 \begin{subfigure}[b]{0.2\textwidth}
@@ -853,16 +875,26 @@ After each retraining Velox's error rate slightly increases due to overfitting.
 	\caption{Cover Types}
 	\label{fig:cover-types-times}
 \end{subfigure}%
+%\begin{subfigure}[b]{0.2\textwidth}
+%  	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/higgs-sample-times.eps}
+%	\caption{Higgs Sample}
+%	\label{fig:higgs-sample-times}
+%\end{subfigure}%
 \begin{subfigure}[b]{0.2\textwidth}
-  	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/higgs-sample-times.eps}
-	\caption{Higgs Sample}
-	\label{fig:higgs-sample-times}
+	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/sea-times.eps}
+	\caption{SEA}
+	\label{fig:sea-times}
 \end{subfigure}%
 \begin{subfigure}[b]{0.2\textwidth}
-  	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/susy-sample-times.eps}
-	\caption{Susy Sample}
-	\label{fig:susy-sample-times}
+	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/adult-times.eps}
+	\caption{Adult}
+	\label{fig:adult-times}
 \end{subfigure}%
+%\begin{subfigure}[b]{0.2\textwidth}
+%  	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/susy-sample-times.eps}
+%	\caption{Susy Sample}
+%	\label{fig:susy-sample-times}
+%\end{subfigure}%
 \begin{subfigure}[b]{0.2\textwidth}
 	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/movie-lens-100k-times.eps}
 	\caption{Movie Lens 100k}
@@ -873,6 +905,7 @@ After each retraining Velox's error rate slightly increases due to overfitting.
 	\caption{Movie Lens 1M}
 	\label{fig:movie-lens-1M-times}
 \end{subfigure}%
+\vspace{2mm}
 \caption{Total training time for Local Datasets}
  \label{fig:local-training-time}
 \end{figure*}
@@ -905,6 +938,7 @@ We evaluated our deployment system on larger workloads in a cluster environment.
 	\caption{SUSY}
 	\label{fig:susy-sample-quality}
 \end{subfigure}
+\vspace{2mm}
 \caption{Large Classification Datasets}
 \label{fig:cluster-classification-results}
 \end{figure}
@@ -995,7 +1029,7 @@ We plan to investigate the effect of using older versions of the model to answer
   \caption{Movie Lens 1M}
   \label{subfig:movie-lens-1m-meta}
 \end{subfigure}
-
+\vspace{2mm}
 \caption{Total Training Time vs Quality}
 \label{fig:training-time-vs-quality}
 \end{figure*}

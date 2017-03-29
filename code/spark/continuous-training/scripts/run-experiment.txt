@@ -22,6 +22,8 @@ HIGGS:
 
 /share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.datasets.HiggsPreprocessing --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/user/behrouz/higgs/raw" "output-path=hdfs://cloud-11:44000/user/behrouz/higgs/" "file-count=1000"
 
+~/Documents/frameworks/spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class de.dfki.preprocessing.datasets.HiggsPreprocessing --master "spark://berlin-241.b.dfki.de:7077" --executor-memory 5G /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/higgs/raw" "output-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/higgs/" "file-count=1000" "sampling-rate=1.0"
+
 scp -r behrouz@cloud-11.dima.tu-berlin.de:/share/hadoop/behrouz/experiments/higgs ./
 
 url:
@@ -41,7 +43,7 @@ wget https://archive.ics.uci.edu/ml/machine-learning-databases/00279/SUSY.csv.gz
 /share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -mkdir hdfs://cloud-11:44000/user/behrouz/susy/raw
 /share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -copyFromLocal /share/hadoop/behrouz/data/SUSY.csv hdfs://cloud-11:44000/user/behrouz/susy/raw
 
-~/Documents/frameworks/spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class de.dfki.preprocessing.datasets.SusyPreprocessing --master "spark://berlin-241.b.dfki.de:7077" --executor-memory 5G /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/susy/raw" "output-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/susy/" "file-count=2400"
+~/Documents/frameworks/spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class de.dfki.preprocessing.datasets.SusyPreprocessing --master "spark://berlin-241.b.dfki.de:7077" --executor-memory 5G /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/susy/raw" "output-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/susy/" "file-count=1000"
 
 /share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.datasets.SusyPreprocessing --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/user/behrouz/susy/raw" "output-path=hdfs://cloud-11:44000/user/behrouz/susy" "file-count=3600"
 

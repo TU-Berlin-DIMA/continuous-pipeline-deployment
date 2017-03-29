@@ -33,11 +33,11 @@ object HiggsPreprocessing {
     else
       sc.textFile(input).map(dataParser.parsePoint)
 
-    val preprocessor = new Preprocessor()
-    val scaledData = preprocessor.scale(data)
-    val splits = preprocessor.split(scaledData, Array(0.1, 0.9))
 
-    preprocessor.convertToCSV(splits._1).repartition(sc.defaultParallelism).saveAsTextFile(s"$output/initial-training/")
-    preprocessor.convertToCSV(splits._2.repartition(fileCount)).saveAsTextFile(s"$output/stream-training/")
+    val scaledData = Preprocessor.scale(data)
+    val splits = Preprocessor.split(scaledData, Array(0.1, 0.9))
+
+    Preprocessor.convertToCSV(splits._1).repartition(sc.defaultParallelism).saveAsTextFile(s"$output/initial-training/")
+    Preprocessor.convertToCSV(splits._2.repartition(fileCount)).saveAsTextFile(s"$output/stream-training/")
   }
 }

@@ -8,9 +8,9 @@ import org.apache.spark.rdd.RDD
 /**
   * @author behrouz
   */
-class Preprocessor {
+object Preprocessor {
 
-  def split(data: RDD[LabeledPoint], splits: Array[Double], partitions: Int = 100): (RDD[LabeledPoint], RDD[LabeledPoint]) = {
+  def split[T](data: RDD[T], splits: Array[Double], partitions: Int = 100): (RDD[T], RDD[T]) = {
     val splitted = data.randomSplit(splits)
     (splitted(0), splitted(1).repartition(partitions))
   }
