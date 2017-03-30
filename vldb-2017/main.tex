@@ -779,14 +779,6 @@ Setting these parameters to small values decreases the running time considerably
 We evaluated our deployment method on the datasets described in Section \ref{subsec:setup}.
 Our prototypes support two different methods of specifying the scheduling rate; buffer size and scheduling period.
 For recommender system experiments we use the buffer size to specify the scheduling rate (in Velox's case scheduling rate corresponds to offline retraining frequency).
-%Both, the velox and the continuous deployment methods use different strategies to update the model.
-%To perform a fair comparison of the two, we are evaluating them under similar resource constraints.
-%We configured both of the methods' frequency of training in such a way that the total running time on the \textit{movie-lens} and \textit{MNIST} datasets are similar.
-%To achieve this, we have fixed the total number of epochs (SGD iterations) for both methods.
-%For Velox, this value is equal to the number of retraining multiplied by number of iterations in each retraining. 
-%For the continuous model, it is total number of scheduled iterations throughout the lifetime of the system.
-%Therefore, the continuous method schedules a new iteration every 500 items for \textit{movie-lens-100k} and 5,000 items for \textit{movie-lens-1M} and %Velox method schedules a retraining every 15,000 items for \textit{movie-lens-100k} and 150,000 items for \textit{movie-lens-1M}.
-
 \begin{figure}[h]
 \begin{subfigure}{\columnwidth}
 	\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-quality-improved.eps}
@@ -833,11 +825,6 @@ Similar to Movie Lens 100k dataset, the error rate of Baseline is highest among 
 	\caption{Cover Types}
 	\label{fig:cover-types-quality}
 \end{subfigure}
-%\begin{subfigure}[b]{\columnwidth}
-%  	\includegraphics[width=\columnwidth]{../images/experiment-results/higgs-sample-quality.eps}
-%	\caption{Higgs Sample}
-%	\label{fig:higgs-sample-quality}
-%\end{subfigure}
 \begin{subfigure}[b]{\columnwidth}
   	\includegraphics[width=\columnwidth]{../images/experiment-results/sea-quality.eps}
 	\caption{SEA}
@@ -848,11 +835,6 @@ Similar to Movie Lens 100k dataset, the error rate of Baseline is highest among 
 	\caption{Adult}
 	\label{fig:adult-quality}
 \end{subfigure}
-%\begin{subfigure}[b]{\columnwidth}
-%  	\includegraphics[width=\columnwidth]{../images/experiment-results/susy-sample-quality.eps}
-%	\caption{SUSY Sample}
-%	\label{fig:susy-sample-quality}
-%\end{subfigure}
 \vspace{2mm}
 \caption{Classification Datasets }
 \label{fig:local-classification-results}
@@ -876,11 +858,6 @@ But similar to Sea and Cover Types, the Continuous approach has the lowest error
 	\caption{Cover Types}
 	\label{fig:cover-types-times}
 \end{subfigure}%
-%\begin{subfigure}[b]{0.2\textwidth}
-%  	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/higgs-sample-times.eps}
-%	\caption{Higgs Sample}
-%	\label{fig:higgs-sample-times}
-%\end{subfigure}%
 \begin{subfigure}[b]{0.2\textwidth}
 	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/sea-times.eps}
 	\caption{SEA}
@@ -891,11 +868,6 @@ But similar to Sea and Cover Types, the Continuous approach has the lowest error
 	\caption{Adult}
 	\label{fig:adult-times}
 \end{subfigure}%
-%\begin{subfigure}[b]{0.2\textwidth}
-%  	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/susy-sample-times.eps}
-%	\caption{Susy Sample}
-%	\label{fig:susy-sample-times}
-%\end{subfigure}%
 \begin{subfigure}[b]{0.2\textwidth}
 	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/movie-lens-100k-times.eps}
 	\caption{Movie Lens 100k}
@@ -920,25 +892,35 @@ In all of the evaluated datasets, the Continuous method's total training time is
 This is because a full retraining incurs a much higher overhead than continuously training the method.
 Another reason for the difference in training time is that as the size of the data increases the time for running a new iteration in continuous method stays roughly the same where as the time for a full retraining increases exponentially.
 
-\subsection{Incomplete - Experiments in the Distributed Environment}
-We evaluated our deployment system on larger workloads in a cluster environment.
+\subsection{Experiments in the Distributed Environment}
+We evaluated our deployment system on larger workloads in a distributed environment.
+Figure \ref{fig:cluster-classification-results} shows the error rate of different deployment methods on classification datasets.
+Since URL Reputation data was gathered over 120 days, it is very likely that the data contains changes in the distribution.
+This concept drift is reflected in Figure \ref{fig:url-quality}.
+Baseline method's error rate is increasing with a steady rate as it cannot adapt to the changes in the data.
+The Continuous deployment method achieves the lowest error rate overall.
+Velox manages to keep the error rate lower than Baseline+ until the the second retraining, after which the error rate slightly increases. 
+Figure \ref{fig:higgs-quality} shows the error rate on Higgs dataset.
+Similar to local classification datasets, the error rate for Baseline is the highest among all of the deployment methods.
+Velox, Baseline+ and Continuous maintain the same error rate until the first retraining of Velox, after which due to possible overfitting, Velox error rate starts to increase.
+Both Baseline+ and Continuous maintain similar error rates throughout, with the Continuous method slightly outperforming Baseline+.
 \begin{figure}[h]
 	\centering
 \begin{subfigure}[b]{\columnwidth}
 	\includegraphics[width=\columnwidth,height=0.4\columnwidth]{../images/experiment-results/url-reputation-quality.eps}
 	\caption{URL Reputation}
-	\label{fig:cover-types-quality}
+	\label{fig:url-quality}
 \end{subfigure}
 \begin{subfigure}[b]{\columnwidth}
   	\includegraphics[width=\columnwidth,height=0.4\columnwidth]{../images/experiment-results/higgs-quality.eps}
 	\caption{Higgs}
-	\label{fig:higgs-sample-quality}
+	\label{fig:higgs-quality}
 \end{subfigure}
-\begin{subfigure}[b]{\columnwidth}
-  	\includegraphics[width=\columnwidth,height=0.4\columnwidth]{../images/experiment-results/placeholder.jpg}
-	\caption{SUSY}
-	\label{fig:susy-sample-quality}
-\end{subfigure}
+%\begin{subfigure}[b]{\columnwidth}
+%  	\includegraphics[width=\columnwidth,height=0.4\columnwidth]{../images/experiment-results/placeholder.jpg}
+%	\caption{SUSY}
+%	\label{fig:susy-quality}
+%\end{subfigure}
 \vspace{2mm}
 \caption{Large Classification Datasets}
 \label{fig:cluster-classification-results}
@@ -957,68 +939,23 @@ We evaluated our deployment system on larger workloads in a cluster environment.
 	\caption{Higgs}
 	\label{fig:higgs-times}
 \end{subfigure}
-\begin{subfigure}[b]{0.5\columnwidth}
-	\centering
-	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/placeholder.jpg}
-	\caption{Susy}
-	\label{fig:susy-times}
-\end{subfigure}
+%\begin{subfigure}[b]{0.5\columnwidth}
+%	\centering
+%	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/placeholder.jpg}
+%	\caption{Susy}
+%	\label{fig:susy-times}
+%\end{subfigure}
 \vspace{2mm}
 \caption{Total training time for Distributed Datasets}
  \label{fig:cluster-training-time}
 \end{figure}
 
-\subsection{Incomplete - Discussion}
-Our experiments show that although Continuous deployment method perform differently on different workloads, it always results in the lowest error rate in a much lower total training time than Velox deployment method.
+Figure \ref{fig:cluster-training-time} shows the total training time for URL Reputation and Higgs.
+Similar to our previous results, the Continuous method decreases the total training time by a factor of 4 for both datasets.
 
-Figure \ref{fig:training-time-vs-quality} shows the total training time and average error rate of each the three different deployment methods (Baseline, Continuous and Velox) on different datasets.
-\ref{subfig:url-meta}--\ref{subfig:susy-meta}
-\ref{subfig:cover-type-meta}--\ref{subfig:adult-meta} shows the trade off between quality and total training time for our local classification datasets.
-In all cases,  Continuous deployment method achieves the lowest average error rate in a reasonable amount of time.
-This is due to two reasons.
-First, it is constantly updating the model with a combination of new and old data.
-Second, contrary to Velox the updates are always incremental and small.
-As we discussed in section \ref{subsec:experiment-local}, a full retraining on a dataset may cause the model to overfit to the training data and cannot generalize well to the incoming data stream.
+\subsection{Discussion}
 
-Figure \ref{subfig:movie-lens-100k-meta} and \ref{subfig:movie-lens-1m-meta} show the trade off between training time and average of mean squared error rate for Movie Lens dataset.
-Here, the characteristics of the data (concept drift and cold start problems) have made online updates necessary.
-Both Velox and Continuous deployment methods achieve similar average mean squared error rate, however, Continuous method has a much smaller training time than that of Velox.
-
-%\todo[inline]{Should I include this? if yes, here or in Conclusion}
-One aspect of the deployment systems that we do not tackle in our current prototype is the prediction latency.
-In our current prototype, both prediction and model updates are managed by the same node and as a result the prediction component is paused until the incremental training (or retraining in the case of Velox) is executed.
-Therefore, the system always answer each prediction query using the latest model, although with a much greater delay.
-
-In an actual model deployment system, training and prediction are done on separate nodes (or threads), therefore any prediction request arriving at the system can be answered immediately using the latest available version of the model.
-Since the retraining time for Velox is large, a considerable percentage of prediction requests are always answered by an older version of the model.
-Our continuous deployment method reduces this delay since the it is updating the underlying model constantly.
-We plan to investigate the effect of using older versions of the model to answer prediction requests in our future work.
-
-\begin{figure*}[h]
-
-\begin{subfigure}{0.30\textwidth}
-  \centering
-  \includegraphics[width=\linewidth]{../images/experiment-results/url-reputation-meta-performance.eps}
-  \caption{URL Reputation}
-   \label{subfig:url-meta}
-\end{subfigure}%
- \hspace*{10mm}
-\begin{subfigure}{0.30\textwidth}
- \centering
-  \includegraphics[width=\linewidth]{../images/experiment-results/higgs-meta-performance.eps}
-  \caption{Higgs}
-   \label{subfig:higgs-meta}
-\end{subfigure}%
- \hspace*{10mm}
-\begin{subfigure}{0.30\textwidth}
- \centering
-  \includegraphics[width=\linewidth]{../images/experiment-results/placeholder.jpg}
-  \caption{Susy}
-  \label{subfig:susy-meta}
-\end{subfigure}
- \vspace*{5mm}
-\centering
-
+\begin{figure*}[t]
 \begin{subfigure}{0.30\textwidth}
   \centering
   \includegraphics[width=\linewidth]{../images/experiment-results/cover-types-meta-performance.eps}
@@ -1026,12 +963,6 @@ We plan to investigate the effect of using older versions of the model to answer
   \label{subfig:cover-type-meta}
 \end{subfigure}%
   \hspace*{10mm}
-%\begin{subfigure}{0.30\textwidth}
-% \centering
-%  \includegraphics[width=\linewidth]{../images/experiment-results/higgs-sample-meta-performance.eps}
-%  \caption{Higgs Sample}
-%  \label{subfig:higgs-sample-meta}
-%\end{subfigure}%
 \begin{subfigure}{0.30\textwidth}
  \centering
   \includegraphics[width=\linewidth]{../images/experiment-results/sea-meta-performance.eps}
@@ -1045,12 +976,6 @@ We plan to investigate the effect of using older versions of the model to answer
   \caption{Adult}
   \label{subfig:adult-meta}
 \end{subfigure}%
-%\begin{subfigure}{0.30\textwidth}
-% \centering
-%  \includegraphics[width=1\linewidth]{../images/experiment-results/susy-sample-meta-performance.eps}
-%  \caption{Susy Sample}
-%  \label{subfig:susy-sample-meta}
-%\end{subfigure}
  \vspace*{5mm}
 \centering
 
@@ -1065,10 +990,59 @@ We plan to investigate the effect of using older versions of the model to answer
   \caption{Movie Lens 1M}
   \label{subfig:movie-lens-1m-meta}
 \end{subfigure}
+
+
+\begin{subfigure}{0.30\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{../images/experiment-results/url-reputation-meta-performance.eps}
+  \caption{URL Reputation}
+   \label{subfig:url-meta}
+\end{subfigure}%
+ \hspace*{10mm}
+\begin{subfigure}{0.30\textwidth}
+ \centering
+  \includegraphics[width=\linewidth]{../images/experiment-results/higgs-meta-performance.eps}
+  \caption{Higgs}
+   \label{subfig:higgs-meta}
+\end{subfigure}
+% \hspace*{10mm}
+%\begin{subfigure}{0.30\textwidth}
+% \centering
+%  \includegraphics[width=\linewidth]{../images/experiment-results/placeholder.jpg}
+%  \caption{Susy}
+%  \label{subfig:susy-meta}
+%\end{subfigure}
+ \vspace*{5mm}
+\centering
+
 \vspace{2mm}
 \caption{Total Training Time vs Quality}
 \label{fig:training-time-vs-quality}
 \end{figure*}
+Figure \ref{fig:training-time-vs-quality} shows the total training time and average error rate of each of the three different deployment methods (Baseline, Continuous and Velox) on different datasets.
+For all the evaluated datasets, the Continuous deployment method achieves the lowest average error rate (for classification datasets) and average mean squared error (for Recommender system datasets).
+The difference in average error rate (or average MSE) between Velox and Continuous methods is smaller for datasets that contain concept drift (Figure \ref{subfig:sea-meta}, \ref{subfig:movie-lens-100k-meta}, \ref{subfig:movie-lens-1m-meta}, \ref{subfig:url-meta}).
+Since both Velox and Continuous methods perform incremental training of the model after it is deployed, they both manage to handle the concept drift in the data.
+However, the Continuous method is able to adapt to the changes faster as it is constantly updating the model by executing iterations of SGD.
+In Velox deployment method, the underlying model cannot adapt to the changes in distribution as quickly, since the retraining procedure cannot be executed frequently as it requires a lot of resources.
+Baseline deployment method's performance is very poor in datasets  with concept drift.
+This is expected, as the underlying model in Baseline approach is only trained on an initial dataset and is not able to adapt to the changes in the data.
+The Continuous method performs very well for datasets with no concept drifts (\ref{subfig:cover-type-meta},  \ref{subfig:adult-meta}, \ref{subfig:higgs-meta}) as well.
+For both Cover Type and Higgs datasets, Baseline method does not converge on the initial dataset, therefore it has a higher error rate than Velox and Continuous.
+The Velox method performs better than Baseline on Higgs and Cover Type, however, retraining on these two datasets causes the underlying model to overfit to the existing data and as a result the model's performance is dropped after each retraining which leads to an overall lower average error rate than the Continuous method.
+
+As expected, the Baseline method has the lowest training time for all the datasets since it only trains the model once on the initial datasets.
+The total training time for Continuous is lower than Velox for every datasets by a factor of 2 to 4.
+This has a big impact on prediction latency and prediction accuracy.
+In our current prototype we do not tackle the problem of the trade off between prediction latency and prediction accuracy.
+In our prototype, both prediction and model updates are managed by the same node and as a result the prediction component is paused until the incremental training (or retraining in the case of Velox) is executed.
+Therefore, the system always answer each prediction query using the latest model, although with a much greater delay.
+However, in an actual model deployment system, training and prediction are done on separate nodes (or threads), therefore any prediction request arriving at the system can be answered immediately using the latest available version of the model.
+Since the retraining time for Velox is large, a considerable percentage of prediction requests are always answered by an older version of the model.
+Therefore while the system is executing a retraining, the error rate of the answered prediction requests will continue to rise until the retraining is finished.
+For large datasets, such as URL Reputation (Figure \ref{subfig:url-meta}), the retraining process may take hours or even days.
+Our continuous deployment method reduces this delay since it is updating the underlying model constantly using smaller batches of data. 
+We plan to investigate the trade off between prediction latency and prediction accuracy in our future work.
 
 \section{Conclusions} \label{conclusion}
 To fully benefit from machine learning models, one has to deploy them in a system capable of answering prediction queries in real-time and continuously update the models so they adjust to the changes in the incoming data.
@@ -1086,8 +1060,8 @@ We show that not only continuous training requires less resources but it also pr
 Comparing to simple techniques such incremental learning or initial batch training, our technique produces a model with higher quality.
 
 In future work, we will explore other optimization strategies such as batching of prediction queries, caching of query results, and more advanced methods for sampling of historical data in order to investigate their effect on the performance of the system.
-%ACKNOWLEDGMENTS are optional
-%\section{Acknowledgments}
+
 \bibliographystyle{plain}
-{\footnotesize\bibliography{main}}
+
+{\fontsize{7}{4}\selectfont \bibliography{main}}
 \end{document}

@@ -148,7 +148,7 @@ coverTypeTime =
   ggplot(melted, aes(x = methods, y = value)) +
   geom_bar(stat='identity') + 
   xlab("") + ylab("Time (m)") + 
-  scale_y_continuous(expand = c(0, 0)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 42)) +
   theme_bw() + 
   theme(legend.position="none",
         axis.text=element_text(size=28, color = "black"),
@@ -210,7 +210,7 @@ p =
   #geom_text(aes(label = models, colour = models), size = 5, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
   xlab("Time (m)") + ylab("Avg Error rate") + 
   #xlim(c(0,400)) + 
-  #ylim(c(0.367, 0.38)) + 
+  ylim(c(0.367, 0.38)) + 
   theme_bw() + 
   theme(legend.text = element_text(size = 30, color = "black"), 
         legend.title = element_text(size = 30, color = "black"),
@@ -247,7 +247,7 @@ p =
   #geom_text(aes(label = models, colour = models), size = 5, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
   xlab("Time (m)") + ylab("Avg Error rate") + 
   #xlim(c(0,400)) + 
-  #ylim(c(0.367, 0.38)) + 
+  ylim(c(0.034, 0.044)) + 
   theme_bw() + 
   theme(legend.text = element_text(size = 30, color = "black"), 
         legend.title = element_text(size = 30, color = "black"),
