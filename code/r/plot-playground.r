@@ -119,11 +119,11 @@ ggplot(data = ml, aes(x = time, y = value, group = variable)) +
 
 
 #URL 
-continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-100/offline-step-1.0/online-step-0.1/2017-03-29-09-15/error-rates.txt', header = FALSE, col.names = 'continuous')
+continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-50/offline-step-1.0/online-step-0.1/2017-03-28-13-50/error-rates.txt', header = FALSE, col.names = 'continuous')
 
-velox = read.csv('url-reputation/velox/num-iterations-500/slack-400/offline-step-1.0/online-step-0.1/2017-03-25-20-58/error-rates.txt', header = FALSE, col.names = 'velox')
+velox = read.csv('url-reputation/velox/num-iterations-500/slack-640/offline-step-1.0/online-step-0.1/2017-03-29-15-04/error-rates.txt', header = FALSE, col.names = 'velox')
 
-baselinePlus = read.csv('url-reputation/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-03-26-14-27/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+baselinePlus = read.csv('url-reputation/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-03-30-10-32/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 
 baseline= read.csv('url-reputation/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-03-28-18-05/error-rates.txt', header = FALSE, col.names = 'baseline')
 
@@ -283,7 +283,7 @@ ggplot(data = ml, aes(x = time, y = value, group = variable)) +
 
 
 #SUSY Cluster
-continuous = read.csv('susy/continuous/num-iterations-500/slack-50/offline-step-1.0/online-step-1.0/2017-03-28-19-41/error-rates.txt', header = FALSE, col.names = 'continuous')
+continuous = read.csv('susy/continuous/num-iterations-500/slack-20/offline-step-1.0/online-step-1.0/2017-03-30-11-48/error-rates.txt', header = FALSE, col.names = 'continuous')
 
 velox = read.csv('susy/velox/num-iterations-500/slack-400/offline-step-1.0/online-step-1.0/2017-03-28-21-07/error-rates.txt', header = FALSE, col.names = 'velox')
 
@@ -306,8 +306,7 @@ df = data.frame(time = 1:nrow(continuous),
 ml = melt(df, id.vars = 'time' )
 ggplot(data = ml, aes(x = time, y = value, group = variable)) + 
   geom_line(aes( colour = variable)) + 
-  xlab("Time") + ylab("Mean Squared Error") + 
-  ylim(c(0.22,0.225))
+  xlab("Time") + ylab("Mean Squared Error") 
 
 #SUSY-SAMPLE-GRIDSEARCH
 continuous05= read.csv('susy-sample/continuous/num-iterations-300/slack-5/offline-step-1.0/online-step-1.0/2017-03-23-16-43/error-rates.txt', header = FALSE, col.names = 'continuous05')

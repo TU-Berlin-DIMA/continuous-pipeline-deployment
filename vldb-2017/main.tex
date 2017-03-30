@@ -50,8 +50,8 @@
 \usepackage{lipsum}% http://ctan.org/pkg/lipsum
 \usepackage{graphicx}% http://ctan.org/pkg/graphicx
 \usepackage{float}
-\usepackage{todonotes}
-%\usepackage[disable]{todonotes}
+%\usepackage{todonotes}
+\usepackage[disable]{todonotes}
 \usepackage[outdir=./figures/]{epstopdf}
 \usepackage{listings}
 \PassOptionsToPackage{table}{colorx}
@@ -307,7 +307,7 @@ Similar to gradient descent, it is an iterative process but in each iteration it
 It calculates the gradient at a single element and updates the parameters of the model accordingly. 
 Although it converges after a higher number of iterations, the overall convergence time is lower (sometimes by orders of magnitude) than gradient descent. 
 Each iteration of SGD can be executed in a short amount of time because it only works with a sample of the data.
-We are leveraging this property of SGD and design our deployment system so that it executes one iteration o	f SGD at a time without interrupting the query answering component.
+We are leveraging this property of SGD and design our deployment system so that it executes one iteration of SGD at a time without interrupting the query answering component.
 In Section \ref{evaluation}, we show that the overhead from executing a single iteration of SGD is very small and it does not affect the query answering component.
 
 \subsection{Distributed SGD}
@@ -597,7 +597,7 @@ This is to evaluate how each of the implemented methods react to changes in the 
 For these two datasets, we used an evolving test set to evaluate the performance of the deployment methods.
 An evolving test set was also created, where the index of the test items are first drawn uniformly at random from the entire data set.
 For Movie Lens 100k, the total size of the test set is 5,000 and for Movie Lens 1M it is 50,000. 
-We start with an empty test set, when we reach the index of a test item, we add that to the current test set and calculate the error rate based on the current test set.
+We start with an empty test set, when we reach the index of a test item, we add that to the current test set and calculate the error rate based on the current test set (We call this a test increment).
 Each error calculation, as a result captures the degree to which the models are adopting to the changes in the dataset.
 %We have set the learning rate to 0.001 for all of the experiments on MovieLens dataset.
 
@@ -616,6 +616,7 @@ Adult \cite{platt199912} is a dataset extracted from a census database.
 It contains information such as education level, occupation, relationship status and salary of individuals from multiple countries and the task is to predict whether an individual earns more than \$50K a year. 
 For all of the datasets we use 10\% for initial training and 90\% for online prediction/training.
 Except for URL Reputation and Movie Lens datasets that are timestamped, the order of the incoming data are arbitrary for the rest of the datasets.
+For all of the classification datasets, we report the prequential error \cite{gama2009issues} when receiving a new batch of training instances.
 %\textbf{Criteo \cite{criteo-kaggle}}: to implement our CTR prediction example we use Criteo's Kaggle advertising challenge dataset.
 %The dataset includes both categorical and numerical features.
 %However, in our evaluations we only used the numerical features.
@@ -944,12 +945,35 @@ We evaluated our deployment system on larger workloads in a cluster environment.
 \end{figure}
 
 
+\begin{figure}[h]
+\centering
+\begin{subfigure}[b]{0.5\columnwidth}
+	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/placeholder.jpg}
+	\caption{URL}
+	\label{fig:url-times}
+\end{subfigure}%
+\begin{subfigure}[b]{0.5\columnwidth}
+	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/higgs-times.eps}
+	\caption{Higgs}
+	\label{fig:higgs-times}
+\end{subfigure}
+\begin{subfigure}[b]{0.5\columnwidth}
+	\centering
+	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/placeholder.jpg}
+	\caption{Susy}
+	\label{fig:susy-times}
+\end{subfigure}
+\vspace{2mm}
+\caption{Total training time for Distributed Datasets}
+ \label{fig:cluster-training-time}
+\end{figure}
+
 \subsection{Incomplete - Discussion}
 Our experiments show that although Continuous deployment method perform differently on different workloads, it always results in the lowest error rate in a much lower total training time than Velox deployment method.
 
 Figure \ref{fig:training-time-vs-quality} shows the total training time and average error rate of each the three different deployment methods (Baseline, Continuous and Velox) on different datasets.
 \ref{subfig:url-meta}--\ref{subfig:susy-meta}
-\ref{subfig:cover-type-meta}--\ref{subfig:susy-sample-meta} shows the trade off between quality and total training time for our local classification datasets.
+\ref{subfig:cover-type-meta}--\ref{subfig:adult-meta} shows the trade off between quality and total training time for our local classification datasets.
 In all cases,  Continuous deployment method achieves the lowest average error rate in a reasonable amount of time.
 This is due to two reasons.
 First, it is constantly updating the model with a combination of new and old data.

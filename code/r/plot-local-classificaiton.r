@@ -11,7 +11,6 @@ loadData <- function(file){
   return(as.numeric(data[[1]]))
 }
 
-
 ###################### Quality Over Time #####################
 
 #### Cover Types ####
@@ -41,15 +40,15 @@ retrainings = c(32,63,96)
 p = 
   ggplot(data = df) + 
   # plot lines
-  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1, linetype = "dotted") + 
-  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1) + 
-  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1) + 
-  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1) + 
+  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1.4, linetype = "dotted") + 
+  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1.4) + 
+  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1.4) + 
+  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1.4) + 
   # plot retraining points
-  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 5, shape = 16 ) + 
+  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 8, shape = 18 ) + 
   # x and y labels
-  xlab("Time") + ylab("Misclassification Rate") + 
-  #ylim(c(0.1,1.5)) + 
+  xlab("Time") + ylab("Error Rate") + 
+  ylim(c(0.24,0.27)) + 
   # legend themes
   theme_bw() + 
   theme(legend.text = element_text(size = 30, color = "black"), 
@@ -57,15 +56,15 @@ p =
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
         axis.text=element_text(size=30, color = "black"),
         axis.title=element_text(size=30, color= "black"),  
-        legend.position=c(0.85,0.67), 
-        legend.key.width = unit(2.5, "cm"), 
+        legend.position=c(0.15,0.25), 
+        legend.key.width = unit(3, "cm"), 
         legend.key.height = unit(0.8, "cm")) + 
   scale_linetype_discrete(guide=FALSE) + 
   scale_shape_discrete(guide=FALSE) + 
   scale_color_manual(name = "", 
                      labels = c("baseline", "baseline+", "continuous","velox", "retraining"),
                      values = c("a"="black", "b"="black","c"="black","d"="black", "e"="black"))+
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,16),linetype=c(3,4,1,5,0)))) 
+  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,18),linetype=c(3,4,1,5,0)))) 
   
 ggsave(p , filename = 'cover-types/cover-types-quality.eps', 
        device = 'eps', 
@@ -106,14 +105,14 @@ retrainings = c(32,63,96)
 p = 
   ggplot(data = df) + 
   # plot lines
-  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1, linetype = "dotted") + 
-  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1) + 
-  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1) + 
-  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1) + 
+  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1.4, linetype = "dotted") + 
+  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1.4) + 
+  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1.4) + 
+  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1.4) + 
   # plot retraining points
-  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 5, shape = 16 ) + 
+  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 8, shape = 18 ) + 
   # x and y labels
-  xlab("Time") + ylab("Misclassification Rate") + 
+  xlab("Time") + ylab("Error Rate") + 
   #ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
@@ -123,14 +122,14 @@ p =
         axis.text=element_text(size=30, color = "black"),
         axis.title=element_text(size=30, color= "black"),  
         legend.position=c(0.85,0.30), 
-        legend.key.width = unit(2.5, "cm"), 
+        legend.key.width = unit(3, "cm"), 
         legend.key.height = unit(0.8, "cm")) + 
   scale_linetype_discrete(guide=FALSE) + 
   scale_shape_discrete(guide=FALSE) + 
   scale_color_manual(name = "", 
                      labels = c("baseline", "baseline+", "continuous","velox", "retraining"),
                      values = c("a"="black", "b"="black","c"="black","d"="black", "e"="black"))+
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,16),linetype=c(3,4,1,5,0)))) 
+  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,18),linetype=c(3,4,1,5,0)))) 
 
 ggsave(p , filename = 'adult/adult-quality.eps', 
        device = 'eps', 
@@ -172,14 +171,14 @@ retrainings = c(32,63,96)
 p = 
   ggplot(data = df) + 
   # plot lines
-  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1, linetype = "dotted") + 
-  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1) + 
-  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1) + 
-  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1) + 
+  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1.4, linetype = "dotted") + 
+  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1.4) + 
+  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1.4) + 
+  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1.4) + 
   # plot retraining points
-  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 5, shape = 16 ) + 
+  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 8, shape = 18 ) + 
   # x and y labels
-  xlab("Time") + ylab("Misclassification Rate") + 
+  xlab("Time") + ylab("Error Rate") + 
   #ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
@@ -189,14 +188,14 @@ p =
         axis.text=element_text(size=30, color = "black"),
         axis.title=element_text(size=30, color= "black"),  
         legend.position=c(0.70,0.80), 
-        legend.key.width = unit(2.5, "cm"), 
+        legend.key.width = unit(3, "cm"), 
         legend.key.height = unit(0.8, "cm")) + 
   scale_linetype_discrete(guide=FALSE) + 
   scale_shape_discrete(guide=FALSE) + 
   scale_color_manual(name = "", 
                      labels = c("baseline", "baseline+", "continuous","velox", "retraining"),
                      values = c("a"="black", "b"="black","c"="black","d"="black", "e"="black"))+
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,16),linetype=c(3,4,1,5,0)))) 
+  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,18),linetype=c(3,4,1,5,0)))) 
 
 ggsave(p , filename = 'sea/sea-quality.eps', 
        device = 'eps', 
@@ -231,14 +230,14 @@ retrainings = c(32,66,98)
 p = 
   ggplot(data = df) + 
   # plot lines
-  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1, linetype = "dotted") + 
-  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1) + 
-  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1) + 
-  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1) + 
+  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1.4, linetype = "dotted") + 
+  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1.4) + 
+  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1.4) + 
+  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1.4) + 
   # plot retraining points
-  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 5, shape = 16 ) + 
+  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 8, shape = 18 ) + 
   # x and y labels
-  xlab("Time") + ylab("Misclassification Rate") + 
+  xlab("Time") + ylab("Error Rate") + 
   #ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
@@ -248,14 +247,14 @@ p =
         axis.text=element_text(size=30, color = "black"),
         axis.title=element_text(size=30, color= "black"),  
         legend.position=c(0.25,0.30), 
-        legend.key.width = unit(2.5, "cm"), 
+        legend.key.width = unit(3, "cm"), 
         legend.key.height = unit(0.8, "cm")) + 
   scale_linetype_discrete(guide=FALSE) + 
   scale_shape_discrete(guide=FALSE) + 
   scale_color_manual(name = "", 
                      labels = c("baseline", "baseline+", "continuous","velox", "retraining"),
                      values = c("a"="black", "b"="black","c"="black","d"="black", "e"="black"))+
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,16),linetype=c(3,4,1,5,0)))) 
+  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,18),linetype=c(3,4,1,5,0)))) 
 
 
 ggsave(p , filename = 'higgs-sample/higgs-sample-quality.eps', 
@@ -291,14 +290,14 @@ retrainings = c(32,66,98)
 p =
   ggplot(data = df) + 
   # plot lines
-  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1, linetype = "dotted") + 
-  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1) + 
-  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1) + 
-  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1) + 
+  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1.4, linetype = "dotted") + 
+  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1.4) + 
+  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1.4) + 
+  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1.4) + 
   # plot retraining points
-  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 5, shape = 16 ) + 
+  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 8, shape = 18 ) + 
   # x and y labels
-  xlab("Time") + ylab("Misclassification Rate") + 
+  xlab("Time") + ylab("Error Rate") + 
   #ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
@@ -308,14 +307,14 @@ p =
         axis.text=element_text(size=30, color = "black"),
         axis.title=element_text(size=30, color= "black"),  
         legend.position=c(0.85,0.67), 
-        legend.key.width = unit(2.5, "cm"), 
+        legend.key.width = unit(3, "cm"), 
         legend.key.height = unit(0.8, "cm")) + 
   scale_linetype_discrete(guide=FALSE) + 
   scale_shape_discrete(guide=FALSE) + 
   scale_color_manual(name = "", 
                      labels = c("baseline", "baseline+", "continuous","velox", "retraining"),
                      values = c("a"="black", "b"="black","c"="black","d"="black", "e"="black"))+
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,16),linetype=c(3,4,1,5,0)))) 
+  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,18),linetype=c(3,4,1,5,0)))) 
 
 ggsave(p , filename = 'susy-sample/susy-sample-quality.eps', 
        device = 'eps', 
@@ -341,7 +340,7 @@ coverTypeTime =
   ggplot(melted, aes(x = methods, y = value)) +
   geom_bar(stat='identity') + 
   xlab("") + ylab("Time (s)") + 
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 150)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 175)) +
   theme_bw() + 
   theme(legend.position="none",
         axis.text=element_text(size=28, color = "black"),
@@ -369,7 +368,7 @@ adultTime =
   ggplot(melted, aes(x = methods, y = value)) +
   geom_bar(stat='identity') + 
   xlab("") + ylab("Time (s)") + 
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 150)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 175)) +
   theme_bw() + 
   theme(legend.position="none",
         axis.text=element_text(size=28, color = "black"),
@@ -396,7 +395,7 @@ susyTime =
   ggplot(melted, aes(x = methods, y = value)) +
   geom_bar(stat='identity') + 
   xlab("") + ylab("Time (s)") + 
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 150)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 175)) +
   theme_bw() + 
   theme(legend.position="none",
         axis.text=element_text(size=28, color = "black"),
@@ -490,7 +489,7 @@ p =
   geom_point(aes(shape = models),  lwd = 12) + 
   #geom_text(aes(label = models, colour = models), size = 5, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
   xlab("Time (s)") + ylab("Avg Error rate") + 
-  ylim(c(0.24, 0.27)) + 
+  ylim(c(0.24, 0.30)) + 
   theme_bw() + 
   theme(legend.text = element_text(size = 30, color = "black"), 
         legend.title = element_text(size = 30, color = "black"),
@@ -617,8 +616,8 @@ ggsave(p , filename = 'adult/adult-meta-performance.eps',
        units = "in")
 
 #### SEA ####
-continuous = read.csv('sea/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-0.05/2017-03-29-10-40/training-times.txt', header = FALSE, col.names = 'continuous')
-velox = read.csv('sea/velox/num-iterations-500/slack-32/offline-step-1.0/online-step-0.05/2017-03-29-10-43/training-times.txt', header = FALSE, col.names = 'velox')
+continuousTime = read.csv('sea/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-0.05/2017-03-29-10-40/training-times.txt', header = FALSE, col.names = 'continuous')
+veloxTime = read.csv('sea/velox/num-iterations-500/slack-32/offline-step-1.0/online-step-0.05/2017-03-29-10-43/training-times.txt', header = FALSE, col.names = 'velox')
 baselineTime = continuousTime[[1]][1]
 
 continuous = read.csv('sea/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-0.05/2017-03-29-10-40/error-rates.txt', header = FALSE, col.names = 'continuous')
@@ -634,7 +633,7 @@ p =
   geom_point(aes(shape = models),  lwd = 12) + 
   #geom_text(aes(label = models, colour = models), size = 5, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
   xlab("Time (s)") + ylab("Avg Error rate") + 
-  ylim(c(0.270, 0.290)) + 
+  ylim(c(0.270, 0.30)) + 
   theme_bw() + 
   theme(legend.text = element_text(size = 30, color = "black"), 
         legend.title = element_text(size = 30, color = "black"),

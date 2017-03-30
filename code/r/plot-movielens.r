@@ -59,14 +59,14 @@ retrainings = c(830,1699,2485,3355,4204,5000)
 p =
   ggplot(data = df) + 
   # plot lines
-  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1, linetype = "dotted") + 
-  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1) + 
-  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1) + 
-  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1) + 
+  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1.4, linetype = "dotted") + 
+  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1.4) + 
+  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1.4) + 
+  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1.4) + 
   # plot retraining points
-  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 5, shape = 16 ) + 
+  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 8, shape = 18 ) + 
   # x and y labels
-  xlab("Time") + ylab("Misclassification Rate") + 
+  xlab("Testing Increments") + ylab("Mean Squared Error") + 
   #ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
@@ -76,14 +76,14 @@ p =
         axis.text=element_text(size=30, color = "black"),
         axis.title=element_text(size=30, color= "black"),  
         legend.position=c(0.85,0.27), 
-        legend.key.width = unit(2.5, "cm"), 
+        legend.key.width = unit(3, "cm"), 
         legend.key.height = unit(0.8, "cm")) + 
   scale_linetype_discrete(guide=FALSE) + 
   scale_shape_discrete(guide=FALSE) + 
   scale_color_manual(name = "", 
                      labels = c("baseline", "baseline+", "continuous","velox", "retraining"),
                      values = c("a"="black", "b"="black","c"="black","d"="black", "e"="black"))+
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,16),linetype=c(3,4,1,5,0)))) 
+  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,18),linetype=c(3,4,1,5,0)))) 
 
 
  
@@ -113,14 +113,14 @@ retrainings = c(8379,16706,25075,33345,41765,50000)
 p =
   ggplot(data = df) + 
   # plot lines
-  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1, linetype = "dotted") + 
-  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1) + 
-  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1) + 
-  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1) + 
+  geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1.4, linetype = "dotted") + 
+  geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1.4) + 
+  geom_line(aes(x = time, y  = continuous, linetype = "c", color = "c"), linetype = "solid", size = 1.4) + 
+  geom_line(aes(x = time, y  = velox, linetype = "d", color = "d"), linetype = "longdash", size = 1.4) + 
   # plot retraining points
-  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 5, shape = 16 ) + 
+  geom_point(data = df[retrainings,c(1,3)], aes(x=time, y = velox, shape = "e", color = "e"), lwd = 8, shape = 18 ) + 
   # x and y labels
-  xlab("Time") + ylab("Misclassification Rate") + 
+  xlab("Testing Increments") + ylab("Mean Squared Error") + 
   #ylim(c(0.1,1.5)) + 
   # legend themes
   theme_bw() + 
@@ -130,14 +130,14 @@ p =
         axis.text=element_text(size=30, color = "black"),
         axis.title=element_text(size=30, color= "black"),  
         legend.position=c(0.85,0.27), 
-        legend.key.width = unit(2.5, "cm"), 
+        legend.key.width = unit(3, "cm"), 
         legend.key.height = unit(0.8, "cm")) + 
   scale_linetype_discrete(guide=FALSE) + 
   scale_shape_discrete(guide=FALSE) + 
   scale_color_manual(name = "", 
                      labels = c("baseline", "baseline+", "continuous","velox", "retraining"),
                      values = c("a"="black", "b"="black","c"="black","d"="black", "e"="black"))+
-  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,16),linetype=c(3,4,1,5,0)))) 
+  guides(color=guide_legend(override.aes=list(shape=c(NA,NA,NA,NA,18),linetype=c(3,4,1,5,0)))) 
 
 ggsave(p , filename = 'movie-lens-1M/50000/movie-lens-1m-quality-improved.eps', 
        device = 'eps',
@@ -212,6 +212,7 @@ movielens100kTimes =
   ggplot(melted, aes(x = methods, y = value)) +
   geom_bar(stat='identity') + 
   xlab("") + ylab("Time (m)") + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 17.5)) +
   theme_bw() + 
   theme(legend.position="none",
         axis.text=element_text(size=28, color = "black"),
@@ -236,6 +237,7 @@ movielens1MTimes =
   ggplot(melted, aes(x = methods, y = value)) +
   geom_bar(stat='identity') + 
   xlab("") + ylab("Time (m)") + 
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 175)) +
   theme_bw() + 
   theme(legend.position="none",
         axis.text=element_text(size=28, color = "black"),
