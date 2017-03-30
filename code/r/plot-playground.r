@@ -127,13 +127,19 @@ baselinePlus = read.csv('url-reputation/baseline-plus/num-iterations-500/slack-n
 
 baseline= read.csv('url-reputation/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-03-28-18-05/error-rates.txt', header = FALSE, col.names = 'baseline')
 
-m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
-continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))
-velox = rbind(velox, data.frame(velox = rep(NA, m - nrow(velox))))
-baseline = rbind(baseline, data.frame(baseline = rep(NA, m - nrow(baseline))))
-baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(NA, m - nrow(baselinePlus))))
+#m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
+m = 1600
+continuous = continuous[1:m,]
+velox = velox[1:m,]
+baselinePlus = baselinePlus[1:m,]
+baseline = baseline[1:m,]
+#continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))
+#velox = rbind(velox, data.frame(velox = rep(NA, m - nrow(velox))))
+#baseline = rbind(baseline, data.frame(baseline = rep(NA, m - nrow(baseline))))
+#baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(NA, m - nrow(baselinePlus))))
 
-df = data.frame(time = 1:nrow(continuous),
+
+df = data.frame(time = 1:1600,
                 continuous = continuous, 
                 velox = velox, 
                 baseline = baseline,
@@ -142,7 +148,7 @@ df = data.frame(time = 1:nrow(continuous),
 ml = melt(df, id.vars = 'time' )
 ggplot(data = ml, aes(x = time, y = value, group = variable)) + 
   geom_line(aes( colour = variable)) + 
-  xlab("Time") + ylab("Mean Squared Error") 
+  xlab("Time") + ylab("Error Rate") 
 
 
 #URL SAMPLE 
@@ -174,13 +180,13 @@ ggplot(data = ml, aes(x = time, y = value, group = variable)) +
 
 
 #HIGGS SAMPLE
-continuous = read.csv('higgs-sample/continuous/num-iterations-300/slack-5/offline-step-1.0/online-step-1.0/2017-03-23-15-37/error-rates.txt', header = FALSE, col.names = 'continuous')
+continuous = read.csv('higgs/continuous/num-iterations-500/slack-30/offline-step-1.0/online-step-1.0/2017-03-30-13-44/error-rates.txt', header = FALSE, col.names = 'continuous')
 
-velox = read.csv('higgs-sample/velox/num-iterations-300/slack-32/offline-step-1.0/online-step-1.0/2017-03-23-15-44/error-rates.txt', header = FALSE, col.names = 'velox')
+velox = read.csv('higgs/velox/num-iterations-500/slack-320/offline-step-1.0/online-step-1.0/2017-03-30-14-41/error-rates.txt', header = FALSE, col.names = 'velox')
 
-baselinePlus = read.csv('higgs-sample/baseline-plus/num-iterations-300/slack-none/offline-step-1.0/online-step-1.0/2017-03-23-16-00/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+baselinePlus = read.csv('higgs/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-03-30-15-25/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 
-baseline = read.csv('higgs-sample/baseline/num-iterations-300/slack-none/offline-step-1.0/online-step-1.0/2017-03-23-16-04/error-rates.txt', header = FALSE, col.names = 'baseline')
+baseline = read.csv('higgs/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-03-30-16-01/error-rates.txt', header = FALSE, col.names = 'baseline')
 
 m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
 continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))
