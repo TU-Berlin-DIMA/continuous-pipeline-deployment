@@ -254,27 +254,6 @@ Moreover, TensorFlow is designed to create and train only deep neural network mo
 Our system supports incremental and batch updates to the model and automatically applies these updates to the model currently being served.
 Furthermore, our system can work with any machine learning model that uses stochastic gradient descent as optimization algorithm.
 
-%\todo[inline]{FIX THIS}
-%Velox \cite{crankshaw2014missing} is an state of the art system which has implemented this deployment model.
-%It uses Apache Spark to train an initial model using the available training data.
-%Once the model is trained, it is deployed into a distributed environment, where prediction queries are answered in real time.
-%When new training data arrives at the system the model is incrementally updated.
-%The incoming training data is also stored in a persistent storage.
-%To ensure the model is performing well, its quality is monitored over time.
-%Velox periodically retrains the model from scratch. 
-%This retraining can be triggered when the size of new training data has surpasses a predefined limit, or the quality of the model has gone below a user defined threshold or simply after a fixed period of time defined by the user.
-%Figure \ref{fig:velox-work-flow} depicts how Velox works. 
-%A buffer is used to store the incoming training observations, which will be combined with the historical data during the next retraining phase.
-%Although Velox continuously monitors and updates the underlying model, it has 3 drawbacks:\\
-%\begin{itemize}
-%\item Complete retraining discards all the current model parameter
-%\item Process of retraining on full dataset is a time consuming process that requires a lot of resources
-%\item When new datasets are introduced, a complete retraining has to be performed in order to update the model
-%\end{itemize}
-%While the model is being retrained, incremental updates are turned off.
-%Moreover, newly introduced datasets will not have any effect on the model until the next retraining.
-%This negatively affects the quality of the predictions produced by the system.
-%To address these problems, we introduced a new deployment system which we describe next.
 Velox is an implementation of the common machine learning serving practice \cite{crankshaw2014missing}, explained in Section \ref{introduction}.
 Velox supports incremental learning and can answer prediction queries in real-time.
 It also eliminates the need for users to manually retrain the model offline and redeploy it again.
@@ -319,17 +298,6 @@ One drawback of this approach is that a synchronization step is required before 
 This synchronization step slows down the SGD process, because after every iteration, all the updates have to be sent to a central process that updates the model.
 Experiments on distributed, asynchronous SGD show that the quality of the final model is not worse than the synchronized approach \cite{recht2011hogwild, dean2012large}. 
 
-%\subsection{Learning Rate Tuning} \label{learning-rate}
-%\todo[inline]{If we decide to go with April submission, try different learning rate tuning techniques}
-%The learning rate or step size is a parameter of SGD, which controls the amount of change in model parameters during each iteration of SGD.
-%It plays an important role in the convergence of SGD.
-%The most common technique is to set the learning rate to a small value, and slowly decrease the value in every iteration until the model converges.
-%However, in continuous and online learning due to possible changes in data distribution the parameters of a model may never converge.
-%Adaptive learning rates have been used in online scenarios where the learning rate is adjusted automatically based on different criteria.
-%Schaul et al. have proposed one such method were the learning rate can be inferred automatically based on the changes in the parameters of the model \cite{schaul2013no}. 
-%One advantage of their method is that it works well with non-stationary problems, where the distribution of the data is constantly changing. 
-%Based on observed changes in the data, one can adjust the learning rate to decrease (when approaching the optimum value) or increase (when the distribution of the data has changed).
-
 \subsection{Machine Learning Models based on SGD}
 SGD is one of the most common optimization methods for training machine learning models on large datasets. 
 It has been used in classification \cite{zhang2004solving}, clustering \cite{bottou1995convergence}, neural networks \cite{dean2012large}, and matrix factorization \cite{funk2006netflix}.
@@ -360,7 +328,7 @@ The success of the Google's Deepmind team in achieving Neural Networks that were
 
 SGD is the ideal optimization algorithm for training neural networks since it works very well with large datasets (which are required for training neural networks).
 In fact, almost all of the recent work on neural networks use SGD for training them.
-\todo[inline]{TR: I thought this is mostly done on GPU? Do they use SGD on GPU?}
+\todo[inline]{TR: I thought this is mostly done on GPU? Do they use SGD on GPU? As far as I know all of them use sgd on both GPU and CPU (at I am certain of the ones I have referenced)}
 
 \begin{figure}[t]
 \centering
@@ -370,30 +338,9 @@ In fact, almost all of the recent work on neural networks use SGD for training t
 \end{figure}
 
 \section{Continuous Training and Serving} \label{continious-training-serving}
-% Stochastic Gradient System properties
-%As described in Section \ref{sgd}, stochastic gradient descent is an iterative process where in each iteration one or a sample of the data is selected randomly and the gradient is calculated based on this sample. 
-%After each iteration the parameters of the model are updated.
-%As more iterations are executed, the model becomes more accurate.
-%Since SGD can train a model using both individual and (mini-)batches of data items, it is an idea optimization methods for deployment environments.
-%Initial models can be trained over large batches data.
-%After the initial training, these models can be deployed into a production environment where they will answer prediction queries arriving at the system.
-%As mentioned in section \ref{introduction} most systems incorporate a feedback mechanism where more training items will become available over time.
-%With arrival of each new training item, SGD can incrementally update the model.
-%In our CTR use case, initial training is performed over the available click behavior of the users.
-%This data is gathered over a long period of time by observing what ads have been click by each specific users.
-%After the model is deployed, prediction queries that contains users' and requested pages' information are send to the model.
-%Based on this data and the properties of the available ads creatives, the model proposes the best set of ads to be shown to the user.
-%The system collects feedback based on whether the user clicked on any of the given set of ads.
-%If an ad is click by a user, this information is sent back to the system as a new training item which will be used to incrementally update the model.
-%However, if an ad is not clicked by a user, it is not a strong indication of user's negative taste towards a specific ad.
-%Therefore, training items with negative labels are typically only generated if an ad has a very low (close to zero) click ratio for a very long period of time.
-%Our key observation is that, by utilizing SGD's properties, the model training process can be seamlessly executed along side the serving and query answering component.
-%Similar to Velox, models are incrementally updated.
-%However, unlike Velox, the retraining process is completely eliminated and instead is replaced by a series of consecutive 1-iteration of SGD optimization.
-%Since each iteration of SGD is light and fast, it can be executed while the system is serving prediction requests.
 Our proposed deployment and maintenance system uses SGD as its underlying learning algorithm.
 As a result, it can update the model incrementally (one training item at a time) or use mini-batches of data (1 iteration of SGD).
-\todo[inline]{TR: Do we compare both in the experiments?}
+\todo[inline]{TR: Do we compare both in the experiments? For the spark experiments I have to use the mini batch since that's the way spark is designed but for local I m doing incremental training (1 at a time)}
 The core design principles of our deployment system are threefold.
 First, we incrementally update the model so that it can adapt to changes in the distribution of the incoming data.
 Second, we eliminate retraining and replace it with a series of consecutive iterations of SGD.
@@ -410,31 +357,6 @@ The scheduler can also decide to run an iteration when the system is not under h
 Each new iteration uses a random sample of the data in storage and the data in the buffer. 
 Moreover, our system stores new batch datasets in the buffer (or the persistent storage unit) as soon as they become available.
 Any new scheduled iteration of SGD uses the newly introduced dataset to further train the model without requiring a new model to be retrained from scratch.
-
-%\subsection{State of the Art} \label{sub:state-of-the-art}
-%Velox \cite{crankshaw2014missing} is an state of the art system which has implemented this deployment model.
-%It uses Apache Spark to train an initial model using the available training data.
-%Once the model is trained, it is deployed into a distributed environment, where prediction queries are answered in real time.
-%When new training data arrives at the system the model is incrementally updated.
-%The incoming training data is also stored in a persistent storage.
-%To ensure the model is performing well, its quality is monitored over time.
-%Velox periodically retrains the model from scratch. 
-%This retraining can be triggered when the size of new training data has surpasses a predefined limit, or the quality of the model has gone below a user defined threshold or simply after a fixed period of time defined by the user.
-%Figure \ref{fig:velox-work-flow} depicts how Velox works. 
-%A buffer is used to store the incoming training observations, which will be combined with the historical data during the next retraining phase.
-%Although Velox continuously monitors and updates the underlying model, it has 3 drawbacks:\\
-%\begin{itemize}
-%\item Complete retraining discards all the current model parameter
-%\item Process of retraining on full dataset is a time consuming process that requires a lot of resources
-%\item When new datasets are introduced, a complete retraining has to be performed in order to update the model
-%\end{itemize}
-%While the model is being retrained, incremental updates are turned off.
-%Moreover, newly introduced datasets will not have any effect on the model until the next retraining.
-%This negatively affects the quality of the predictions produced by the system.
-%To address these problems, we introduced a new deployment system which we describe next.
-
-%\subsection{Continuous Deployment}
-
 
 \section{System Architecture} \label{sec:system-architecutre}
 \begin{figure}[t]
@@ -471,7 +393,7 @@ Therefore, the scheduler component has to communicate with the model manager in 
 In order to execute an iteration of SGD, we need to combine the training data that arrives at the system in real-time with the data stored on disk.
 The data manager is responsible for storing the incoming training observations in an intermediate buffer.
 When a new training iteration is scheduled, the data manager accesses the historical data stored on disk and provides a sample.
-\todo[inline]{TR: How is the sample generated?}
+\todo[inline]{TR: How is the sample generated? For now I am just using default sampling available in python and Spark}
 The data from the sample and the data in the buffer are merged to create the dataset for next training iteration.
 The data manager provides access to this dataset for the model manager where the actual training and model updates happen.
 The data manager also communicates with the scheduler in order to inform it when the intermediate buffer is becoming full and a new training iteration is required. 
@@ -743,10 +665,10 @@ Figure \ref{fig:mnist-sample-rate} shows the effect of different sampling rates 
 Interestingly and contrary to the results we achieved for Movie Lens 100k the error rates for different sampling rates are very similar.
 We believe this is caused by how neural networks behave.
 Increasing the sampling rate causes similar data items to be used repeatedly in each training iteration and based on our experiments neural networks are not affected by this oversampling and, therefore, the results are almost similar with different sampling rates.
-\todo[inline]{TR: Is the same sample used over and over again?}
+\todo[inline]{TR: Is the same sample used over and over again? No, but since we are sampling from the same data, if the sampling rate is big, it will contain a lot of items that have been used (possibly multiple types)}
 Moreover, in this experiment, the number of parameters of the multi-layer perceptron is far less than the number of parameters of the matrix factorization model for Movie Lens 100k.
 This causes the neural work to converge faster and, therefore, it is not affected by more training, unless new training observations arrive at the system.
-\todo[inline]{TR: Not sure, is this obvious, otherwise it might be an interesting comparison. Do you ever reference to fig 7b?}
+\todo[inline]{TR: Not sure, is this obvious, otherwise it might be an interesting comparison. Do you ever reference to fig 7b? I used the wrong labels, and was referencing the same figure twice. I included this to reason that sampling rate and buffer size selection is not a "one size fit all" process}
 \begin{figure}[h]
 \begin{subfigure}{\columnwidth}
 \centering
