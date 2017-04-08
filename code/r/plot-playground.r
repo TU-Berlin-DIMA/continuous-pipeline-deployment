@@ -38,13 +38,13 @@ ggplot(data = ml, aes(x = time, y = value, group = variable)) +
 
 
 # Plot Criteo cluster
-continuous = read.csv('criteo/continuous/batch-2-slack-40-incremental-true-error-cumulative-prequential-1.0-200/2017-02-27-21-46/error-rates.txt', header = FALSE, col.names = 'continuous')
+continuous = read.csv('criteo/continuous/num-iterations-500/slack-50/offline-step-1.0/online-step-1.0/2017-03-30-18-53/error-rates.txt', header = FALSE, col.names = 'continuous')
 
-velox = read.csv('criteo/velox/batch-2-slack-400-incremental-true-error-cumulative-prequential-1.0-200/2017-02-27-23-11/error-rates.txt', header = FALSE, col.names = 'velox')
+velox = read.csv('criteo/velox/num-iterations-500/slack-320/offline-step-1.0/online-step-1.0/2017-03-30-19-35/error-rates.txt', header = FALSE, col.names = 'velox')
 
-baselinePlus = read.csv('criteo/baseline-plus/batch-2-slack-none-incremental-true-error-cumulative-prequential-1.0-200/2017-02-28-10-21/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+baselinePlus = read.csv('criteo/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-03-30-20-17/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 
-baseline= read.csv('criteo/baseline/batch-2-slack-none-incremental-false-error-cumulative-prequential-1.0-200/2017-02-28-00-49/error-rates.txt', header = FALSE, col.names = 'baseline')
+baseline= read.csv('criteo/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-03-30-20-17/error-rates.txt', header = FALSE, col.names = 'baseline')
 
 m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
 continuous = rbind(continuous, data.frame(continuous = rep(tail(continuous, n = 1), m - nrow(continuous))))
@@ -55,8 +55,8 @@ baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(tail(baselinePl
 df = data.frame(time = 1:nrow(velox),
                 continuous = continuous, 
                 velox = velox,
-                baseline = baseline)
-                #baselinePlus = baselinePlus)
+                baseline = baseline,
+                baselinePlus = baselinePlus)
 
 ml = melt(df, id.vars = 'time')
 ggplot(data = ml, aes(x = time, y = value, group = variable)) + 
@@ -208,9 +208,9 @@ ggplot(data = ml, aes(x = time, y = value, group = variable)) +
 
 
 #HIGGS
-continuous = read.csv('higgs/continuous/num-iterations-500/slack-50/offline-step-1.0/online-step-1.0/2017-03-29-11-22/error-rates.txt', header = FALSE, col.names = 'continuous')
+continuous = read.csv('higgs/continuous/num-iterations-500/slack-100/offline-step-1.0/online-step-1.0/2017-03-30-17-01/error-rates.txt', header = FALSE, col.names = 'continuous')
 
-velox = read.csv('higgs/velox/num-iterations-500/slack-320/offline-step-1.0/online-step-1.0/2017-03-29-11-53/error-rates.txt', header = FALSE, col.names = 'velox')
+velox = read.csv('higgs/velox/num-iterations-500/slack-640/offline-step-1.0/online-step-1.0/2017-03-30-17-45/error-rates.txt', header = FALSE, col.names = 'velox')
 
 baselinePlus = read.csv('higgs/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-03-29-13-47/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 
