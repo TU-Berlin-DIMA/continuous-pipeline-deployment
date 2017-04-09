@@ -819,13 +819,13 @@ We evaluated our deployment system on larger workloads in a distributed environm
 Figure \ref{fig:cluster-classification-results} shows the error rate of different deployment methods on classification datasets.
 Since URL Reputation data was gathered over 120 days, it is very likely that the data contains changes in the distribution.
 This concept drift is reflected in Figure \ref{fig:url-quality}.
-Baseline method's error rate is increasing with a steady rate as it cannot adapt to the changes in the data.
-The Continuous deployment method achieves the lowest error rate overall.
+The Baseline method's error rate is increasing with a steady rate as it cannot adapt to the changes in the data.
+The continuous deployment method achieves the lowest error rate overall.
 Velox manages to keep the error rate lower than Baseline+ until the the second retraining, after which the error rate slightly increases. 
 Figure \ref{fig:higgs-quality} shows the error rate on Higgs dataset.
 Similar to local classification datasets, the error rate for Baseline is the highest among all of the deployment methods.
-Velox, Baseline+ and Continuous maintain the same error rate until the first retraining of Velox, after which due to possible overfitting, Velox error rate starts to increase.
-Both Baseline+ and Continuous maintain similar error rates throughout, with the Continuous method slightly outperforming Baseline+.
+Velox, Baseline+, and Continuous maintain the same error rate until the first retraining of Velox, after which due to possible overfitting, the error rate of Velox starts to increase.
+Both Baseline+ and Continuous maintain similar error rates throughout, with the continuous method slightly outperforming Baseline+.
 \begin{figure}[h]
 	\centering
 \begin{subfigure}[b]{\columnwidth}
@@ -872,7 +872,7 @@ Both Baseline+ and Continuous maintain similar error rates throughout, with the 
  \label{fig:cluster-training-time}
 \end{figure}
 
-Figure \ref{fig:cluster-training-time} shows the total training time for URL Reputation and Higgs.
+Figure \ref{fig:cluster-training-time} shows the total training time for URL Reputation and Higgs experiments.
 Similar to our previous results, the Continuous method decreases the total training time by a factor of 4 for both datasets.
 
 \subsection{Discussion}
@@ -942,13 +942,13 @@ Similar to our previous results, the Continuous method decreases the total train
 \label{fig:training-time-vs-quality}
 \end{figure*}
 Figure \ref{fig:training-time-vs-quality} shows the total training time and average error rate of each of the three different deployment methods (Baseline, Continuous and Velox) on different datasets.
-For all the evaluated datasets, the Continuous deployment method achieves the lowest average error rate (for classification datasets) and average mean squared error (for Recommender system datasets).
-The difference in average error rate (or average MSE) between Velox and Continuous methods is smaller for datasets that contain concept drift (Figure \ref{subfig:sea-meta}, \ref{subfig:movie-lens-100k-meta}, \ref{subfig:movie-lens-1m-meta}, \ref{subfig:url-meta}).
-Since both Velox and Continuous methods perform incremental training of the model after it is deployed, they both manage to handle the concept drift in the data.
-However, the Continuous method is able to adapt to the changes faster as it is constantly updating the model by executing iterations of SGD.
-In Velox deployment method, the underlying model cannot adapt to the changes in distribution as quickly, since the retraining procedure cannot be executed frequently as it requires a lot of resources.
-Baseline deployment method's performance is very poor in datasets  with concept drift.
-This is expected, as the underlying model in Baseline approach is only trained on an initial dataset and is not able to adapt to the changes in the data.
+For all evaluated datasets, the Continuous deployment method achieves the lowest average error rate (for classification datasets) and average mean squared error (for Recommender system datasets).
+The difference in average error rate (or average MSE) between Velox and continuous methods is smaller for datasets that contain concept drift (Figure \ref{subfig:sea-meta}, \ref{subfig:movie-lens-100k-meta}, \ref{subfig:movie-lens-1m-meta}, \ref{subfig:url-meta}).
+Since both the Velox and continuous perform incremental training of the model after it is deployed, they both manage to handle the concept drift in the data.
+However, the continuous method is able to adapt to the changes faster as it is constantly updating the model by executing iterations of SGD.
+In the deployment method of Velox, the underlying model cannot adapt to the changes in the distribution as quickly, since the retraining procedure cannot be executed frequently as it requires a lot of resources.
+The performance of the Baseline deployment method is very poor in datasets with concept drift.
+This is expected, as the underlying model in the Baseline approach is only trained on an initial dataset and is not able to adapt to the changes in the data.
 The Continuous method performs very well for datasets with no concept drifts (\ref{subfig:cover-type-meta},  \ref{subfig:adult-meta}, \ref{subfig:higgs-meta}) as well.
 For both Cover Type and Higgs datasets, Baseline method does not converge on the initial dataset, therefore it has a higher error rate than Velox and Continuous.
 The Velox method performs better than Baseline on Higgs and Cover Type, however, retraining on these two datasets causes the underlying model to overfit to the existing data and as a result the model's performance is dropped after each retraining which leads to an overall lower average error rate than the Continuous method.
@@ -956,12 +956,12 @@ The Velox method performs better than Baseline on Higgs and Cover Type, however,
 As expected, the Baseline method has the lowest training time for all the datasets since it only trains the model once on the initial datasets.
 The total training time for Continuous is lower than Velox for every datasets by a factor of 2 to 4.
 This has a big impact on prediction latency and prediction accuracy.
-In our current prototype we do not tackle the problem of the trade off between prediction latency and prediction accuracy.
+In our current prototype, we do not address the problem of the trade off between prediction latency and prediction accuracy.
 In our prototype, both prediction and model updates are managed by the same node and as a result the prediction component is paused until the incremental training (or retraining in the case of Velox) is executed.
-Therefore, the system always answer each prediction query using the latest model, although with a much greater delay.
-However, in an actual model deployment system, training and prediction are done on separate nodes (or threads), therefore any prediction request arriving at the system can be answered immediately using the latest available version of the model.
+Therefore, the system always answers each prediction query using the latest model, although with a much greater delay.
+However, in an actual model deployment system, training and prediction are done on separate nodes (or threads), therefore, any prediction request arriving at the system can be answered immediately using the latest available version of the model.
 Since the retraining time for Velox is large, a considerable percentage of prediction requests are always answered by an older version of the model.
-Therefore while the system is executing a retraining, the error rate of the answered prediction requests will continue to rise until the retraining is finished.
+Therefore, while the system is executing a retraining, the error rate of the answered prediction requests will continue to rise until the retraining is finished.
 For large datasets, such as URL Reputation (Figure \ref{subfig:url-meta}), the retraining process may take hours or even days.
 Our continuous deployment method reduces this delay since it is updating the underlying model constantly using smaller batches of data. 
 We plan to investigate the trade off between prediction latency and prediction accuracy in our future work.
