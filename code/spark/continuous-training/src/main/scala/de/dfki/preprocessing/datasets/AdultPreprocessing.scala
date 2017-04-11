@@ -13,7 +13,7 @@ object AdultPreprocessing extends LibSVMDatasetsPreprocessing {
 
   override def defaultOutputPath = "data/adult"
 
-  override def defaultFileCount = 100
+  override def defaultFileCount = 600
 
   override def defaultSamplingRate = 1.0
 

@@ -66,6 +66,17 @@ class OnlineSVM(private var stepSize: Double,
     this
   }
 
+  /**
+    * Set the convergence tolerance
+    *
+    * @param convergenceTol convergence toll
+    * @return
+    */
+  def setConvergenceTol(convergenceTol: Double): this.type = {
+    this.algorithm.optimizer.setConvergenceTol(convergenceTol)
+    this
+  }
+
   def predictOnValues[K: ClassTag](data: RDD[(K, Vector)]): RDD[(K, Double)] = {
     if (model.isEmpty) {
       throw new IllegalArgumentException("Model must be initialized before starting prediction")

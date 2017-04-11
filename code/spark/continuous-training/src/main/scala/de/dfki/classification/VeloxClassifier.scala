@@ -1,5 +1,6 @@
 package de.dfki.classification
 
+import java.io.{File, FileWriter}
 import java.util.concurrent.{Executors, TimeUnit}
 
 import de.dfki.utils.CommandLineParser
@@ -91,6 +92,7 @@ object VeloxClassifier extends SVMClassifier {
         println(streamingModel.latestModel().weights.toString)
         streamingSource.pause()
 
+        storeRetrainingPoint(streamingSource.getLastProcessedFileIndex, resultPath)
         val startTime = System.currentTimeMillis()
         val before = streamingModel.latestModel().weights
         val model = trainModel(ssc.sparkContext, initialDataPath + "," + tempDirectory)
@@ -118,6 +120,14 @@ object VeloxClassifier extends SVMClassifier {
     future = execService.scheduleWithFixedDelay(task, slack, slack, TimeUnit.SECONDS)
     future.get()
 
+  }
+
+  def storeRetrainingPoint(index: Int, resultPath: String) = {
+    val file = new File(s"$resultPath/retraining-points.txt")
+    file.getParentFile.mkdirs()
+    val fw = new FileWriter(file, true)
+    fw.write(s"$index\n")
+    fw.close()
   }
 
   override def getApplicationName = "Velox SVM Model"

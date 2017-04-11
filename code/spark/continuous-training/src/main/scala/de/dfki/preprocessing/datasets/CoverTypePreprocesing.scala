@@ -13,7 +13,7 @@ object CoverTypePreprocesing extends LibSVMDatasetsPreprocessing {
 
   override def defaultOutputPath = "data/cover-types/"
 
-  override def defaultFileCount = 100
+  override def defaultFileCount = 600
 
   override def defaultSamplingRate = 1.0
 

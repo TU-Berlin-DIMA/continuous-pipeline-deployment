@@ -17,7 +17,7 @@
 *.synctex.gz
 
 # Folders:
-vldb-2017/figures/
+vldb/figures/
 sigmod-2017/figures/
 */target/
 code/spark/continuous-training/data/

@@ -231,7 +231,7 @@ abstract class SVMClassifier extends Serializable {
     */
   def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String): OnlineSVM = {
     val model = trainModel(ssc.sparkContext, initialDataDirectories)
-    new OnlineSVM().setInitialModel(model).setNumIterations(1).setStepSize(onlineStepSize)
+    new OnlineSVM().setInitialModel(model).setNumIterations(1).setStepSize(onlineStepSize).setConvergenceTol(0.0)
   }
 
   /**

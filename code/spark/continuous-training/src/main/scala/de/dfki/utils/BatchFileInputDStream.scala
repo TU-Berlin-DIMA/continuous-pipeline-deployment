@@ -85,6 +85,10 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
     }
   }
 
+  def getLastProcessedFileIndex: Int = {
+    lastProcessedFileIndex
+  }
+
   def isCompleted: Boolean = {
     lastProcessedFileIndex >= files.length
   }

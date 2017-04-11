@@ -32,17 +32,17 @@ class SeaPreprocessing(sc: SparkContext = null, ratio: List[Double] = List(0.1, 
     val lines = Source.fromFile(path).getLines().toList
     val initialCutOff = 6000
     val (initial, streaming) = lines.splitAt(initialCutOff)
-    val f = new File(s"${ContinuousClassifier.BASE_DATA_DIRECTORY}/${ContinuousClassifier.INITIAL_TRAINING}/init")
+    val f = new File("data/sea/initial-training/init")
     f.getParentFile.mkdirs()
     val writer = new PrintWriter(f)
     writer.write(initial.mkString("\n"))
     writer.close()
 
-    val streamingBatchSize = 540
+    val streamingBatchSize = 90
     var i = 0
-    while (i < 100) {
+    while (i < 600) {
       val dataBatch = streaming.slice(i * streamingBatchSize, (i + 1) * streamingBatchSize)
-      val file = new File(s"${ContinuousClassifier.BASE_DATA_DIRECTORY}/${ContinuousClassifier.STREAM_TRAINING}/stream$i")
+      val file = new File(s"data/sea/stream-training/stream$i")
       file.getParentFile.mkdir()
       val writer = new PrintWriter(file)
       writer.write(dataBatch.mkString("\n"))

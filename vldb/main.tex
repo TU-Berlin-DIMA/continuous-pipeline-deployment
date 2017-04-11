@@ -328,7 +328,6 @@ The success of the Google's Deepmind team in achieving Neural Networks that were
 
 SGD is the ideal optimization algorithm for training neural networks since it works very well with large datasets (which are required for training neural networks).
 In fact, almost all of the recent work on neural networks use SGD for training them.
-\todo[inline]{TR: I thought this is mostly done on GPU? Do they use SGD on GPU? As far as I know all of them use sgd on both GPU and CPU (at I am certain of the ones I have referenced)}
 
 \begin{figure}[t]
 \centering
@@ -340,7 +339,6 @@ In fact, almost all of the recent work on neural networks use SGD for training t
 \section{Continuous Training and Serving} \label{continious-training-serving}
 Our proposed deployment and maintenance system uses SGD as its underlying learning algorithm.
 As a result, it can update the model incrementally (one training item at a time) or use mini-batches of data (1 iteration of SGD).
-\todo[inline]{TR: Do we compare both in the experiments? For the spark experiments I have to use the mini batch since that's the way spark is designed but for local I m doing incremental training (1 at a time)}
 The core design principles of our deployment system are threefold.
 First, we incrementally update the model so that it can adapt to changes in the distribution of the incoming data.
 Second, we eliminate retraining and replace it with a series of consecutive iterations of SGD.
@@ -348,7 +346,6 @@ And finally, we immediately use new batch datasets that are available to the sys
 Figure \ref{fig:cont-training-serving} shows how our deployment method works.
 First, using the existing data residing on disk, we train an initial model and deploy it into the system.
 The system receives prediction queries and training observations in a streaming fashion.
-\todo[inline]{TR: What about a cold start scenario? I.e., start with no data, would that work?}
 The deployed model answers incoming prediction queries as soon as they are received.
 Once the system receives a training observation it updates the model incrementally.
 The system also keeps track of incoming training observations and adds them to an intermediate buffer.
@@ -392,10 +389,16 @@ Therefore, the scheduler component has to communicate with the model manager in 
 \subsection{Data Manager} \label{data-manager}
 In order to execute an iteration of SGD, we need to combine the training data that arrives at the system in real-time with the data stored on disk.
 The data manager is responsible for storing the incoming training observations in an intermediate buffer.
-When a new training iteration is scheduled, the data manager accesses the historical data stored on disk and provides a sample.
-\todo[inline]{TR: How is the sample generated? For now I am just using default sampling available in python and Spark}
+\todo[inline]{Sampling}
+{\color{green}When a new training iteration is scheduled, the data manager accesses the historical data stored on disk and provides a sample.
+Different sampling strategies can be used to provide the sample.
+In our current prototype, the data manager uses a simple unified random sampling method to generate this sample.
+More advanced methods, such as Reservoir \cite{vitter1985random} or weighted random sampling can also be used to generate the sample.
+Reservoir sampling is typically used to generate samples from large datasets that do not fit in memory, whereas weighted random sampling is used when data elements have different weights.
+In an online machine learning scenario, recent items are more important for training the model and are assigned a bigger weight than older items.
+Therefore, weighted random sampling can generate samples that can contribute to the training of a better model.}
 The data from the sample and the data in the buffer are merged to create the dataset for next training iteration.
-The data manager provides access to this dataset for the model manager where the actual training and model updates happen.
+The data manager provides access to this dataset for the model manager in order to further train the model.
 The data manager also communicates with the scheduler in order to inform it when the intermediate buffer is becoming full and a new training iteration is required. 
 
 The created data set consists of the data inside the buffer and a sample of the historical data as described earlier.
@@ -462,7 +465,7 @@ The choice of run-time for SGD slightly influences the data manager as well.
 In our prototype, historical data is stored on Hadoop Distributed File System (HDFS) \cite{shvachko2010hadoop}.
 
 \section{Evaluation} \label{evaluation} 
-In this section, we evaluate the performance of our system using various datasets. 
+In this section we evaluate the performance of our system using various datasets. 
 We report both the quality (error rate) and performance of our proposed method. 
 
 \subsection{Setup}\label{subsec:setup}
@@ -499,7 +502,6 @@ Movie Lens 100k & 1000 & 1700 & 100000
 Name & \#Features  & \#Instances 
 \\\midrule 
 Higgs  & 28 & 11000000 \\
-Susy & 18 & 5000000 \\ 
 URL Reputation & 3231961 & 2396130 \\
 Cover Type & 52 & 581012 \\
 MNIST & 784 & 60000 \\
@@ -524,8 +526,8 @@ Each error calculation, as a result captures the degree to which the models are 
 %We have set the learning rate to 0.001 for all of the experiments on MovieLens dataset.
 
 To evaluate the classifier, we use a collection of binary classification datasets (mostly from UCI Machine Learning Repository\footnote{\url{http://archive.ics.uci.edu/ml/}}).
-Higgs and Susy \cite{baldi2014searching} are physics datasets which are produced using Monte Carlo simulations.
-For these two datasets, the task is to distinguish between a signal process that produces a target particle (Higgs bosons particle for Higgs and supersymmetric particle for Susy) and a background process which does not.
+Higgs \cite{baldi2014searching} is a physics datasets which is produced using Monte Carlo simulations.
+For these two datasets, the task is to distinguish between a signal process that produces a target particle (Higgs bosons) and a background process which does not.
 Cover Type \cite{collobert2002parallel} is a dataset used for predicting forest cover types from cartographic variables only.
 We use a binary class version of this dataset\footnote{\url{https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/}}.
 URL Reputation \cite{ma2009identifying} is an collection of URLs and whether they are malicious or not.
@@ -665,10 +667,8 @@ Figure \ref{fig:mnist-sample-rate} shows the effect of different sampling rates 
 Interestingly and contrary to the results we achieved for Movie Lens 100k the error rates for different sampling rates are very similar.
 We believe this is caused by how neural networks behave.
 Increasing the sampling rate causes similar data items to be used repeatedly in each training iteration and based on our experiments neural networks are not affected by this oversampling and, therefore, the results are almost similar with different sampling rates.
-\todo[inline]{TR: Is the same sample used over and over again? No, but since we are sampling from the same data, if the sampling rate is big, it will contain a lot of items that have been used (possibly multiple types)}
 Moreover, in this experiment, the number of parameters of the multi-layer perceptron is far less than the number of parameters of the matrix factorization model for Movie Lens 100k.
 This causes the neural work to converge faster and, therefore, it is not affected by more training, unless new training observations arrive at the system.
-\todo[inline]{TR: Not sure, is this obvious, otherwise it might be an interesting comparison. Do you ever reference to fig 7b? I used the wrong labels, and was referencing the same figure twice. I included this to reason that sampling rate and buffer size selection is not a "one size fit all" process}
 \begin{figure}[h]
 \begin{subfigure}{\columnwidth}
 \centering
@@ -763,16 +763,19 @@ Similar to Movie Lens 100k dataset, the error rate of Baseline is highest among 
 \end{figure}
 
 Figure \ref{fig:local-classification-results} shows the misclassification rate over time of the deployment methods on several classification datasets.
+For all of the datasets, the sampling rate of the continuous method is set to 0.2.
 Contrary to the recommender system use case, the data used in these experiments is not time dependent (except for SEA) and as a result the deployment methods behave differently.
-For Cover type (Figure \ref{fig:cover-types-quality}), Continuous method achieves the lowest error rate overall, although the difference with baseline+ is very small.
+For Cover type (Figure \ref{fig:cover-types-quality}), the continuous method achieves the lowest error rate overall, followed by Baseline+.
 Baseline method has the highest error rate overall because it is not performing incremental updates on the model.
-Interestingly, Velox starts to perform worst after each retraining.
-This increase in error rate is the result of overfitting the model to the existing data. 
+Interestingly, the error rate of Velox slightly increases after the first retraining and it never recovers from this increase.
+By performing a retraining, the underlying model in Velox overfits to the existing data, therefore the test error on incoming data does not decrease the same way that it does in case of Baseline+ and the continuous method.
 The error rate for all of the deployment methods, except for Baseline is very similar on SEA (Figure \ref{fig:sea-quality}).
-The Continuous method still perform slightly better than Baseline+ and Velox, although with a very small margin.
+The continuous method still perform slightly better than Baseline+ and Velox, although with a very small margin.
 Figure \ref{fig:adult-quality} shows the error rate of different deployment methods on Adult dataset.
-Both Velox and Baseline+ perform slightly better than the Baseline approach.
-But similar to Sea and Cover Types, the Continuous approach has the lowest error rate among all methods.
+In this dataset, the different deployment methods perform rather similarly.
+Baseline has the highest error rate overall, however, after the 4th retraining the difference between the error rate of Velox and Baseline becomes smaller.
+This is, similar to the Cover types dataset, due to the over training of the underlying model in Velox.
+Baseline+ and the continuous approach maintain a steady error rate overall, with the continuous method slightly outperforming Baseline+.
 
 \begin{figure*}[h]
 \begin{subfigure}[b]{0.2\textwidth}
@@ -805,14 +808,19 @@ But similar to Sea and Cover Types, the Continuous approach has the lowest error
  \label{fig:local-training-time}
 \end{figure*}
 
-Figure  \ref{fig:local-training-time} shows the total training time for deployment methods on local datasets.
+{\color{green}Figure  \ref{fig:local-training-time} shows the total training time for deployment methods on local datasets.
 To measure this value, we calculated the total time that each method spent in training the model.
-We excluded the incremental training time as both Velox and Continuous methods perform incremental training as part of their process.
-The Baseline method's total training time is equal to the initial training time.
-Both Continuous and Velox methods also perform this initial training, as a result, their total training time cannot be smaller the Baseline.
-In all of the evaluated datasets, the Continuous method's total training time is 2 to 5 times smaller than Velox'.
-This is because a full retraining incurs a much higher overhead than continuously training the method.
-Another reason for the difference in training time is that as the size of the data increases the time for running a new iteration in continuous method stays roughly the same where as the time for a full retraining increases exponentially.
+We excluded the incremental training time as both Velox and the continuous methods perform incremental training as part of their process.
+The total training time of the Baseline method is equal to the initial training time.
+Both the continuous and Velox methods perform the same initial training, as a result, their total training time cannot be smaller than Baseline.
+For the classification datasets (Figure \ref{fig:cover-types-times}, {fig:sea-times}, {fig:adult-times}), the continuous method and Velox are approximately 25 and 50 times slower than the Baseline method.
+This is expected, as both the amount of data and the frequency of training is much smaller for Baseline.
+For recommender system datasets, the difference in total training time is smaller.
+In our python prototype, the entire dataset is first loaded into the memory and then it is streamed to the deployment system one by one.
+As a result, both the continuous and Velox methods can train the model much faster.
+In all of the evaluated datasets, the total training time of the continuous method is 2 to 4 times smaller than the that of Velox.
+This is because a full retraining incurs a higher overhead than continuously training the method.
+Another reason for the difference in training time is that as the size of the data increases, the time for running a new iteration in continuous method stays approximately the same, whereas the time for a full retraining increases exponentially.}
 
 \subsection{Experiments in the Distributed Environment}
 We evaluated our deployment system on larger workloads in a distributed environment.
@@ -824,8 +832,10 @@ The continuous deployment method achieves the lowest error rate overall.
 Velox manages to keep the error rate lower than Baseline+ until the the second retraining, after which the error rate slightly increases. 
 Figure \ref{fig:higgs-quality} shows the error rate on Higgs dataset.
 Similar to local classification datasets, the error rate for Baseline is the highest among all of the deployment methods.
-Velox, Baseline+, and Continuous maintain the same error rate until the first retraining of Velox, after which due to possible overfitting, the error rate of Velox starts to increase.
-Both Baseline+ and Continuous maintain similar error rates throughout, with the continuous method slightly outperforming Baseline+.
+Velox, Baseline+, and Continuous maintain the same error rate until the first retraining of Velox, after which due to possible overfitting, the error rate of Velox slightly increases.
+The continuous method performs slightly better than the Baseline+ in the beginning, however, the underlying models of both deployment methods slowly converges.
+Therefore, the error rates of both of the deployment methods becomes become similar.
+
 \begin{figure}[h]
 	\centering
 \begin{subfigure}[b]{\columnwidth}
@@ -838,11 +848,6 @@ Both Baseline+ and Continuous maintain similar error rates throughout, with the 
 	\caption{Higgs}
 	\label{fig:higgs-quality}
 \end{subfigure}
-%\begin{subfigure}[b]{\columnwidth}
-%  	\includegraphics[width=\columnwidth,height=0.4\columnwidth]{../images/experiment-results/placeholder.jpg}
-%	\caption{SUSY}
-%	\label{fig:susy-quality}
-%\end{subfigure}
 \vspace{2mm}
 \caption{Large Classification Datasets}
 \label{fig:cluster-classification-results}
@@ -861,22 +866,20 @@ Both Baseline+ and Continuous maintain similar error rates throughout, with the 
 	\caption{Higgs}
 	\label{fig:higgs-times}
 \end{subfigure}
-%\begin{subfigure}[b]{0.5\columnwidth}
-%	\centering
-%	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/placeholder.jpg}
-%	\caption{Susy}
-%	\label{fig:susy-times}
-%\end{subfigure}
 \vspace{2mm}
 \caption{Total training time for Distributed Datasets}
  \label{fig:cluster-training-time}
 \end{figure}
 
-Figure \ref{fig:cluster-training-time} shows the total training time for URL Reputation and Higgs experiments.
-Similar to our previous results, the Continuous method decreases the total training time by a factor of 4 for both datasets.
-
-\subsection{Discussion}
-
+{\color{green}Figure \ref{fig:cluster-training-time} shows the total training time for URL Reputation and Higgs experiments.
+Similar to local datasets, the Baseline method has the smallest total training time.
+However, the different between the training time of Baseline and other methods is not as large.
+In our local experiments, the entire resources of the computing machine was being consumed to perform the training.
+However, in distributed environment, the cluster is underutilized in the beginning as the amount of data is small.
+As more data arrives at the system, the utilization of the cluster increases.
+As a result, the training time of the continuous and Velox methods do not increase linearly with size.
+Therefore, the total training time for continuous method is only 5 to 10 times larger than that of Baseline (instead of 20 to 25 times for local datasets) and the total training time for Velox is 20 to 25 times slower than that of Baseline (instead of 50 to 55 times for local datasets).}
+\subsection{Discussion} \label{subsec:discussion}
 \begin{figure*}[t]
 \begin{subfigure}{0.30\textwidth}
   \centering
@@ -927,13 +930,6 @@ Similar to our previous results, the Continuous method decreases the total train
   \caption{Higgs}
    \label{subfig:higgs-meta}
 \end{subfigure}
-% \hspace*{10mm}
-%\begin{subfigure}{0.30\textwidth}
-% \centering
-%  \includegraphics[width=\linewidth]{../images/experiment-results/placeholder.jpg}
-%  \caption{Susy}
-%  \label{subfig:susy-meta}
-%\end{subfigure}
  \vspace*{5mm}
 \centering
 
@@ -941,30 +937,31 @@ Similar to our previous results, the Continuous method decreases the total train
 \caption{Total Training Time vs Quality}
 \label{fig:training-time-vs-quality}
 \end{figure*}
+
 Figure \ref{fig:training-time-vs-quality} shows the total training time and average error rate of each of the three different deployment methods (Baseline, Continuous and Velox) on different datasets.
-For all evaluated datasets, the Continuous deployment method achieves the lowest average error rate (for classification datasets) and average mean squared error (for Recommender system datasets).
-The difference in average error rate (or average MSE) between Velox and continuous methods is smaller for datasets that contain concept drift (Figure \ref{subfig:sea-meta}, \ref{subfig:movie-lens-100k-meta}, \ref{subfig:movie-lens-1m-meta}, \ref{subfig:url-meta}).
-Since both the Velox and continuous perform incremental training of the model after it is deployed, they both manage to handle the concept drift in the data.
+For all evaluated datasets, the continuous deployment method achieves the lowest average error rate (for classification datasets) and average mean squared error (for Recommender system datasets).
+The difference in average error rate (or average MSE) between Velox and the continuous methods is smaller for datasets that contain concept drift (Figure \ref{subfig:sea-meta}, \ref{subfig:movie-lens-100k-meta}, \ref{subfig:movie-lens-1m-meta}, \ref{subfig:url-meta}).
+Since both Velox and the continuous methods perform incremental training of the model after it is deployed, they both manage to handle the concept drift in the data.
 However, the continuous method is able to adapt to the changes faster as it is constantly updating the model by executing iterations of SGD.
 In the deployment method of Velox, the underlying model cannot adapt to the changes in the distribution as quickly, since the retraining procedure cannot be executed frequently as it requires a lot of resources.
 The performance of the Baseline deployment method is very poor in datasets with concept drift.
 This is expected, as the underlying model in the Baseline approach is only trained on an initial dataset and is not able to adapt to the changes in the data.
-The Continuous method performs very well for datasets with no concept drifts (\ref{subfig:cover-type-meta},  \ref{subfig:adult-meta}, \ref{subfig:higgs-meta}) as well.
-For both Cover Type and Higgs datasets, Baseline method does not converge on the initial dataset, therefore it has a higher error rate than Velox and Continuous.
-The Velox method performs better than Baseline on Higgs and Cover Type, however, retraining on these two datasets causes the underlying model to overfit to the existing data and as a result the model's performance is dropped after each retraining which leads to an overall lower average error rate than the Continuous method.
+The continuous method performs very well for datasets with no concept drifts (\ref{subfig:cover-type-meta},  \ref{subfig:adult-meta}, \ref{subfig:higgs-meta}) as well.
+For both Cover Type and Higgs datasets, Baseline method does not converge on the initial dataset, therefore it has a higher error rate than Velox and the continuous methods.
+The Velox method performs better than Baseline on Higgs and Cover Type, however, retraining on these two datasets causes the underlying model to overfit to the existing data and as a result the performance of the model is decreased after each retraining which leads to an overall lower average error rate than the continuous method.
 
 As expected, the Baseline method has the lowest training time for all the datasets since it only trains the model once on the initial datasets.
-The total training time for Continuous is lower than Velox for every datasets by a factor of 2 to 4.
+The total training time for the continuous method is lower than Velox for every datasets by a factor of 2 to 4.
 This has a big impact on prediction latency and prediction accuracy.
 In our current prototype, we do not address the problem of the trade off between prediction latency and prediction accuracy.
 In our prototype, both prediction and model updates are managed by the same node and as a result the prediction component is paused until the incremental training (or retraining in the case of Velox) is executed.
 Therefore, the system always answers each prediction query using the latest model, although with a much greater delay.
-However, in an actual model deployment system, training and prediction are done on separate nodes (or threads), therefore, any prediction request arriving at the system can be answered immediately using the latest available version of the model.
+However, in an actual model deployment system, model training and prediction answering are typically executed on separate nodes (or threads), therefore, any prediction request arriving at the system is answered immediately, although not with the latest version of the model.
 Since the retraining time for Velox is large, a considerable percentage of prediction requests are always answered by an older version of the model.
-Therefore, while the system is executing a retraining, the error rate of the answered prediction requests will continue to rise until the retraining is finished.
-For large datasets, such as URL Reputation (Figure \ref{subfig:url-meta}), the retraining process may take hours or even days.
-Our continuous deployment method reduces this delay since it is updating the underlying model constantly using smaller batches of data. 
-We plan to investigate the trade off between prediction latency and prediction accuracy in our future work.
+{\color{green}Therefore, while the system is executing a retraining, the error rate of the answered prediction requests will continue to rise until the retraining is finished.
+For URL Reputation dataset, the average time of each retraining is 68 minutes in Velox, whereas the average time of each iteration of SGD is 1.5 minutes.
+This means that in worst case scenario, the model that is answering a prediction request in Velox is outdated by 1 hour.
+Our continuous deployment method reduces this delay since it is updating the underlying model constantly using smaller batches of data.} 
 
 \section{Conclusions} \label{conclusion}
 To fully benefit from machine learning models, one has to deploy them in a system capable of answering prediction queries in real-time and continuously update the models so they adjust to the changes in the incoming data.
@@ -981,9 +978,9 @@ Our experiments show the continuous training of the machine learning models is m
 We show that not only continuous training requires less resources but it also produces models with lower error rates that adapt to the changes in data faster.
 Comparing to simple techniques such incremental learning or initial batch training, our technique produces a model with higher quality.
 
-In future work, we will explore other optimization strategies such as batching of prediction queries, caching of query results, and more advanced methods for sampling of historical data in order to investigate their effect on the performance of the system.
+{\color{green}In future work, we will explore more advanced methods for sampling of historical data in order to investigate their effect on the performance of the system. Moreover, we plan to investigate the trade off between prediction latency and prediction accuracy.}
 
 \bibliographystyle{plain}
 
-{\fontsize{7}{4}\selectfont \bibliography{main}}
+{\fontsize{8}{4}\selectfont \bibliography{main}}
 \end{document}

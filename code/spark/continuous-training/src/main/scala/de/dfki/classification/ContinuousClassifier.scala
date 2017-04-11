@@ -92,15 +92,15 @@ object ContinuousClassifier extends SVMClassifier {
         logger.info("schedule an iteration of SGD")
         streamingSource.pause()
         val startTime = System.currentTimeMillis()
-        val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(dataParser.parsePoint).cache()
-        val before = streamingModel.latestModel().weights
-        streamingModel.setMiniBatchFraction(0.2).setNumIterations(5)
+        val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(dataParser.parsePoint).sample(withReplacement = false, fraction = 0.2).cache()
+        //val before = streamingModel.latestModel().weights
+        streamingModel.setStepSize(continuousStepSize)
         streamingModel.trainOn(historicalDataRDD)
-        streamingModel.setMiniBatchFraction(1.0).setNumIterations(1)
-        val after = streamingModel.latestModel().weights
+        streamingModel.setStepSize(onlineStepSize)
+        //val after = streamingModel.latestModel().weights
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)
-        logger.info(s"Delta: ${Vectors.sqdist(before, after)}")
+        //logger.info(s"Delta: ${Vectors.sqdist(before, after)}")
         if (streamingSource.isCompleted) {
           logger.warn("stopping the program")
           ssc.stop(stopSparkContext = true, stopGracefully = true)

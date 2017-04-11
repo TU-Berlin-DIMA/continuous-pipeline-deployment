@@ -11,16 +11,19 @@ loadData <- function(file){
   return(as.numeric(data[[1]]))
 }
 
+######################### Directories ########################
+HIGGS_CONTINUOUS = 'higgs/continuous/num-iterations-500/slack-50/offline-step-1.0/online-step-0.1/2017-04-10-15-52'
+HIGGS_VELOX = 'higgs/velox/num-iterations-500/slack-320/offline-step-1.0/online-step-0.1/2017-04-10-17-17'
+HIGGS_BASELINE_PLUS = 'higgs/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-04-10-18-55'
+HIGGS_BASELINE = 'higgs/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-04-11-10-31'
+
 ###################### Quality Over Time #####################
 
 #### HIGGS ####
-continuous = read.csv('higgs/continuous/num-iterations-500/slack-50/offline-step-1.0/online-step-1.0/2017-03-29-11-22/error-rates.txt', header = FALSE, col.names = 'continuous')
-
-velox = read.csv('higgs/velox/num-iterations-500/slack-320/offline-step-1.0/online-step-1.0/2017-03-29-11-53/error-rates.txt', header = FALSE, col.names = 'velox')
-
-baselinePlus = read.csv('higgs/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-03-29-13-47/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
-
-baseline= read.csv('higgs/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-03-29-14-15/error-rates.txt', header = FALSE, col.names = 'baseline')
+continuous = read.csv(paste(HIGGS_CONTINUOUS,'error-rates.txt', sep='/'), header = FALSE, col.names = 'continuous')
+velox = read.csv(paste(HIGGS_VELOX,'error-rates.txt', sep='/'), header = FALSE, col.names = 'velox')
+baselinePlus = read.csv(paste(HIGGS_BASELINE_PLUS,'error-rates.txt', sep='/'), header = FALSE, col.names = 'baselinePlus')
+baseline = read.csv(paste(HIGGS_BASELINE,'error-rates.txt', sep='/'), header = FALSE, col.names = 'baseline')
 
 m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
 continuous = rbind(continuous, data.frame(continuous = rep(tail(continuous[[1]], 1), m - nrow(continuous))))
@@ -34,7 +37,7 @@ df = data.frame(time = 1:nrow(continuous),
                 baseline = baseline,
                 baselinePlus = baselinePlus)
 
-retrainings = c(320,630,960)
+retrainings = seq(300, 3600, 320)
 
 # data frame
 p = 
@@ -133,8 +136,8 @@ ggsave(p , filename = 'url-reputation/url-reputation-quality.eps',
 ###################### TOTAL TRAINING TIMES #####################
 
 #### HIGGS ####
-continuous = read.csv('higgs/continuous/num-iterations-500/slack-50/offline-step-1.0/online-step-1.0/2017-03-29-11-22/training-times.txt', header = FALSE, col.names = 'continuous')
-velox = read.csv('higgs/velox/num-iterations-500/slack-320/offline-step-1.0/online-step-1.0/2017-03-29-11-53/training-times.txt', header = FALSE, col.names = 'velox')
+continuous = read.csv(paste(HIGGS_CONTINUOUS,'training-times.txt', sep='/'), header = FALSE, col.names = 'continuous')
+velox = read.csv(paste(HIGGS_VELOX,'training-times.txt', sep='/'), header = FALSE, col.names = 'velox')
 baseline = continuous[[1]][1]
 continuous = sum(continuous)
 velox = sum(velox)
@@ -144,18 +147,18 @@ melted = melt(df, id.vars = 'methods', variable.names = "methods")
 melted$methods = factor(as.character(melted$methods), 
                         levels=c("Baseline","Continuous","Velox"))
 
-coverTypeTime = 
+higgsTime = 
   ggplot(melted, aes(x = methods, y = value)) +
   geom_bar(stat='identity') + 
   xlab("") + ylab("Time (m)") + 
-  scale_y_continuous(expand = c(0, 0), limits = c(0, 42)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 32)) +
   theme_bw() + 
   theme(legend.position="none",
         axis.text=element_text(size=28, color = "black"),
         axis.title=element_text(size=28, color = "black"),  
         plot.margin = unit(c(0.4, 0.0, -0.80, 0.2), "cm"))
 
-ggsave(coverTypeTime , filename = 'higgs/higgs-times.eps', 
+ggsave(higgsTime , filename = 'higgs/higgs-times.eps', 
        device = 'eps',
        width = 7, height = 5, 
        units = "in")
@@ -173,7 +176,7 @@ melted = melt(df, id.vars = 'methods', variable.names = "methods")
 melted$methods = factor(as.character(melted$methods), 
                         levels=c("Baseline","Continuous","Velox"))
 
-coverTypeTime = 
+urlTime = 
   ggplot(melted, aes(x = methods, y = value)) +
   geom_bar(stat='identity') + 
   xlab("") + ylab("Time (m)") + 
@@ -184,7 +187,7 @@ coverTypeTime =
         axis.title=element_text(size=28, color = "black"),  
         plot.margin = unit(c(0.4, 0.0, -0.80, 0.2), "cm"))
 
-ggsave(coverTypeTime , filename = 'url-reputation/url-reputation-times.eps', 
+ggsave(urlTime , filename = 'url-reputation/url-reputation-times.eps', 
        device = 'eps',
        width = 7, height = 5, 
        units = "in")
@@ -192,13 +195,13 @@ ggsave(coverTypeTime , filename = 'url-reputation/url-reputation-times.eps',
 ###################### META: PERFORMANCE VS QUALITY #####################
 
 #### HIGGS ####
-continuousTime = read.csv('higgs/continuous/num-iterations-500/slack-50/offline-step-1.0/online-step-1.0/2017-03-29-11-22/training-times.txt', header = FALSE, col.names = 'continuous')
-veloxTime = read.csv('higgs/velox/num-iterations-500/slack-320/offline-step-1.0/online-step-1.0/2017-03-29-11-53/training-times.txt', header = FALSE, col.names = 'velox')
+continuousTime = read.csv(paste(HIGGS_CONTINUOUS,'training-times.txt', sep='/'), header = FALSE, col.names = 'continuous')
+veloxTime = read.csv(paste(HIGGS_VELOX,'training-times.txt', sep='/'), header = FALSE, col.names = 'velox')
 baselineTime = continuousTime[[1]][1]
 
-continuous = read.csv('higgs/continuous/num-iterations-500/slack-50/offline-step-1.0/online-step-1.0/2017-03-29-11-22/error-rates.txt', header = FALSE, col.names = 'continuous')
-velox = read.csv('higgs/velox/num-iterations-500/slack-320/offline-step-1.0/online-step-1.0/2017-03-29-11-53/error-rates.txt', header = FALSE, col.names = 'velox')
-baseline = read.csv('higgs/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-03-29-14-15/error-rates.txt', header = FALSE)
+continuous = read.csv(paste(HIGGS_CONTINUOUS,'error-rates.txt', sep = '/'), header = FALSE, col.names = 'continuous')
+velox = read.csv(paste(HIGGS_VELOX,'error-rates.txt', sep = '/'), header = FALSE, col.names = 'velox')
+baseline = read.csv(paste(HIGGS_BASELINE,'error-rates.txt', sep = '/'), header = FALSE)
 
 
 df = data.frame('error'=c(colMeans(continuous), colMeans(velox), colMeans(baseline)), 
