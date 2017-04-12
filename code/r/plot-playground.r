@@ -92,8 +92,8 @@ ggplot(data = ml, aes(x = time, y = value, group = variable)) +
 
 
 # Plot SEA
-continuous = read.csv('sea/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-0.05/2017-04-11-22-04/error-rates.txt', header = FALSE, col.names = 'continuous')
-velox = read.csv('sea/velox/num-iterations-500/slack-32/offline-step-1.0/online-step-0.05/2017-04-11-22-19/error-rates.txt', header = FALSE, col.names = 'velox')
+continuous = read.csv('sea/continuous/num-iterations-500/slack-10/offline-step-1.0/online-step-0.05/2017-04-12-10-35/error-rates.txt', header = FALSE, col.names = 'continuous')
+velox = read.csv('sea/velox/num-iterations-500/slack-64/offline-step-1.0/online-step-0.05/2017-04-12-10-07/error-rates.txt', header = FALSE, col.names = 'velox')
 baselinePlus = read.csv('sea/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.05/2017-04-11-23-10/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 baseline= read.csv('sea/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-0.05/2017-04-11-23-20/error-rates.txt', header = FALSE, col.names = 'baseline')
 

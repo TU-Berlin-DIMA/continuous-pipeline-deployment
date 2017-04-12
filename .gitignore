@@ -19,7 +19,13 @@
 # Folders:
 vldb/figures/
 sigmod-2017/figures/
-*/target/
+code/spark/continuous-training/target/
 code/spark/continuous-training/data/
 code/spark/continuous-training/checkpoints/
 code/python/continuous-training/datasets/
+.ipynb_checkpoints/
+checkpoints/
+experiment-results/*/*.eps
+
+# Files:
+main.pdf

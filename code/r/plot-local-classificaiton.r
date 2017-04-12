@@ -16,12 +16,12 @@ concat <- function(base, filename){
 }
 ######################### Directories ########################
 COVER_CONTINUOUS = 'cover-types/continuous/num-iterations-500/slack-10/offline-step-1.0/online-step-0.1/2017-04-11-11-25'
-COVER_VELOX = 'cover-types/velox/num-iterations-500/slack-64/offline-step-1.0/online-step-0.1/2017-04-11-13-44'
+COVER_VELOX = 'cover-types/velox/num-iterations-500/slack-62/offline-step-1.0/online-step-0.1/2017-04-12-10-55'
 COVER_BASELINE_PLUS = 'cover-types/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-04-11-12-06'
 COVER_BASELINE = 'cover-types/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-04-11-13-10'
 
-SEA_CONTINUOUS = 'sea/continuous/num-iterations-500/slack-5/offline-step-1.0/online-step-0.05/2017-04-11-22-04'
-SEA_VELOX = 'sea/velox/num-iterations-500/slack-32/offline-step-1.0/online-step-0.05/2017-04-11-22-19'
+SEA_CONTINUOUS = 'sea/continuous/num-iterations-500/slack-10/offline-step-1.0/online-step-0.05/2017-04-12-10-35'
+SEA_VELOX = 'sea/velox/num-iterations-500/slack-64/offline-step-1.0/online-step-0.05/2017-04-12-10-07'
 SEA_BASELINE_PLUS = 'sea/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.05/2017-04-11-23-10'
 SEA_BASELINE = 'sea/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-0.05/2017-04-11-23-20'
 
@@ -272,7 +272,7 @@ seaTime =
   ggplot(melted, aes(x = methods, y = value)) +
   geom_bar(stat='identity') + 
   xlab("") + ylab("Time (s)") + 
- scale_y_continuous(expand = c(0, 0), limits = c(0, 4000)) +
+ scale_y_continuous(expand = c(0, 0), limits = c(0, 1000)) +
   theme_bw() + 
   theme(legend.position="none",
         axis.text=element_text(size=28, color = "black"),
