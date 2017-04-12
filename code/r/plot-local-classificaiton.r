@@ -21,7 +21,7 @@ COVER_BASELINE_PLUS = 'cover-types/baseline-plus/num-iterations-500/slack-none/o
 COVER_BASELINE = 'cover-types/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-04-11-13-10'
 
 SEA_CONTINUOUS = 'sea/continuous/num-iterations-500/slack-10/offline-step-1.0/online-step-0.05/2017-04-12-10-35'
-SEA_VELOX = 'sea/velox/num-iterations-500/slack-64/offline-step-1.0/online-step-0.05/2017-04-12-10-07'
+SEA_VELOX = 'sea/velox/num-iterations-500/slack-64/offline-step-1.0/online-step-0.05/2017-04-11-19-56'
 SEA_BASELINE_PLUS = 'sea/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.05/2017-04-11-23-10'
 SEA_BASELINE = 'sea/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-0.05/2017-04-11-23-20'
 
@@ -361,7 +361,7 @@ ggsave(p , filename = 'adult/adult-meta-performance.eps',
 
 #### SEA ####
 continuousTime = read.csv(concat(SEA_CONTINUOUS, 'training-times.txt'), header = FALSE, col.names = 'continuous')
-veloxTime = read.csv(concat(SEA_VELOX, training-times.txt),  header = FALSE, col.names = 'velox')
+veloxTime = read.csv(concat(SEA_VELOX, 'training-times.txt'),  header = FALSE, col.names = 'velox')
 baselineTime = continuousTime[[1]][1]
 
 continuous = read.csv(concat(SEA_CONTINUOUS, 'error-rates.txt'), header = FALSE, col.names = 'continuous')
@@ -377,7 +377,7 @@ p =
   geom_point(aes(shape = models),  lwd = 12) + 
   #geom_text(aes(label = models, colour = models), size = 5, fontface ="bold", hjust="inward", vjust="inward", show.legend  = F, angle = 45)  + 
   xlab("Time (s)") + ylab("Avg Error rate") + 
-  ylim(c(0.270, 0.30)) + 
+  ylim(c(0.270, 0.32)) + 
   theme_bw() + 
   theme(legend.text = element_text(size = 30, color = "black"), 
         legend.title = element_text(size = 30, color = "black"),
