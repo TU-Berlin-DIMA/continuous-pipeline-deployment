@@ -129,21 +129,17 @@
 
 \maketitle
 \begin{abstract}
-Many scientific and business applications rely on methods from machine learning in order to derive novel insight from large data sets.
 A data analytics process is a pipeline comprised of several steps, from source selection, data preparation, feature engineering, model building/training, to the deployment of the model in a production environment. 
 Many of these steps are not automated, but require manual configuration by a data scientist or are semi-automatic at best.
-Once a machine learning model is trained on a dataset it is deployed into a system where it can answer prediction queries in a real-time and reliable fashion.
-While the system is running, new training data may become available, and the system incrementally updates the model.
-Furthermore, to ensure higher quality of prediction and better adaptation to changes in data distribution, the system also periodically retrain the model.
+When a machine learning model is trained, it is deployed into a system where it can answer prediction queries in a real-time and reliable fashion.
+While the system is running, new training data, both in the form of stream sources and batch datasets, may become available.
+To maintain a high quality of prediction, the deployment system performs online training as well as periodical batch retraining.
 However, retraining of models is a time consuming and resource intensive process.
 
-In this paper, we propose a novel deployment method for stochastic gradient descent (SGD)-based machine learning models.
-SGD is an iterative process, which works well with large data sets.
-In each iteration, SGD updates the model based on a set of training items.
-Using this property, we eliminate the need for complete retraining by replacing it with a series of consecutive SGD iterations.
+We propose a novel deployment method for continuously training stochastic gradient descent (SGD)-based machine learning models.
+Our method eliminates the need for complete retraining and replaces it with a series of consecutive SGD iterations.
 We show that individual iterations of SGD are light-weight and can be executed while the system is answering prediction queries.
-Our experiments show that our deployment method updates models an order of magnitude faster, without degrading the quality of the model.
-Furthermore, models adopt faster to changes in data distribution using our deployment method.
+Our experiments show that our deployment method updates models two to five times faster than the current deployment methods, without degrading, and in some cases even increasing the quality of the model.
 \end{abstract}
 
 
