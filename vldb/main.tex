@@ -129,9 +129,9 @@
 
 \maketitle
 \begin{abstract}
-A data analytics process is a pipeline comprised of several steps, from source selection, data preparation, feature engineering, model building/training, to the deployment of the model in a production environment. 
-Many of these steps are not automated, but require manual configuration by a data scientist or are semi-automatic at best.
-When a machine learning model is trained, it is deployed into a system where it can answer prediction queries in a real-time and reliable fashion.
+A data analytics process is a pipeline comprised of several steps, from source selection, data preparation, feature engineering, to model building/training.
+However, this process does not end with the training of the model. 
+When the training is completed, the model is deployed into a system where it can answer prediction queries in a real-time and reliable fashion.
 While the system is running, new training data, both in the form of stream sources and batch datasets, may become available.
 To maintain a high quality of prediction, the deployment system performs online training as well as periodical batch retraining.
 However, retraining of models is a time consuming and resource intensive process.
