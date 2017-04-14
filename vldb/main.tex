@@ -139,7 +139,7 @@ However, retraining of models is a time consuming and resource intensive process
 We propose a novel deployment method for continuously training stochastic gradient descent (SGD)-based machine learning models.
 Our method eliminates the need for complete retraining and replaces it with a series of consecutive SGD iterations.
 We show that individual iterations of SGD are light-weight and can be executed while the system is answering prediction queries.
-Our experiments show that our deployment method updates models two to five times faster than the current deployment methods, without decreasing, and in some cases even increasing the quality of the model.
+Our experiments show that our deployment method updates models two to five times faster than the current deployment methods, without decreasing, and in some cases even increasing, the quality of the model.
 \end{abstract}
 
 
@@ -214,14 +214,10 @@ Based on this observation, we present a system, that supports deployment, mainte
 We are making the following contributions: 
 \begin{itemize}
 \item We define a system for machine learning models deployment and maintenance and provide a prototypical implementation
-%Volker
 \item We allow for incremental updates to the model, thus handling changes in the data distribution
-%Volker
 \item We eliminate offline batch retraining and replace it with a series of single iteration of SGD
 \end{itemize}
-%Volker
 Our experiments show that our approach improves the runtime of model training and deployment by an order of magnitude over the state of the art while retaining the quality of the model. 
-%Volker
 The speedup is due to the fact that we are able to completely eliminate batch retraining. 
 Our method can also adapt to changes in the distribution faster than the existing methods.
 
@@ -397,7 +393,7 @@ The data manager provides access to this dataset for the model manager in order 
 The data manager also communicates with the scheduler in order to inform it when the intermediate buffer is becoming full and a new training iteration is required. 
 
 The created data set consists of the data inside the buffer and a sample of the historical data as described earlier.
-The sampling rate, therefore, is a parameter that has to be configured.
+The sampling rate is a system parameter that has to be configured.
 It can be pre-configured to a constant value based on the application.
 However, using the feedback from the system's model manager (Section \ref{model-manager}), the sampling rate can be adjusted.
 For example, when the data distribution is changing, a smaller sampling rate places more emphasis on the data that arrived recently. 
@@ -437,7 +433,7 @@ def error_rate(X_test, Y_test): Double
 
 The \textit{error\_rate} method returns the error rate of the model using the provided test dataset.
 As described earlier, constant monitoring of the quality is required in order to adjust the scheduling and sampling rate.
-When the error rate is stagnating, this mean that the model has converged using the existing data, therefore, the model manager informs scheduler not to schedule any new iterations until new training observations have arrived at the system.
+When the error rate is stagnating, this mean that the model has converged using the existing data, therefore the model manager informs scheduler not to schedule any new iterations until new training observations have arrived at the system.
 Similarly as explained in Section \ref{data-manager}, an increase in the error rate may indicate a change in distribution of the data.
 As a result, reducing the sampling rate will put more emphasis on recent data (in the intermediate buffer) and help adopt the model to the changes in the distribution.
 
@@ -464,7 +460,7 @@ In this section we evaluate the performance of our system using various datasets
 We report both the quality (error rate) and performance of our proposed method. 
 
 \subsection{Setup}\label{subsec:setup}
-\textbf{Environments:} We evaluated our deployment method on two environments; local and distributed.
+\textbf{Environments:} We evaluate our deployment method on two environments; local and distributed.
 We use a single node OS X machine with  a quad-core Intel i7 and 16 GB of RAM for our local experiments.
 The distributed environment consists of 11 nodes (1 master, 10 slaves).
 Each node is running on a Intel Xeon 2.40 GHz 16 core processor and has 28 GB for dedicated memory for running our prototype.
@@ -513,29 +509,28 @@ We use two versions of this dataset (100k and 1M), each with varying number of u
 Table \ref{table:recommender-systems} shows the details of Movie Lens dataset.
 We have sorted the Movie Lens data set based on the ratings timestamp and items are examined one by one according to their timestamp.
 This is to evaluate how each of the implemented methods react to changes in the distribution of the data.
-For these two datasets, we used an evolving test set to evaluate the performance of the deployment methods.
-An evolving test set was also created, where the index of the test items are first drawn uniformly at random from the entire data set.
-For Movie Lens 100k, the total size of the test set is 5,000 and for Movie Lens 1M it is 50,000. 
+For these two datasets, we use an evolving test set to evaluate the performance of the deployment methods.
+To create the evolving test set, first we draw indices for the test items uniformly at random from the entire data.
 We start with an empty test set, when we reach the index of a test item, we add that to the current test set and calculate the error rate based on the current test set (We call this a test increment).
-Each error calculation, as a result captures the degree to which the models are adopting to the changes in the dataset.
-%We have set the learning rate to 0.001 for all of the experiments on MovieLens dataset.
+For Movie Lens 100k, the total size of the test set is 5,000 and for Movie Lens 1M, it is 50,000. 
+Each error calculation, as a result, captures the degree to which the models are adopting to the changes in the dataset.
 
-To evaluate the classifier, we use a collection of binary classification datasets (mostly from UCI Machine Learning Repository\footnote{\url{http://archive.ics.uci.edu/ml/}}).
+To evaluate the classifier, we use a collection of classification datasets (mostly from UCI Machine Learning Repository\footnote{\url{http://archive.ics.uci.edu/ml/}}).
 Higgs \cite{baldi2014searching} is a physics datasets which is produced using Monte Carlo simulations.
 For these two datasets, the task is to distinguish between a signal process that produces a target particle (Higgs bosons) and a background process which does not.
-Cover Type \cite{collobert2002parallel} is a dataset used for predicting forest cover types from cartographic variables only.
+Cover Type \cite{collobert2002parallel} is a dataset used for predicting forest cover types from cartographic variables.
 We use a binary class version of this dataset\footnote{\url{https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/}}.
-URL Reputation \cite{ma2009identifying} is an collection of URLs and whether they are malicious or not.
+URL Reputation \cite{ma2009identifying} is a collection of URLs and the task is to identify malicious URLs. 
 This dataset is collected over 120 days and features are anonymized, but correspond to lexical and host-based information gathered for each URL.
 MNIST \cite{lecun-mnist} is a dataset of handwritten digits.
 Each image has 28x28 pixels and the labels are the 10 digits (0 to 9) the images are representing.
 SEA is an artificially generated dataset that has been injected with concept drift (change in data distribution)\cite{street2001streaming}.
 Attributes are floating point values between 0 and 10 and there are a total of 4 concepts (15,000 instances in each concept).
 Adult \cite{platt199912} is a dataset extracted from a census database.
-It contains information such as education level, occupation, relationship status and salary of individuals from multiple countries and the task is to predict whether an individual earns more than \$50K a year. 
+It contains information such as education level, occupation, relationship status, and salary of individuals from multiple countries and the task is to predict whether an individual earns more than \$50K a year. 
 For all of the datasets we use 10\% for initial training and 90\% for online prediction/training.
 Except for URL Reputation and Movie Lens datasets that are timestamped, the order of the incoming data are arbitrary for the rest of the datasets.
-For all of the classification datasets, we report the prequential error \cite{gama2009issues} when receiving a new batch of training instances.
+For all of the classification datasets, we report the prequential error \cite{gama2009issues} when receiving a new training instances.
 %\textbf{Criteo \cite{criteo-kaggle}}: to implement our CTR prediction example we use Criteo's Kaggle advertising challenge dataset.
 %The dataset includes both categorical and numerical features.
 %However, in our evaluations we only used the numerical features.
@@ -551,7 +546,7 @@ After a model is a trained from the initial data, it is used throughout the life
 \textbf{Baseline+} is similar to the baseline approach with the added incremental learning.
 After the initial model is deployed, it is constantly updated based on new training items that arrive at the system.
 
-\textbf{Velox} is an implementation of the common deployment scenario described in Section \ref{introduction}
+\textbf{Velox} is an implementation of the common deployment scenario described in Section \ref{introduction}.
 It is based on the the proposed system by Crankshaw \cite{crankshaw2014missing}. 
 After the initial model is deployed, the model is incrementally updated with every new training item.
 A full retraining of the model is performed once a certain amount of training observations have been received.
@@ -562,10 +557,6 @@ New training data is used to incrementally update the model.
 Based on the rate of incoming training data, a scheduler component triggers new iteration of SGD.
 The data used in this new iteration of SGD consists of the new data that arrived in the system since the last scheduled iteration plus a sample of the existing historical data.
 
-\textbf{Static training} is a simple training of a static model over the entire dataset. 
-Static training is only used to establish a baseline for comparison of the running time of different methods.
-It is only applicable in cases where the entire dataset is available.
-
 \subsection{Implementation of ML Models}
 We have implemented three different machine learning models to evaluate our deployment method.
 In this section, we briefly explain each of the implemented methods.
@@ -573,16 +564,16 @@ In this section, we briefly explain each of the implemented methods.
 \textbf{Recommender system:} we implement a recommender system based on the matrix factorization using SGD \cite{funk2006netflix}.
 Based on our initial experiments, we set the number of latent factors to 40.
 First, we train a model using the initial static data.
-To produce more accurate predictions, we have also included user, item, and global bias values as described in \cite{koren2009matrix}.
-After the initial training, we deploy the model and use any new training observation to incrementally update the model.
+To produce more accurate predictions, we include user, item, and global bias values as described by Simon Funk \cite{koren2009matrix}.
+After the initial training, we deploy the model and use the new training observations to incrementally update the model.
 Training observations are of the form \textit{\((user\_id, item\_id, rating\))}.
 Based on the training observation, the bias values as well as the factors are updated for the specified user and item.
 
 \textbf{SVM Classifier:} we implement a simple SVM classifier by extending the existing SVM classifier of Apache Spark.
 We implement the necessary methods described in Section \ref{sec:system-architecutre} for the SVM classifier to work with our deployment method.
-The extra methods are \textit{update} which takes one (or a micro-batch in Spark Streaming) and incrementally update the model and \textit{update\_iteration} which takes a dataset and executes one iteration of SGD on the given data.
+The extra methods are \textit{update} which takes one (or a micro-batch in Spark Streaming) item and incrementally update the model and \textit{update\_iteration} which takes a dataset and executes one iteration of SGD on the given data.
 
-\textbf{Neural Network:} to evaluate our system on an image classification task, we implemented a multi-layer perceptron neural network using back propagation \cite{collobert2004links}.
+\textbf{Neural Network:} to evaluate our system on an image classification task, we implement a multi-layer perceptron neural network using back propagation \cite{collobert2004links}.
 We set the number of hidden layers to 50 and use a softmax output function \cite{bishop2006pattern}.
 Similar to recommender system case, a network is first trained on the static data.
 The training observations are of the form of \textit{\((X,y)\)}, where X is a vector of 784 dimension (1 for each pixel) and y is the digit the image is representing.
@@ -592,9 +583,9 @@ In Section \ref{continious-training-serving}, we discussed how system parameters
 In this section, we analyze the effects of different sampling and scheduling rates on the system.
 Our goal, is to make these parameters adaptive, but for now we analyze their effects on the running time and quality. 
 
-\textbf{Scheduling rate:} This parameter specifies how often a new iteration of SGD should be scheduled. 
+\textbf{Scheduling rate:} this parameter specifies how often a new iteration of SGD should be scheduled. 
 In our prototype, the scheduling rate is governed by a parameter called buffer size, which dictates how many new items should be stored in the buffer before a new iteration of SGD is executed. 
-Ultimately, the decision to schedule new iterations is made by the system based on the availability of resources. 
+Ultimately, the system should make the decision to schedule new iterations based on the availability of resources.
 Executing one iteration of SGD even using the entire data is not a resource heavy process, and can easily be done in parallel with the serving component of the system. 
 This results in a paradigm where both training and serving can happen simultaneously. 
 
@@ -617,9 +608,9 @@ This results in a paradigm where both training and serving can happen simultaneo
 
 Figure \ref{fig:movie-lens-100k-buffer-size-mse} shows the mean squared error for different buffer sizes for Movie Lens 100k dataset. 
 A smaller buffer size causes the scheduler to initiate training iterations more frequently.
-As a result, the underlying model is updated faster.
+As a result, the system updates the underlying model more frequently.
 However, the error rate is not decreasing linearly with the buffer size.
-Further analysis show that once the model is update more frequently, it slowly starts to converge and any further training has little to no effect on the overall quality of the model.
+Further analysis show that the more frequent the model updates are, the faster the model converges and any further training has little to no effect on the overall quality.
 Therefore, increasing the scheduling rate only decreases the error rate up to a point, after which increasing the scheduling rate has no effect on the overall quality of the model.
 This is extremely important, specially when considering the effect the buffer size has on the running time.
 Figure \ref{fig:movie-lens-100k-buffer-size-time} shows the running time on Movie Lens 100k dataset using different buffer sizes. 
@@ -641,11 +632,11 @@ Therefore, depending on the application, we can set the buffer size to bigger va
 \caption{Parameters effects on run time}
 \end{figure}
 
-\textit{Dynamic scheduling:} In production environments, the load on the system varies throughout the day. 
+\textit{Dynamic scheduling:} in production environments, the load on the system typically varies throughout the lifetime of the application.
 Therefore, a dynamic scheduling maximizes the performance of the system, by performing more frequent updates while there are more resources available for training. 
 Moreover, since training and serving can be done in parallel, we can perform training in the background and only update the weights when the training iteration is over. 
 
-\textbf{Sampling rate:} In each iteration of SGD, as described in Section \ref{continious-training-serving}, the data inside the buffer and a sample of the historical data is used to update the model.
+\textbf{Sampling rate:} in each iteration of SGD, as described in Section \ref{continious-training-serving}, the data inside the buffer and a sample of the historical data is used to update the model.
 In this section, we investigate the effect of the sampling rate on the model quality and the running time of the system.
 Figure \ref{fig:movie-lens-100k-sample-rate} shows that a larger sampling rate increases the quality of the model, but similar to scheduling rate, the decrease in error rate is negligible considering the effect it has on running time. 
 This is again, caused by the same phenomena, where the model after training on bigger sample rates start to converge faster and as a result bigger sample sizes do not have an effect on the quality.
@@ -654,16 +645,17 @@ Figure \ref{fig:movie-lens-100k-sample-rate-time} shows the effect of increasing
 Using the entire historical data (sampling rate = 1.0) increases the running time 5 fold. 
 Therefore, similar to the scheduling rate, setting the sampling rate to smaller values will increase the performance substantially, while only slightly affecting the quality of the model.
 
-\textbf{Tuning parameters based on error rate:} The underlying machine learning model and the dataset have big effects on the selection of sampling rate and scheduling rate.
+\textbf{Tuning parameters based on error rate:} the underlying machine learning model and the dataset have big effects on the selection of sampling rate and scheduling rate.
 In the recommender system use case, due to changes in incoming data distribution, we see that bigger sample rates and higher scheduling rates have an effect (although small) on the quality of the model.
 This, however, is not be the case for every application.
 To demonstrate this, we perform the same set of experiments on the MNIST dataset.
-Figure \ref{fig:mnist-sample-rate} shows the effect of different sampling rates on the neural network classifier model for \textit{MNIST} data.
-Interestingly and contrary to the results we achieved for Movie Lens 100k the error rates for different sampling rates are very similar.
-We believe this is caused by how neural networks behave.
-Increasing the sampling rate causes similar data items to be used repeatedly in each training iteration and based on our experiments neural networks are not affected by this oversampling and, therefore, the results are almost similar with different sampling rates.
+Figure \ref{fig:mnist-sample-rate} shows the effect of different sampling rates on the neural network classifier model for MNIST data.
+Contrary to the results we achieved for Movie Lens 100k the error rates for different sampling rates are very similar.
+This is caused by how neural networks behave.
+Increasing the sampling rate causes similar data items to be used repeatedly in consecutive training iterations.
+Neural networks are not affected by this oversampling, therefore the results are almost similar with different sampling rates.
 Moreover, in this experiment, the number of parameters of the multi-layer perceptron is far less than the number of parameters of the matrix factorization model for Movie Lens 100k.
-This causes the neural work to converge faster and, therefore, it is not affected by more training, unless new training observations arrive at the system.
+This causes the neural work to converge faster and, therefore it is not affected by more training, unless new training observations arrive at the system.
 \begin{figure}[h]
 \begin{subfigure}{\columnwidth}
 \centering
@@ -683,7 +675,7 @@ This causes the neural work to converge faster and, therefore, it is not affecte
 
 Figure \ref{fig:mnist-buffer-size} shows how the buffer size affects the overall quality of the neural network model.
 Similar to the sampling rate case, the error rates of the models are not affected by the scheduling rate.
-New training observations that exist in the buffer have the maximum effect on the model's quality, since they are becoming available to the model for the first time.
+New training observations that exist in the buffer have the maximum effect on the quality of the model since they are becoming available to the model for the first time.
 As the scheduling rate increases, the number of new training observations remain the same, and only the historical data is used more frequently to train the model.
 Since neural networks do not gain much benefit by revisiting the same items, increasing the scheduling rate has no effect on the overall quality.
 
@@ -713,24 +705,25 @@ For recommender system experiments we use the buffer size to specify the schedul
 
 Figure \ref{fig:movie-lens-100k-score} shows the mean squared error of Continuous, Velox, Baseline+, and Baseline on Movie Lens 100k dataset.
 The scheduling rate (buffer size) is set to 500 for Continuous and 15,000 for Velox.
-All four methods perform an initial training, therefore, they have similar error rates in the beginning.
+All four methods perform an initial training, therefore they have similar error rates in the beginning.
 However, the error rate of Baseline starts to increase since it does not incrementally update the model.
 Baseline+ incrementally updates the model.
-As a result, it performs better than Baseline method overall.
+As a result, it has a lower error rate than Baseline.
 The error rate of Velox is similar to Baseline+ until the first scheduled retraining for Velox.
 After the retraining, there is a sudden drop in the error rate.
 For the remainder of the data, Velox performs as expected, once there is a retraining, the error rate immediately decreases.
-This decrease in error rate, is followed by a slow increase due the fact that Velox only incrementally updates the model until the next scheduled retraining, which as discussed earlier is not handling the change in the data distribution gracefully.
-Initial error rate of Continuous is similar to other methods.
+This decrease in error rate is followed by a slow increase due the fact that Velox only incrementally updates the model until the next scheduled retraining, which as discussed earlier is not handling the change in the data distribution gracefully.
+Initial error rate of Continuous is similar to the other methods.
 However, the error rate starts to decrease rapidly.
 The reason for the fast decrease in error rate is that immediately after the deployment of the model, the Continuous method executes iterations of SGD.
-It consistently manages to adopt to the changes in data and decrease the error rate where the distribution of the incoming data is stable.
+It consistently manages to adopt to the changes in data and decreases the error rate.
 As expected, except for immediately after a full retraining, Continuous always performs better than Velox.
 
 Figure \ref{fig:movie-lens-1M-score} shows the mean squared error rate achieved by the implemented methods on Movie Lens 1M.
 Similar to Movie Lens 100k, Continuous has the lowest error rate among all the implemented methods.
 The difference in error rate between Continuous and Velox is even greater than the error rate for Movie Lens 100k.
-The change in data distribution in Movie Lens 1M is greater (data in Movie Lens 1M is gathered from a longer period of time), however,  Continuous can adopt the changes in data distribution faster than other methods.
+This is because the change in data distribution in Movie Lens 1M is greater than Movie Lens 100k (data in Movie Lens 1M is gathered from a longer period of time).
+Since Continuous adapts to the changes in distribution faster than Velox, it maintains a lower error rate throughout.
 The error rate of Velox follows the same trend as in the case of Movie Lens 100k. 
 After every retraining, the error rate first drops then slowly increases until the next retraining.
 Similar to Movie Lens 100k dataset, the error rate of Baseline is the highest among all the implemented methods, followed by Baseline+ , where due to the incremental updates of the model the error rate is lower.
@@ -761,14 +754,14 @@ Figure \ref{fig:local-classification-results} shows the misclassification rate o
 For all of the datasets, the sampling rate of Continuous is set to 0.2.
 Contrary to the recommender system use case, the data used in these experiments is not time dependent (except for SEA) and as a result the deployment methods behave differently.
 For Cover type (Figure \ref{fig:cover-types-quality}), Continuous achieves the lowest error rate overall, followed by Baseline+.
-Baseline method has the highest error rate overall because it is not performing incremental updates on the model.
-Interestingly, the error rate of Velox slightly increases after the first retraining and it never recovers from this increase.
+Baseline method has the highest error rate because it is not performing incremental updates on the model.
+The error rate of Velox slightly increases after the first retraining and it never recovers from this increase.
 By performing a retraining, the underlying model in Velox overfits to the existing data, therefore the test error on incoming data does not decrease the same way that it does in case of Baseline+ and Continuous.
 The error rate for all of the deployment methods, except for Baseline is very similar on SEA (Figure \ref{fig:sea-quality}).
 Continuous still perform slightly better than Baseline+ and Velox, although with a very small margin.
 Figure \ref{fig:adult-quality} shows the error rate of different deployment methods on Adult dataset.
 In this dataset, the different deployment methods perform rather similarly.
-Baseline has the highest error rate overall, however, after the 4th retraining the difference between the error rate of Velox and Baseline becomes smaller.
+Baseline has the highest error rate overall, however after the 4th retraining the difference between the error rate of Velox and Baseline becomes smaller.
 This is, similar to the Cover types dataset, due to the over training of the underlying model in Velox.
 Baseline+ and Continuous maintain a steady error rate overall, with Continuous slightly outperforming Baseline+.
 
@@ -813,7 +806,7 @@ This is expected, as both the amount of data and the frequency of training is mu
 For recommender system experiments, the difference in total training time is smaller.
 In our python prototype, the entire dataset is first loaded into the memory and then it is streamed to the deployment system one by one.
 As a result, both Continuous and Velox can train the model much faster.
-In all of the evaluated datasets, the total training time of Continuous is 2 to 4 times smaller than that of Velox.
+In all of the evaluated datasets, the total training time of Continuous is 2 to 5 times smaller than that of Velox.
 This is because a full retraining incurs a higher overhead than continuously training the method.
 Another reason for the difference in training time is that as the size of the data increases, the time for running a new iteration in Continuous stays approximately the same, whereas the time for a full retraining increases exponentially.
 
@@ -822,14 +815,14 @@ We evaluated our deployment system on larger workloads in a distributed environm
 Figure \ref{fig:cluster-classification-results} shows the error rate of different deployment methods on classification datasets.
 Since URL Reputation data was gathered over 120 days, it is very likely that the data contains changes in the distribution.
 This concept drift is reflected in Figure \ref{fig:url-quality}.
-The Baseline method's error rate is increasing with a steady rate as it cannot adapt to the changes in the data.
+The error rate of Baseline is increasing with a steady rate as it cannot adapt to the changes in the data.
 Continuous achieves the lowest error rate overall.
 Velox manages to keep the error rate lower than Baseline+ until the the second retraining, after which the error rate slightly increases. 
 Figure \ref{fig:higgs-quality} shows the error rate on Higgs dataset.
 Similar to local classification datasets, the error rate for Baseline is the highest among all of the deployment methods.
 Velox, Baseline+, and Continuous maintain the same error rate until the first retraining of Velox, after which due to possible overfitting, the error rate of Velox slightly increases.
 Continuous performs slightly better than Baseline+ in the beginning, however, the underlying models of both deployment methods slowly converges.
-Therefore, the error rates of both of the deployment methods becomes become similar.
+Therefore, the error rates of both of the deployment methods become similar.
 
 \begin{figure}[h]
 	\centering
@@ -873,7 +866,8 @@ In our local experiments, the entire resources of the computing machine was bein
 However, in distributed environment, the cluster is underutilized in the beginning as the amount of data is small.
 As more data arrives at the system, the utilization of the cluster increases.
 As a result, the training time for Continuous and Velox does not increase linearly with size.
-Therefore, the total training time for Continuous is only 5 to 10 times larger than that of Baseline (instead of 20 to 25 times for local datasets) and the total training time for Velox is 20 to 25 times slower than that of Baseline (instead of 50 to 55 times for local datasets).
+Therefore, the total training time for Continuous is only 5 to 10 times larger than that of Baseline (instead of 20 to 25 times for local datasets) and the total training time for Velox is 20 to 25 times larger than that of Baseline (instead of 50 to 55 times for local datasets).
+
 \subsection{Discussion} \label{subsec:discussion}
 \begin{figure*}[t]
 \begin{subfigure}{0.30\textwidth}
@@ -933,15 +927,15 @@ Therefore, the total training time for Continuous is only 5 to 10 times larger t
 \label{fig:training-time-vs-quality}
 \end{figure*}
 
-Figure \ref{fig:training-time-vs-quality} shows the total training time and average error rate of each of the three different deployment methods (Baseline, Continuous and Velox) on different datasets.
-For all evaluated datasets, Continuous achieves the lowest average error rate (for classification datasets) and average mean squared error (for Recommender system datasets).
-The difference in average error rate (or average MSE) between Velox and Continuous is smaller for datasets that contain concept drift (Figure \ref{subfig:sea-meta}, \ref{subfig:movie-lens-100k-meta}, \ref{subfig:movie-lens-1m-meta}, \ref{subfig:url-meta}).
+Figure \ref{fig:training-time-vs-quality} shows the total training time and average error rate of each of the three different deployment methods (Baseline, Continuous, and Velox) on different datasets.
+For all evaluated datasets, Continuous achieves the lowest average error rate (for classification datasets) and average mean squared error (for recommender system datasets).
+The difference in average error rate (or average MSE) between Velox and Continuous is smaller for datasets that contain concept drift (Figure \ref{subfig:sea-meta}, \ref{subfig:movie-lens-100k-meta}, \ref{subfig:movie-lens-1m-meta}, and \ref{subfig:url-meta}).
 Since both Velox and Continuous perform incremental training of the model after it is deployed, they both manage to handle the concept drift in the data.
 However, Continuous is able to adapt to the changes faster as it is constantly updating the model by executing iterations of SGD.
 In the deployment method of Velox, the underlying model cannot adapt to the changes in the distribution as quickly, since the retraining procedure cannot be executed frequently as it requires a lot of resources.
 The performance of Baseline is very poor in datasets with concept drift.
 This is expected, as the underlying model in Baseline is only trained on an initial dataset and is not able to adapt to the changes in the data.
-Continuous performs very well for datasets with no concept drifts (\ref{subfig:cover-type-meta},  \ref{subfig:adult-meta}, \ref{subfig:higgs-meta}) as well.
+Continuous performs very well for datasets with no concept drifts (Figure \ref{subfig:cover-type-meta},  \ref{subfig:adult-meta}, and \ref{subfig:higgs-meta}) as well.
 For both Cover Type and Higgs datasets, Baseline method does not converge on the initial dataset, therefore it has a higher error rate than Velox and Continuous.
 Velox performs better than Baseline on Higgs and Cover Type, however, retraining on these two datasets causes the underlying model to overfit to the existing data and as a result the performance of the model is decreased after each retraining.
 This leads to an overall lower average error rate than that of Continuous
@@ -953,7 +947,7 @@ In our current prototype, we do not address the problem of the trade off between
 In our prototype, both prediction and model updates are managed by the same node.
 As a result the prediction component is paused until the SGD iteration (or retraining in the case of Velox) is executed.
 Therefore, the system always answers each prediction query using the latest model, although with a much greater delay.
-However, in an actual model deployment system, model training and prediction answering are typically executed on separate nodes (or threads), therefore, any prediction request arriving at the system is answered immediately, although not with the latest version of the model.
+However, in an actual model deployment system, model training and prediction answering are typically executed on separate nodes (or threads), therefore any prediction request arriving at the system is answered immediately, although not with the latest version of the model.
 Since the retraining time for Velox is large, a considerable percentage of prediction requests are always answered by an older version of the model.
 Therefore, while the system is executing a retraining, the error rate of the answered prediction requests will continue to rise until the retraining is finished.
 For example in URL Reputation dataset, the average time of each retraining is 68 minutes in Velox, whereas the average time of each iteration of SGD is 1.5 minutes.
@@ -976,6 +970,7 @@ We show that not only continuous training requires less resources but it also pr
 Comparing to simple techniques such incremental learning or initial batch training, our technique produces a model with higher quality.
 
 In future work, we will explore more advanced methods for sampling of historical data in order to investigate their effect on the performance of the system. Moreover, we plan to investigate the trade off between prediction latency and prediction accuracy.
+
 
 \bibliographystyle{plain}
 
