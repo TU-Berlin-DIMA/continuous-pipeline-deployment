@@ -50,8 +50,8 @@
 \usepackage{lipsum}% http://ctan.org/pkg/lipsum
 \usepackage{graphicx}% http://ctan.org/pkg/graphicx
 \usepackage{float}
-%\usepackage{todonotes}
-\usepackage[disable]{todonotes}
+\usepackage{todonotes}
+%\usepackage[disable]{todonotes}
 \usepackage[outdir=./figures/]{epstopdf}
 \usepackage{listings}
 \PassOptionsToPackage{table}{colorx}
@@ -147,34 +147,30 @@ Our experiments show that our deployment method updates models two to five times
 
 \section{Introduction} \label{introduction}
 %\todo[inline]{Add BBDC and streamline funding id}
-% Problem
 Deploying and maintaining models is a crucial step in the lifecycle of a machine learning (ML) application. 
-%Volker
 The deployment and serving of ML models in production has received very little attention by the research community despite the fact that it is the aspect that delivers the actual (business) value.
-%Volker
-% Specific problem
 In order to sustain the performance of a model in a dynamic environment, where data and thus models may change, we have to monitor the performance of the model in real-time during its deployment and update the model when necessary.
 
 However, incremental updates alone are not enough to maintain model quality. 
 When the data distribution changes quickly, the model will not adjust in a timely fashion. 
 Furthermore, new batch datasets from external sources may become available while the system is running.
-Lastly, incrementally updating may not arrive at the same quality of model as a complete batch retraining.
-Therefore, in order to prevent the model's quality from degrading, periodic retraining should be performed to better fit the model with the data that has arrived at the system since the last training.
+Lastly, incrementally updating may not arrive at the same model quality as a complete, batched retraining.
+Therefore, in order to prevent the model's quality from degrading, the model should be retrained periodically using the data that has arrived at the system since the last training.
 
-% How is it different from prior work
 Most of the current machine learning research focuses on training and providing tools to make model training and search easier. 
-Kumar et al. provided an overview of landscape of existing machine learning systems \cite{kumar2015survey}. 
+Kumar et al. provided an overview of existing machine learning systems \cite{kumar2015survey}. 
 Most of the surveyed systems provide little to no support after the model has been trained.
 Only few systems \cite{akdere2011case, crankshaw2014missing} support deploying and maintaining the models.
-Moreover, systems with support for model deployment are still lacking constant monitoring and fast and accurate updates of the machine learning models.
+However, they are still lacking continuous monitoring and fast and accurate updates of the model.
 
 Figure \ref{fig:velox-work-flow} demonstrates the most common model deployment approach.
-First, a model is trained based on an existing dataset residing on disk, this model serves as the initial model.
-This model is then deployed to an environment where it can answer prediction queries arriving at the system.
-The system also receives feedback in the form of new training observations.
-Upon receiving a training observation, the system updates the model incrementally.
-Not all of machine learning models support incremental updates.
-The ability to perform incremental updates is determined by the underlying optimization strategy and whether it allows incremental changes to the parameter of the model based on individual training items.
+First, an initial model is trained based on an existing dataset residing on disk.
+Deploying this model to a production environment enables it to answer prediction queries arriving at the system.
+During production, the system continuously receives feedback in the form of new training observations.
+This enables the system to update the model incrementally.
+Note that not every machine learning model support incremental updates.
+The underlying optimization strategy determines whether a model can be updated incrementally.
+
 \begin{figure}[t]
 \centering
 \includegraphics[width=1\columnwidth]{../images/velox-final.pdf}
@@ -182,14 +178,19 @@ The ability to perform incremental updates is determined by the underlying optim
 \label{fig:velox-work-flow}
 \end{figure}
 
-
 \textbf{Example application:} to illustrate this model deployment approach, consider the task of predicting the click through rate (CTR) of online advertisements.
 Search engine providers use machine learning models to estimate the expected click rate of different advertisements.
 They train machine learning models based on the available data, which typically includes content of the page, search query, user information, content and meta-data of the available advertisements. 
-Once the model is deployed, prediction queries of the form of ad requests arrive at the system.
+Once such model is deployed, prediction queries of the form of ad requests arrive at the system.
 The model determines the advertisements that have the highest probabilities of being clicked by the user.
-Based on whether or not advertisements are clicked on, the system sends feedback in the form of new training observations and the model is updated accordingly.
+Based on whether or not advertisements are clicked on, the system sends feedback in the form of new training observations, which serve to update the model accordingly.
+\todo[inline]{VM:How do you make this aspect easier with your work. This is not clear to me, as this brings a batch database in, so a batch retraining might be warranted here. This might be quite different from the continuous case of periodic retraining based on new observations.Just wondering if you convolute two things here, which may weaken your argument, as the argument of dealing with continuous observations is quite strong alone.If you agree, I would suggest to make this aspect a secondary side-aspect, but not give it the equal prominence as the continuous retraining.
+
+BD: My goal is to have "Introduction of new batch datasets" as a secondary goal. When a batch dataset becomes available, the system will periodically sample from it and use it in new iterations. Using this method eliminates the need for complete retraining. However, I do not perform any experiments for this specific use case. I suspect that for some datasets, the quality may be affected negatively until enough iterations of SGD using samples from the new datasets are executed. As Volker suggested, I would like to make it a secondary side-aspect/goal. Should I remove this sentence and discuss the "Introduction of new batch datasets" somewhere else, or should I remove it completely?}
 Furthermore, new batch training datasets in the form of user databases, new advertisements with their metadata and more web pages will become available as more companies employ the service of the search engine provider.
+\todo[inline]{VM: Is this describing the problem, or is that not already your solution? If so, this should be made clearer
+
+BD: This is describing the current method of model deployment (using periodic retraining). Should I explain how my deployment method will help improving the use case as well? }
 In order to leverage the new data and reduce the error introduced by incremental learning, the model is periodically retrained using the entire data.
 Figure \ref{fig:click-rate} demonstrates the CTR prediction example for a search engine provider.
 
@@ -211,7 +212,7 @@ As a result, they miss many opportunities for optimizing the training and deploy
 
 Our key observation is that, by exploiting the iterative nature of the underlying optimization algorithm, i.e., stochastic gradient descent (SGD), the model training process can be seamlessly executed with the serving and query answering component.
 Based on this observation, we present a system, that supports deployment, maintenance, and incremental and fast batch updates of machine learning models.
-We are making the following contributions: 
+Our contributions are as follows:
 \begin{itemize}
 \item We define a system for machine learning models deployment and maintenance and provide a prototypical implementation
 \item We allow for incremental updates to the model, thus handling changes in the data distribution
