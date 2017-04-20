@@ -131,10 +131,10 @@
 \begin{abstract}
 A data analytics process is a pipeline comprised of several steps, from source selection, data preparation, feature engineering, to model building/training.
 However, this process does not end with the training of the model. 
-When the training is completed, the model is deployed into a system where it can answer prediction queries in a real-time and reliable fashion.
+When the training is completed, the model is deployed into a system where it can answer prediction queries reliably, continuously, and in real-time.
 While the system is running, new training data, both in the form of stream sources and batch datasets, may become available.
 To maintain a high quality of prediction, the deployment system performs online training as well as periodical batch retraining.
-However, retraining of models is a time consuming and resource intensive process.
+However, retraining of models is a time-consuming and resource-intensive process.
 
 We propose a novel deployment method for continuously training stochastic gradient descent (SGD)-based machine learning models.
 Our method eliminates the need for complete retraining and replaces it with a series of consecutive SGD iterations.
