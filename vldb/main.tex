@@ -231,8 +231,9 @@ In Section \ref{evaluation}, we evaluate our system against different workloads 
 Finally, Section \ref{conclusion} presents our conclusion and future work.
 
 \section{Related Work} \label{related-work}
-Traditional machine learning systems focus on training and management of models and leave the task of deployment and maintenance to the users. 
-It has only been recently that some systems, for example Velox \cite{crankshaw2014missing}, TensorFlow Serving \cite{abadi2016tensorflow}, and LongView \cite{akdere2011case} have proposed architectures to support model deployment and query answering as well. 
+\todo[inline]{Which one is better: training and managing .... deploying and maintaining OR training and managing ... deployment and maintenance}
+Traditional machine learning systems focus solely on training and managing models and leave the task of deploying and maintaining to the users. 
+It has only been recently that some systems, for example Velox \cite{crankshaw2014missing}, TensorFlow Serving \cite{abadi2016tensorflow}, and LongView \cite{akdere2011case} have proposed architectures that also consider model deployment and query answering.
 LongView integrates predictive machine learning models into relational databases. 
 It answers predictive queries and maintains and manages the models.
 LongView uses techniques such as query optimization and materialized view selection to increase the performance of the system.
@@ -240,7 +241,7 @@ However, it only works with batch data and does not provide support for real-tim
 As a result it does not support incremental learning.
 In contrast, our system is designed to work in a dynamic environment where it answers prediction queries in real-time and incrementally updates the model when required.
 TensorFlow Serving provides mechanisms for real-time queries, deployment and version control of machine learning models.
-It has out-of-the-box support for models created using TensorFlow and it provides several interfaces for users to deploy their custom models.
+It has out-of-the-box support for models created using TensorFlow and provides several interfaces for users to deploy their custom models.
 However, it does not provide incremental updates to the model.
 Contrary to our system, models have to be retrained outside of the system and have to be redeployed to TensorFlow Serving once the training is done.
 Moreover, TensorFlow is designed to create and train only deep neural network models and does not work with other machine learning models.
