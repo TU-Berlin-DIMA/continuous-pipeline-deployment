@@ -492,9 +492,9 @@ Each node is running on a Intel Xeon 2.40 GHz 16 core processor and has 28 GB fo
 
 \textbf{Prototypes:} we implemented two versions of our deployment method.
 Version 1 is implemented using python and uses some of the libraries available in scikit-learn \cite{sklearn_api}.
-This version is designed to work on a local environment.
-It gives a greater control over tuning the parameters of the system, since we are able to perform incremental updates one item at a time (as opposed to Spark's micro-batching).
-Version 1 supports neural networks (multi-layer perceptron) and recommender system (matrix factorization).
+This version is designed to work in a local environment.
+It gives more control over tuning the parameters of the system, since we are able to perform incremental updates one item at a time (as opposed to Spark's micro-batching).
+Version 1 supports neural networks (multi-layer perceptron) and recommender algorithms (matrix factorization).
 Version 2 is implemented on top of Apache Spark \cite{zaharia2010spark}.
 It is using the SGD class of Spark's machine learning library, to execute the initial and incremental training.
 Version 2 works in both local and cluster environment and supports different types of linear models (SVM, Logistic Regression and Linear Regression).
@@ -529,18 +529,18 @@ Adult & 123 & 48882
 \end{table}
 
 \textbf{Datasets:} we use two different types of datasets in our experiments.
-To evaluate the recommender system we use Movie Lens datasets, which are a collection of movie ratings \cite{harper2016movielens} .
-We use two versions of this dataset (100k and 1M), each with varying number of users, movies and ratings.
-Table \ref{table:recommender-systems} shows the details of Movie Lens dataset.
+To evaluate the recommender system we use 2 versions (100k ratings and 1M ratings) of the Movie Lens datasets, which are a collection of movie ratings \cite{harper2016movielens} .
+Table \ref{table:recommender-systems} shows the details of the Movie Lens dataset.
 We have sorted the Movie Lens data set based on the ratings timestamp and items are examined one by one according to their timestamp.
 This is to evaluate how each of the implemented methods react to changes in the distribution of the data.
 For these two datasets, we use an evolving test set to evaluate the performance of the deployment methods.
 To create the evolving test set, first we draw indices for the test items uniformly at random from the entire data.
-We start with an empty test set, when we reach the index of a test item, we add that to the current test set and calculate the error rate based on the current test set (We call this a test increment).
+We start with an empty test set.
+When we reach the index of a test item, we add that to the current test set and calculate the error rate based on the current test set (We call this a test increment).
 For Movie Lens 100k, the total size of the test set is 5,000 and for Movie Lens 1M, it is 50,000. 
 Each error calculation, as a result, captures the degree to which the models are adopting to the changes in the dataset.
 
-To evaluate the classifier, we use a collection of classification datasets (mostly from UCI Machine Learning Repository\footnote{\url{http://archive.ics.uci.edu/ml/}}).
+To evaluate the classifier, we use a collection of classification datasets (mostly from the UCI Machine Learning Repository\footnote{\url{http://archive.ics.uci.edu/ml/}}).
 Higgs \cite{baldi2014searching} is a physics datasets which is produced using Monte Carlo simulations.
 For these two datasets, the task is to distinguish between a signal process that produces a target particle (Higgs bosons) and a background process which does not.
 Cover Type \cite{collobert2002parallel} is a dataset used for predicting forest cover types from cartographic variables.
@@ -635,7 +635,7 @@ Figure \ref{fig:movie-lens-100k-buffer-size-mse} shows the mean squared error fo
 A smaller buffer size causes the scheduler to initiate training iterations more frequently.
 As a result, the system updates the underlying model more frequently.
 However, the error rate is not decreasing linearly with the buffer size.
-Further analysis show that the more frequent the model updates are, the faster the model converges and any further training has little to no effect on the overall quality.
+Further analysis shows that the more frequent the model updates are, the faster the model converges and any further training has little to no effect on the overall quality.
 Therefore, increasing the scheduling rate only decreases the error rate up to a point, after which increasing the scheduling rate has no effect on the overall quality of the model.
 This is extremely important, specially when considering the effect the buffer size has on the running time.
 Figure \ref{fig:movie-lens-100k-buffer-size-time} shows the running time on Movie Lens 100k dataset using different buffer sizes. 
