@@ -184,7 +184,9 @@ They train machine learning models based on the available data, which typically 
 Once such model is deployed, prediction queries of the form of ad requests arrive at the system.
 The model determines the advertisements that have the highest probabilities of being clicked by the user.
 Based on whether or not advertisements are clicked on, the system sends feedback in the form of new training observations, which serve to update the model accordingly.
-\todo[inline]{VM:How do you make this aspect easier with your work. This is not clear to me, as this brings a batch database in, so a batch retraining might be warranted here. This might be quite different from the continuous case of periodic retraining based on new observations.Just wondering if you convolute two things here, which may weaken your argument, as the argument of dealing with continuous observations is quite strong alone.If you agree, I would suggest to make this aspect a secondary side-aspect, but not give it the equal prominence as the continuous retraining.
+\todo[inline]{VM:How do you make this aspect easier with your work. This is not clear to me, as this brings a batch database in, so a batch retraining might be warranted here. This might be quite different from the continuous case of periodic retraining based on new observations.
+Just wondering if you convolute two things here, which may weaken your argument, as the argument of dealing with continuous observations is quite strong alone.
+If you agree, I would suggest to make this aspect a secondary side-aspect, but not give it the equal prominence as the continuous retraining.
 
 BD: My goal is to have "Introduction of new batch datasets" as a secondary goal. When a batch dataset becomes available, the system will periodically sample from it and use it in new iterations. Using this method eliminates the need for complete retraining. However, I do not perform any experiments for this specific use case. I suspect that for some datasets, the quality may be affected negatively until enough iterations of SGD using samples from the new datasets are executed. As Volker suggested, I would like to make it a secondary side-aspect/goal. Should I remove this sentence and discuss the "Introduction of new batch datasets" somewhere else, or should I remove it completely?}
 Furthermore, new batch training datasets in the form of user databases, new advertisements with their metadata and more web pages will become available as more companies employ the service of the search engine provider.
@@ -243,7 +245,7 @@ In contrast, our system is designed to work in a dynamic environment where it an
 TensorFlow Serving provides mechanisms for real-time queries, deployment and version control of machine learning models.
 It has out-of-the-box support for models created using TensorFlow and provides several interfaces for users to deploy their custom models.
 However, it does not provide incremental updates to the model.
-Contrary to our system, models have to be retrained outside of the system and have to be redeployed to TensorFlow Serving once the training is done.
+Contrary to our system, models have to be retrained outside of the system and have to be redeployed to TensorFlow Serving once the training is complete.
 Moreover, TensorFlow is designed to create and train only deep neural network models and does not work with other machine learning models.
 Our system supports incremental and batch updates to the model and automatically applies these updates to the model currently being served.
 Furthermore, our system can work with any machine learning model that uses stochastic gradient descent as optimization algorithm.
@@ -251,67 +253,79 @@ Furthermore, our system can work with any machine learning model that uses stoch
 Velox is an implementation of the common machine learning serving practice \cite{crankshaw2014missing}, explained in Section \ref{introduction}.
 Velox supports incremental learning and can answer prediction queries in real-time.
 It also eliminates the need for users to manually retrain the model offline and redeploy it again.
-Velox monitors the quality of the model using a validation set and once the error rate has gone beyond a predefined threshold it initiates a complete retraining of the model using Spark. 
-This deployment method, however, has three drawbacks; retraining discards updates that have been applied to the model so far, the process of retraining on full data set is resource intensive and time consuming and new datasets introduced to the system only influence the model after the next retraining.
-Our system uses the underlying properties of SGD to fully integrate the training process into the system's lifeline and eliminate the need for complete retraining of the model, which both reduces the time spent on training and can produce an updated model swiftly.
-Moreover, our system makes use of new batch datasets as soon as they become available.  
+Velox monitors the error rate of the model using a validation set.
+Once the error rate exceeds a predefined threshold, Velox initiates a complete retraining of the model using Spark. 
+This deployment method, however, has three drawbacks; retraining discards updates that have been applied to the model so far, the process of retraining on full data set is resource intensive and time consuming, and new datasets introduced to the system only influence the model after the next retraining.
+Our approach differs, as it exploits the underlying properties of SGD to fully integrate the training process into the system's lifeline.
+This eliminates the need for completely retraining the model and replaces it with consecutive SGD-iterations.
+Moreover, our system can train the model on new batch datasets as soon as they become available.
 
 Clipper \cite{crankshaw2016clipper} is another machine learning deployment system that focuses on producing higher quality predictions by maintaining an ensemble of models.
-It constantly examines the confidence of each model and for each prediction request, it uses the model with the highest confidence.
-However, it does not incrementally train the models in production which overtime leads to models becoming outdated.
-Our deployment method on the other hand, focuses on maintenance and constant updates of the models.
+It constantly examines the confidence of each model.
+For each prediction request, it uses the model with the highest confidence.
+However, it does not incrementally train the models in production, which over time leads to models becoming outdated.
+Our deployment method on the other hand, focuses on maintenance and continuous updates of the models.
 
-Weka \cite{hall2009weka}, Apache Mahout \cite{Owen:2011:MA:2132656}, and Madlib \cite{hellerstein2012madlib} are systems that provide the necessary toolkits to train machine learning models. All of these systems provide a range of machine learning training algorithms. 
-However, they do not provide any management, before or after deployment of these models. 
-Our proposed system focuses on models trainable using stochastic gradient descent and as a result is able to provide management of the models both in training and after deployment.
+Weka \cite{hall2009weka}, Apache Mahout \cite{Owen:2011:MA:2132656}, and Madlib \cite{hellerstein2012madlib} are systems that provide the necessary toolkits to train machine learning models. 
+All of these systems provide a range training algorithms for machine learning methods. 
+However, they do not provide any management, before or after the models have been deployed. 
+Our proposed system focuses on models trainable using stochastic gradient descent and as a result is able to provide model management both during training and deployment time.
 
-MLBase \cite{kraska2013mlbase} and TuPaq \cite{sparks2015tupaq} are machine learning model management systems.
+MLBase \cite{kraska2013mlbase} and TuPaq \cite{sparks2015tupaq} are model management systems.
 They provide a range of training algorithms to create machine learning models and mechanism for model search as well as model management.
 They focus on training high quality models by performing automatic feature engineering and hyper-parameter search.
-However, they only work with batch datasets and once models are trained, they have to be deployed and used for serving manually by the users.
+However, they only work with batch datasets.
+Once models are trained, they have to be deployed and used for serving manually by the users.
 Our system, on the contrary, is designed for deployment and maintenance of already trained models.
 
 \section{Stochastic Gradient Descent} \label{sgd}
-Machine learning applies optimization methods in order to find the minimum of an objective function (referred to as the loss function) by calculating the gradient of the function at different data points and update the function parameters based on the gradient values.
-A common optimization method is gradient descent, an iterative process where in every iteration the entire training data set is used to calculate the gradient value.
-One drawback of gradient descent is that in presence of large datasets it will become very slow because every iteration has to inspect all the training items.
+Machine learning minimizes an objective function (often referred to as the loss function).
+Usually, this requires us to calculate the gradient of the function at different data points and update the function parameters based on the gradient values.
+A common optimization method is gradient descent, an iterative process where each iteration uses the entire training data set to calculate the gradient value.
+One drawback of gradient descent is that in presence of large datasets it performs very slow.
 Stochastic gradient descent \cite{bottou2010large} is an approximation of the gradient descent method. 
-Similar to gradient descent, it is an iterative process but in each iteration it operates on one element (or a sample of elements) at a time. 
-It calculates the gradient at a single element and updates the parameters of the model accordingly. 
-Although it converges after a higher number of iterations, the overall convergence time is lower (sometimes by orders of magnitude) than gradient descent. 
-Each iteration of SGD can be executed in a short amount of time because it only works with a sample of the data.
-We are leveraging this property of SGD and design our deployment system so that it executes one iteration of SGD at a time without interrupting the query answering component.
-In Section \ref{evaluation}, we show that the overhead from executing a single iteration of SGD is very small and it does not affect the query answering component.
+Similar to gradient descent, it is an iterative process.
+However, in each iteration it calculates the gradient at a single element (or a small sample) and updates the parameters of the model accordingly. 
+Although it converges after a higher number of iterations, the overall convergence time is lower (sometimes by orders of magnitude) than gradient descent \cite{bottou2010large}. 
+Each iteration of SGD executes in a short amount of time because it only works with a sample of the data.
+We are leveraging this property of SGD and design our deployment system so that it performs one iteration of SGD at a time without interrupting the query answering component.
+In Section \ref{evaluation}, we show that the overhead from executing a single iteration of SGD is very small and does not affect the query answering component.
 
 \subsection{Distributed SGD}
 To efficiently train machine learning models on large datasets, scalable techniques have to be employed.
 SGD inherently works well with large amounts of data because it does not need to scan every data point during every iteration.
-However, for very large datasets SGD has to perform many iterations in order to converge.
+However, for very large datasets, SGD has to perform many iterations in order to converge.
 To decrease the running time, large datasets can be distributed among multiple nodes, where each node will compute the gradients on a subset of the data in parallel.
-One drawback of this approach is that a synchronization step is required before applying the updates to the model. 
-This synchronization step slows down the SGD process, because after every iteration, all the updates have to be sent to a central process that updates the model.
-Experiments on distributed, asynchronous SGD show that the quality of the final model is not worse than the synchronized approach \cite{recht2011hogwild, dean2012large}. 
+One drawback of this approach is that a synchronization step is required before applying the updates to the model, which slows down the optimization process.
+To alleviate this, several asynchronous SGD methods are proposed \cite{recht2011hogwild, dean2012large}. 
+Experiments using these methods show that the quality of the produced model is similar to the synchronized SGD approach.
 
 \subsection{Machine Learning Models based on SGD}
-SGD is one of the most common optimization methods for training machine learning models on large datasets. 
-It has been used in classification \cite{zhang2004solving}, clustering \cite{bottou1995convergence}, neural networks \cite{dean2012large}, and matrix factorization \cite{funk2006netflix}.
+SGD is a common optimization methods that has been used in classification \cite{zhang2004solving}, clustering \cite{bottou1995convergence}, neural networks \cite{dean2012large}, and matrix factorization \cite{funk2006netflix}.
 Some examples of machine learning models that use SGD are: 
 
 \textbf{Linear Classifiers} are arguably the most common type of machine learning models built using the SGD optimization method. 
-In our CTR prediction example described in Section \ref{introduction}, the logistic regression method is used to train models for predicting the click through rate \cite{macmahan2013}. 
+In the CTR prediction example of Section \ref{introduction}, we use logistic regression to train the model for predicting the click through rate \cite{macmahan2013}. 
 Logistic regression models typically output a probability instead of a class label that indicates how likely an item belongs to a specific class \cite{hosmer2013applied}.
-In our example, for every available advertisement, the click probability is predicted and depending on how many advertisements will be displayed, the ones with highest probabilities are selected.
+In our example, logistic regression predicts the click probabilities for all the available advertisements and the ones with the highest probabilities are displayed.
 Support vector machines (SVM) represent another common class of classification models \cite{steinwart2008support}.
-While logistic regression models aim to find parameters of a function that accurately fit the data points to the labels, SVM tries to separate the data points belonging to different classes. 
-In many cases, both type of models work equally well, but depending on the data (whether it is linearly separable or not) and result requirements (predictions should be probabilities instead of the class labels) one method may be preferred to the other.
+While logistic regression aims to find parameters of a function that accurately fit the data points to the labels, SVM tries to separate the data points belonging to different classes. 
+In many cases, both types of models work equally well.
+However, depending on the data (whether it is linearly separable or not) and result requirements (probability values or class labels) one method may be preferred to the other.
 
+\todo[inline]{VM: Have you not described some of that earlier? Also, is this background really necessary for your paper?
+
+BD: These are the methods that I have implemented in the prototype, that's why I thought I should explain them briefly.}
 \textbf{Matrix Factorization} is a common method used in recommender systems \cite{koren2009matrix}. 
 Matrix factorization is used to derive the latent factors (e.g., for users and items) for recommender systems.
 It relies on the fact that each user and item can be described in a few dimensions (10 to 40 usually) based on the available ratings.
 These latent factors automatically capture the similarity of users and items based on the ratings provided by the users.
-Any unknown rating, hence can be predicted by computing the dot product of the user vector with the item vector.
+Hence, any unknown rating can be predicted by computing the dot product of the user vector with the item vector.
 A scalable version of the algorithm was proposed by Gemulla et al. \cite{gemulla2011large}.
 
+\todo[inline]{VK: Same as previous paragraph?Maybe can be shortened/removed?This looks more like further related work, distracting from the "meat" of your paper
+
+BD: Should I get rid of them completely ? }
 \textbf{Neural Networks} or deep learning -- inspired by biological neural networks in the brain -- are used to learn and approximate complex functions. 
 They have been used for more than half a century to model functions and have been successfully applied to training machine learning models.
 However, due to the slow training process and the lack of large amount of training data, they have not been used extensively in the machine learning community in the past.
@@ -331,6 +345,9 @@ In fact, almost all of the recent work on neural networks use SGD for training t
 \end{figure}
 
 \section{Continuous Training and Serving} \label{continious-training-serving}
+\todo[inline]{VK: You should later describe how severe that limitation is. So maybe the previous text on Neural networks and Matrix Factorization is useful in this context, but rather use this to make the point that your method applies broadly and that focusing only on SGD is focusing on a practically relevant class of problems. While you describe a lot in a tutorial style, what these methods are, you do not really make this line of argument very clearly yet. It might be useful to strengthen the paper.
+
+BD: Any suggestions how to incorporate VM's comment?}
 Our proposed deployment and maintenance system uses SGD as its underlying learning algorithm.
 As a result, it can update the model incrementally (one training item at a time) or use mini-batches of data (1 iteration of SGD).
 The core design principles of our deployment system are threefold.
@@ -343,11 +360,11 @@ The system receives prediction queries and training observations in a streaming 
 The deployed model answers incoming prediction queries as soon as they are received.
 Once the system receives a training observation it updates the model incrementally.
 The system also keeps track of incoming training observations and adds them to an intermediate buffer.
-A scheduler component, will schedule a new iteration of SGD based on the rate of incoming training observations. 
+A scheduler component, triggers new iterations of SGD based on the rate of incoming training observations. 
 The scheduler can also decide to run an iteration when the system is not under heavy load.
 Each new iteration uses a random sample of the data in storage and the data in the buffer. 
 Moreover, our system stores new batch datasets in the buffer (or the persistent storage unit) as soon as they become available.
-Any new scheduled iteration of SGD uses the newly introduced dataset to further train the model without requiring a new model to be retrained from scratch.
+Any further scheduled iteration of SGD incorporates the new data without requiring the model to be retrained from scratch.
 
 \section{System Architecture} \label{sec:system-architecutre}
 \begin{figure}[t]
@@ -358,21 +375,21 @@ Any new scheduled iteration of SGD uses the newly introduced dataset to further 
 \end{figure}
 
 The proposed system comprises three main components; model manager, data manager and scheduler, and an independent SGD run-time. 
-Figure \ref{fig:system-architecture} gives an overview of the architecture of our system and the interactions between its components.
-Incoming training observations are forwarded to the data manager.
-The data manager first stores the training observations in a buffer and then passes them on to the model manager.
+Figure \ref{fig:system-architecture} gives an overview of the architecture of our system and the interactions among its components.
+The data manager first stores the incoming training observations in a buffer and then passes them on to the model manager.
 The model manager incrementally updates the model using the training observations.
 The model manager is also responsible for receiving prediction requests.
-Once it receives a request, it uses the latest version of the model to make a prediction and return the result to the user.
-Both scheduler and data manager components are constantly communicating with each other and with the model manager to obtain the latest statistics such as the model quality and buffer size, which in turn helps in tuning the scheduling and sampling rate for the next iterations of SGD. 
+Once it receives a request, it uses the latest version of the model to make a prediction and returns the result to the user.
+Both the scheduler and the data manager components are constantly communicating with each other and with the model manager, to obtain the latest statistics, such as the model quality and buffer size.
+This in turn helps us to tune the scheduling and sampling rate for future iterations of SGD. 
 Next, we explain each component of the system in more detail.
 
 \subsection{Scheduler}\label{scheduler}
-The scheduler component is responsible for scheduling of new iterations of SGD.
+The scheduler component is responsible for scheduling new iterations of SGD.
 Intuitively, the best time to execute an iteration is when the system is not under heavy load.
-This will help in utilizing the system's resources as well as keeping the model up to date at all time.
 A new iteration of SGD is also executed when the system receives more training data than can be handled by the intermediate buffer.
-If the model is not updated with the new training items frequently, the quality decreases more rapidly, especially if the distribution of the data is changing.
+If the model is not updated with the new training items frequently, the quality decreases.
+This decrease in the quality is more rapid if the distribution of the data is changing.
 In our prototype, the scheduling rate is controlled by a user defined parameter, \textit{max\_buffer\_size}.
 When the intermediate buffer's size reaches \textit{max\_buffer\_size}, the scheduler executes a new iteration of SGD.
 It is important to note that the scheduling rate affects the quality of the model.
@@ -383,13 +400,15 @@ Therefore, the scheduler component has to communicate with the model manager in 
 \subsection{Data Manager} \label{data-manager}
 In order to execute an iteration of SGD, we need to combine the training data that arrives at the system in real-time with the data stored on disk.
 The data manager is responsible for storing the incoming training observations in an intermediate buffer.
-When a new training iteration is scheduled, the data manager accesses the historical data stored on disk and provides a sample.
+Upon a new training iteration, the data manager accesses the historical data stored on disk and provides a sample.
+
 Different sampling strategies can be used to provide the sample.
 In our current prototype, the data manager uses a simple unified random sampling method to generate this sample.
 More advanced methods, such as Reservoir \cite{vitter1985random} or weighted random sampling can also be used to generate the sample.
 Reservoir sampling is typically used to generate samples from large datasets that do not fit in memory, whereas weighted random sampling is used when data elements have different weights.
 In an online machine learning scenario, recent items are more important for training the model and are assigned a bigger weight than older items.
 Therefore, weighted random sampling can generate samples that can contribute to the training of a better model.
+
 The data from the sample and the data in the buffer are merged to create the dataset for next training iteration.
 The data manager provides access to this dataset for the model manager in order to further train the model.
 The data manager also communicates with the scheduler in order to inform it when the intermediate buffer is becoming full and a new training iteration is required. 
@@ -435,27 +454,31 @@ def error_rate(X_test, Y_test): Double
 
 The \textit{error\_rate} method returns the error rate of the model using the provided test dataset.
 As described earlier, constant monitoring of the quality is required in order to adjust the scheduling and sampling rate.
-When the error rate is stagnating, this mean that the model has converged using the existing data, therefore the model manager informs scheduler not to schedule any new iterations until new training observations have arrived at the system.
+When the error rate is stagnating, the model has converged using the existing data.
+Therefore the model manager informs scheduler not to schedule any new iterations until new training observations have arrived at the system.
 Similarly as explained in Section \ref{data-manager}, an increase in the error rate may indicate a change in distribution of the data.
-As a result, reducing the sampling rate will put more emphasis on recent data (in the intermediate buffer) and help adopt the model to the changes in the distribution.
+As a result, reducing the sampling rate will place more emphasis on recent data (in the intermediate buffer) and help adapt the model to the changes in the distribution.
 
 The model manager also keeps track of the changes that are made to the model.
-The model is updated both through incremental learning and training iteration.
+The model is updated both through incremental learning and SGD-iteration.
 The model manager creates snapshots of the model in two different scenarios; after a series of incremental updates are made and after each training iteration.
 This versioning of the models is essential.
 When there is a rapid change in the distribution of the incoming data (a sudden concept drift) or when there are anomalies in the data, it is sometimes necessary to revert back to a version before the change in distribution occurred.
-In case of concept drift, new training iterations should be scheduled that only use the data in the buffer and in case of an anomalies in the data, they have to be identified and discarded before any further model updates could happen.
+In case of concept drift, new training iterations should be scheduled that only use the data in the buffer.
+Moreover, in case of anomalies in the data, they have to be identified and discarded before any further model updates could happen.
 
 \subsection{SGD Run-Time} 
 All components of our model serving system described so far are not limited to any specific run-time.
 We have decoupled the components from the actual run time of the system.
-The underlying optimization method is SGD and any run time capable of performing incremental and batch SGD updates efficiently are suitable options for our system.
-Apache Flink \cite{carbone2015apache} and Apache Spark \cite{zaharia2010spark} are distributed data processing platform that work with data in memory and have support for iterative algorithms, which makes both of them ideal options for our SGD run-time.
-In our current prototype, we are using Apache Spark \cite{zaharia2010spark} as our SGD run-time, but we plan incorporate Apache Flink in the complete version of the system.
+Any system capable of performing incremental and batch SGD updates efficiently are suitable options for our system.
+Apache Flink \cite{carbone2015apache} and Apache Spark \cite{zaharia2010spark} are distributed data processing platforms that work with data in memory and have support for iterative algorithms, which makes both of them ideal options for our SGD run-time.
+In our current prototype, we are using Apache Spark \cite{zaharia2010spark} as our SGD run-time.
+
 The model manager is the component responsible for communicating with the SGD run-time.
-In the current version of our prototype, the model manager requests Spark to perform both incremental and batch updates to the model, both of which are supported by the built in machine learning library of Spark.
+In the current version of our prototype, the model manager requests Spark to perform both incremental and batch updates to the model.
+Both types of updates are supported by the built in machine learning library of Spark.
 The choice of run-time for SGD slightly influences the data manager as well.
-In our prototype, historical data is stored on Hadoop Distributed File System (HDFS) \cite{shvachko2010hadoop}.
+In our prototype, historical data is stored on the Hadoop Distributed File System (HDFS) \cite{shvachko2010hadoop}.
 
 \section{Evaluation} \label{evaluation} 
 In this section we evaluate the performance of our system using various datasets. 
