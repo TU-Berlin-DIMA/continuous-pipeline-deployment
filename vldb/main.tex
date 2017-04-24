@@ -323,7 +323,9 @@ These latent factors automatically capture the similarity of users and items bas
 Hence, any unknown rating can be predicted by computing the dot product of the user vector with the item vector.
 A scalable version of the algorithm was proposed by Gemulla et al. \cite{gemulla2011large}.
 
-\todo[inline]{VK: Same as previous paragraph?Maybe can be shortened/removed?This looks more like further related work, distracting from the "meat" of your paper
+\todo[inline]{VK: Same as previous paragraph?
+Maybe can be shortened/removed?
+This looks more like further related work, distracting from the "meat" of your paper
 
 BD: Should I get rid of them completely ? }
 \textbf{Neural Networks} or deep learning -- inspired by biological neural networks in the brain -- are used to learn and approximate complex functions. 
@@ -488,16 +490,18 @@ We report both the quality (error rate) and performance of our proposed method.
 \textbf{Environments:} We evaluate our deployment method on two environments; local and distributed.
 We use a single node OS X machine with  a quad-core Intel i7 and 16 GB of RAM for our local experiments.
 The distributed environment consists of 11 nodes (1 master, 10 slaves).
-Each node is running on a Intel Xeon 2.40 GHz 16 core processor and has 28 GB for dedicated memory for running our prototype.
+Each node is running on an Intel Xeon 2.40 GHz 16 core processor and has 28 GB of dedicated memory for running our prototype.
 
-\textbf{Prototypes:} we implemented two versions of our deployment method.
-Version 1 is implemented using python and uses some of the libraries available in scikit-learn \cite{sklearn_api}.
-This version is designed to work in a local environment.
-It gives more control over tuning the parameters of the system, since we are able to perform incremental updates one item at a time (as opposed to Spark's micro-batching).
+\textbf{Prototypes:} We implement two versions of our deployment method.
+Version 1 is implemented in python and utilizes the scikit-learn machine learning library \cite{sklearn_api}.
+This version works in local environments.
+It supports incremental updates to the model, one item at a time (as opposed to the micro-batching of Apache Spark).
+\todo[inline]{BD: Is this sentence clear? What I mean to say is that since we the items are arriving one at a time, both sampling and scheduling rate can be set to exact values. Because of Spark's mini batch, the scheduling and sampling are approximates rather than exact values}
+As a result, it enables us to investigate the effects of scheduling and sampling rates more accurately.
 Version 1 supports neural networks (multi-layer perceptron) and recommender algorithms (matrix factorization).
 Version 2 is implemented on top of Apache Spark \cite{zaharia2010spark}.
-It is using the SGD class of Spark's machine learning library, to execute the initial and incremental training.
-Version 2 works in both local and cluster environment and supports different types of linear models (SVM, Logistic Regression and Linear Regression).
+It uses the SGD implementation available in the machine learning library of Apache Spark.
+This version works in both the local and cluster environment and supports different types of linear models (SVM, Logistic Regression and Linear Regression).
 
 \begin{table}\centering
 \begin{tabular}{lrrr}
@@ -528,34 +532,36 @@ Adult & 123 & 48882
 \caption{Classification Datasets}
 \end{table}
 
-\textbf{Datasets:} we use two different types of datasets in our experiments.
-To evaluate the recommender system we use 2 versions (100k ratings and 1M ratings) of the Movie Lens datasets, which are a collection of movie ratings \cite{harper2016movielens} .
+\textbf{Datasets:} We perform our experiments on two different types of datasets.
+To evaluate the recommender system we use 2 versions (100k ratings and 1M ratings) of the Movie Lens datasets, which are collections of movie ratings \cite{harper2016movielens} .
 Table \ref{table:recommender-systems} shows the details of the Movie Lens dataset.
-We have sorted the Movie Lens data set based on the ratings timestamp and items are examined one by one according to their timestamp.
-This is to evaluate how each of the implemented methods react to changes in the distribution of the data.
+We have sorted the Movie Lens dataset based on the timestamp of the ratings.
+Every item is examined one by one according to their timestamp.
+This is to evaluate how each of the implemented methods react to the changes in the distribution of the data.
 For these two datasets, we use an evolving test set to evaluate the performance of the deployment methods.
 To create the evolving test set, first we draw indices for the test items uniformly at random from the entire data.
 We start with an empty test set.
 When we reach the index of a test item, we add that to the current test set and calculate the error rate based on the current test set (We call this a test increment).
-For Movie Lens 100k, the total size of the test set is 5,000 and for Movie Lens 1M, it is 50,000. 
-Each error calculation, as a result, captures the degree to which the models are adopting to the changes in the dataset.
+For Movie Lens 100k, the total size of the test set is 5,000 and for Movie Lens 1M, the test size is 50,000. 
 
 To evaluate the classifier, we use a collection of classification datasets (mostly from the UCI Machine Learning Repository\footnote{\url{http://archive.ics.uci.edu/ml/}}).
-Higgs \cite{baldi2014searching} is a physics datasets which is produced using Monte Carlo simulations.
-For these two datasets, the task is to distinguish between a signal process that produces a target particle (Higgs bosons) and a background process which does not.
-Cover Type \cite{collobert2002parallel} is a dataset used for predicting forest cover types from cartographic variables.
+Higgs is a physics datasets which is produced using Monte Carlo simulations \cite{baldi2014searching}.
+For this dataset, the task is to distinguish between a signal process that produces a target particle (Higgs bosons) and a background process which does not.
+Cover Type is a dataset used for predicting forest cover types from cartographic variables \cite{collobert2002parallel}.
 We use a binary class version of this dataset\footnote{\url{https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/}}.
-URL Reputation \cite{ma2009identifying} is a collection of URLs and the task is to identify malicious URLs. 
-This dataset is collected over 120 days and features are anonymized, but correspond to lexical and host-based information gathered for each URL.
-MNIST \cite{lecun-mnist} is a dataset of handwritten digits.
+URL Reputation is a collection of URLs and the task is to identify malicious URLs \cite{ma2009identifying}. 
+This dataset is collected over 120 days.
+The features of this dataset are anonymized, but they correspond to lexical and host-based information gathered for each URL.
+MNIST is a dataset of handwritten digits \cite{lecun-mnist}.
 Each image has 28x28 pixels and the labels are the 10 digits (0 to 9) the images are representing.
 SEA is an artificially generated dataset that has been injected with concept drift (change in data distribution)\cite{street2001streaming}.
 Attributes are floating point values between 0 and 10 and there are a total of 4 concepts (15,000 instances in each concept).
-Adult \cite{platt199912} is a dataset extracted from a census database.
-It contains information such as education level, occupation, relationship status, and salary of individuals from multiple countries and the task is to predict whether an individual earns more than \$50K a year. 
-For all of the datasets we use 10\% for initial training and 90\% for online prediction/training.
-Except for URL Reputation and Movie Lens datasets that are timestamped, the order of the incoming data are arbitrary for the rest of the datasets.
-For all of the classification datasets, we report the prequential error \cite{gama2009issues} when receiving a new training instances.
+Adult is a dataset extracted from a census database \cite{platt199912}.
+It contains information such as education level, occupation, relationship status, and salary of individuals from multiple countries.
+The task in this dataset is to predict whether an individual earns more than \$50K a year. 
+For all of the datasets we use 10\% of the data for initial training and 90\% for online prediction/training.
+Except for URL Reputation and the Movie Lens datasets that are timestamped, the order of the incoming data are arbitrary for the rest of the datasets.
+For all of the classification datasets, we report the prequential error when receiving a new training instances \cite{gama2009issues} .
 %\textbf{Criteo \cite{criteo-kaggle}}: to implement our CTR prediction example we use Criteo's Kaggle advertising challenge dataset.
 %The dataset includes both categorical and numerical features.
 %However, in our evaluations we only used the numerical features.
@@ -566,53 +572,49 @@ For all of the classification datasets, we report the prequential error \cite{ga
 \textbf{Deployment methods:} In this section, we briefly describe the methods we have implemented.
 
 \textbf{Baseline} is the naive and simplest deployment model. 
-After a model is a trained from the initial data, it is used throughout the lifetime of the application without any incremental or batch learning.
+In Baseline, we train a model from the initial data.
+We use this model throughout the lifetime of the application without any further incremental or batch training.
 
-\textbf{Baseline+} is similar to the baseline approach with the added incremental learning.
-After the initial model is deployed, it is constantly updated based on new training items that arrive at the system.
+\textbf{Baseline+} is similar to Baseline with the added incremental learning.
+After the initial model is deployed, it is incrementally updated with new training items that arrive at the system.
 
 \textbf{Velox} is an implementation of the common deployment scenario described in Section \ref{introduction}.
 It is based on the the proposed system by Crankshaw \cite{crankshaw2014missing}. 
-After the initial model is deployed, the model is incrementally updated with every new training item.
-A full retraining of the model is performed once a certain amount of training observations have been received.
+After the initial model is deployed, the model is incrementally updated with new training item.
+Velox also retrains the model periodically using the entire training data.
+
 
 \textbf{Continuous} is the implementation of our proposed method. 
-Similar to Velox and Baseline+ once, an initial model is first trained using the existing data.
-New training data is used to incrementally update the model.
-Based on the rate of incoming training data, a scheduler component triggers new iteration of SGD.
+Similar to Velox and Baseline+, a model is trained using the initial data.
+Continuous also updates the model incrementally with new training data.
+Based on the rate of incoming training data, the scheduler component triggers new iterations of SGD.
 The data used in this new iteration of SGD consists of the new data that arrived in the system since the last scheduled iteration plus a sample of the existing historical data.
 
 \subsection{Implementation of ML Models}
-We have implemented three different machine learning models to evaluate our deployment method.
-In this section, we briefly explain each of the implemented methods.
 
-\textbf{Recommender system:} we implement a recommender system based on the matrix factorization using SGD \cite{funk2006netflix}.
+\textbf{Recommender system:} We implement a recommender system based on the matrix factorization using SGD \cite{funk2006netflix}.
 Based on our initial experiments, we set the number of latent factors to 40.
-First, we train a model using the initial static data.
 To produce more accurate predictions, we include user, item, and global bias values as described by Simon Funk \cite{koren2009matrix}.
 After the initial training, we deploy the model and use the new training observations to incrementally update the model.
 Training observations are of the form \textit{\((user\_id, item\_id, rating\))}.
 Based on the training observation, the bias values as well as the factors are updated for the specified user and item.
 
-\textbf{SVM Classifier:} we implement a simple SVM classifier by extending the existing SVM classifier of Apache Spark.
-We implement the necessary methods described in Section \ref{sec:system-architecutre} for the SVM classifier to work with our deployment method.
-The extra methods are \textit{update} which takes one (or a micro-batch in Spark Streaming) item and incrementally update the model and \textit{update\_iteration} which takes a dataset and executes one iteration of SGD on the given data.
+\textbf{SVM Classifier:} We implement a simple SVM classifier by extending the existing SVM classifier of Apache Spark.
+We implement the necessary methods; \textit{update} and \textit{update\_iteration} as described in Section \ref{sec:system-architecutre}.
+\textit{Update} takes one (or a micro-batch in Spark Streaming) item and incrementally update the model.
+\textit{Update\_iteration} takes a dataset and executes one iteration of SGD on the given data.
 
-\textbf{Neural Network:} to evaluate our system on an image classification task, we implement a multi-layer perceptron neural network using back propagation \cite{collobert2004links}.
+\textbf{Neural Network:} To evaluate our system on an image classification task, we implement a multi-layer perceptron neural network using back propagation \cite{collobert2004links}.
 We set the number of hidden layers to 50 and use a softmax output function \cite{bishop2006pattern}.
-Similar to recommender system case, a network is first trained on the static data.
 The training observations are of the form of \textit{\((X,y)\)}, where X is a vector of 784 dimension (1 for each pixel) and y is the digit the image is representing.
 
 \subsection{Tuning parameters} \label{tuning}
 In Section \ref{continious-training-serving}, we discussed how system parameters such as sampling and scheduling rate affect the performance and quality of the system.
 In this section, we analyze the effects of different sampling and scheduling rates on the system.
-Our goal, is to make these parameters adaptive, but for now we analyze their effects on the running time and quality. 
 
-\textbf{Scheduling rate:} this parameter specifies how often a new iteration of SGD should be scheduled. 
+\textbf{Scheduling rate:} This parameter specifies how often a new iteration of SGD should be scheduled. 
 In our prototype, the scheduling rate is governed by a parameter called buffer size, which dictates how many new items should be stored in the buffer before a new iteration of SGD is executed. 
-Ultimately, the system should make the decision to schedule new iterations based on the availability of resources.
-Executing one iteration of SGD even using the entire data is not a resource heavy process, and can easily be done in parallel with the serving component of the system. 
-This results in a paradigm where both training and serving can happen simultaneously. 
+Executing one iteration of SGD, even using the entire data, is not a resource heavy process, and can be executed simultaneously with the serving component of the system. 
 
 \begin{figure}[h]
 \begin{subfigure}{\columnwidth}
@@ -631,15 +633,16 @@ This results in a paradigm where both training and serving can happen simultaneo
 \caption{Parameters effect on quality (Movie Lens 100K)}
 \end{figure}
 
-Figure \ref{fig:movie-lens-100k-buffer-size-mse} shows the mean squared error for different buffer sizes for Movie Lens 100k dataset. 
-A smaller buffer size causes the scheduler to initiate training iterations more frequently.
-As a result, the system updates the underlying model more frequently.
+Figure \ref{fig:movie-lens-100k-buffer-size-mse} shows the mean squared error for different buffer sizes for Movie Lens 100k. 
+A smaller buffer size forces the scheduler to initiate training iterations more frequently.
+As a result, the system updates the underlying model more often.
 However, the error rate is not decreasing linearly with the buffer size.
 Further analysis shows that the more frequent the model updates are, the faster the model converges and any further training has little to no effect on the overall quality.
-Therefore, increasing the scheduling rate only decreases the error rate up to a point, after which increasing the scheduling rate has no effect on the overall quality of the model.
-This is extremely important, specially when considering the effect the buffer size has on the running time.
-Figure \ref{fig:movie-lens-100k-buffer-size-time} shows the running time on Movie Lens 100k dataset using different buffer sizes. 
-Increasing the buffer size from 500 to 5000 decreases the running time by a factor of 5 while as described before the error rate is only increased slightly.
+Therefore, increasing the scheduling rate decreases the error rate up to a certain point.
+Any further increase in the scheduling rate has no effect on the overall quality of the model.
+This is extremely important, specially when considering the effect of the buffer size on the running time.
+Figure \ref{fig:movie-lens-100k-buffer-size-time} shows the running time on Movie Lens 100k using different buffer sizes. 
+Increasing the buffer size from 500 to 5000 decreases the running time by a factor of 5 while as described before the error rate is only decreased slightly.
 Therefore, depending on the application, we can set the buffer size to bigger values in order to increase the performance of the system without affecting the quality of the final model substantially.
 
 \begin{figure}[H]
@@ -657,30 +660,34 @@ Therefore, depending on the application, we can set the buffer size to bigger va
 \caption{Parameters effects on run time}
 \end{figure}
 
-\textit{Dynamic scheduling:} in production environments, the load on the system typically varies throughout the lifetime of the application.
+\textit{Dynamic scheduling:} In production environments, the load on the system typically varies throughout the lifetime of the application.
 Therefore, a dynamic scheduling maximizes the performance of the system, by performing more frequent updates while there are more resources available for training. 
-Moreover, since training and serving can be done in parallel, we can perform training in the background and only update the weights when the training iteration is over. 
+Moreover, since training and serving can be done in parallel, we can perform training in a background process and only update the weights when the training iteration is over. 
 
-\textbf{Sampling rate:} in each iteration of SGD, as described in Section \ref{continious-training-serving}, the data inside the buffer and a sample of the historical data is used to update the model.
+\textbf{Sampling rate:} In each iteration of SGD the data inside the buffer and a sample of the historical data is combined to update the model.
 In this section, we investigate the effect of the sampling rate on the model quality and the running time of the system.
-Figure \ref{fig:movie-lens-100k-sample-rate} shows that a larger sampling rate increases the quality of the model, but similar to scheduling rate, the decrease in error rate is negligible considering the effect it has on running time. 
-This is again, caused by the same phenomena, where the model after training on bigger sample rates start to converge faster and as a result bigger sample sizes do not have an effect on the quality.
+Figure \ref{fig:movie-lens-100k-sample-rate} shows that a larger sampling rate increases the quality of the model.
+However, similar to the scheduling rate, the decrease in error rate is negligible considering the effect it has on running time. 
+This is caused by the same phenomena, where the model after training on bigger sample rates start to converge faster.
+As a result, bigger sample sizes do not have a considerable effect on the quality.
  
-Figure \ref{fig:movie-lens-100k-sample-rate-time} shows the effect of increasing sampling rate on running time.
+Figure \ref{fig:movie-lens-100k-sample-rate-time} shows the effect of increasing the sampling rate on the running time.
 Using the entire historical data (sampling rate = 1.0) increases the running time 5 fold. 
 Therefore, similar to the scheduling rate, setting the sampling rate to smaller values will increase the performance substantially, while only slightly affecting the quality of the model.
 
-\textbf{Tuning parameters based on error rate:} the underlying machine learning model and the dataset have big effects on the selection of sampling rate and scheduling rate.
-In the recommender system use case, due to changes in incoming data distribution, we see that bigger sample rates and higher scheduling rates have an effect (although small) on the quality of the model.
-This, however, is not be the case for every application.
+\textbf{Tuning parameters based on error rate:} The underlying machine learning model and the dataset have big effects on the selection of sampling rate and scheduling rate.
+In the recommender system use case, due to the changes in the incoming data distribution, we see that bigger sample rates and higher scheduling rates have an effect (although small) on the quality of the model.
+However, this is not be the case for every application.
 To demonstrate this, we perform the same set of experiments on the MNIST dataset.
-Figure \ref{fig:mnist-sample-rate} shows the effect of different sampling rates on the neural network classifier model for MNIST data.
-Contrary to the results we achieved for Movie Lens 100k the error rates for different sampling rates are very similar.
+Figure \ref{fig:mnist-sample-rate} shows the effect of different sampling rates on the neural network classifier model for MNIST.
+Contrary to the results we achieved for Movie Lens 100k, the error rates for different sampling rates are very similar.
 This is caused by how neural networks behave.
 Increasing the sampling rate causes similar data items to be used repeatedly in consecutive training iterations.
 Neural networks are not affected by this oversampling, therefore the results are almost similar with different sampling rates.
 Moreover, in this experiment, the number of parameters of the multi-layer perceptron is far less than the number of parameters of the matrix factorization model for Movie Lens 100k.
-This causes the neural work to converge faster and, therefore it is not affected by more training, unless new training observations arrive at the system.
+This causes the neural work to converge faster.
+Therefore it is not affected by more training, unless new training observations arrive at the system.
+
 \begin{figure}[h]
 \begin{subfigure}{\columnwidth}
 \centering
@@ -699,13 +706,13 @@ This causes the neural work to converge faster and, therefore it is not affected
 \end{figure}
 
 Figure \ref{fig:mnist-buffer-size} shows how the buffer size affects the overall quality of the neural network model.
-Similar to the sampling rate case, the error rates of the models are not affected by the scheduling rate.
+Similar to the sampling rate case, the error rate of the model is not affected by the scheduling rate.
 New training observations that exist in the buffer have the maximum effect on the quality of the model since they are becoming available to the model for the first time.
 As the scheduling rate increases, the number of new training observations remain the same, and only the historical data is used more frequently to train the model.
 Since neural networks do not gain much benefit by revisiting the same items, increasing the scheduling rate has no effect on the overall quality.
 
 Based on our findings, we conclude that increasing the sampling and scheduling rate does not always affect the quality.
-In both the Movie Lens 100k and MNIST use cases the change in scheduling and sampling rate has small to no effect on the overall quality.
+In both the Movie Lens 100k and MNIST datasets, the change in scheduling and sampling rate have small to no effect on the overall quality.
 However, the running time of the methods are heavily influenced by these parameters.
 Setting these parameters to small values decreases the running time considerably and save computation resources regardless of the type of model the system is serving.
 
