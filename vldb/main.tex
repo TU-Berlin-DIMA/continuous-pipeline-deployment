@@ -49,6 +49,7 @@
 \usepackage{url}
 \usepackage{lipsum}% http://ctan.org/pkg/lipsum
 \usepackage{graphicx}% http://ctan.org/pkg/graphicx
+\usepackage{color,soul}
 \usepackage{float}
 \usepackage{todonotes}
 %\usepackage[disable]{todonotes}
@@ -717,9 +718,9 @@ However, the running time of the methods are heavily influenced by these paramet
 Setting these parameters to small values decreases the running time considerably and save computation resources regardless of the type of model the system is serving.
 
 \subsection{Experiments in the Local Environment}\label{subsec:experiment-local}
-We evaluated our deployment method on the datasets described in Section \ref{subsec:setup}.
-Our prototypes support two different methods of specifying the scheduling rate; buffer size and scheduling period.
-For recommender system experiments we use the buffer size to specify the scheduling rate (in Velox's case scheduling rate corresponds to offline retraining frequency).
+In this set of experiments, we investigate the error rate and training time for the different deployment methods on the smaller datasets in the local environment.
+For all of the datasets, the sampling rate of Continuous is set to 0.2.
+
 \begin{figure}[h]
 \begin{subfigure}{\columnwidth}
 	\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-quality-improved.eps}
@@ -732,24 +733,26 @@ For recommender system experiments we use the buffer size to specify the schedul
 \label{fig:movie-lens-1M-score}
 \end{subfigure}
 \vspace{2mm}
-\caption{Recommender Systems}
+\caption{Mean Squared Error of Recommender Systems}
 \end{figure}
 
-Figure \ref{fig:movie-lens-100k-score} shows the mean squared error of Continuous, Velox, Baseline+, and Baseline on Movie Lens 100k dataset.
+Figure \ref{fig:movie-lens-100k-score} shows the mean squared error for Continuous, Velox, Baseline+, and Baseline on Movie Lens 100k.
 The scheduling rate (buffer size) is set to 500 for Continuous and 15,000 for Velox.
 All four methods perform an initial training, therefore they have similar error rates in the beginning.
-However, the error rate of Baseline starts to increase since it does not incrementally update the model.
+However, the error rate of Baseline gradually increases since it does not incrementally update the model.
 Baseline+ incrementally updates the model.
 As a result, it has a lower error rate than Baseline.
 The error rate of Velox is similar to Baseline+ until the first scheduled retraining for Velox.
 After the retraining, there is a sudden drop in the error rate.
-For the remainder of the data, Velox performs as expected, once there is a retraining, the error rate immediately decreases.
-This decrease in error rate is followed by a slow increase due the fact that Velox only incrementally updates the model until the next scheduled retraining, which as discussed earlier is not handling the change in the data distribution gracefully.
+For the remainder of the data, Velox performs as expected.
+After every retraining the error rate immediately decreases.
+This decrease in the error rate is followed by a slow increase.
+The increase is due the fact that Velox only incrementally updates the model until the next scheduled retraining, which as discussed earlier is not handling the change in the data distribution gracefully.
 Initial error rate of Continuous is similar to the other methods.
 However, the error rate starts to decrease rapidly.
-The reason for the fast decrease in error rate is that immediately after the deployment of the model, the Continuous method executes iterations of SGD.
+The reason for the fast decrease in error rate is that immediately after the deployment of the model, Continuous executes iterations of SGD.
 It consistently manages to adopt to the changes in data and decreases the error rate.
-As expected, except for immediately after a full retraining, Continuous always performs better than Velox.
+As expected, except for immediately after a full retraining of Velox, Continuous always performs better than all the other methods.
 
 Figure \ref{fig:movie-lens-1M-score} shows the mean squared error rate achieved by the implemented methods on Movie Lens 1M.
 Similar to Movie Lens 100k, Continuous has the lowest error rate among all the implemented methods.
@@ -758,7 +761,7 @@ This is because the change in data distribution in Movie Lens 1M is greater than
 Since Continuous adapts to the changes in distribution faster than Velox, it maintains a lower error rate throughout.
 The error rate of Velox follows the same trend as in the case of Movie Lens 100k. 
 After every retraining, the error rate first drops then slowly increases until the next retraining.
-Similar to Movie Lens 100k dataset, the error rate of Baseline is the highest among all the implemented methods, followed by Baseline+ , where due to the incremental updates of the model the error rate is lower.
+Similar to Movie Lens 100k, the error rate of Baseline is the highest among all the implemented methods, followed by Baseline+ , where due to the incremental updates of the model the error rate is lower.
 
 \begin{figure}[h]
 	\centering
@@ -778,22 +781,22 @@ Similar to Movie Lens 100k dataset, the error rate of Baseline is the highest am
 	\label{fig:adult-quality}
 \end{subfigure}
 \vspace{2mm}
-\caption{Classification Datasets }
+\caption{Error rate of the SVM Classifiers}
 \label{fig:local-classification-results}
 \end{figure}
 
 Figure \ref{fig:local-classification-results} shows the misclassification rate over time for the implemented deployment methods on several classification datasets.
-For all of the datasets, the sampling rate of Continuous is set to 0.2.
 Contrary to the recommender system use case, the data used in these experiments is not time dependent (except for SEA) and as a result the deployment methods behave differently.
 For Cover type (Figure \ref{fig:cover-types-quality}), Continuous achieves the lowest error rate overall, followed by Baseline+.
 Baseline method has the highest error rate because it is not performing incremental updates on the model.
 The error rate of Velox slightly increases after the first retraining and it never recovers from this increase.
-By performing a retraining, the underlying model in Velox overfits to the existing data, therefore the test error on incoming data does not decrease the same way that it does in case of Baseline+ and Continuous.
+By performing a retraining, the underlying model in Velox overfits to the existing data.
+As a result, the test error on incoming data does not decrease the same way that it does in the case of Baseline+ and Continuous.
 The error rate for all of the deployment methods, except for Baseline is very similar on SEA (Figure \ref{fig:sea-quality}).
 Continuous still perform slightly better than Baseline+ and Velox, although with a very small margin.
 Figure \ref{fig:adult-quality} shows the error rate of different deployment methods on Adult dataset.
 In this dataset, the different deployment methods perform rather similarly.
-Baseline has the highest error rate overall, however after the 4th retraining the difference between the error rate of Velox and Baseline becomes smaller.
+Baseline has the highest error rate overall, however after the 6th retraining the difference between the error rate of Velox and Baseline becomes smaller.
 This is, similar to the Cover types dataset, due to the over training of the underlying model in Velox.
 Baseline+ and Continuous maintain a steady error rate overall, with Continuous slightly outperforming Baseline+.
 
@@ -824,34 +827,35 @@ Baseline+ and Continuous maintain a steady error rate overall, with Continuous s
 	\label{fig:movie-lens-1M-times}
 \end{subfigure}%
 \vspace{2mm}
-\caption{Total training time for Local Datasets}
+\caption{Total Training Time}
  \label{fig:local-training-time}
 \end{figure*}
 
-Figure \ref{fig:local-training-time} shows the total training time for deployment methods on local datasets.
-To measure this value, we calculated the total time that each method spent in training the model.
+Figure \ref{fig:local-training-time} shows the total training time for the deployment methods on local datasets.
+To measure this the total training time, we calculate the total time that each method spent in training the model.
 We excluded the incremental training time as both Velox and Continuous perform incremental training as part of their process.
 The total training time of Baseline is equal to the initial training time.
 Both Continuous and Velox perform the same initial training, as a result, their total training time cannot be smaller than Baseline.
-For the classification datasets (Figure \ref{fig:cover-types-times}, {fig:sea-times}, {fig:adult-times}), Continuous and Velox are approximately 25 and 50 times slower than Baseline method.
-This is expected, as both the amount of data and the frequency of training is much smaller for Baseline.
+For the classification datasets (Figure \ref{fig:cover-types-times}, \ref{fig:sea-times}, \ref{fig:adult-times}), Continuous and Velox are approximately 25 and 50 times slower than Baseline.
+This is expected, since Baseline only trains the model once.
+Moreover, this training is executed over a smaller dataset (10\% of the entire data).
 For recommender system experiments, the difference in total training time is smaller.
 In our python prototype, the entire dataset is first loaded into the memory and then it is streamed to the deployment system one by one.
-As a result, both Continuous and Velox can train the model much faster.
+As a result, both Continuous and Velox can train the model faster.
 In all of the evaluated datasets, the total training time of Continuous is 2 to 5 times smaller than that of Velox.
 This is because a full retraining incurs a higher overhead than continuously training the method.
 Another reason for the difference in training time is that as the size of the data increases, the time for running a new iteration in Continuous stays approximately the same, whereas the time for a full retraining increases exponentially.
 
 \subsection{Experiments in the Distributed Environment}
-We evaluated our deployment system on larger workloads in a distributed environment.
+In this set of experiments, we investigate the performance of the deployment methods on large datasets in the distributed environment.
 Figure \ref{fig:cluster-classification-results} shows the error rate of different deployment methods on classification datasets.
-Since URL Reputation data was gathered over 120 days, it is very likely that the data contains changes in the distribution.
+\hl{Since the URL Reputation data was gathered over 120 days, it is very likely that the data contains changes in the distribution.}
 This concept drift is reflected in Figure \ref{fig:url-quality}.
 The error rate of Baseline is increasing with a steady rate as it cannot adapt to the changes in the data.
 Continuous achieves the lowest error rate overall.
-Velox manages to keep the error rate lower than Baseline+ until the the second retraining, after which the error rate slightly increases. 
-Figure \ref{fig:higgs-quality} shows the error rate on Higgs dataset.
-Similar to local classification datasets, the error rate for Baseline is the highest among all of the deployment methods.
+Velox manages to keep the error rate lower than Baseline+ until the the second retraining, after which the error rate slightly increases.
+Figure \ref{fig:higgs-quality} shows the error rate on the Higgs dataset.
+Similar to the local classification datasets, the error rate for Baseline is the highest among all of the deployment methods.
 Velox, Baseline+, and Continuous maintain the same error rate until the first retraining of Velox, after which due to possible overfitting, the error rate of Velox slightly increases.
 Continuous performs slightly better than Baseline+ in the beginning, however, the underlying models of both deployment methods slowly converges.
 Therefore, the error rates of both of the deployment methods become similar.
@@ -869,7 +873,7 @@ Therefore, the error rates of both of the deployment methods become similar.
 	\label{fig:higgs-quality}
 \end{subfigure}
 \vspace{2mm}
-\caption{Large Classification Datasets}
+\caption{Error rate of the SVM Classifiers}
 \label{fig:cluster-classification-results}
 \end{figure}
 
@@ -887,18 +891,18 @@ Therefore, the error rates of both of the deployment methods become similar.
 	\label{fig:higgs-times}
 \end{subfigure}
 \vspace{2mm}
-\caption{Total training time for Distributed Datasets}
+\caption{Total Training Time}
  \label{fig:cluster-training-time}
 \end{figure}
 
-Figure \ref{fig:cluster-training-time} shows the total training time for URL Reputation and Higgs experiments.
+Figure \ref{fig:cluster-training-time} shows the total training time for the URL Reputation and Higgs experiments.
 Similar to local datasets, Baseline has the smallest total training time.
 However, the difference between the training time of Baseline and other methods is not as large.
-In our local experiments, the entire resources of the computing machine was being consumed to perform the training.
-However, in distributed environment, the cluster is underutilized in the beginning as the amount of data is small.
+In our local experiments, the entire resources of the computing machine were being consumed to perform the training.
+However, in the distributed environment, the cluster is underutilized in the beginning as the amount of data is small.
 As more data arrives at the system, the utilization of the cluster increases.
-As a result, the training time for Continuous and Velox does not increase linearly with size.
-Therefore, the total training time for Continuous is only 5 to 10 times larger than that of Baseline (instead of 20 to 25 times for local datasets) and the total training time for Velox is 20 to 25 times larger than that of Baseline (instead of 50 to 55 times for local datasets).
+However, the training time for Continuous and Velox does not increase linearly with size.
+Therefore, the total training time for Continuous is only 5 to 10 times larger than that of Baseline (instead of 20 to 25 times for the local datasets) and the total training time for Velox is 20 to 25 times larger than that of Baseline (instead of 50 to 55 times for the local datasets).
 
 \subsection{Discussion} \label{subsec:discussion}
 \begin{figure*}[t]
@@ -960,7 +964,7 @@ Therefore, the total training time for Continuous is only 5 to 10 times larger t
 \end{figure*}
 
 Figure \ref{fig:training-time-vs-quality} shows the total training time and average error rate of each of the three different deployment methods (Baseline, Continuous, and Velox) on different datasets.
-For all evaluated datasets, Continuous achieves the lowest average error rate (for classification datasets) and average mean squared error (for recommender system datasets).
+For all of the evaluated datasets, Continuous achieves the lowest average error rate (for classification datasets) and average mean squared error (for recommender system datasets).
 The difference in average error rate (or average MSE) between Velox and Continuous is smaller for datasets that contain concept drift (Figure \ref{subfig:sea-meta}, \ref{subfig:movie-lens-100k-meta}, \ref{subfig:movie-lens-1m-meta}, and \ref{subfig:url-meta}).
 Since both Velox and Continuous perform incremental training of the model after it is deployed, they both manage to handle the concept drift in the data.
 However, Continuous is able to adapt to the changes faster as it is constantly updating the model by executing iterations of SGD.

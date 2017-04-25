@@ -116,11 +116,14 @@ ggplot(data = ml, aes(x = time, y = value, group = variable)) +
 
 
 #URL 
-continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.1/2017-04-24-11-16/error-rates.txt', header = FALSE, col.names = 'continuous')
+# step size = 0.5
+#continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.01/2017-04-25-11-50/error-rates.txt', header = FALSE, col.names = 'continuous')
+# step size = 0.1
+#continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.01/2017-04-25-09-36/error-rates.txt', header = FALSE, col.names = 'continuous')
 
 velox = read.csv('url-reputation/velox/num-iterations-500/slack-1280/offline-step-1.0/online-step-0.1/2017-04-12-02-46/error-rates.txt', header = FALSE, col.names = 'velox')
 
-baselinePlus = read.csv('url-reputation/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-04-24-05-46/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+baselinePlus = read.csv('url-reputation/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.01/2017-04-24-15-55/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 
 baseline= read.csv('url-reputation/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-04-24-12-11/error-rates.txt', header = FALSE, col.names = 'baseline')
 
