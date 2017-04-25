@@ -964,42 +964,50 @@ Therefore, the total training time for Continuous is only 5 to 10 times larger t
 \end{figure*}
 
 Figure \ref{fig:training-time-vs-quality} shows the total training time and average error rate of each of the three different deployment methods (Baseline, Continuous, and Velox) on different datasets.
-For all of the evaluated datasets, Continuous achieves the lowest average error rate (for classification datasets) and average mean squared error (for recommender system datasets).
-The difference in average error rate (or average MSE) between Velox and Continuous is smaller for datasets that contain concept drift (Figure \ref{subfig:sea-meta}, \ref{subfig:movie-lens-100k-meta}, \ref{subfig:movie-lens-1m-meta}, and \ref{subfig:url-meta}).
-Since both Velox and Continuous perform incremental training of the model after it is deployed, they both manage to handle the concept drift in the data.
-However, Continuous is able to adapt to the changes faster as it is constantly updating the model by executing iterations of SGD.
-In the deployment method of Velox, the underlying model cannot adapt to the changes in the distribution as quickly, since the retraining procedure cannot be executed frequently as it requires a lot of resources.
-The performance of Baseline is very poor in datasets with concept drift.
-This is expected, as the underlying model in Baseline is only trained on an initial dataset and is not able to adapt to the changes in the data.
-Continuous performs very well for datasets with no concept drifts (Figure \ref{subfig:cover-type-meta},  \ref{subfig:adult-meta}, and \ref{subfig:higgs-meta}) as well.
-For both Cover Type and Higgs datasets, Baseline method does not converge on the initial dataset, therefore it has a higher error rate than Velox and Continuous.
-Velox performs better than Baseline on Higgs and Cover Type, however, retraining on these two datasets causes the underlying model to overfit to the existing data and as a result the performance of the model is decreased after each retraining.
-This leads to an overall lower average error rate than that of Continuous
+For all of the evaluated datasets, Continuous achieves the lowest average error rate (for the classification datasets) and average mean squared error (for the recommender system datasets).
 
-As expected, Baseline has the lowest training time for all the datasets since it only trains the model once on the initial datasets.
+The difference in average error rate (or average MSE) between Velox and Continuous is smaller for datasets that contain concept drift (Figure \ref{subfig:sea-meta}, \ref{subfig:movie-lens-100k-meta}, \ref{subfig:movie-lens-1m-meta}, and \ref{subfig:url-meta}).
+Since both Velox and Continuous perform incremental and batch training of the model after it is deployed, they both manage to handle the concept drift in the data.
+However, Continuous is able to adapt to the changes faster as it is continuously updating the model by executing iterations of SGD.
+Since the retraining process is resource intensive, Velox cannot execute it frequently.
+As a result, the underlying model in Velox cannot adapt to the changes in the distribution as quickly as Continuous.
+The performance of Baseline is very poor in datasets with concept drift.
+This is expected, as the underlying model in Baseline is only trained on an initial dataset.
+Therefore, it is not capable of adapting to the changes in the data.
+
+Continuous performs very well for datasets with no concept drifts (Figure \ref{subfig:cover-type-meta},  \ref{subfig:adult-meta}, and \ref{subfig:higgs-meta}) as well.
+For the Cover Type and Higgs datasets, Baseline does not converge on the initial dataset, therefore it has a higher error rate than Velox and Continuous.
+Velox performs better than Baseline on Higgs and Cover Type, however, retraining on these two datasets causes the underlying model to overfit to the existing data.
+As a result, the performance of the model is decreased after each retraining.
+This leads to an overall lower average error rate than that of Continuous.
+
+As expected, Baseline has the lowest training time for all the datasets since it only trains the model only once on the initial datasets.
 The total training time for Continuous is 2 to 5 time smaller than Velox for every datasets.
-This has a big impact on prediction latency and prediction accuracy.
-In our current prototype, we do not address the problem of the trade off between prediction latency and prediction accuracy.
+This has a big impact on prediction latency and accuracy.
+In our current prototype, we do not address the problem of the trade off between prediction latency and accuracy.
 In our prototype, both prediction and model updates are managed by the same node.
-As a result the prediction component is paused until the SGD iteration (or retraining in the case of Velox) is executed.
-Therefore, the system always answers each prediction query using the latest model, although with a much greater delay.
-However, in an actual model deployment system, model training and prediction answering are typically executed on separate nodes (or threads), therefore any prediction request arriving at the system is answered immediately, although not with the latest version of the model.
+As a result, the prediction component is paused until the SGD iteration (or retraining in the case of Velox) is executed.
+Therefore, the system always answers each prediction query using the latest version of the model, although with a much greater delay.
+However, in an actual model deployment system, model training and prediction answering are typically executed on separate nodes (or threads).
+Therefore any prediction request arriving at the system is answered immediately, although not with the latest version of the model.
 Since the retraining time for Velox is large, a considerable percentage of prediction requests are always answered by an older version of the model.
-Therefore, while the system is executing a retraining, the error rate of the answered prediction requests will continue to rise until the retraining is finished.
-For example in URL Reputation dataset, the average time of each retraining is 68 minutes in Velox, whereas the average time of each iteration of SGD is 1.5 minutes.
+As a result, while the system is executing a retraining, the error rate will continue to rise until the retraining is finished.
+For example in the URL Reputation dataset, the average time of each retraining is 68 minutes in Velox, whereas the average time of each iteration of SGD is 1.5 minutes.
 This means that in worst case scenario, the model that is answering a prediction request in Velox is outdated by 1 hour.
 Our continuous deployment method reduces this delay since it is updating the underlying model constantly using smaller batches of data.
 
 \section{Conclusions} \label{conclusion}
+\todo[inline]{Is the first paragraph necessary? If I remove it, should extend the length of the conclusion?}
 To fully benefit from machine learning models, one has to deploy them in a system capable of answering prediction queries in real-time and continuously update the models so they adjust to the changes in the incoming data.
 To continuously update a model, existing deployment systems perform two types of updates to the model; incremental training and full retraining of the model.
 However, full retraining is a resource intensive and time consuming process.
 
-We propose a system for deploying and maintaining machine learning models that are trained using stochastic gradient descent optimization.
-In our system, we schedule iterations of SGD to run while the machine learning model is answering prediction queries.
-After every iteration, the model is updated with new parameters.
+\todo[inline]{Can I directly use the term "SGD" or is it better to redefine the abbreviation in the conclusion section}
+We propose a system for deploying and maintaining machine learning models that are trained using stochastic gradient descent (SGD) optimization.
+In our system, we schedule iterations of SGD to run while the machine learning model is answering the prediction queries.
+After every iteration, the model is updated with the new parameters.
 The frequent updates help in adapting the model to changes in the data distribution.
-Moreover, our system is applicable to a wide range of machine learning models as demonstrated in our evaluation section.
+Moreover, our system is applicable to a wide range of machine learning models as demonstrated in our evaluation.
 
 Our experiments show that the continuous training of the machine learning models is much faster than full retraining, which is the most common approach in deployment and maintenance of machine learning models. 
 We show that not only continuous training requires less resources but it also produces models with lower error rates that adapt to the changes in data faster.
