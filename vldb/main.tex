@@ -484,6 +484,7 @@ The choice of run-time for SGD slightly influences the data manager as well.
 In our prototype, historical data is stored on the Hadoop Distributed File System (HDFS) \cite{shvachko2010hadoop}.
 
 \section{Evaluation} \label{evaluation} 
+\todo[inline]{Are the figure captions OK?}
 In this section we evaluate the performance of our system using various datasets. 
 We report both the quality (error rate) and performance of our proposed method. 
 
@@ -847,9 +848,10 @@ This is because a full retraining incurs a higher overhead than continuously tra
 Another reason for the difference in training time is that as the size of the data increases, the time for running a new iteration in Continuous stays approximately the same, whereas the time for a full retraining increases exponentially.
 
 \subsection{Experiments in the Distributed Environment}
+\todo[inline]{I'm running a new set of experiments for URL Reputations. The result will looks the same, but I have increased the streaming time to match Higgs.}
 In this set of experiments, we investigate the performance of the deployment methods on large datasets in the distributed environment.
 Figure \ref{fig:cluster-classification-results} shows the error rate of different deployment methods on classification datasets.
-\hl{Since the URL Reputation data was gathered over 120 days, it is very likely that the data contains changes in the distribution.}
+Since the URL Reputation data was gathered over 120 days, it is very likely that the data contains changes in the distribution.
 This concept drift is reflected in Figure \ref{fig:url-quality}.
 The error rate of Baseline is increasing with a steady rate as it cannot adapt to the changes in the data.
 Continuous achieves the lowest error rate overall.
