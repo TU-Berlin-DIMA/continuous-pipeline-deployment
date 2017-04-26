@@ -234,7 +234,7 @@ In Section \ref{evaluation}, we evaluate our system against different workloads 
 Finally, Section \ref{conclusion} presents our conclusion and future work.
 
 \section{Related Work} \label{related-work}
-\todo[inline]{Which one is better: training and managing .... deploying and maintaining OR training and managing ... deployment and maintenance}
+\todo[inline]{Which one is better in the first sentence: training and managing .... deploying and maintaining OR training and managing ... deployment and maintenance}
 Traditional machine learning systems focus solely on training and managing models and leave the task of deploying and maintaining to the users. 
 It has only been recently that some systems, for example Velox \cite{crankshaw2014missing}, TensorFlow Serving \cite{abadi2016tensorflow}, and LongView \cite{akdere2011case} have proposed architectures that also consider model deployment and query answering.
 LongView integrates predictive machine learning models into relational databases. 
@@ -498,7 +498,7 @@ Each node is running on an Intel Xeon 2.40 GHz 16 core processor and has 28 GB o
 Version 1 is implemented in python and utilizes the scikit-learn machine learning library \cite{sklearn_api}.
 This version works in local environments.
 It supports incremental updates to the model, one item at a time (as opposed to the micro-batching of Apache Spark).
-\todo[inline]{BD: Is this sentence clear? What I mean to say is that since we the items are arriving one at a time, both sampling and scheduling rate can be set to exact values. Because of Spark's mini batch, the scheduling and sampling are approximates rather than exact values}
+\todo[inline]{BD: Is this sentence clear? What I mean to say is that since the items are arriving one at a time, both sampling and scheduling rate can be set to exact values. In Spark, because of micro-batching, the scheduling and sampling are approximates rather than exact values}
 As a result, it enables us to investigate the effects of scheduling and sampling rates more accurately.
 Version 1 supports neural networks (multi-layer perceptron) and recommender algorithms (matrix factorization).
 Version 2 is implemented on top of Apache Spark \cite{zaharia2010spark}.
