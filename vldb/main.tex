@@ -132,17 +132,16 @@
 %}
 \maketitle
 \begin{abstract}
-A data analytics process is a pipeline comprised of several steps, from source selection, data preparation, feature engineering, to model training.
+A data analysis process is a pipeline comprised of several steps: source selection, data preparation, feature engineering, and model training. 
 Once the model is trained, it is deployed into a system where it can answer prediction queries reliably and in real-time.
-\todo[inline]{TR: This is not clear. This sounds like all systems do online training and periodic batch training.
-BD: That what I mean to say here. I have added the word 'current' to make it more clear.}
 Current deployment systems perform online training and periodical batch retraining to maintain the quality of the model.
 However, retraining of models is a time-consuming and resource-intensive process.
 
 We propose a novel deployment method for continuously training stochastic gradient descent (SGD)-based machine learning models.
 We utilize the iterative nature of SGD and replace the retraining process with a series of consecutive SGD iterations.
 We show that individual iterations of SGD are light-weight and can be executed while the system is answering prediction queries.
-Our deployment method updates models two to five times faster than the current deployment methods, without decreasing the quality of the model.
+Our deployment method updates models two to five times faster than current deployment methods without decreasing the quality of the model.
+
 
 \end{abstract}
 
