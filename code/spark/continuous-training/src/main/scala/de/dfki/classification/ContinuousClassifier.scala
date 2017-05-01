@@ -53,7 +53,7 @@ object ContinuousClassifier extends SVMClassifier {
       testType = "dataset"
     }
     val parent = s"$getExperimentName/num-iterations-$numIterations/" +
-      s"slack-$slack/offline-step-$offlineStepSize/online-step-$onlineStepSize"
+      s"slack-$slack/offline-step-$offlineStepSize/online-step-$onlineStepSize/continuous-step-$continuousStepSize"
 
     val resultPath = experimentResultPath(resultRoot, parent)
     val tempDirectory = experimentResultPath(tempRoot, parent)
@@ -92,7 +92,8 @@ object ContinuousClassifier extends SVMClassifier {
         logger.info("schedule an iteration of SGD")
         streamingSource.pause()
         val startTime = System.currentTimeMillis()
-        val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(dataParser.parsePoint).sample(withReplacement = false, fraction = 0.2).cache()
+        val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(dataParser.parsePoint)
+          //.sample(withReplacement = false, fraction = 0.2).cache()
         //val before = streamingModel.latestModel().weights
         streamingModel.setStepSize(continuousStepSize)
         streamingModel.trainOn(historicalDataRDD)

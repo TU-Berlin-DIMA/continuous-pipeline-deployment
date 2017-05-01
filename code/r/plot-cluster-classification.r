@@ -17,6 +17,12 @@ HIGGS_VELOX = 'higgs/velox/num-iterations-500/slack-320/offline-step-1.0/online-
 HIGGS_BASELINE_PLUS = 'higgs/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-04-10-18-55'
 HIGGS_BASELINE = 'higgs/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-04-11-10-31'
 
+URL_CONTINUOUS = 'url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.1/2017-04-24-00-41/error-rates.txt'
+URL_VELOX = 'url-reputation/velox/num-iterations-500/slack-1280/offline-step-1.0/online-step-0.1/2017-04-12-02-46/error-rates.txt'
+URL_BASELINE_PLUS = 'url-reputation/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-04-24-05-46/error-rates.txt'
+URL_BASELINE = 'url-reputation/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-04-24-12-11/error-rates.txt'
+
+
 ###################### Quality Over Time #####################
 
 #### HIGGS ####
@@ -75,31 +81,47 @@ ggsave(p , filename = 'higgs/higgs-quality.eps',
        units = "in")
 
 #### URL ####
-continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-50/offline-step-1.0/online-step-0.1/2017-03-28-13-50/error-rates.txt', header = FALSE, col.names = 'continuous')
-velox = read.csv('url-reputation/velox/num-iterations-500/slack-640/offline-step-1.0/online-step-0.1/2017-03-29-15-04/error-rates.txt', header = FALSE, col.names = 'velox')
-baselinePlus = read.csv('url-reputation/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-03-30-10-32/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
-baseline= read.csv('url-reputation/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-03-28-18-05/error-rates.txt', header = FALSE, col.names = 'baseline')
+# OLD
+#continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-50/offline-step-1.0/online-step-0.1/2017-03-28-13-50/error-rates.txt', header = FALSE, col.names = 'continuous')
+#velox = read.csv('url-reputation/velox/num-iterations-500/slack-640/offline-step-1.0/online-step-0.1/2017-03-29-15-04/error-rates.txt', header = FALSE, col.names = 'velox')
+#baselinePlus = read.csv('url-reputation/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-03-30-10-32/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+#baseline= read.csv('url-reputation/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-03-28-18-05/error-rates.txt', header = FALSE, col.names = 'baseline')
 
-#m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
-m = 1600
-continuous = continuous[1:m,]
-velox = velox[1:m,]
-baselinePlus = baselinePlus[1:m,]
-baseline = baseline[1:m,]
+# NEW step 0.1
+continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.1/2017-04-24-00-41/error-rates.txt', header = FALSE, col.names = 'continuous')
+velox = read.csv('url-reputation/velox/num-iterations-500/slack-1280/offline-step-1.0/online-step-0.1/2017-04-12-02-46/error-rates.txt', header = FALSE, col.names = 'velox')
+baselinePlus = read.csv('url-reputation/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-04-24-05-46/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+baseline= read.csv('url-reputation/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-04-24-12-11/error-rates.txt', header = FALSE, col.names = 'baseline')
 
 
-df = data.frame(time = 1:1600,
+# NEW step 0.01
+#continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-40/offline-step-1.0/online-step-0.01/continuous-step-0.2/2017-04-30-19-28/error-rates.txt', header = FALSE, col.names = 'continuous')
+#velox = read.csv('url-reputation/velox/num-iterations-500/slack-1280/offline-step-1.0/online-step-0.01/2017-04-25-18-46/error-rates.txt', header = FALSE, col.names = 'velox')
+#baselinePlus = read.csv('url-reputation/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.01/2017-04-24-15-55/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+#baseline= read.csv('url-reputation/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-04-24-12-11/error-rates.txt', header = FALSE, col.names = 'baseline')
+
+m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
+#m = 1600
+#continuous = continuous[1:m,]
+#velox = velox[1:m,]
+#baselinePlus = baselinePlus[1:m,]
+#baseline = baseline[1:m,]
+continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))
+velox = rbind(velox, data.frame(velox = rep(NA, m - nrow(velox))))
+baseline = rbind(baseline, data.frame(baseline = rep(NA, m - nrow(baseline))))
+baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(NA, m - nrow(baselinePlus))))
+
+
+df = data.frame(time = 1:m,
                 continuous = continuous, 
                 velox = velox, 
                 baseline = baseline,
                 baselinePlus = baselinePlus)
-#continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))
-#velox = rbind(velox, data.frame(velox = rep(NA, m - nrow(velox))))
-#baseline = rbind(baseline, data.frame(baseline = rep(NA, m - nrow(baseline))))
-#baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(NA, m - nrow(baselinePlus))))
-retrainings = c(500,1000,1500)
 
-p = ggplot(data = df) + 
+retrainings = seq(300, 3600, 320)
+
+p = 
+  ggplot(data = df) + 
   # plot lines
   geom_line(aes(x = time, y  = baseline, linetype = "a", color = "a"), size = 1.4, linetype = "dotted") + 
   geom_line(aes(x = time, y  = baselinePlus, linetype = "b", color = "b"), linetype = "dotdash", size = 1.4) + 
@@ -117,7 +139,7 @@ p = ggplot(data = df) +
         legend.background = element_rect(colour = "transparent", fill = "transparent"), 
         axis.text=element_text(size=30, color = "black"),
         axis.title=element_text(size=30, color= "black"),  
-        legend.position=c(0.85,0.74), 
+        legend.position=c(0.85,0.67), 
         legend.key.width = unit(3, "cm"), 
         legend.key.height = unit(0.8, "cm")) + 
   scale_linetype_discrete(guide=FALSE) + 

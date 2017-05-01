@@ -117,7 +117,7 @@ ggplot(data = ml, aes(x = time, y = value, group = variable)) +
 
 #URL 
 # step size = 0.5
-continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.01/2017-04-25-11-50/error-rates.txt', header = FALSE, col.names = 'continuous')
+#continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.01/2017-04-25-11-50/error-rates.txt', header = FALSE, col.names = 'continuous')
 # step size = 0.1
 #continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.01/2017-04-25-09-36/error-rates.txt', header = FALSE, col.names = 'continuous')
 # step size = 1.0
@@ -126,10 +126,20 @@ continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/of
 #continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.01/2017-04-26-22-38/error-rates.txt', header = FALSE, col.names = 'continuous')
 # step size = 0.2
 #continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.01/2017-04-25-13-35/error-rates.txt', header = FALSE, col.names = 'continuous')
+# step size = 0.4
+#continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.01/2017-04-27-12-09/error-rates.txt', header = FALSE, col.names = 'continuous')
+# step size = 0.3
+#continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.01/2017-04-27-17-17/error-rates.txt', header = FALSE, col.names = 'continuous')
+# step size = 0.1
+#continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.05/2017-04-28-00-02/error-rates.txt', header = FALSE, col.names = 'continuous')
+# step size = 0.2
+#continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.01/', header = FALSE, col.names = 'continuous')
 
-velox = read.csv('url-reputation/velox/num-iterations-500/slack-1280/offline-step-1.0/online-step-0.01/2017-04-25-18-46/error-rates.txt', header = FALSE, col.names = 'velox')
+continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.1/2017-04-24-00-41/error-rates.txt', header = FALSE, col.names = 'continuous')
 
-baselinePlus = read.csv('url-reputation/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.01/2017-04-24-15-55/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+velox = read.csv('url-reputation/velox/num-iterations-500/slack-1280/offline-step-1.0/online-step-0.1/2017-04-12-02-46/error-rates.txt', header = FALSE, col.names = 'velox')
+
+baselinePlus = read.csv('url-reputation/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-04-24-05-46/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 
 baseline= read.csv('url-reputation/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-04-24-12-11/error-rates.txt', header = FALSE, col.names = 'baseline')
 

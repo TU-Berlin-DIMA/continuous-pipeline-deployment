@@ -51,8 +51,8 @@
 \usepackage{graphicx}% http://ctan.org/pkg/graphicx
 \usepackage{color,soul}
 \usepackage{float}
-\usepackage{todonotes}
-%\usepackage[disable]{todonotes}
+%\usepackage{todonotes}
+\usepackage[disable]{todonotes}
 \usepackage[outdir=./figures/]{epstopdf}
 \usepackage{listings}
 \PassOptionsToPackage{table}{colorx}
@@ -130,20 +130,22 @@
 
 \maketitle
 \begin{abstract}
-A data analytics process is a pipeline comprised of several steps, from source selection, data preparation, feature engineering, to model building/training.
+A data analytics process is a pipeline comprised of several steps, from source selection, data preparation, feature engineering, to model training.
 However, this process does not end with the training of the model. 
 When the training is completed, the model is deployed into a system where it can answer prediction queries reliably, continuously, and in real-time.
+\todo[inline]{TR: This is not clear. This sounds like all systems do online training and periodic batch training.
+BD: That what I mean to say here. I have added the word 'current' to make it more clear.}
 While the system is running, new training data, both in the form of stream sources and batch datasets, may become available.
-To maintain a high quality of prediction, the deployment system performs online training as well as periodical batch retraining.
+To maintain a high quality of prediction, the current deployment systems perform online training as well as periodical batch retraining.
 However, retraining of models is a time-consuming and resource-intensive process.
 
 We propose a novel deployment method for continuously training stochastic gradient descent (SGD)-based machine learning models.
-Our method eliminates the need for complete retraining and replaces it with a series of consecutive SGD iterations.
+Our method utilizes the iterative nature of SGD and replaces the retraining process with a series of consecutive SGD iterations.
 We show that individual iterations of SGD are light-weight and can be executed while the system is answering prediction queries.
 Our experiments show that our deployment method updates models two to five times faster than the current deployment methods, without decreasing, and in some cases even increasing, the quality of the model.
 \end{abstract}
 
-
+\todo[inline]{Should I use these key words??}
 \keywords{Machine Learning Model Management; Stochastic Gradient Descent; Machine Learning Systems}
 
 \section{Introduction} \label{introduction}
@@ -160,39 +162,39 @@ Therefore, in order to prevent the model's quality from degrading, the model sho
 
 Most of the current machine learning research focuses on training and providing tools to make model training and search easier. 
 Kumar et al. provided an overview of existing machine learning systems \cite{kumar2015survey}. 
-Most of the surveyed systems provide little to no support after the model has been trained.
-Only few systems \cite{akdere2011case, crankshaw2014missing} support deploying and maintaining the models.
-However, they are still lacking continuous monitoring and fast and accurate updates of the model.
+They find that most of the surveyed systems provide little to no support after the model has been trained.
+Only few systems support deploying and maintaining the models \cite{akdere2011case, crankshaw2014missing}.
+However, these are still lacking continuous monitoring and fast and accurate updates of the model.
 
 Figure \ref{fig:velox-work-flow} demonstrates the most common model deployment approach.
 First, an initial model is trained based on an existing dataset residing on disk.
 Deploying this model to a production environment enables it to answer prediction queries arriving at the system.
 During production, the system continuously receives feedback in the form of new training observations.
 This enables the system to update the model incrementally.
-Note that not every machine learning model support incremental updates.
+Note that not every machine learning model supports incremental updates.
 The underlying optimization strategy determines whether a model can be updated incrementally.
-
 \begin{figure}[t]
 \centering
 \includegraphics[width=1\columnwidth]{../images/velox-final.pdf}
 \caption{Current Model Deployment Method}
 \label{fig:velox-work-flow}
 \end{figure}
+\todo[inline]{TR: How does the online learning influence the model? 
+BD: Online learning tries to maintain the quality as best as it can, but a retraining still have be to executed to make sure the error does not degrade }
+
 
 \textbf{Example application:} to illustrate this model deployment approach, consider the task of predicting the click through rate (CTR) of online advertisements.
+Figure \ref{fig:click-rate} demonstrates the CTR prediction example for a search engine provider.
 Search engine providers use machine learning models to estimate the expected click rate of different advertisements.
-They train machine learning models based on the available data, which typically includes content of the page, search query, user information, content and meta-data of the available advertisements. 
-Once such model is deployed, prediction queries of the form of ad requests arrive at the system.
+They train machine learning models based on the available data, which typically includes content of the page, search query, user information, content, and meta-data of the available advertisements. 
+Once such a model is deployed, prediction queries of the form of ad requests arrive at the system.
 The model determines the advertisements that have the highest probabilities of being clicked by the user.
 Based on whether or not advertisements are clicked on, the system sends feedback in the form of new training observations.
 The deployment system incrementally updates the underlying prediction model based on the new training observation. 
-\todo[inline]{TR: Seems like you need to clarify what is current, what is your solution, what is the problem. If a reader is left wondering, we have a problem.
-BR: please see the highlighted section .. }
-\hl{However, incremental updates alone are not enough to maintain the quality of the CTR prediction model.
+However, incremental updates alone are not enough to maintain the quality of the CTR prediction model.
 As a result, the deployment system periodically retrains the model using the entire data.
-This retraining may take hours or even days depending on the size of the data.}
-
-Figure \ref{fig:click-rate} demonstrates the CTR prediction example for a search engine provider.
+This retraining may take hours or even days depending on the size of the data.
+Our proposed deployment method eliminates the need for this time-consuming retraining.
 
 \begin{figure}[h]
 \centering
@@ -205,40 +207,35 @@ Some emerging machine learning systems have tried to automate this process \cite
 They automatically deploy the model into a production environment, monitor its quality, and initiate a retraining when required.
 However, they treat the underlying machine learning models as black boxes. 
 As a result, they miss many opportunities for optimizing the training and deployment process.
-% What is the motivation for this work
-%Given the lack of systems to support model deployment and maintenance, we have set out to design a system that not only supports deployment and maintenance of machine learning models but also provides %constant crashing and batch updates while the system is running. 
-%We propose the design of a system that provide 
-%real-time query support as well incremental and fast batch updates to the machine learning models.
 
 Our key observation is that, by exploiting the iterative nature of the underlying optimization algorithm, i.e., stochastic gradient descent (SGD), the model training process can be seamlessly executed with the serving and query answering component.
 Based on this observation, we present a system, that supports deployment, maintenance, and incremental and fast batch updates of machine learning models.
 Our contributions are as follows:
 \begin{itemize}
-\item We define a system for machine learning models deployment and maintenance and provide a prototypical implementation
+\item We define a flexible system for machine learning models deployment and maintenance that allows any SGD-based machine learning model to be incorporated. We provide a prototypical implementation with several different machine learning model types
+\todo[inline]{TR: Maybe we should talk about the process here.
+BD: The deployment process? I'm not really sure how to summarize in 1 2 sentences }
 \item We allow for incremental updates to the model, thus handling changes in the data distribution
-\item We eliminate offline batch retraining and replace it with a series of single iteration of SGD
+\item We eliminate the lengthy offline batch retraining and replace it with a series of single iteration of SGD without affecting the final quality of the model
 \end{itemize}
 Our experiments show that our approach improves the runtime of model training and deployment by an order of magnitude over the state of the art while retaining the quality of the model. 
 The speedup is due to the fact that we are able to completely eliminate batch retraining. 
 Our method can also adapt to changes in the distribution faster than the existing methods.
-\todo[inline]{TR: IF you do not have an experiment for this claim, then you should make it secondary or remove it. Which sentence do you mean?
-BD: So I removed the original paragraph about the new batch datasets from the use case description and added the highlighted paragraph instead. }
-\hl{Furthermore, while the deployment system is serving the model, new batch training datasets may become available.
-Our proposed deployment method is capable of utilizing the new datasets to further train the model without delay.}
+\todo[inline]{TR: Maybe we should include this in the use case (the way the Zalando people explained it)
+BD: It was included in the use case in previous versions, but I moved it here to indicate this is a secondary objective of the paper}
+Furthermore, while the deployment system is serving the model, new batch training datasets may become available.
+Our proposed deployment method is capable of utilizing the new datasets to further train the model without delay.
 
 % Outline: The rest of this document is structured as follows. ...
 The rest of this paper is organized as follows. 
 Section \ref {related-work} discusses related work.
-In section \ref{sgd}, we describe the underlying optimization method.
+In Section \ref{sgd}, we describe the underlying optimization method.
 Section \ref{continious-training-serving} and \ref{sec:system-architecutre} introduce the design principles and architecture of our deployment system.
 In Section \ref{evaluation}, we evaluate our system against different workloads and compare the performance of our method to other model deployment and maintenance approaches. 
 Finally, Section \ref{conclusion} presents our conclusion and future work.
 
 \section{Related Work} \label{related-work}
-\todo[inline]{TR: I would choose the first and repeat models. BTW: how do current systems manage models?
-
-BD: By manage, I meant the model management during training (i.e. MLBase) which automatically trains multiple models for the same task and chooses the best one. I have removed "manage", since it seems a bit confusing to have it here.}
-\hl{Traditional machine learning systems focus solely on training models and leave the task of deploying and maintaining these models to the users. }
+Traditional machine learning systems focus solely on training models and leave the task of deploying and maintaining these models to the users.
 It has only been recently that some systems, for example Velox \cite{crankshaw2014missing}, TensorFlow Serving \cite{abadi2016tensorflow}, and LongView \cite{akdere2011case} have proposed architectures that also consider model deployment and query answering.
 LongView integrates predictive machine learning models into relational databases. 
 It answers predictive queries and maintains and manages the models.
@@ -317,8 +314,6 @@ While logistic regression aims to find parameters of a function that accurately 
 In many cases, both types of models work equally well.
 However, depending on the data (whether it is linearly separable or not) and result requirements (probability values or class labels) one method may be preferred to the other.
 
-\todo[inline]{TR: Question is, do we need this here, do you already have this earlier? If you have it earlier, no need to repeat. Same for the one below.
-BD: Please see the next todo on top of Section 4}
 \textbf{Matrix Factorization} is a common method used in recommender systems \cite{koren2009matrix}. 
 Matrix factorization is used to derive the latent factors (e.g., for users and items) for recommender systems.
 It relies on the fact that each user and item can be described in a few dimensions (10 to 40 usually) based on the available ratings.
@@ -335,7 +330,7 @@ The ImageNet competition \cite{ILSVRC15} in 2012 was won by a neural network pro
 The success of the Google's Deepmind team in achieving Neural Networks that were capable of defeating humans in the game of Go \cite{silver2016mastering} and mastering Atari games \cite{mnih2013playing} was also instrumental in popularizing neural networks in the machine learning community.
 
 SGD is the ideal optimization algorithm for training neural networks since it works very well with large datasets (which are required for training neural networks).
-In fact, almost all of the recent work on neural networks use SGD for training them.
+In fact, almost all recent work on neural networks uses SGD for training them.
 
 \begin{figure}[t]
 \centering
@@ -345,8 +340,6 @@ In fact, almost all of the recent work on neural networks use SGD for training t
 \end{figure}
 
 \section{Continuous Training and Serving} \label{continious-training-serving}
-\todo[inline]{TR: What I think he means is that you should make clear that you can use a broad variety of algorithms although you restrict yourself to SGD. This is along the lines of what I commented earlier. Important point is to either say that this is not a limitation or what the limitation is.
-BD: I tried to justify the importance and popularity of SGD in Section \ref{sgd} (specially in \ref{subsec:ml-models-sgd}) so that by this point in the paper, it would be clear to the readers that by focusing on SGD we are not imposing limitations on the system. Instead, we are improving a method (SGD) that is very common in Machine Learning. In previous versions there was a sentence about SGD being very common, but I removed it because it would repeat the same point from previous chapter.}
 Our proposed deployment and maintenance system uses SGD as its underlying learning algorithm.
 As a result, it can update the model incrementally (one training item at a time) or use mini-batches of data (1 iteration of SGD).
 The core design principles of our deployment system are threefold.
@@ -480,7 +473,6 @@ The choice of run-time for SGD slightly influences the data manager as well.
 In our prototype, historical data is stored on the Hadoop Distributed File System (HDFS) \cite{shvachko2010hadoop}.
 
 \section{Evaluation} \label{evaluation} 
-\todo[inline]{Are the figure captions OK?}
 In this section we evaluate the performance of our system using various datasets. 
 We report both the quality (error rate) and performance of our proposed method. 
 
@@ -494,11 +486,9 @@ Each node is running on an Intel Xeon 2.40 GHz 16 core processor and has 28 GB o
 Version 1 is implemented in python and utilizes the scikit-learn machine learning library \cite{sklearn_api}.
 This version works in local environments.
 It supports incremental updates to the model, one item at a time (as opposed to the micro-batching of Apache Spark).
-\todo[inline]{TR: What you mean to say is not in the sentence in my mind. :)Maybe just add this explanation ?
-BD: I guess I was overexplaining things.. I wrote the highlighted sentence instead. }
-As a result, it enables us to investigate the effects of scheduling and sampling rates more accurately.
+As a result, we are able to investigate the effects of scheduling and sampling rates more accurately.
 Version 1 supports neural networks (multi-layer perceptron) and recommender algorithms (matrix factorization).
-\hl{In our evaluations, we use Version1, to investigate the effect of scheduling and sampling rate on the running time and quality of the models.}
+In our evaluations, we use Version 1 to investigate the effect of scheduling and sampling rate on the running time and quality of the models.
 Version 2 is implemented on top of Apache Spark \cite{zaharia2010spark}.
 It uses the SGD implementation available in the machine learning library of Apache Spark.
 This version works in both the local and cluster environment and supports different types of linear models (SVM, Logistic Regression, and Linear Regression).
@@ -538,11 +528,9 @@ Table \ref{table:recommender-systems} shows the details of the Movie Lens datase
 We have sorted the Movie Lens dataset based on the timestamp of the ratings.
 Every item is examined one by one according to their timestamp.
 This is to evaluate how each of the implemented methods react to the changes in the distribution of the data.
-\todo[inline]{TR: I don't fully understand this.
-BD: Is this more clear? }
-\hl{For these two datasets, we use an evolving test set to evaluate the performance of the deployment methods.
+For these two datasets, we use an evolving test set to evaluate the performance of the deployment methods.
 We start with an empty test set.
-Upon receiving new test items, we add them to the current test set and calculate the error (we call this a test increment).}
+Upon receiving new test items, we add them to the test set and calculate the error on the current test set (we call this a test increment).
 For Movie Lens 100k, the total size of the test set is 5,000 and for Movie Lens 1M, the test size is 50,000. 
 
 To evaluate the classifier, we use a collection of classification datasets (mostly from the UCI Machine Learning Repository\footnote{\url{http://archive.ics.uci.edu/ml/}}).
@@ -639,14 +627,9 @@ A smaller buffer size forces the scheduler to initiate training iterations more 
 As a result, the system updates the underlying model more often.
 However, the error rate is not decreasing linearly with the buffer size.
 Further analysis shows that the more frequent the model updates are, the faster the model converges and any further training has little to no effect on the overall quality.
-\todo[inline]{TR: Is this shown in the figure? 
-BD: Maybe the highlighted section better described what I am trying to explain
-Also, where do you analyze 5b?
-BD: I moved the explanation of Figure 5b a few paragraphs forwards where I am explaining the effect of sampling rate.
-}
 This is extremely important, specially when considering the effect of the buffer size on the running time.
 Figure \ref{fig:movie-lens-100k-buffer-size-time} shows the running time on Movie Lens 100k using different buffer sizes. 
-Increasing the buffer size from 500 to 5000 decreases the running time by a factor of 5 \hl{while the MSE is only decreased slightly.}
+Increasing the buffer size from 500 to 5000 decreases the running time by a factor of 5 while the MSE is only decreased slightly.
 Therefore, depending on the application, we can set the buffer size to bigger values in order to increase the performance of the system without affecting the quality of the final model substantially.
 
 \begin{figure}[H]
@@ -676,11 +659,7 @@ This is caused by the same phenomena, where the model after training on bigger s
 As a result, bigger sample sizes do not have a considerable effect on the quality.
  
 Figure \ref{fig:movie-lens-100k-sample-rate-time} shows the effect of increasing the sampling rate on the running time.
-\todo[inline]{TR: Over which baseline?}
-\hl{Increasing the sampling rate from 0.1 to 1.0, increases the running time by a factor of 5.}
-\todo[inline]{TR: How much is this dataset dependent? I cannot see much in the two figures, since everything is interacting too much
-
-BD: In the next few paragraphs (starting from  "Tuning parameters based on error rate") I explain that this is a model dependent. I use Figure 7 to explain that in certain models (NNs) these parameters seem to have no effect on the quality of the model}
+Increasing the sampling rate from 0.1 to 1.0, increases the running time by a factor of 5.
 Therefore, similar to the scheduling rate, setting the sampling rate to smaller values will increase the performance substantially, while only slightly affecting the quality of the model.
 
 \textbf{Tuning parameters based on error rate:} The underlying machine learning model and the dataset have big effects on the selection of sampling rate and scheduling rate.
@@ -840,9 +819,6 @@ Baseline+ and Continuous maintain a steady error rate overall, with Continuous s
 
 Figure \ref{fig:local-training-time} shows the total training time for the deployment methods on local datasets.
 To measure this the total training time, we calculate the total time that each method spent in training the model.
-\todo[inline]{TR: Is this not the main part of the work in a long running setup?
-
-BD: Since I'm focusing on eliminating the offline retraining of Velox, I excluded the time spent for online learning. I don't think including the online learning time here, makes much sense. That would be part of the delay that I have mentioned as future work. Moreover, both Velox and Continuous perform online learning anyway, so adding the incremental training time will just increase the total time by a constant factor in both deployment methods.}
 We excluded the incremental training time as both Velox and Continuous perform incremental training as part of their process.
 The total training time of Baseline is equal to the initial training time.
 Both Continuous and Velox perform the same initial training, as a result, their total training time cannot be smaller than Baseline.
@@ -857,14 +833,16 @@ This is because a full retraining incurs a higher overhead than continuously tra
 Another reason for the difference in training time is that as the size of the data increases, the time for running a new iteration in Continuous stays approximately the same, whereas the time for a full retraining increases exponentially.
 
 \subsection{Experiments in the Distributed Environment}
-\todo[inline]{I'm running a new set of experiments for URL Reputations. The result will looks the same, but I have increased the streaming time to match Higgs.}
 In this set of experiments, we investigate the performance of the deployment methods on large datasets in the distributed environment.
 Figure \ref{fig:cluster-classification-results} shows the error rate of different deployment methods on classification datasets.
 Since the URL Reputation data was gathered over 120 days, it is very likely that the data contains changes in the distribution.
 This concept drift is reflected in Figure \ref{fig:url-quality}.
 The error rate of Baseline is increasing with a steady rate as it cannot adapt to the changes in the data.
-Continuous achieves the lowest error rate overall.
-Velox manages to keep the error rate lower than Baseline+ until the the second retraining, after which the error rate slightly increases.
+All the other three methods perform similarly in the beginning.
+However, after the 4th retraining the error rate of Velox increases slightly.
+Similar to the previous experiments, Velox is overfitting to the data after a few retraining processes and as a result, it does not recover from the increase in the error rate.
+Continuous and Baseline+ maintain a lower error rate throughout with Continuous performing slightly better than Baseline+.
+
 Figure \ref{fig:higgs-quality} shows the error rate on the Higgs dataset.
 Similar to the local classification datasets, the error rate for Baseline is the highest among all of the deployment methods.
 Velox, Baseline+, and Continuous maintain the same error rate until the first retraining of Velox, after which due to possible overfitting, the error rate of Velox slightly increases.
@@ -912,7 +890,7 @@ However, the difference between the training time of Baseline and other methods 
 In our local experiments, the entire resources of the computer were being consumed to perform the training.
 However, in the distributed environment, the cluster is underutilized in the beginning as the amount of data is small.
 \todo[inline]{TR: can we have a graph?
-BD: It should be doable. I ll try to find out how (probably need to use some internal spark reporting APIs)}
+BD: I will keep this todo in the document and will do it for the next revision}
 As more data arrives at the system, the utilization of the cluster increases.
 However, the training time for Continuous and Velox does not increase linearly with size.
 Therefore, the total training time for Continuous is only 5 to 10 times larger than that of Baseline (instead of 20 to 25 times for the local datasets) and the total training time for Velox is 20 to 25 times larger than that of Baseline (instead of 50 to 55 times for the local datasets).
@@ -1022,6 +1000,7 @@ We show that not only continuous training requires less resources but it also pr
 Comparing to simple techniques such incremental learning or initial batch training, our technique produces a model with higher quality.
 
 In future work, we will explore more advanced methods for sampling of historical data in order to investigate their effect on the performance of the system. Moreover, we plan to investigate the trade off between prediction latency and prediction accuracy.
+
 
 
 \bibliographystyle{plain}
