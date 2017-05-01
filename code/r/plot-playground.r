@@ -135,7 +135,7 @@ ggplot(data = ml, aes(x = time, y = value, group = variable)) +
 # step size = 0.2
 #continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.01/', header = FALSE, col.names = 'continuous')
 
-continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.1/2017-04-24-00-41/error-rates.txt', header = FALSE, col.names = 'continuous')
+continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-40/offline-step-1.0/online-step-0.1/continuous-step-0.2/2017-05-01-10-57/error-rates.txt', header = FALSE, col.names = 'continuous')
 
 velox = read.csv('url-reputation/velox/num-iterations-500/slack-1280/offline-step-1.0/online-step-0.1/2017-04-12-02-46/error-rates.txt', header = FALSE, col.names = 'velox')
 

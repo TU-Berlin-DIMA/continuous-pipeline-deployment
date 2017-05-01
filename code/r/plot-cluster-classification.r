@@ -17,10 +17,10 @@ HIGGS_VELOX = 'higgs/velox/num-iterations-500/slack-320/offline-step-1.0/online-
 HIGGS_BASELINE_PLUS = 'higgs/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-04-10-18-55'
 HIGGS_BASELINE = 'higgs/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-04-11-10-31'
 
-URL_CONTINUOUS = 'url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.1/2017-04-24-00-41/error-rates.txt'
-URL_VELOX = 'url-reputation/velox/num-iterations-500/slack-1280/offline-step-1.0/online-step-0.1/2017-04-12-02-46/error-rates.txt'
-URL_BASELINE_PLUS = 'url-reputation/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-04-24-05-46/error-rates.txt'
-URL_BASELINE = 'url-reputation/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-04-24-12-11/error-rates.txt'
+URL_CONTINUOUS = 'url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.1/2017-04-24-00-41'
+URL_VELOX = 'url-reputation/velox/num-iterations-500/slack-1280/offline-step-1.0/online-step-0.1/2017-04-12-02-46'
+URL_BASELINE_PLUS = 'url-reputation/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-04-24-05-46'
+URL_BASELINE = 'url-reputation/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-04-24-12-11'
 
 
 ###################### Quality Over Time #####################
@@ -88,10 +88,10 @@ ggsave(p , filename = 'higgs/higgs-quality.eps',
 #baseline= read.csv('url-reputation/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-03-28-18-05/error-rates.txt', header = FALSE, col.names = 'baseline')
 
 # NEW step 0.1
-continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-200/offline-step-1.0/online-step-0.1/2017-04-24-00-41/error-rates.txt', header = FALSE, col.names = 'continuous')
-velox = read.csv('url-reputation/velox/num-iterations-500/slack-1280/offline-step-1.0/online-step-0.1/2017-04-12-02-46/error-rates.txt', header = FALSE, col.names = 'velox')
-baselinePlus = read.csv('url-reputation/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-04-24-05-46/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
-baseline= read.csv('url-reputation/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-04-24-12-11/error-rates.txt', header = FALSE, col.names = 'baseline')
+continuous = read.csv(paste(URL_CONTINUOUS,'error-rates.txt', sep='/'), header = FALSE, col.names = 'continuous')
+velox = read.csv(paste(URL_VELOX,'error-rates.txt', sep='/'), header = FALSE, col.names = 'velox')
+baselinePlus = read.csv(paste(URL_BASELINE_PLUS,'error-rates.txt', sep='/'), header = FALSE, col.names = 'baselinePlus')
+baseline = read.csv(paste(URL_BASELINE,'error-rates.txt', sep='/'), header = FALSE, col.names = 'baseline')
 
 
 # NEW step 0.01
@@ -101,11 +101,6 @@ baseline= read.csv('url-reputation/baseline/num-iterations-500/slack-none/offlin
 #baseline= read.csv('url-reputation/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-04-24-12-11/error-rates.txt', header = FALSE, col.names = 'baseline')
 
 m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
-#m = 1600
-#continuous = continuous[1:m,]
-#velox = velox[1:m,]
-#baselinePlus = baselinePlus[1:m,]
-#baseline = baseline[1:m,]
 continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))
 velox = rbind(velox, data.frame(velox = rep(NA, m - nrow(velox))))
 baseline = rbind(baseline, data.frame(baseline = rep(NA, m - nrow(baseline))))
@@ -186,8 +181,8 @@ ggsave(higgsTime , filename = 'higgs/higgs-times.eps',
        units = "in")
 
 #### URL REPUTATION ####
-continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-50/offline-step-1.0/online-step-0.1/2017-03-28-13-50/training-times.txt', header = FALSE, col.names = 'continuous')
-velox = read.csv('url-reputation/velox/num-iterations-500/slack-640/offline-step-1.0/online-step-0.1/2017-03-29-15-04/training-times.txt', header = FALSE, col.names = 'velox')
+continuous = read.csv(paste(URL_CONTINUOUS,'training-times.txt', sep='/'), header = FALSE, col.names = 'continuous')
+velox = read.csv(paste(URL_VELOX,'training-times.txt', sep='/'), header = FALSE, col.names = 'velox')
 
 baseline = continuous[[1]][1]
 continuous = sum(continuous)
@@ -254,13 +249,13 @@ ggsave(p , filename = 'higgs/higgs-meta-performance.eps',
        units = "in")
 
 #### URL REPUTATION ####
-continuousTime = read.csv('url-reputation/continuous/num-iterations-500/slack-50/offline-step-1.0/online-step-0.1/2017-03-28-13-50/training-times.txt', header = FALSE, col.names = 'continuous')
-veloxTime = read.csv('url-reputation/velox/num-iterations-500/slack-640/offline-step-1.0/online-step-0.1/2017-03-29-15-04/training-times.txt', header = FALSE, col.names = 'velox')
+continuousTime = read.csv(paste(URL_CONTINUOUS,'training-times.txt', sep='/'), header = FALSE, col.names = 'continuous')
+veloxTime = read.csv(paste(URL_VELOX,'training-times.txt', sep='/'), header = FALSE, col.names = 'velox')
 baselineTime = continuousTime[[1]][1]
 
-continuous = read.csv('url-reputation/continuous/num-iterations-500/slack-50/offline-step-1.0/online-step-0.1/2017-03-28-13-50/error-rates.txt', header = FALSE, col.names = 'continuous')
-velox = read.csv('url-reputation/velox/num-iterations-500/slack-640/offline-step-1.0/online-step-0.1/2017-03-29-15-04/error-rates.txt', header = FALSE, col.names = 'velox')
-baseline = read.csv('url-reputation/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-03-28-18-05/error-rates.txt', header = FALSE)
+continuous = read.csv(paste(URL_CONTINUOUS,'error-rates.txt', sep = '/'), header = FALSE, col.names = 'continuous')
+velox = read.csv(paste(URL_VELOX,'error-rates.txt', sep = '/'), header = FALSE, col.names = 'velox')
+baseline = read.csv(paste(URL_BASELINE,'error-rates.txt', sep = '/'), header = FALSE)
 
 
 df = data.frame('error'=c(colMeans(continuous), colMeans(velox), colMeans(baseline)), 
