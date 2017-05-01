@@ -140,7 +140,7 @@ Current deployment systems perform online training and periodical batch retraini
 However, retraining of models is a time-consuming and resource-intensive process.
 
 We propose a novel deployment method for continuously training stochastic gradient descent (SGD)-based machine learning models.
-We utilize the iterative nature of SGD and replaces the retraining process with a series of consecutive SGD iterations.
+We utilize the iterative nature of SGD and replace the retraining process with a series of consecutive SGD iterations.
 We show that individual iterations of SGD are light-weight and can be executed while the system is answering prediction queries.
 Our deployment method updates models two to five times faster than the current deployment methods, without decreasing the quality of the model.
 
@@ -219,7 +219,7 @@ BD: The deployment process? I'm not really sure how to summarize in 1 2 sentence
 \item We allow for incremental updates to the model, thus handling changes in the data distribution
 \item We eliminate the lengthy offline batch retraining and replace it with a series of single iteration of SGD without affecting the final quality of the model
 \end{itemize}
-Our experiments show that our approach improves the runtime of model training and deployment by an order of magnitude over the state of the art while retaining the quality of the model. 
+Our experiments show that our approach improves the runtime of model training and deployment two to five times over the state of the art while retaining the quality of the model. 
 The speedup is due to the fact that we are able to completely eliminate batch retraining. 
 Our method can also adapt to changes in the distribution faster than the existing methods.
 \todo[inline]{TR: Maybe we should include this in the use case (the way the Zalando people explained it)
