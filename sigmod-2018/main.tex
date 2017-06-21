@@ -384,6 +384,7 @@ Each new iteration uses a random sample of the data in storage and the data in t
 Moreover, our system stores new batch datasets in the buffer (or the persistent storage unit) as soon as they become available.
 Any further scheduled iteration of SGD incorporates the new data without requiring the model to be retrained from scratch.
 
+\todo[inline]{R3: Section 5 has many unclear and informal descriptions, without formal methodology.}
 \section{System Architecture} \label{sec:system-architecutre}
 \begin{figure}[t]
 \centering
@@ -413,6 +414,7 @@ When the intermediate buffer's size reaches \textit{max\_buffer\_size}, the sche
 It is important to note that the scheduling rate affects the quality of the model.
 In Section \ref{evaluation}, we investigate the effect of scheduling rate on model quality.
 If no new training data is available, the model parameters will eventually converge and any further training iterations will not have any effect on the model quality.
+\todo[inline]{R3: How is the convergence detected?}
 Therefore, the scheduler component has to communicate with the model manager in order to detect whether the model parameters have converged and stop further iterations until more training data becomes available.
 
 \subsection{Data Manager} \label{data-manager}
@@ -475,12 +477,14 @@ The \textit{error\_rate} method returns the error rate of the model using the pr
 As described earlier, constant monitoring of the quality is required in order to adjust the scheduling and sampling rate.
 When the error rate is stagnating, the model has converged using the existing data.
 Therefore the model manager informs scheduler not to schedule any new iterations until new training observations have arrived at the system.
+\todo[inline]{R3: How is this done exactly?}
 Similarly as explained in Section \ref{data-manager}, an increase in the error rate may indicate a change in distribution of the data.
 As a result, reducing the sampling rate will place more emphasis on recent data (in the intermediate buffer) and help adapt the model to the changes in the distribution.
 
 The model manager also keeps track of the changes that are made to the model.
 The model is updated both through incremental learning and SGD-iteration.
 The model manager creates snapshots of the model in two different scenarios; after a series of incremental updates are made and after each training iteration.
+\todo[inline]{R3: What is the algorithm here?}
 This versioning of the models is essential.
 When there is a rapid change in the distribution of the incoming data (a sudden concept drift) or when there are anomalies in the data, it is sometimes necessary to revert back to a version before the change in distribution occurred.
 In case of concept drift, new training iterations should be scheduled that only use the data in the buffer.
@@ -499,6 +503,7 @@ Both types of updates are supported by the built in machine learning library of 
 The choice of run-time for SGD slightly influences the data manager as well.
 In our prototype, historical data is stored on the Hadoop Distributed File System (HDFS) \cite{shvachko2010hadoop}.
 
+\todo[inline]{R3: The paper has a point that not only the resource consumption is reduced by incremental update, but also the prediction accuracy can be improved due to adapting the model to newly seen data. The system uses a sampling component to use a subset of historical data in each SGD update. However, a non-incremental retraining can also achieve the same adaptation by weighing towards the newly seen data (e.g., learning with concept drifting). Therefore, the ideas of incremental update and adaptation to concept drift should not be confused. The evaluation in this paper does not clearly decouple them. BD: Interesting insight. We have to address this.}
 \section{Evaluation} \label{evaluation} 
 In this section we evaluate the performance of our system using various datasets. 
 We report both the quality (error rate) and performance of our proposed method. 
@@ -676,6 +681,7 @@ Therefore, depending on the application, we can set the buffer size to bigger va
 \end{figure}
 
 \todo[inline]{R1: Dynamic Scheduling is an interesting idea -- but you're not offering any scheduling algorithm here? Just the idea that you can schedule training when there's free CPU cycles? BD: Scheduling and Sampling rate have to be studied in more detail. All reviewers had concerns about these}
+\todo[inline]{R3: What is exactly the scheduling?}
 \textit{Dynamic scheduling:} In production environments, the load on the system typically varies throughout the lifetime of the application.
 Therefore, a dynamic scheduling maximizes the performance of the system, by performing more frequent updates while there are more resources available for training. 
 \todo[inline]{R1: "Moreover, since training and serving ... only update the weights when the training iteration is over". Why? Why not apply the updates to the model in-place? This allows you to serve every request with the absolute freshest model. At least for the single-machine case. BD: the updated model is the result of the training iterations, therefore, we have to wait until the iteration is over. The sentence seems clear to me. I should it run it by TR}
@@ -690,6 +696,7 @@ As a result, bigger sample sizes do not have a considerable effect on the qualit
  
 Figure \ref{fig:movie-lens-100k-sample-rate-time} shows the effect of increasing the sampling rate on the running time.
 Increasing the sampling rate from 0.1 to 1.0, increases the running time by a factor of 5.
+\todo[inline]{R3: . The sampling parameter deserves a more systematic treatment since it deeply affects the performance. In fact, Baseline+ and Velox represent two extreme settings of it: 0\% and 100\%. Instead, the paper simply suggests "setting the sampling rate to smaller values will increase the performance substantially, while only slightly affecting the quality of the model." It is not a sound conclusion if we agree Baseline+ is equivalent to 0\% sampling rate.}
 Therefore, similar to the scheduling rate, setting the sampling rate to smaller values will increase the performance substantially, while only slightly affecting the quality of the model.
 
 \textbf{Tuning parameters based on error rate:} The underlying machine learning model and the dataset have big effects on the selection of sampling rate and scheduling rate.
@@ -731,6 +738,7 @@ Since neural networks do not gain much benefit by revisiting the same items, inc
 Based on our findings, we conclude that increasing the sampling and scheduling rate does not always affect the quality.
 In both the Movie Lens 100k and MNIST datasets, the change in scheduling and sampling rate have small to no effect on the overall quality.
 However, the running time of the methods are heavily influenced by these parameters.
+\todo[inline]{R3:  Similarly, the treatment of buffer size is also shallow. "Setting these parameters to small values decreases the running time considerably and save computation resources regardless of the type of model the system is serving." What about setting the buffer size as 1? BD: Reviewer's confusion is because I have used both scheduling rate and buffer size in the text, although they both control how often a training iteration is executed, they are 'opposite' of each other. Increasing the scheduling rate means we have a smaller buffer size and decreasing the scheduling rate means we have a bigger buffer size. }
 Setting these parameters to small values decreases the running time considerably and save computation resources regardless of the type of model the system is serving.
 
 \subsection{Experiments in the Local Environment}\label{subsec:experiment-local}
@@ -753,6 +761,7 @@ For all of the datasets, the sampling rate of Continuous is set to 0.2.
 \end{figure}
 
 Figure \ref{fig:movie-lens-100k-score} shows the mean squared error for Continuous, Velox, Baseline+, and Baseline on Movie Lens 100k.
+\todo[inline]{R3: Why? This reflects another flaw in evaluation. Since both Continuous and Velox have tunable parameters, it is not convincing to just compare two specific parameter choices.}
 The scheduling rate (buffer size) is set to 500 for Continuous and 15,000 for Velox.
 All four methods perform an initial training, therefore they have similar error rates in the beginning.
 However, the error rate of Baseline gradually increases since it does not incrementally update the model.
