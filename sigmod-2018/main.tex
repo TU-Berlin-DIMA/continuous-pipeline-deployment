@@ -237,6 +237,7 @@ As a result, they miss many opportunities for optimizing the training and deploy
 Our key observation is that, by exploiting the iterative nature of the underlying optimization algorithm, i.e., stochastic gradient descent (SGD), the model training process can be seamlessly executed with the serving and query answering component.
 Based on this observation, we present a system, that supports deployment, maintenance, and incremental and fast batch updates of machine learning models.
 Our contributions are as follows:
+\todo[inline]{R2: The first contribution item says the proposed method works for any SGD based models. However, the API in Listing 1 does not consider unsupervised models which can also be trained using SGD, like RBM (restricted boltzmann machine). BD: I think the contribution is still valid, we just have to clarify that the prototype only supports supervised learning for now.}
 \begin{itemize}
 \item We define a flexible system for machine learning models deployment and maintenance that allows any SGD-based machine learning model to be incorporated. We provide a prototypical implementation with several different machine learning model types
 \todo[inline]{TR: Maybe we should talk about the process here.
@@ -446,6 +447,7 @@ Moreover,  new data sets can be registered in data manager.
 In our current prototype, new data sets first have to be stored on disk, and data manager can be informed of the data path.
 Newly available data sets are used in the subsequent SGD iterations.
 
+\todo[inline]{R2: The difference of incremental update and SGD update needs clarification. In the experiment, they are used in different approaches (baseline+ is using incremental update and Continuous is using SGD). But, the second sentence of the last paragraph of sec 5.3 says both updates are applied in Continuous. BD: I have used incremental to refer to online learning. Whereas in some literature incremental may also refer to mini batch updates. I think the reviewers comment is already addressed in section \ref{subsec:setup}}
 \subsection{Model Manager} \label{model-manager} 
 An important part of the system is the model manager component.
 It is responsible for storing the model, answering prediction queries, and performing incremental and batch updates to the model.
