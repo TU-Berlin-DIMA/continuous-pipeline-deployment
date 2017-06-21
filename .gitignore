@@ -19,6 +19,9 @@
 # Folders:
 vldb/figures/
 sigmod-2017/figures/
+sigmod-2018/figures/
+vldb/drafts/
+vldb/reviews/
 code/spark/continuous-training/target/
 code/spark/continuous-training/data/
 code/spark/continuous-training/checkpoints/
