@@ -6,7 +6,7 @@ import java.util.Calendar
 import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
 import de.dfki.preprocessing.parsers.{CSVParser, DataParser, SVMParser}
-import de.dfki.streaming.models.OnlineSVM
+import de.dfki.streaming.models.{HybridLR, HybridModel, HybridSVM}
 import de.dfki.utils.{BatchFileInputDStream, CommandLineParser}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
@@ -14,8 +14,8 @@ import org.apache.hadoop.io.{LongWritable, NullWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat
 import org.apache.log4j.Logger
-import org.apache.spark.mllib.classification.{SVMModel, SVMWithSGD}
-import org.apache.spark.mllib.regression.LabeledPoint
+import org.apache.spark.mllib.classification.{LogisticRegressionModel, LogisticRegressionWithSGD, SVMModel, SVMWithSGD}
+import org.apache.spark.mllib.regression.{GeneralizedLinearAlgorithm, GeneralizedLinearModel, LabeledPoint}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming._
 import org.apache.spark.streaming.dstream.{ConstantInputDStream, DStream}
@@ -38,7 +38,7 @@ import org.apache.spark.{SparkConf, SparkContext}
   *
   * @author Behrouz Derakhshan
   */
-abstract class SVMClassifier extends Serializable {
+abstract class Classifier extends Serializable {
 
   @transient var future: ScheduledFuture[_] = _
   @transient var execService: ScheduledExecutorService = _
@@ -49,13 +49,13 @@ abstract class SVMClassifier extends Serializable {
 
   // constants for the directory structures
   val DATA_DIRECTORY = "data"
-  val DATA_SET = "criteo-sample/processed"
+  val DATA_SET = "criteo-sample"
   val BASE_DATA_DIRECTORY: String = s"$DATA_DIRECTORY/$DATA_SET"
   val INITIAL_TRAINING = "initial-training"
   val STREAM_TRAINING = "stream-training"
   val TEST_DATA = "test"
 
-  var streamingModel: OnlineSVM = _
+  var streamingModel: HybridModel[GeneralizedLinearModel, GeneralizedLinearAlgorithm[GeneralizedLinearModel]] = _
   var dataParser: DataParser = _
 
   def experimentResultPath(root: String, parent: String): String = {
@@ -72,7 +72,8 @@ abstract class SVMClassifier extends Serializable {
   var defaultParallelism: Int = _
 
 
-  def parseArgs(args: Array[String]): (String, String, String, String) = {
+
+  def parseArgs(args: Array[String]): (String, String, String, String, String) = {
     val parser = new CommandLineParser(args).parse()
     // spark streaming batch duration
     batchDuration = parser.getLong("batch-duration", defaultBatchDuration)
@@ -84,6 +85,8 @@ abstract class SVMClassifier extends Serializable {
     val streamingDataPath = parser.get("streaming-path", s"$BASE_DATA_DIRECTORY/$STREAM_TRAINING")
     // folder (file) for test data
     val testDataPath = parser.get("test-path", "prequential")
+    // model type
+    val modelType = parser.get("model-type", defaultModelType)
     // cumulative test error
     errorType = parser.get("error-type", "cumulative")
     // number of iterations
@@ -94,13 +97,14 @@ abstract class SVMClassifier extends Serializable {
     onlineStepSize = parser.getDouble("online-step-size", 1.0)
 
 
+
     if (parser.get("input-format", "text") == "text") {
       dataParser = new CSVParser()
     } else {
       dataParser = new SVMParser(parser.getInteger("feature-size"))
     }
 
-    (resultRoot, initialDataPath, streamingDataPath, testDataPath)
+    (resultRoot, initialDataPath, streamingDataPath, testDataPath, modelType)
   }
 
   /**
@@ -173,7 +177,7 @@ abstract class SVMClassifier extends Serializable {
     val currentTuple = value.getOrElse(0.0, 0.0)
     val error = currentTuple._1 + currentState._1
     val sum = currentTuple._2 + currentState._2
-    println(s"New State: ($error : $sum)")
+    //println(s"New State: ($error : $sum)")
     state.update(error, sum)
     (error, sum)
   }
@@ -229,29 +233,22 @@ abstract class SVMClassifier extends Serializable {
     * @param initialDataDirectories directory of initial data
     * @return Online SVM Model
     */
-  def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String): OnlineSVM = {
-    val model = trainModel(ssc.sparkContext, initialDataDirectories)
-    new OnlineSVM().setInitialModel(model).setNumIterations(1).setStepSize(onlineStepSize).setConvergenceTol(0.0)
+  def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String, modelType: String): HybridModel[GeneralizedLinearModel, GeneralizedLinearAlgorithm[GeneralizedLinearModel]] = {
+    if (modelType.equals("svm")) {
+      logger.info("Instantiating a SVM Model")
+      val model = trainSVMModel(ssc.sparkContext, initialDataDirectories)
+      val hModel = new HybridSVM().asInstanceOf[HybridModel[GeneralizedLinearModel, GeneralizedLinearAlgorithm[GeneralizedLinearModel]]]
+      hModel.setInitialModel(model).setNumIterations(1).setStepSize(onlineStepSize).setConvergenceTol(0.0)
+    } else {
+      logger.info("Instantiating a Linear Regression Model")
+      val model = trainLRModel(ssc.sparkContext, initialDataDirectories)
+      val hModel = new HybridLR().asInstanceOf[HybridModel[GeneralizedLinearModel, GeneralizedLinearAlgorithm[GeneralizedLinearModel]]]
+      hModel.setInitialModel(model).setNumIterations(1).setStepSize(onlineStepSize).setConvergenceTol(0.0)
+    }
   }
 
-  /**
-    * Train a SVM Model from the data in the specified directories separated by comma
-    *
-    * @param sc           SparkContext object
-    * @param trainingPath list of directories separated by comma
-    * @return SVMModel
-    */
-  def trainModel(sc: SparkContext, trainingPath: String): SVMModel = {
-    trainModel(sc.textFile(trainingPath).map(dataParser.parsePoint))
-  }
-
-  /**
-    * Train a SVM Model from the RDD
-    *
-    * @param data rdd
-    * @return SVMModel
-    */
-  def trainModel(data: RDD[LabeledPoint]): SVMModel = {
+  def trainSVMModel(sc: SparkContext, trainingData: String): SVMModel = {
+    val data = sc.textFile(trainingData).map(dataParser.parsePoint)
     val cachedData = data.cache()
     cachedData.count()
     val model = SVMWithSGD.train(cachedData, numIterations, offlineStepSize, 0.01)
@@ -259,6 +256,14 @@ abstract class SVMClassifier extends Serializable {
     model
   }
 
+  def trainLRModel(sc: SparkContext, trainingData: String): LogisticRegressionModel = {
+    val data = sc.textFile(trainingData).map(dataParser.parsePoint)
+    val cachedData = data.cache()
+    cachedData.count()
+    val model = LogisticRegressionWithSGD.train(cachedData, numIterations, offlineStepSize, 0.01)
+    cachedData.unpersist(false)
+    model
+  }
 
 
   /**
@@ -298,6 +303,8 @@ abstract class SVMClassifier extends Serializable {
   def defaultBatchDuration: Long
 
   def defaultTrainingSlack: Long
+
+  def defaultModelType: String
 
   def run(args: Array[String])
 

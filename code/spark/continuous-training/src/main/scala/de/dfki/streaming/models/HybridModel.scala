@@ -1,68 +1,55 @@
 package de.dfki.streaming.models
 
-
 import java.io.{File, FileWriter}
 
-import org.apache.spark.mllib.classification.{SVMModel, SVMWithSGD}
 import org.apache.spark.mllib.linalg.Vector
-import org.apache.spark.mllib.regression.{LabeledPoint, StreamingLinearAlgorithm}
+import org.apache.spark.mllib.optimization.GradientDescent
+import org.apache.spark.mllib.regression.{GeneralizedLinearAlgorithm, GeneralizedLinearModel, LabeledPoint, StreamingLinearAlgorithm}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
 
 import scala.reflect.ClassTag
 
 /**
-  * @author Behrouz Derakhshan
+  * @author behrouz
   */
-class OnlineSVM(private var stepSize: Double,
-                private var numIterations: Int,
-                private var miniBatchFraction: Double,
-                private var regParam: Double)
-  extends StreamingLinearAlgorithm[SVMModel, SVMWithSGD]
-    with Serializable {
+abstract class
 
 
-  override protected var model: Option[SVMModel] = None
-  override protected val algorithm: SVMWithSGD = new SVMWithSGD()
+HybridModel[M <: GeneralizedLinearModel, A <: GeneralizedLinearAlgorithm[M]]
+  extends StreamingLinearAlgorithm[M, A] with Serializable {
 
 
-  def this() = this(0.1, 50, 1.0, 0.0)
+  protected var model: Option[M]
+  protected val algorithm: A
 
-  def setInitialModel(initialModel: SVMModel): this.type = {
+  def setInitialModel(initialModel: M): this.type = {
     this.model = Some(initialModel)
     this
   }
 
-  /**
-    * Set the number of iterations of gradient descent to run per update. Default: 50.
-    */
-  def setNumIterations(numIterations: Int): this.type = {
-    this.algorithm.optimizer.setNumIterations(numIterations)
-    this
-  }
+  /** Set the step size for gradient descent. Default: 0.1. */
 
-  /**
-    * Set the step size for gradient descent. Default: 0.1.
-    */
   def setStepSize(stepSize: Double): this.type = {
-    this.algorithm.optimizer.setStepSize(stepSize)
+    this.algorithm.optimizer.asInstanceOf[GradientDescent].setStepSize(stepSize)
     this
   }
 
+  /** Set the number of iterations of gradient descent to run per update. Default: 50. */
+  def setNumIterations(numIterations: Int): this.type = {
+    this.algorithm.optimizer.asInstanceOf[GradientDescent].setNumIterations(numIterations)
+    this
+  }
 
-  /**
-    * Set the fraction of each batch to use for updates. Default: 1.0.
-    */
+  /** Set the fraction of each batch to use for updates. Default: 1.0. */
   def setMiniBatchFraction(miniBatchFraction: Double): this.type = {
-    this.algorithm.optimizer.setMiniBatchFraction(miniBatchFraction)
+    this.algorithm.optimizer.asInstanceOf[GradientDescent].setMiniBatchFraction(miniBatchFraction)
     this
   }
 
-  /**
-    * Set the regularization parameter. Default: 0.0.
-    */
+  /** Set the regularization parameter. Default: 0.0. */
   def setRegParam(regParam: Double): this.type = {
-    this.algorithm.optimizer.setRegParam(regParam)
+    this.algorithm.optimizer.asInstanceOf[GradientDescent].setRegParam(regParam)
     this
   }
 
@@ -73,9 +60,13 @@ class OnlineSVM(private var stepSize: Double,
     * @return
     */
   def setConvergenceTol(convergenceTol: Double): this.type = {
-    this.algorithm.optimizer.setConvergenceTol(convergenceTol)
+    this.algorithm.optimizer.asInstanceOf[GradientDescent].setConvergenceTol(convergenceTol)
     this
   }
+
+
+  def latestModelWeights() = super.latestModel().weights
+
 
   def predictOnValues[K: ClassTag](data: RDD[(K, Vector)]): RDD[(K, Double)] = {
     if (model.isEmpty) {
@@ -107,7 +98,6 @@ class OnlineSVM(private var stepSize: Double,
       finally fw.close()
     }
     data.foreachRDD(storeErrorRate)
-
   }
 
   override def trainOn(observations: DStream[LabeledPoint]): Unit = {

@@ -1,7 +1,7 @@
 package de.dfki.examples
 
 import de.dfki.preprocessing.parsers.CSVParser
-import de.dfki.streaming.models.OnlineSVM
+import de.dfki.streaming.models.HybridSVM
 import org.apache.spark.SparkConf
 import org.apache.spark.mllib.classification.SVMWithSGD
 import org.apache.spark.mllib.regression.LabeledPoint
@@ -38,7 +38,7 @@ object StreamingSVM {
     }
     //sc.stop()
 
-    val streamingModel = new OnlineSVM().setInitialModel(model)
+    val streamingModel = new HybridSVM().setInitialModel(model)
     val testRdd = ssc.sparkContext.textFile("data/test/").map(new CSVParser().parsePoint)
     val rddQueue = new Queue[RDD[LabeledPoint]]()
 

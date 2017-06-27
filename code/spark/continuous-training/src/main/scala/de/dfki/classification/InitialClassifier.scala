@@ -6,14 +6,14 @@ package de.dfki.classification
   *
   * @author Behrouz Derakhshan
   */
-object InitialClassifier extends SVMClassifier {
+object InitialClassifier extends Classifier {
 
   def main(args: Array[String]): Unit = {
     run(args)
   }
 
   override def run(args: Array[String]): Unit = {
-    val (resultRoot, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
+    val (resultRoot, initialDataPath, streamingDataPath, testDataPath, modelType) = parseArgs(args)
     val ssc = initializeSpark()
     var testType = ""
     if (testDataPath == "prequential") {
@@ -21,12 +21,12 @@ object InitialClassifier extends SVMClassifier {
     } else {
       testType = "dataset"
     }
-    val parent = s"$getExperimentName/num-iterations-$numIterations/" +
+    val parent = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
       s"slack-none/offline-step-$offlineStepSize/online-step-$onlineStepSize"
 
     val resultPath = experimentResultPath(resultRoot, parent)
     // train initial model
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath, modelType)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
@@ -50,4 +50,6 @@ object InitialClassifier extends SVMClassifier {
   override def defaultBatchDuration = 1L
 
   override def defaultTrainingSlack = 0L
+
+  override def defaultModelType = "svm"
 }

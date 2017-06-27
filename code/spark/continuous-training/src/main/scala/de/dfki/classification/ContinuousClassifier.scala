@@ -3,7 +3,6 @@ package de.dfki.classification
 import java.util.concurrent.{Executors, TimeUnit}
 
 import de.dfki.utils.CommandLineParser
-import org.apache.spark.mllib.linalg.Vectors
 
 /**
   * Novel training and testing model
@@ -19,40 +18,40 @@ import org.apache.spark.mllib.linalg.Vectors
   *
   * @author Behrouz Derakhshan
   */
-object ContinuousClassifier extends SVMClassifier {
+object ContinuousClassifier extends Classifier {
 
   /**
     * @param args arguments to the main class should be a set of key, value pairs in the format of key=value
     *             Continuous Classifier:
     *             slack: delay between in periodic sgd iteration
     *             temp-path: path to write the observed data for retraining purposed
-    *             refer to [[SVMClassifier]] to view the rest of the arguments
+    *             refer to [[Classifier]] to view the rest of the arguments
     *
     */
   def main(args: Array[String]) {
     run(args)
   }
 
-  def parseContinuousArgs(args: Array[String]): (String, Long, String, String, String, String, Boolean, Double) = {
+  def parseContinuousArgs(args: Array[String]): (String, Long, String, String, String, String, Boolean, Double, String) = {
     val parser = new CommandLineParser(args).parse()
-    val (resultRoot, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
+    val (resultRoot, initialDataPath, streamingDataPath, testDataPath, modelType) = parseArgs(args)
     val slack = parser.getLong("slack", defaultTrainingSlack)
     val tempRoot = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
     val incremental = parser.getBoolean("incremental", default = true)
     // optional parameter for step of size of sgd iterations in continuous deployment method
     val continuousStepSize = parser.getDouble("continuous-step-size", onlineStepSize)
-    (resultRoot, slack, initialDataPath, streamingDataPath, testDataPath, tempRoot, incremental, continuousStepSize)
+    (resultRoot, slack, initialDataPath, streamingDataPath, testDataPath, tempRoot, incremental, continuousStepSize, modelType)
   }
 
   override def run(args: Array[String]): Unit = {
-    val (resultRoot, slack, initialDataPath, streamingDataPath, testDataPath, tempRoot, incremental, continuousStepSize) = parseContinuousArgs(args)
+    val (resultRoot, slack, initialDataPath, streamingDataPath, testDataPath, tempRoot, incremental, continuousStepSize, modelType) = parseContinuousArgs(args)
     var testType = ""
     if (testDataPath == "prequential") {
       testType = s"prequential"
     } else {
       testType = "dataset"
     }
-    val parent = s"$getExperimentName/num-iterations-$numIterations/" +
+    val parent = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
       s"slack-$slack/offline-step-$offlineStepSize/online-step-$onlineStepSize/continuous-step-$continuousStepSize"
 
     val resultPath = experimentResultPath(resultRoot, parent)
@@ -62,7 +61,7 @@ object ContinuousClassifier extends SVMClassifier {
 
     // train initial model
     val startTime = System.currentTimeMillis()
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory, modelType)
     val endTime = System.currentTimeMillis()
     storeTrainingTimes(endTime - startTime, resultPath)
 
@@ -126,4 +125,6 @@ object ContinuousClassifier extends SVMClassifier {
   override def defaultBatchDuration = 1L
 
   override def defaultTrainingSlack = 5L
+
+  override def defaultModelType = "lr"
 }

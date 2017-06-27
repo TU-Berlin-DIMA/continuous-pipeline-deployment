@@ -2,7 +2,7 @@ package de.dfki.examples
 
 import java.util.concurrent.{Executors, TimeUnit}
 
-import de.dfki.streaming.models.OnlineSVM
+import de.dfki.streaming.models.HybridSVM
 import org.apache.spark.mllib.classification.SVMModel
 import org.apache.spark.mllib.linalg.DenseVector
 
@@ -14,7 +14,7 @@ import scala.util.Random
 object TestStateSharingOverThreads {
   val execService = Executors.newSingleThreadScheduledExecutor()
 
-  def doStuff(streamingModel: OnlineSVM) = {
+  def doStuff(streamingModel: HybridSVM) = {
 
     val task2 = new Runnable {
       override def run() = {
@@ -26,7 +26,7 @@ object TestStateSharingOverThreads {
 
   def main(args: Array[String]): Unit = {
 
-    val streamingModel = new OnlineSVM().setInitialModel(new SVMModel(new DenseVector(List(0.0, 0, 0).toArray), 0.0))
+    val streamingModel = new HybridSVM().setInitialModel(new SVMModel(new DenseVector(List(0.0, 0, 0).toArray), 0.0))
     doStuff(streamingModel)
 
     val task = new Runnable {

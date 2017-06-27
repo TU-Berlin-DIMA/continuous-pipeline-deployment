@@ -5,7 +5,6 @@ import java.util.concurrent.{Executors, TimeUnit}
 
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.mllib.linalg.Vectors
-import org.apache.spark.streaming.Seconds
 
 /**
   * Training and Serving of SVM classifier using the architecture described in Velox: https://arxiv.org/abs/1409.3809
@@ -20,7 +19,7 @@ import org.apache.spark.streaming.Seconds
   *
   * @author Behrouz Derakhshan
   */
-object VeloxClassifier extends SVMClassifier {
+object VeloxClassifier extends Classifier {
 
 
   /**
@@ -28,32 +27,32 @@ object VeloxClassifier extends SVMClassifier {
     *             Velox Classifier:
     *             slack: delay between in periodic sgd iteration
     *             temp-path: path to write the observed data for retraining purposed
-    *             refer to [[SVMClassifier]] to view the rest of the arguments
+    *             refer to [[Classifier]] to view the rest of the arguments
     *
     */
   def main(args: Array[String]): Unit = {
     run(args)
   }
 
-  def parseVeloxArgs(args: Array[String]): (Long, String, String, String, String, String, Boolean) = {
+  def parseVeloxArgs(args: Array[String]): (Long, String, String, String, String, String, Boolean, String) = {
     val parser = new CommandLineParser(args).parse()
-    val (resultPath, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
+    val (resultPath, initialDataPath, streamingDataPath, testDataPath, modelType) = parseArgs(args)
     val slack = parser.getLong("slack", defaultTrainingSlack)
     val tempDirectory = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
     val incremental = parser.getBoolean("incremental", default = true)
     (slack, resultPath, initialDataPath, streamingDataPath,
-      testDataPath, tempDirectory, incremental)
+      testDataPath, tempDirectory, incremental, modelType)
   }
 
   override def run(args: Array[String]): Unit = {
-    val (slack, resultRoot, initialDataPath, streamingDataPath, testDataPath, tempRoot, incremental) = parseVeloxArgs(args)
+    val (slack, resultRoot, initialDataPath, streamingDataPath, testDataPath, tempRoot, incremental, modelType) = parseVeloxArgs(args)
     var testType = ""
     if (testDataPath == "prequential") {
       testType = "prequential"
     } else {
       testType = "dataset"
     }
-    val parent = s"$getExperimentName/num-iterations-$numIterations/" +
+    val parent = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
       s"slack-$slack/offline-step-$offlineStepSize/online-step-$onlineStepSize"
 
     val resultPath = experimentResultPath(resultRoot, parent)
@@ -63,7 +62,7 @@ object VeloxClassifier extends SVMClassifier {
 
     // train initial model
     val startTime = System.currentTimeMillis()
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory, modelType)
     val endTime = System.currentTimeMillis()
     storeTrainingTimes(endTime - startTime, resultPath)
     val streamingSource = streamSource(ssc, streamingDataPath)
@@ -89,17 +88,23 @@ object VeloxClassifier extends SVMClassifier {
           future.cancel(true)
         }
         logger.info("initiating a retraining of the model ...")
-        println(streamingModel.latestModel().weights.toString)
+        //println(streamingModel.latestModel().weights.toString)
         streamingSource.pause()
 
         storeRetrainingPoint(streamingSource.getLastProcessedFileIndex, resultPath)
         val startTime = System.currentTimeMillis()
-        val before = streamingModel.latestModel().weights
-        val model = trainModel(ssc.sparkContext, initialDataPath + "," + tempDirectory)
-        val after = streamingModel.latestModel().weights
+        val before = streamingModel.latestModelWeights
+
+
+        val after = streamingModel.latestModelWeights
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)
-        streamingModel.setInitialModel(model)
+        if (modelType.equals("svm")) {
+          val model = trainSVMModel(ssc.sparkContext, initialDataPath + "," + tempDirectory)
+          streamingModel.setInitialModel(model)
+        } else {
+
+        }
         logger.info(s"Delta: ${Vectors.sqdist(before, after)}")
 
 
@@ -137,4 +142,6 @@ object VeloxClassifier extends SVMClassifier {
   override def defaultBatchDuration = 1L
 
   override def defaultTrainingSlack = 60L
+
+  override def defaultModelType = "svm"
 }

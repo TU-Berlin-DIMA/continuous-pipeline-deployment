@@ -8,14 +8,14 @@ import org.apache.spark.{SparkConf, SparkContext}
   *
   * @author Behrouz Derakhshan
   */
-object BatchClassifier extends SVMClassifier {
+object BatchClassifier extends Classifier {
 
   def main(args: Array[String]) {
     run(args)
   }
 
   override def run(args: Array[String]): Unit = {
-    val (_, initialDataPath, streamingDataPath, testDataPath) = parseArgs(args)
+    val (_, initialDataPath, streamingDataPath, testDataPath, modelType) = parseArgs(args)
     val conf = new SparkConf().setMaster("local[*]").setAppName("Batch SVM Classifier")
     val sc = new SparkContext(conf)
 
@@ -45,6 +45,8 @@ object BatchClassifier extends SVMClassifier {
   override def defaultBatchDuration = 0L
 
   override def defaultTrainingSlack = 0L
+
+  override def defaultModelType = "svm"
 }
 
 //Error rate = 0.3145537463802043
