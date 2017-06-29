@@ -86,3 +86,6 @@ scp -r behrouz@cloud-11.dima.tu-berlin.de:/share/hadoop/behrouz/experiments/crit
 
 
 ~/Documents/frameworks/spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class de.dfki.examples.URLTrainingBug --master "spark://berlin-189.b.dfki.de:7077" /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "initial-training-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/url-reputation-sample/initial-training" "type=1"
+
+
+~/Documents/frameworks/spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class de.dfki.examples.CriteoPreprocessing --master "spark://berlin-235.b.dfki.de:7077" --executor-memory 5G /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-full/processed/withday" "output-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-full/processed/" 
