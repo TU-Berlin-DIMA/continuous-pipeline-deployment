@@ -5,7 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
-import de.dfki.preprocessing.parsers.{CSVParser, DataParser, SVMParser}
+import de.dfki.preprocessing.parsers.{CSVParser, DataParser, SVMParser, VectorParser}
 import de.dfki.streaming.models.{HybridLR, HybridModel, HybridSVM}
 import de.dfki.utils.{BatchFileInputDStream, CommandLineParser}
 import org.apache.hadoop.conf.Configuration
@@ -72,7 +72,6 @@ abstract class Classifier extends Serializable {
   var defaultParallelism: Int = _
 
 
-
   def parseArgs(args: Array[String]): (String, String, String, String, String) = {
     val parser = new CommandLineParser(args).parse()
     // spark streaming batch duration
@@ -97,11 +96,13 @@ abstract class Classifier extends Serializable {
     onlineStepSize = parser.getDouble("online-step-size", 1.0)
 
 
-
-    if (parser.get("input-format", "text") == "text") {
+    val inputFormat = parser.get("input-format", "text")
+    if (inputFormat == "text") {
       dataParser = new CSVParser()
-    } else {
+    } else if (inputFormat == "svm") {
       dataParser = new SVMParser(parser.getInteger("feature-size"))
+    } else {
+      dataParser = new VectorParser()
     }
 
     (resultRoot, initialDataPath, streamingDataPath, testDataPath, modelType)

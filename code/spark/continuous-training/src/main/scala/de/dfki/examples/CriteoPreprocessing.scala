@@ -22,6 +22,7 @@ import org.apache.spark.{SparkConf, sql}
 object CriteoPreprocessing {
   val INPUT_PATH = "data/criteo-full"
   val OUTPUT_PATH = "data/criteo-full/processed"
+  val FILES_PER_DAY = 100
   // There are a total of 23 days
   val DAYS = 4
 
@@ -31,6 +32,7 @@ object CriteoPreprocessing {
     val root = parser.get("input-path", INPUT_PATH)
     val result = parser.get("output-path", OUTPUT_PATH)
     val days = 0 to parser.getInteger("days", DAYS)
+    val filesPerDay = parser.getInteger("files-per-day", FILES_PER_DAY)
 
     val conf = new SparkConf().setAppName("Criteo Feature Engineering")
     val masterURL = conf.get("spark.master", "local[*]")
@@ -41,7 +43,7 @@ object CriteoPreprocessing {
       .config(conf)
       .getOrCreate()
 
-    var indexerModel: PipelineModel = _
+    var indexerModel: PipelineModel = null
     try {
       // load the model if it already exists
       indexerModel = PipelineModel.load(s"$root/model/")
@@ -91,14 +93,14 @@ object CriteoPreprocessing {
         .setInputCols(finalColumns.toArray)
         .setOutputCol("features")
 
-      val output = assembler.transform(finalDf).select("_c0", "features")
+      val output = assembler.transform(finalDf).select("_c0", "features").repartition(filesPerDay)
       // without explicitly caching the dataset, the program runs out of memory on my local machine
       output.cache()
       output.count()
 
       finalDf.unpersist(true)
       dataFrame.unpersist(true)
-      output.rdd.map(r => (r.get(0).toString, r.get(1).toString)).saveAsTextFile(s"$result/$d/")
+      output.rdd.map(r => s"${r.get(0).toString} | ${r.get(1).toString}").saveAsTextFile(s"$result/$d/")
       output.unpersist(true)
     }
 
