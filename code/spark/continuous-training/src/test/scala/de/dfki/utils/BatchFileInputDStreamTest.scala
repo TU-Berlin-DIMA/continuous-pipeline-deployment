@@ -31,7 +31,18 @@ class BatchFileInputDStreamTest extends FunSuite with BeforeAndAfterEach {
     source.listFiles().foreach(println)
   }
 
-  test("dummy") {
-    
+  test("CurrentFolder") {
+    val path = "data/criteo-full/processed/*"
+    val source = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](ssc, path)
+
+    print(source.currentFolder)
   }
+
+  test("dummy2"){
+    val v1 = "file:/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-full/processed/3/part-00090"
+    val v2 = "file:/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-full/processed/4/part-00000"
+
+    print("1" < "2")
+  }
+
 }

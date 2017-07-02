@@ -2,6 +2,7 @@ package de.dfki.classification
 
 import java.util.concurrent.{Executors, TimeUnit}
 
+import de.dfki.core.scheduling.FixedIntervalScheduler
 import de.dfki.utils.CommandLineParser
 
 /**
@@ -82,17 +83,14 @@ object ContinuousClassifier extends Classifier {
       trainOnStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint))
     }
 
+
     // periodically schedule one iteration of the SGD
     val task = new Runnable {
       def run() {
-        if (ssc.sparkContext.isStopped) {
-          future.cancel(true)
-        }
-        logger.info("schedule an iteration of SGD")
         streamingSource.pause()
         val startTime = System.currentTimeMillis()
         val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(dataParser.parsePoint)
-          //.sample(withReplacement = false, fraction = 0.2).cache()
+        //.sample(withReplacement = false, fraction = 0.2).cache()
         //val before = streamingModel.latestModel().weights
         streamingModel.setStepSize(continuousStepSize)
         streamingModel.trainOn(historicalDataRDD)
@@ -101,21 +99,19 @@ object ContinuousClassifier extends Classifier {
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)
         //logger.info(s"Delta: ${Vectors.sqdist(before, after)}")
-        if (streamingSource.isCompleted) {
-          logger.warn("stopping the program")
-          ssc.stop(stopSparkContext = true, stopGracefully = true)
-          future.cancel(true)
-          execService.shutdown()
-        }
         streamingSource.unpause()
       }
     }
 
-    ssc.start()
+    val scheduler = new FixedIntervalScheduler(streamingSource, ssc, task, slack)
 
-    execService = Executors.newSingleThreadScheduledExecutor()
-    future = execService.scheduleWithFixedDelay(task, slack, slack, TimeUnit.SECONDS)
-    future.get()
+    ssc.start()
+    scheduler.init()
+    scheduler.schedule()
+
+    //    execService = Executors.newSingleThreadScheduledExecutor()
+    //    future = execService.scheduleWithFixedDelay(task, slack, slack, TimeUnit.SECONDS)
+    //    future.get()
   }
 
   override def getApplicationName = "Continuous SVM Model"

@@ -1,8 +1,8 @@
 package de.dfki.classification
 
 import java.io.{File, FileWriter}
-import java.util.concurrent.{Executors, TimeUnit}
 
+import de.dfki.core.scheduling.{FixedIntervalScheduler, FolderBasedScheduler}
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.mllib.linalg.Vectors
 
@@ -84,19 +84,15 @@ object VeloxClassifier extends Classifier {
     // periodically retrain the model from scratch using the historical data
     val task = new Runnable {
       def run() {
-        if (ssc.sparkContext.isStopped) {
-          future.cancel(true)
-        }
-        logger.info("initiating a retraining of the model ...")
         //println(streamingModel.latestModel().weights.toString)
         streamingSource.pause()
 
         storeRetrainingPoint(streamingSource.getLastProcessedFileIndex, resultPath)
         val startTime = System.currentTimeMillis()
-        val before = streamingModel.latestModelWeights
+        val before = streamingModel.latestModelWeights()
 
 
-        val after = streamingModel.latestModelWeights
+        val after = streamingModel.latestModelWeights()
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)
         if (modelType.equals("svm")) {
@@ -107,23 +103,24 @@ object VeloxClassifier extends Classifier {
         }
         logger.info(s"Delta: ${Vectors.sqdist(before, after)}")
 
-
-        if (streamingSource.isCompleted) {
-          logger.warn("stopping the program")
-          ssc.stop(stopSparkContext = true, stopGracefully = true)
-          future.cancel(true)
-          execService.shutdown()
-        }
-
         streamingSource.unpause()
       }
     }
 
-    ssc.start()
 
-    execService = Executors.newSingleThreadScheduledExecutor()
-    future = execService.scheduleWithFixedDelay(task, slack, slack, TimeUnit.SECONDS)
-    future.get()
+    val scheduler = if (slack == -1) {
+      new FolderBasedScheduler(streamingSource, ssc, task)
+    } else {
+      new FixedIntervalScheduler(streamingSource, ssc, task, slack)
+    }
+
+
+    ssc.start()
+    scheduler.init()
+    scheduler.schedule()
+    //    execService = Executors.newSingleThreadScheduledExecutor()
+    //    future = execService.scheduleWithFixedDelay(task, slack, slack, TimeUnit.SECONDS)
+    //    future.get()
 
   }
 
