@@ -23,9 +23,11 @@ abstract class Scheduler(streamingSource: BatchFileInputDStream[LongWritable, Te
     execService = Executors.newSingleThreadScheduledExecutor()
   }
 
-  def runNow()
+  def runNow(): Unit
 
-  def schedule()
+  def schedule(): Unit
+
+  def schedulingType(): String
 
   def stop(): Unit = {
     logger.info("Shutting down the scheduler")

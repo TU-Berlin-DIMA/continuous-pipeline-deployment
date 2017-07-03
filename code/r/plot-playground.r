@@ -20,7 +20,7 @@ baselinePlus = read.csv('cover-types/baseline-plus/num-iterations-500/slack-none
 baseline= read.csv('cover-types/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-04-11-13-10/error-rates.txt', header = FALSE, col.names = 'baseline')
 
 m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
-continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))
+continuous = rbind(continuinstaous, data.frame(continuous = rep(NA, m - nrow(continuous))))
 velox = rbind(velox, data.frame(velox = rep(NA, m - nrow(velox))))
 baseline = rbind(baseline, data.frame(baseline = rep(NA, m - nrow(baseline))))
 baselinePlus = rbind(baselinePlus, data.frame(baselinePlus = rep(NA, m - nrow(baselinePlus))))
@@ -244,13 +244,13 @@ ggplot(data = ml, aes(x = time, y = value, group = variable)) +
 
 
 #SUSY Cluster
-continuous = read.csv('susy/continuous/num-iterations-500/slack-20/offline-step-1.0/online-step-1.0/2017-03-30-11-48/error-rates.txt', header = FALSE, col.names = 'continuous')
+continuous = read.csv('susy/continuous/model-type-lr/num-iterations-500/slack-5/offline-step-1.0/online-step-1.0/continuous-step-1.0/2017-07-03-14-11/error-rates.txt', header = FALSE, col.names = 'continuous')
 
-velox = read.csv('susy/velox/num-iterations-500/slack-400/offline-step-1.0/online-step-1.0/2017-03-28-21-07/error-rates.txt', header = FALSE, col.names = 'velox')
+velox = read.csv('susy/velox/model-type-svm/num-iterations-500/slack--1/offline-step-1.0/online-step-1.0/2017-07-03-11-29/error-rates.txt', header = FALSE, col.names = 'velox')
 
-baselinePlus = read.csv('susy/baseline-plus/num-iterations-500/slack-none/offline-step-1.0/online-step-0.1/2017-03-28-18-55/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
+baselinePlus = read.csv('susy/velox/model-type-svm/num-iterations-500/slack--1/offline-step-1.0/online-step-1.0/2017-07-03-11-29/error-rates.txt', header = FALSE, col.names = 'baselinePlus')
 
-baseline = read.csv('susy/baseline/num-iterations-500/slack-none/offline-step-1.0/online-step-1.0/2017-03-29-09-16/error-rates.txt', header = FALSE, col.names = 'baseline')
+baseline = read.csv('susy/velox/model-type-svm/num-iterations-500/slack--1/offline-step-1.0/online-step-1.0/2017-07-03-11-29/error-rates.txt', header = FALSE, col.names = 'baseline')
 
 m = max(nrow(continuous), nrow(velox), nrow(baseline), nrow(baselinePlus))
 continuous = rbind(continuous, data.frame(continuous = rep(NA, m - nrow(continuous))))

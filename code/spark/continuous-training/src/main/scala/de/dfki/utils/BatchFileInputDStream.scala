@@ -1,6 +1,7 @@
 package de.dfki.utils
 
 
+import de.dfki.core.scheduling.{FixedIntervalScheduler, FolderBasedScheduler}
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path, PathFilter}
 import org.apache.hadoop.mapreduce.{InputFormat => NewInputFormat}
@@ -30,6 +31,7 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
   @transient private var _files: Array[String] = _
   @transient private var lastProcessedFileIndex = 0
   @transient private var isPaused = false
+  @transient private var schedulingPolicy = FixedIntervalScheduler.SCHEDULING_TYPE
 
 
   private def directoryPath: Path = {
@@ -79,7 +81,8 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
     else if (lastProcessedFileIndex < files.length) {
       val rdd = rddFromFile(files(lastProcessedFileIndex))
       if (currentFolder != nextFolder &
-        nextFolder != BatchFileInputDStream.NO_MORE_FOLDERS) {
+        nextFolder != BatchFileInputDStream.NO_MORE_FOLDERS &
+        schedulingPolicy == FolderBasedScheduler.SCHEDULING_TYPE) {
         // this is not the ideal behaviour, as streaming and
         // batch learning can and should happen simultaneously
         logger.info(s"Finished Processing Folder: $currentFolder")
@@ -171,6 +174,10 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
       val i1 = s.lastIndexOf("/", i2 - 1)
       s.substring(i1 + 1, i2)
     }
+  }
+
+  def setSchedulingPolicy(policy: String) = {
+    schedulingPolicy = policy
   }
 }
 

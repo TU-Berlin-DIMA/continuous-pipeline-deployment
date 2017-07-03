@@ -106,10 +106,6 @@ object ContinuousClassifier extends Classifier {
     ssc.start()
     scheduler.init()
     scheduler.schedule()
-
-    //    execService = Executors.newSingleThreadScheduledExecutor()
-    //    future = execService.scheduleWithFixedDelay(task, slack, slack, TimeUnit.SECONDS)
-    //    future.get()
   }
 
   override def getApplicationName = "Continuous SVM Model"

@@ -29,6 +29,7 @@ class FolderBasedScheduler(streamingSource: BatchFileInputDStream[LongWritable, 
 
   override def init() = {
     super.init()
+    streamingSource.setSchedulingPolicy(schedulingType())
     currentFolder = streamingSource.currentFolder
 
   }
@@ -61,5 +62,9 @@ class FolderBasedScheduler(streamingSource: BatchFileInputDStream[LongWritable, 
     }
   }
 
+  override def schedulingType() = FolderBasedScheduler.SCHEDULING_TYPE
+}
 
+object FolderBasedScheduler {
+  val SCHEDULING_TYPE = "folder-based-scheduling"
 }

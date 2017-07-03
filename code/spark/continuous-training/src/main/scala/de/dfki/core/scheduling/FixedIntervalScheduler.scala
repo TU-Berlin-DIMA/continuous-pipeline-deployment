@@ -36,5 +36,10 @@ class FixedIntervalScheduler(streamingSource: BatchFileInputDStream[LongWritable
     execService.execute(task)
   }
 
+  override def schedulingType = FixedIntervalScheduler.SCHEDULING_TYPE
 
+}
+
+object FixedIntervalScheduler {
+  val SCHEDULING_TYPE = "fixed-interval-scheduling"
 }
