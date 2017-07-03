@@ -80,8 +80,11 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
       val rdd = rddFromFile(files(lastProcessedFileIndex))
       if (currentFolder != nextFolder &
         nextFolder != BatchFileInputDStream.NO_MORE_FOLDERS) {
+        // this is not the ideal behaviour, as streaming and
+        // batch learning can and should happen simultaneously
+        logger.info(s"Finished Processing Folder: $currentFolder")
+        logger.warn(s"Streaming source is paused until new training is scheduled")
         pause()
-        logger.warn("Pausing the source until new batch job is executed")
       }
       lastProcessedFileIndex += 1
       Option(rdd)
@@ -143,8 +146,12 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
   }
 
   def currentFolder = {
-    if (!isPattern)
+    if (!isPattern) {
       BatchFileInputDStream.FOLDER_IS_FLAT
+    }
+    else if (lastProcessedFileIndex >= files.length) {
+      BatchFileInputDStream.NO_MORE_FOLDERS
+    }
     else {
       val s = files(lastProcessedFileIndex)
       val i2 = s.lastIndexOf("/")

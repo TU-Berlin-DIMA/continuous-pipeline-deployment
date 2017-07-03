@@ -248,6 +248,16 @@ abstract class Classifier extends Serializable {
     }
   }
 
+  def trainModel(sc: SparkContext, trainingData: String, modelType: String): GeneralizedLinearModel = {
+    if (modelType.equals("svm")) {
+      logger.info("Train a new SVM model")
+      trainSVMModel(sc, trainingData)
+    } else {
+      logger.info("Train a new Logistic Regression")
+      trainLRModel(sc, trainingData)
+    }
+  }
+
   def trainSVMModel(sc: SparkContext, trainingData: String): SVMModel = {
     val data = sc.textFile(trainingData).map(dataParser.parsePoint)
     val cachedData = data.cache()

@@ -29,9 +29,9 @@ abstract class Scheduler(streamingSource: BatchFileInputDStream[LongWritable, Te
 
   def stop(): Unit = {
     logger.info("Shutting down the scheduler")
-    ssc.stop(stopSparkContext = true, stopGracefully = true)
     future.cancel(true)
     execService.shutdown()
+    ssc.stop(stopSparkContext = true, stopGracefully = true)
   }
 
 

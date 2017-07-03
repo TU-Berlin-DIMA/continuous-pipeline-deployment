@@ -90,37 +90,27 @@ object VeloxClassifier extends Classifier {
         storeRetrainingPoint(streamingSource.getLastProcessedFileIndex, resultPath)
         val startTime = System.currentTimeMillis()
         val before = streamingModel.latestModelWeights()
-
-
+        val model = trainModel(ssc.sparkContext, initialDataPath + "," + tempDirectory, modelType)
         val after = streamingModel.latestModelWeights()
         val endTime = System.currentTimeMillis()
+        streamingModel.setInitialModel(model)
         storeTrainingTimes(endTime - startTime, resultPath)
-        if (modelType.equals("svm")) {
-          val model = trainSVMModel(ssc.sparkContext, initialDataPath + "," + tempDirectory)
-          streamingModel.setInitialModel(model)
-        } else {
-
-        }
         logger.info(s"Delta: ${Vectors.sqdist(before, after)}")
-
         streamingSource.unpause()
       }
     }
 
-
+    // slack == -1 means a Folder based Scheduler
     val scheduler = if (slack == -1) {
       new FolderBasedScheduler(streamingSource, ssc, task)
     } else {
       new FixedIntervalScheduler(streamingSource, ssc, task, slack)
     }
 
-
     ssc.start()
     scheduler.init()
     scheduler.schedule()
-    //    execService = Executors.newSingleThreadScheduledExecutor()
-    //    future = execService.scheduleWithFixedDelay(task, slack, slack, TimeUnit.SECONDS)
-    //    future.get()
+    ssc.awaitTermination()
 
   }
 
