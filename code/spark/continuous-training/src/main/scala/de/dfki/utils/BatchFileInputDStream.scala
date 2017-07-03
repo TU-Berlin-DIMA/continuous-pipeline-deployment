@@ -12,7 +12,7 @@ import org.apache.spark.streaming.{StreamingContext, Time}
 import scala.reflect.ClassTag
 
 /**
-  * Created by bede01 on 24/11/16.
+  * @author Behrouz
   */
 class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
                                                               _ssc: StreamingContext,
@@ -21,6 +21,7 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
                                                               conf: Option[Configuration] = None)
                                                             (implicit km: ClassTag[K], vm: ClassTag[V], fm: ClassTag[F])
   extends InputDStream[(K, V)](_ssc) with Serializable {
+
   @transient private val logger = Logger.getLogger(getClass.getName)
 
 
@@ -77,6 +78,14 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
     }
     else if (lastProcessedFileIndex < files.length) {
       val rdd = rddFromFile(files(lastProcessedFileIndex))
+      if (currentFolder != nextFolder &
+        nextFolder != BatchFileInputDStream.NO_MORE_FOLDERS) {
+        // this is not the ideal behaviour, as streaming and
+        // batch learning can and should happen simultaneously
+        logger.info(s"Finished Processing Folder: $currentFolder")
+        logger.warn(s"Streaming source is paused until new training is scheduled")
+        pause()
+      }
       lastProcessedFileIndex += 1
       Option(rdd)
     } else {
@@ -109,7 +118,11 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
   }
 
   def sortByFolderName(p1: Path, p2: Path) = {
-    p1.getName > p2.getName
+    p1.getName < p2.getName
+  }
+
+  def sortByName(s1: String, s2: String) = {
+    s1 < s2
   }
 
   def listFiles(): Array[String] = {
@@ -122,15 +135,49 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
       override def accept(path: Path): Boolean = filter(path)
     }
     val directories = fs.globStatus(directoryPath, directoryFilter).map(_.getPath)
-
-    val allFiles = directories.sortWith(sortByFolderName).flatMap(dir =>
-      fs.listStatus(dir, pathFilter).map(_.getPath.toString))
+    val allFiles = directories
+      .flatMap(dir => fs.listStatus(dir, pathFilter).map(_.getPath.toString))
+      .sortWith(sortByName)
     allFiles
+  }
+
+  def isPattern = {
+    directory contains "*"
+  }
+
+  def currentFolder = {
+    if (!isPattern) {
+      BatchFileInputDStream.FOLDER_IS_FLAT
+    }
+    else if (lastProcessedFileIndex >= files.length) {
+      BatchFileInputDStream.NO_MORE_FOLDERS
+    }
+    else {
+      val s = files(lastProcessedFileIndex)
+      val i2 = s.lastIndexOf("/")
+      val i1 = s.lastIndexOf("/", i2 - 1)
+      s.substring(i1 + 1, i2)
+    }
+  }
+
+  def nextFolder = {
+    if (!isPattern) {
+      BatchFileInputDStream.FOLDER_IS_FLAT
+    } else if (lastProcessedFileIndex >= files.length - 1) {
+      BatchFileInputDStream.NO_MORE_FOLDERS
+    } else {
+      val s = files(lastProcessedFileIndex + 1)
+      val i2 = s.lastIndexOf("/")
+      val i1 = s.lastIndexOf("/", i2 - 1)
+      s.substring(i1 + 1, i2)
+    }
   }
 }
 
 
 object BatchFileInputDStream {
+  val FOLDER_IS_FLAT = "folder is flat"
+  val NO_MORE_FOLDERS = "no more folders"
 
   // skip files starting with . and _ (for success)
   def defaultFilter(path: Path): Boolean = !path.getName.startsWith(".") && !path.getName.startsWith("_")
