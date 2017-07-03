@@ -1,8 +1,8 @@
 package de.dfki.examples
 
 import org.apache.spark.SparkConf
-import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.streaming.dstream.{ConstantInputDStream, DStream}
+import org.apache.spark.streaming.{Seconds, StreamingContext}
 
 /**
   * Created by bede01 on 05/01/17.

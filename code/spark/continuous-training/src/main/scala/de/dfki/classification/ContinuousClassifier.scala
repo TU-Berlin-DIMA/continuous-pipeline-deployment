@@ -1,7 +1,5 @@
 package de.dfki.classification
 
-import java.util.concurrent.{Executors, TimeUnit}
-
 import de.dfki.core.scheduling.FixedIntervalScheduler
 import de.dfki.utils.CommandLineParser
 
