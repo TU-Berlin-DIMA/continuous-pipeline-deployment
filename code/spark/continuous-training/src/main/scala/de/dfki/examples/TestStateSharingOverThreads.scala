@@ -2,7 +2,7 @@ package de.dfki.examples
 
 import java.util.concurrent.{Executors, TimeUnit}
 
-import de.dfki.streaming.models.HybridSVM
+import de.dfki.ml.streaming.models.HybridSVM
 import org.apache.spark.mllib.classification.SVMModel
 import org.apache.spark.mllib.linalg.DenseVector
 

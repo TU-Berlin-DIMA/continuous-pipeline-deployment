@@ -1,12 +1,12 @@
-package de.dfki.classification
+package de.dfki.deployment
 
 /**
-  * Baseline classifier
-  * Train an initial model and deploy it without further incremental learning
+  * Baseline+ classifier
+  * Train an initial model and apply incremental learning after deployment
   *
   * @author Behrouz Derakhshan
   */
-object InitialClassifier extends Classifier {
+object OnlineClassifier extends Classifier {
 
   def main(args: Array[String]): Unit = {
     run(args)
@@ -14,6 +14,7 @@ object InitialClassifier extends Classifier {
 
   override def run(args: Array[String]): Unit = {
     val (resultRoot, initialDataPath, streamingDataPath, testDataPath, modelType) = parseArgs(args)
+
     val ssc = initializeSpark()
     var testType = ""
     if (testDataPath == "prequential") {
@@ -25,27 +26,27 @@ object InitialClassifier extends Classifier {
       s"slack-none/offline-step-$offlineStepSize/online-step-$onlineStepSize"
 
     val resultPath = experimentResultPath(resultRoot, parent)
-    // train initial model
     streamingModel = createInitialStreamingModel(ssc, initialDataPath, modelType)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
-    // evaluate the stream
+    // evaluate the stream and incrementally update the model
     if (testDataPath == "prequential") {
       evaluateStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint), resultPath)
     } else {
       evaluateStream(testData, resultPath)
     }
 
+    trainOnStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint))
+
+
     ssc.start()
     ssc.awaitTermination()
-
   }
 
+  override def getApplicationName: String = "Baseline+ SVM Model"
 
-  override def getApplicationName = "Baseline SVM Model"
-
-  override def getExperimentName = "baseline"
+  override def getExperimentName = "baseline-plus"
 
   override def defaultBatchDuration = 1L
 

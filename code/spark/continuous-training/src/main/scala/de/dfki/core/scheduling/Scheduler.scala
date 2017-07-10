@@ -2,7 +2,7 @@ package de.dfki.core.scheduling
 
 import java.util.concurrent.{Executors, ScheduledExecutorService, ScheduledFuture}
 
-import de.dfki.utils.BatchFileInputDStream
+import de.dfki.core.streaming.BatchFileInputDStream
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.log4j.Logger

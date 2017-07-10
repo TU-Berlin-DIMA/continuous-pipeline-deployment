@@ -1,4 +1,4 @@
-package de.dfki.utils
+package de.dfki.core.streaming
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path, PathFilter}

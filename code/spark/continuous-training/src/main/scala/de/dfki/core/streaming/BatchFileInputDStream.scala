@@ -1,5 +1,4 @@
-package de.dfki.utils
-
+package de.dfki.core.streaming
 
 import de.dfki.core.scheduling.{FixedIntervalScheduler, FolderBasedScheduler}
 import org.apache.hadoop.conf.Configuration
