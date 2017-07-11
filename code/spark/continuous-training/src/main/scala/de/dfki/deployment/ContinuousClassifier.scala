@@ -1,4 +1,4 @@
-package de.dfki.classification
+package de.dfki.deployment
 
 import de.dfki.core.scheduling.FixedIntervalScheduler
 import de.dfki.utils.CommandLineParser

@@ -1,5 +1,6 @@
 package de.dfki.utils
 
+import de.dfki.core.streaming.BatchFileInputDStream
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.spark.SparkConf

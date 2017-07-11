@@ -1,14 +1,15 @@
 package de.dfki.preprocessing.parsers
+
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.mllib.regression.LabeledPoint
 
 /**
   * @author Behrouz
   */
-class VectorParser extends DataParser{
+class CustomVectorParser extends DataParser {
   override def parsePoint(point: String): LabeledPoint = {
-    val values = point.split("|")
-    new LabeledPoint(values.head.toDouble, Vectors.parse(values(0)))
+    val values = point.split("\\|")
+    new LabeledPoint(values.head.trim.toDouble, Vectors.parse(values(1).trim))
   }
 
   override def unparsePoint(p: LabeledPoint): String = {

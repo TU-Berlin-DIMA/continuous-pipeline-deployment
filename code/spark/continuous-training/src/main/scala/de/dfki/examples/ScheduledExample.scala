@@ -2,8 +2,8 @@ package de.dfki.examples
 
 import java.util.concurrent.{Executors, TimeUnit}
 
+import de.dfki.core.streaming.BatchFileInputDStream
 import de.dfki.preprocessing.parsers.CSVParser
-import de.dfki.utils.BatchFileInputDStream
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.spark.SparkConf

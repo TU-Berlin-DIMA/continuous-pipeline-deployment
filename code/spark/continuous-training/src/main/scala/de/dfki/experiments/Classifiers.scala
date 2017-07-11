@@ -6,10 +6,10 @@ package de.dfki.experiments
   *   - Training time
   *   - error rate
   * Run:
-  * - [[de.dfki.classification.ContinuousClassifier]]
-  * - [[de.dfki.classification.VeloxClassifier]]
-  * - [[de.dfki.classification.OnlineClassifier]]
-  * - [[de.dfki.classification.InitialClassifier]]
+  * - [[de.dfki.deployment.ContinuousClassifier]]
+  * - [[de.dfki.deployment.VeloxClassifier]]
+  * - [[de.dfki.deployment.OnlineClassifier]]
+  * - [[de.dfki.deployment.InitialClassifier]]
   *
   * with their default parameters
   *

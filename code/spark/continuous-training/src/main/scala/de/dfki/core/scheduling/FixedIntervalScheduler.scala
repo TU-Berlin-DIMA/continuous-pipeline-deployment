@@ -2,7 +2,7 @@ package de.dfki.core.scheduling
 
 import java.util.concurrent._
 
-import de.dfki.utils.BatchFileInputDStream
+import de.dfki.core.streaming.BatchFileInputDStream
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.spark.streaming.StreamingContext

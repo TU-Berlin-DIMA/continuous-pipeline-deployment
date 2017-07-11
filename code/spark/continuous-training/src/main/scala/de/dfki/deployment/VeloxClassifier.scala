@@ -1,4 +1,4 @@
-package de.dfki.classification
+package de.dfki.deployment
 
 import java.io.{File, FileWriter}
 

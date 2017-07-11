@@ -1,6 +1,7 @@
-package de.dfki.streaming.models
+package de.dfki.ml.streaming.models
 
-import org.apache.spark.mllib.classification._
+import de.dfki.ml.classification.LogisticRegressionWithSGD
+import org.apache.spark.mllib.classification.LogisticRegressionModel
 
 /**
   * @author bede01.

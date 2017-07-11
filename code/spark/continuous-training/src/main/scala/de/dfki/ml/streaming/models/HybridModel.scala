@@ -1,4 +1,4 @@
-package de.dfki.streaming.models
+package de.dfki.ml.streaming.models
 
 import java.io.{File, FileWriter}
 
