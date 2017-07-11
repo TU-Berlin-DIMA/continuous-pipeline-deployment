@@ -29,7 +29,7 @@ class LogisticRegressionWithSGD(val stepSize: Double,
     .setNumIterations(numIterations)
     .setRegParam(regParam)
     .setMiniBatchFraction(miniBatchFraction)
-    .setConvergenceTol(1E-4)
+    .setConvergenceTol(1E-6)
     .setFitIntercept(fitIntercept)
 
   override protected val validators = List(DataValidators.binaryLabelValidator)
@@ -39,10 +39,15 @@ class LogisticRegressionWithSGD(val stepSize: Double,
   def this(stepSize: Double,
            numIterations: Int,
            regParam: Double,
+           updater: Updater) = this(stepSize, numIterations, regParam, 1.0, true, true, updater)
+
+  def this(stepSize: Double,
+           numIterations: Int,
+           regParam: Double,
            miniBatchFraction: Double) = this(stepSize, numIterations, regParam, miniBatchFraction, true, true, new SquaredL2Updater)
 
   override def createModel(weights: Vector, intercept: Double) = {
-    // TODO: This is a hack as I reusing the gradient update from the newer spark
+    // TODO: This is a hack as I am reusing the gradient update from the newer spark
     // package, I couldn't use the add intercept option provided in the GeneralizedLinearAlgorithm
     // class
     val (finalWeights, finalIntercept) = if (!fitIntercept) {
@@ -53,6 +58,8 @@ class LogisticRegressionWithSGD(val stepSize: Double,
     println(s"Creating a model with features size: ${finalWeights.size} and intercept: $finalIntercept")
     new LogisticRegressionModel(finalWeights, finalIntercept)
   }
+
+
 
 
 }

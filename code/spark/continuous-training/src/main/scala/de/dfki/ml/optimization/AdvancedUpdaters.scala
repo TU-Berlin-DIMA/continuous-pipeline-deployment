@@ -13,11 +13,17 @@ import org.apache.spark.mllib.optimization.Updater
   * @author bede01.
   */
 
-class AdvancedUpdaters {
-
+abstract class AdvancedUpdaters extends Updater {
+  def name
 }
 
-class SquaredL2Updater extends Updater {
+class NullUpdater extends AdvancedUpdaters {
+  override def name = "null"
+
+  override def compute(weightsOld: Vector, gradient: Vector, stepSize: Double, iter: Int, regParam: Double) = ???
+}
+
+class SquaredL2Updater extends AdvancedUpdaters {
   val logger = Logger.getLogger(getClass.getName)
 
   override def compute(weightsOld: Vector,
@@ -46,9 +52,11 @@ class SquaredL2Updater extends Updater {
 
     (fromBreeze(brzWeights), regVal)
   }
+
+  override def name = "l2"
 }
 
-class SquaredL2UpdaterWithStepDecay extends Updater {
+class SquaredL2UpdaterWithStepDecay(decaySize: Int) extends AdvancedUpdaters {
   val logger = Logger.getLogger(getClass.getName)
 
   override def compute(weightsOld: Vector,
@@ -60,9 +68,9 @@ class SquaredL2UpdaterWithStepDecay extends Updater {
     // the gradient of the regularizer (= regParam * weightsOld)
     // w' = w - thisIterStepSize * (gradient + regParam * w)
     // w' = (1 - thisIterStepSize * regParam) * w - thisIterStepSize * gradient
-    var multipleOf10Iter = iter.toDouble - (iter % 10)
-    if (multipleOf10Iter == 0) multipleOf10Iter = 0.5
-    val thisIterStepSize = stepSize / math.sqrt(multipleOf10Iter)
+    var multipleOfDecaySize = iter.toDouble - (iter % decaySize)
+    if (multipleOfDecaySize == 0) multipleOfDecaySize = 0.5
+    val thisIterStepSize = stepSize / math.sqrt(multipleOfDecaySize)
     val brzWeights: BV[Double] = asBreeze(weightsOld).toDenseVector
     if (regParam != 0) {
       brzWeights :*= (1.0 - stepSize * regParam)
@@ -82,9 +90,11 @@ class SquaredL2UpdaterWithStepDecay extends Updater {
 
   }
 
+  override def name = "l2-step-decay"
+
 }
 
-class SquaredL2UpdaterWithConstantLearningRate extends Updater {
+class SquaredL2UpdaterWithConstantLearningRate extends AdvancedUpdaters {
   val logger = Logger.getLogger(getClass.getName)
 
   override def compute(weightsOld: Vector,
@@ -115,16 +125,18 @@ class SquaredL2UpdaterWithConstantLearningRate extends Updater {
     (fromBreeze(brzWeights), regVal)
   }
 
+  override def name = "l2-constant"
+
 }
 
 /**
   * Implements the learning adaptation with momentum
-  * @see  http://sebastianruder.com/optimizing-gradient-descent/index.html#momentum
-  *       for more detailed information
   *
+  * @see http://sebastianruder.com/optimizing-gradient-descent/index.html#momentum
+  *      for more detailed information
   * @param gamma fraction of previous update vector
   */
-class SquaredL2UpdaterWithMomentum(gamma: Double) extends Updater {
+class SquaredL2UpdaterWithMomentum(gamma: Double) extends AdvancedUpdaters {
   val logger = Logger.getLogger(getClass.getName)
   var updateVector: BV[Double] = _
 
@@ -138,7 +150,8 @@ class SquaredL2UpdaterWithMomentum(gamma: Double) extends Updater {
     // the gradient of the regularizer (= regParam * weightsOld)
     // w' = w - thisIterStepSize * (gradient + regParam * w)
     // w' = (1 - thisIterStepSize * regParam) * w - thisIterStepSize * gradient
-    val thisIterStepSize = stepSize // / math.sqrt(iter)
+    val thisIterStepSize = stepSize
+    // / math.sqrt(iter)
     val brzWeights: BV[Double] = asBreeze(weightsOld).toDenseVector
     if (regParam != 0) {
       brzWeights :*= (1.0 - stepSize * regParam)
@@ -161,8 +174,14 @@ class SquaredL2UpdaterWithMomentum(gamma: Double) extends Updater {
     logger.info(s"current step-size ($thisIterStepSize), regParam($regParam)")
 
     (fromBreeze(brzWeights), regVal)
-
-
   }
+
+  override def name = "l2-momentum"
+}
+
+class SquaredL2UpdaterWithAdaDelta extends AdvancedUpdaters {
+  override def compute(weightsOld: Vector, gradient: Vector, stepSize: Double, iter: Int, regParam: Double) = ???
+
+  override def name() = ???
 }
 

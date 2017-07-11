@@ -1,8 +1,11 @@
 package de.dfki.examples
 
 
+import java.nio.file.{Files, Paths}
+
 import de.dfki.ml.classification.LogisticRegressionWithSGD
 import de.dfki.ml.evaluation.ConfusionMatrix
+import de.dfki.ml.optimization._
 import de.dfki.preprocessing.parsers.CustomVectorParser
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.mllib.classification.LogisticRegressionWithLBFGS
@@ -36,9 +39,12 @@ object LogisticRegressionOnCriteoData {
   val TEST_DATA = "data/criteo-full/streaming-day-based/1"
   val RESULT_PATH = "data/criteo-full/temp-results"
   val STEP_SIZE = "1.0"
-  val REGULARIZATION_PARAMETER = "0.01,0.5,0.1"
-  val ITERATIONS = "100"
-  val OPTIMIZER = "sgd"
+  val REGULARIZATION_PARAMETER = "0.0"
+  val ITERATIONS = "500"
+  val OPTIMIZER = "lbfgs"
+  val LEARNING_RATE = "null"
+  val GAMMA = 0.9
+  val DECAY_SIZE = 10
 
   def main(args: Array[String]): Unit = {
 
@@ -51,6 +57,15 @@ object LogisticRegressionOnCriteoData {
     val steps = parser.get("step-size", STEP_SIZE).split(",").map(_.trim.toDouble)
     val regParams = parser.get("reg-param", REGULARIZATION_PARAMETER).split(",").map(_.trim.toDouble)
     val optimzers = parser.get("optimizer", OPTIMIZER).split(",").map(_.trim)
+    val updaters = parser.get("updater", LEARNING_RATE).split(",").map(_.trim).map {
+      case "l2" => new SquaredL2Updater()
+      case "l2-momentum" => new SquaredL2UpdaterWithMomentum(parser.getDouble("gamma", GAMMA))
+      case "l2-step-decay" => new SquaredL2UpdaterWithStepDecay(parser.getInteger("decay-size", DECAY_SIZE))
+      case "l2-adadelta" => new SquaredL2UpdaterWithAdaDelta()
+      case "l2-constant" => new SquaredL2UpdaterWithConstantLearningRate()
+      // dummy updater for LBFGS
+      case _ => new NullUpdater()
+    }
 
     val conf = new SparkConf().setAppName("Logistic Regression")
     val masterURL = conf.get("spark.master", "local[*]")
@@ -65,26 +80,34 @@ object LogisticRegressionOnCriteoData {
 
 
     for (optimizer <- optimzers) {
-      for (it <- iters) {
-        for (ss <- steps) {
-          for (reg <- regParams) {
-            val algorithm =
-              if (optimizer == "sgd")
-                new LogisticRegressionWithSGD(ss, it, reg, 1.0)
-              else {
-                val alg = new LogisticRegressionWithLBFGS()
-                alg.optimizer.setNumIterations(it)
-                alg.optimizer.setRegParam(ss)
-                alg
+      val finalUpdaters = if (optimizer == "lbfgs") {
+        println("Optimizer does not support learning rates, setting learning rate to null")
+        List(new NullUpdater()).toArray
+      } else {
+        updaters
+      }
+      for (updater <- finalUpdaters) {
+        for (it <- iters) {
+          for (ss <- steps) {
+            for (reg <- regParams) {
+              val algorithm =
+                if (optimizer == "sgd")
+                  new LogisticRegressionWithSGD(ss, it, reg, updater)
+                else {
+                  val alg = new LogisticRegressionWithLBFGS()
+                  alg.optimizer.setNumIterations(it)
+                  alg.optimizer.setRegParam(reg)
+                  alg
+                }
+              val model = algorithm.run(training)
+              //val model = new LogisticRegressionWithSGD(ss, it, reg, 1.0).run(training)
+              val predictionAndLabels = test.map { case LabeledPoint(label, features) =>
+                val prediction = model.predict(features)
+                (prediction, label)
               }
-            val model = algorithm.run(training)
-            //val model = new LogisticRegressionWithSGD(ss, it, reg, 1.0).run(training)
-            val predictionAndLabels = test.map { case LabeledPoint(label, features) =>
-              val prediction = model.predict(features)
-              (prediction, label)
+              predictionAndLabels.repartition(8).saveAsTextFile(s"$resultPath/optimizer=$optimizer/updater=${updater.name}/iter=$it/step-size=$ss/reg=$reg")
+              println(s"Execution with iter=$it\tstep-size=$ss\treg=$reg is completed")
             }
-            predictionAndLabels.repartition(8).saveAsTextFile(s"$resultPath/optimizer=$optimizer/iter=$it/step-size=$ss/reg=$reg")
-            println(s"Execution with iter=$it\tstep-size=$ss\treg=$reg is completed")
           }
         }
       }
@@ -109,19 +132,21 @@ object ComputeScores {
 
     val steps = List(1.0)
     //, 0.05, 0.1, 0.5, 1.0)
-    val iters = List(100)
+    val iters = List(100, 500)
     //, 200, 300, 400, 500)
-    val regParams = List(0.01, 0.5, 0.1)
+    val regParams = List(0.0)
 
-    val optimizers = List("sgd")
+    val optimizers = List("sgd", "lbfgs")
+
+    val updaters = List("momentum", "decreasing")
     //, 0.01, 0.05, 0.1, 0.5, 1.0)
     //, 0.01, 0.05, 0.1, 0.5, 1.0)
     // iterations, step-size, reg
-    var results: List[(Int, Double, Double, ConfusionMatrix)] = List()
-    var maxAccuracy = (0, 0.0, 0.0, -1.0)
-    var maxPrecision = (0, 0.0, 0.0, -1.0)
-    var maxRecall = (0, 0.0, 0.0, -1.0)
-    var maxFMeasure = (0, 0.0, 0.0, -1.0)
+    var results: List[(String, String, Int, Double, Double, ConfusionMatrix)] = List()
+    var maxAccuracy = ("", "", 0, 0.0, 0.0, -1.0)
+    var maxPrecision = ("", "", 0, 0.0, 0.0, -1.0)
+    var maxRecall = ("", "", 0, 0.0, 0.0, -1.0)
+    var maxFMeasure = ("", "", 0, 0.0, 0.0, -1.0)
 
 
     //    val data = sc.textFile(s"$resultPath/optimizer=sgd/iter=10000/step-size=1.0/reg=0.0")
@@ -134,40 +159,52 @@ object ComputeScores {
     //      .collect()
     //      .toList
     for (opt <- optimizers) {
-      for (it <- iters) {
-        for (ss <- steps) {
-          for (reg <- regParams) {
-            val data = sc.textFile(s"$resultPath/optimizer=$opt/iter=$it/step-size=$ss/reg=$reg").map(parse)
-            val cMatrix = createConfusionMatrix(data)
-            if (maxAccuracy._4 < cMatrix.accuracy) {
-              maxAccuracy = (it, ss, reg, cMatrix.accuracy)
-            }
-            if (maxPrecision._4 < cMatrix.precision) {
-              maxPrecision = (it, ss, reg, cMatrix.precision)
-            }
-            if (maxRecall._4 < cMatrix.recall) {
-              maxRecall = (it, ss, reg, cMatrix.recall)
-            }
-            if (maxFMeasure._4 < cMatrix.fMeasure) {
-              maxFMeasure = (it, ss, reg, cMatrix.fMeasure)
-            }
+      val finalUpdaters = if (opt == "lbfgs") {
+        println("Optimizer does not support learning rates, setting learning rate to null")
+        List("null")
+      } else {
+        updaters
+      }
+      for (updater <- finalUpdaters) {
+        for (it <- iters) {
+          for (ss <- steps) {
+            for (reg <- regParams) {
+              val path = s"$resultPath/optimizer=$opt/updater=$updater/iter=$it/step-size=$ss/reg=$reg"
+              if (Files.exists(Paths.get(path))) {
+                val data = sc.textFile(s"$resultPath/optimizer=$opt/updater=$updater/iter=$it/step-size=$ss/reg=$reg").map(parse)
+                val cMatrix = createConfusionMatrix(data)
+                if (maxAccuracy._4 < cMatrix.accuracy) {
+                  maxAccuracy = (opt, updater, it, ss, reg, cMatrix.accuracy)
+                }
+                if (maxPrecision._4 < cMatrix.precision) {
+                  maxPrecision = (opt, updater, it, ss, reg, cMatrix.precision)
+                }
+                if (maxRecall._4 < cMatrix.recall) {
+                  maxRecall = (opt, updater, it, ss, reg, cMatrix.recall)
+                }
+                if (maxFMeasure._4 < cMatrix.fMeasure) {
+                  maxFMeasure = (opt, updater, it, ss, reg, cMatrix.fMeasure)
+                }
 
-            results = (it, ss, reg, cMatrix) :: results
-
+                results = (opt, updater, it, ss, reg, cMatrix) :: results
+              } else {
+                println(s"directory: $path \n does not exist")
+              }
+            }
           }
         }
       }
     }
 
     for (r <- results) {
-      println(s"iter(${r._1}), step(${r._2}), reg(${r._3}) -> ${r._4.toString}")
+      println(s"optimizer(${r._1}), updater(${r._2}), iter(${r._3}), step(${r._4}), reg(${r._5}) -> ${r._6.toString}")
     }
 
     println(s"Max Performance")
-    println(s"accuracy(${maxAccuracy._4}) => iter(${maxAccuracy._1}), step(${maxAccuracy._2}), reg(${maxAccuracy._3})")
-    println(s"precision(${maxPrecision._4}) => iter(${maxPrecision._1}), step(${maxPrecision._2}), reg(${maxPrecision._3})")
-    println(s"recall(${maxRecall._4}) => iter(${maxRecall._1}), step(${maxRecall._2}), reg(${maxRecall._3})")
-    println(s"f-measure(${maxFMeasure._4}) => iter(${maxFMeasure._1}), step(${maxFMeasure._2}), reg(${maxFMeasure._3})")
+    println(s"accuracy(${maxAccuracy._4}) => optimizer(${maxAccuracy._1}), updater(${maxAccuracy._2}),iter(${maxAccuracy._1}), step(${maxAccuracy._2}), reg(${maxAccuracy._3})")
+    println(s"precision(${maxPrecision._4}) => optimizer(${maxPrecision._1}), updater(${maxPrecision._2}),iter(${maxPrecision._1}), step(${maxPrecision._2}), reg(${maxPrecision._3})")
+    println(s"recall(${maxRecall._4}) => optimizer(${maxRecall._1}), updater(${maxRecall._2}), iter(${maxRecall._1}), step(${maxRecall._2}), reg(${maxRecall._3})")
+    println(s"f-measure(${maxFMeasure._4}) => optimizer(${maxFMeasure._1}), updater(${maxFMeasure._2}), iter(${maxFMeasure._1}), step(${maxFMeasure._2}), reg(${maxFMeasure._3})")
     //println(s"test-size($totalSize), class-dist(${classDist.toString})")
 
   }
