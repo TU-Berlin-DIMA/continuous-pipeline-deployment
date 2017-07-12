@@ -14,11 +14,13 @@ import org.apache.spark.mllib.optimization.Updater
   */
 
 abstract class AdvancedUpdaters extends Updater {
-  def name
+  def name: String
 }
 
 class NullUpdater extends AdvancedUpdaters {
+
   override def name = "null"
+
 
   override def compute(weightsOld: Vector, gradient: Vector, stepSize: Double, iter: Int, regParam: Double) = ???
 }

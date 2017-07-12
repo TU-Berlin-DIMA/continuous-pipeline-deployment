@@ -1,15 +1,18 @@
 package de.dfki.ml.streaming.models
 
 import de.dfki.ml.classification.LogisticRegressionWithSGD
+import de.dfki.ml.optimization.SquaredL2Updater
 import org.apache.spark.mllib.classification.LogisticRegressionModel
+import org.apache.spark.mllib.optimization.Updater
 
 /**
   * @author bede01.
   */
 class HybridLR(private var stepSize: Double,
                private var numIterations: Int,
+               private var regParam: Double,
                private var miniBatchFraction: Double,
-               private var regParam: Double)
+               private var updater: Updater)
   extends HybridModel[LogisticRegressionModel, LogisticRegressionWithSGD] {
 
 
@@ -19,22 +22,9 @@ class HybridLR(private var stepSize: Double,
     * Initial weights must be set before using trainOn or predictOn
     * (see `StreamingLinearAlgorithm`)
     */
-  def this() = this(0.1, 50, 1.0, 0.0)
+  def this() = this(0.1, 50, 0.0, 1.0, new SquaredL2Updater)
 
-  protected val algorithm = new LogisticRegressionWithSGD()
+  protected val algorithm = new LogisticRegressionWithSGD(stepSize, numIterations, regParam, miniBatchFraction, updater)
 
   protected var model: Option[LogisticRegressionModel] = _
-
-  /**
-    * Set the convergence tolerance
-    *
-    * @param convergenceTol convergence toll
-    * @return
-    */
-  override def setConvergenceTol(convergenceTol: Double): this.type = {
-    this.algorithm.optimizer.setConvergenceTol(convergenceTol)
-    this
-  }
-
-
 }

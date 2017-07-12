@@ -41,8 +41,8 @@ object LogisticRegressionOnCriteoData {
   val STEP_SIZE = "1.0"
   val REGULARIZATION_PARAMETER = "0.0"
   val ITERATIONS = "500"
-  val OPTIMIZER = "lbfgs"
-  val LEARNING_RATE = "null"
+  val OPTIMIZER = "sgd"
+  val LEARNING_RATE = "l2-momentum"
   val GAMMA = 0.9
   val DECAY_SIZE = 10
 
@@ -132,13 +132,13 @@ object ComputeScores {
 
     val steps = List(1.0)
     //, 0.05, 0.1, 0.5, 1.0)
-    val iters = List(100, 500)
+    val iters = List(500)
     //, 200, 300, 400, 500)
     val regParams = List(0.0)
 
-    val optimizers = List("sgd", "lbfgs")
+    val optimizers = List("sgd")
 
-    val updaters = List("momentum", "decreasing")
+    val updaters = List("l2-momentum")
     //, 0.01, 0.05, 0.1, 0.5, 1.0)
     //, 0.01, 0.05, 0.1, 0.5, 1.0)
     // iterations, step-size, reg
@@ -201,10 +201,10 @@ object ComputeScores {
     }
 
     println(s"Max Performance")
-    println(s"accuracy(${maxAccuracy._4}) => optimizer(${maxAccuracy._1}), updater(${maxAccuracy._2}),iter(${maxAccuracy._1}), step(${maxAccuracy._2}), reg(${maxAccuracy._3})")
-    println(s"precision(${maxPrecision._4}) => optimizer(${maxPrecision._1}), updater(${maxPrecision._2}),iter(${maxPrecision._1}), step(${maxPrecision._2}), reg(${maxPrecision._3})")
-    println(s"recall(${maxRecall._4}) => optimizer(${maxRecall._1}), updater(${maxRecall._2}), iter(${maxRecall._1}), step(${maxRecall._2}), reg(${maxRecall._3})")
-    println(s"f-measure(${maxFMeasure._4}) => optimizer(${maxFMeasure._1}), updater(${maxFMeasure._2}), iter(${maxFMeasure._1}), step(${maxFMeasure._2}), reg(${maxFMeasure._3})")
+    println(s"accuracy(${maxAccuracy._6}) => optimizer(${maxAccuracy._1}), updater(${maxAccuracy._2}),iter(${maxAccuracy._3}), step(${maxAccuracy._4}), reg(${maxAccuracy._5})")
+    println(s"precision(${maxPrecision._6}) => optimizer(${maxPrecision._1}), updater(${maxPrecision._2}),iter(${maxPrecision._3}), step(${maxPrecision._4}), reg(${maxPrecision._5})")
+    println(s"recall(${maxRecall._6}) => optimizer(${maxRecall._1}), updater(${maxRecall._2}), iter(${maxRecall._3}), step(${maxRecall._4}), reg(${maxRecall._5})")
+    println(s"f-measure(${maxFMeasure._6}) => optimizer(${maxFMeasure._1}), updater(${maxFMeasure._2}), iter(${maxFMeasure._3}), step(${maxFMeasure._4}), reg(${maxFMeasure._5})")
     //println(s"test-size($totalSize), class-dist(${classDist.toString})")
 
   }
