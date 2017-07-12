@@ -1,7 +1,8 @@
 package de.dfki.ml.streaming.models
 
 
-import org.apache.spark.mllib.classification.{SVMModel, SVMWithSGD}
+import de.dfki.ml.classification.SVMWithSGD
+import org.apache.spark.mllib.classification.SVMModel
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.streaming.dstream.DStream
 

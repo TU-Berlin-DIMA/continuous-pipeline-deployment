@@ -152,8 +152,8 @@ object GradientDescent {
       Vectors.dense(initialCoefficientsWithIntercept)
     }
     if (standardization) {
-      gradient.asInstanceOf[SparseGradient].setFeaturesMean(featuresMean)
-      gradient.asInstanceOf[SparseGradient].setFeaturesStd(featuresStd)
+      gradient.setFeaturesMean(featuresMean)
+      gradient.setFeaturesStd(featuresStd)
     }
 
 

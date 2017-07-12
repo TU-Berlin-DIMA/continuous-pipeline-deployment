@@ -2,6 +2,7 @@ package de.dfki.ml.streaming.models
 
 import java.io.{File, FileWriter}
 
+import de.dfki.ml.classification.StochasticGradientDescent
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.optimization.GradientDescent
 import org.apache.spark.mllib.regression.{GeneralizedLinearAlgorithm, GeneralizedLinearModel, LabeledPoint, StreamingLinearAlgorithm}
@@ -16,7 +17,7 @@ import scala.reflect.ClassTag
 abstract class
 
 
-HybridModel[M <: GeneralizedLinearModel, A <: GeneralizedLinearAlgorithm[M]]
+HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientDescent[M]]
   extends StreamingLinearAlgorithm[M, A] with Serializable {
 
 

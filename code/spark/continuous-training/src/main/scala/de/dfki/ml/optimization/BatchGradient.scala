@@ -11,13 +11,12 @@ import org.apache.spark.rdd.RDD
 abstract class BatchGradient {
 
   def compute(data: RDD[(Double, Vector)], weights: Vector): (Double, Vector)
-}
 
-abstract class SparseGradient extends BatchGradient {
   def setFeaturesMean(means: Array[Double])
 
   def setFeaturesStd(std: Array[Double])
 }
+
 
 /**
   * Modified version of @see org.apache.spark.ml.classification.LogisticCostFunction
@@ -28,7 +27,7 @@ abstract class SparseGradient extends BatchGradient {
   */
 class LogisticGradient(fitIntercept: Boolean,
                        standardization: Boolean,
-                       regParamL2: Double) extends SparseGradient {
+                       regParamL2: Double) extends BatchGradient {
 
   var featuresMean: Array[Double] = _
   var featuresStd: Array[Double] = _

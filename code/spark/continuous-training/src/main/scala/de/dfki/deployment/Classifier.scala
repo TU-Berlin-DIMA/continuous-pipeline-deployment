@@ -6,7 +6,7 @@ import java.util.Calendar
 import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
 import de.dfki.core.streaming.BatchFileInputDStream
-import de.dfki.ml.classification.LogisticRegressionWithSGD
+import de.dfki.ml.classification.{LogisticRegressionWithSGD, StochasticGradientDescent}
 import de.dfki.ml.streaming.models.{HybridLR, HybridModel, HybridSVM}
 import de.dfki.preprocessing.parsers.{CSVParser, CustomVectorParser, DataParser, SVMParser}
 import de.dfki.utils.CommandLineParser
@@ -57,7 +57,7 @@ abstract class Classifier extends Serializable {
   val STREAM_TRAINING = "stream-training"
   val TEST_DATA = "test"
 
-  var streamingModel: HybridModel[GeneralizedLinearModel, GeneralizedLinearAlgorithm[GeneralizedLinearModel]] = _
+  var streamingModel: HybridModel[GeneralizedLinearModel, StochasticGradientDescent[GeneralizedLinearModel]] = _
   var dataParser: DataParser = _
 
   def experimentResultPath(root: String, parent: String): String = {
@@ -236,16 +236,16 @@ abstract class Classifier extends Serializable {
     * @param initialDataDirectories directory of initial data
     * @return Online SVM Model
     */
-  def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String, modelType: String): HybridModel[GeneralizedLinearModel, GeneralizedLinearAlgorithm[GeneralizedLinearModel]] = {
+  def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String, modelType: String): HybridModel[GeneralizedLinearModel, StochasticGradientDescent[GeneralizedLinearModel]] = {
     if (modelType.equals("svm")) {
       logger.info("Instantiating a SVM Model")
       val model = trainSVMModel(ssc.sparkContext, initialDataDirectories)
-      val hModel = new HybridSVM().asInstanceOf[HybridModel[GeneralizedLinearModel, GeneralizedLinearAlgorithm[GeneralizedLinearModel]]]
+      val hModel = new HybridSVM().asInstanceOf[HybridModel[GeneralizedLinearModel, StochasticGradientDescent[GeneralizedLinearModel]]]
       hModel.setInitialModel(model).setNumIterations(1).setStepSize(onlineStepSize).setConvergenceTol(0.0)
     } else {
       logger.info("Instantiating a Linear Regression Model")
       val model = trainLRModel(ssc.sparkContext, initialDataDirectories)
-      val hModel = new HybridLR().asInstanceOf[HybridModel[GeneralizedLinearModel, GeneralizedLinearAlgorithm[GeneralizedLinearModel]]]
+      val hModel = new HybridLR().asInstanceOf[HybridModel[GeneralizedLinearModel, StochasticGradientDescent[GeneralizedLinearModel]]]
       hModel.setInitialModel(model).setNumIterations(1).setStepSize(onlineStepSize).setConvergenceTol(0.0)
     }
   }
