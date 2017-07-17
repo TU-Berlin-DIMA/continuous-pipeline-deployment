@@ -19,7 +19,7 @@ abstract class StochasticGradientDescent[M <: GeneralizedLinearModel](val stepSi
                                                                       val standardization: Boolean,
                                                                       val fitIntercept: Boolean,
                                                                       val updater: Updater)
-  extends GeneralizedLinearAlgorithm[M] {
+  extends GeneralizedLinearAlgorithm[M]{
 
   setIntercept(fitIntercept)
 

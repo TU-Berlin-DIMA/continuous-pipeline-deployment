@@ -43,7 +43,7 @@ object InitialClassifier extends Classifier {
   }
 
 
-  override def getApplicationName = "Baseline SVM Model"
+  override def getApplicationName = "Baseline Classifier"
 
   override def getExperimentName = "baseline"
 

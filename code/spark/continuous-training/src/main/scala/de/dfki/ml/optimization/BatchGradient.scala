@@ -8,7 +8,7 @@ import org.apache.spark.rdd.RDD
 /**
   * @author behrouz
   */
-abstract class BatchGradient {
+abstract class BatchGradient extends Serializable{
 
   def compute(data: RDD[(Double, Vector)], weights: Vector): (Double, Vector)
 

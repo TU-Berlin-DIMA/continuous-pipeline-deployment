@@ -9,20 +9,53 @@ import org.apache.spark.mllib.stat.MultivariateOnlineSummarizer
 import org.apache.spark.rdd.RDD
 
 /**
+  * TODO: Fix the mini batch
+  * Technically mini batch is a property of stochastic gradient descent
+  * in gradient descent the mini batch ratio is always 1
+  *
   * @author bede01.
   */
-class GradientDescent(numIterations: Int,
-                      stepSize: Double,
-                      regParam: Double,
-                      miniBatchFraction: Double,
-                      convergenceTol: Double,
-                      standardize: Boolean,
-                      fitIntercept: Boolean,
+class GradientDescent(var numIterations: Int,
+                      var stepSize: Double,
+                      var regParam: Double,
+                      var miniBatchFraction: Double,
+                      var convergenceTol: Double,
+                      var standardize: Boolean,
+                      var fitIntercept: Boolean,
                       gradient: BatchGradient,
                       updater: Updater) extends SGDOptimizer {
 
+  def setConvergenceTol(convergenceTol: Double): this.type = {
+    this.convergenceTol = convergenceTol
+    this
+  }
+
+  def setRegParam(regParam: Double): this.type = {
+    this.regParam = regParam
+    this
+  }
+
+
+  def setMiniBatchFraction(miniBatchFraction: Double): this.type = {
+    this.miniBatchFraction = miniBatchFraction
+    this
+  }
+
+
+  def setNumIterations(numIterations: Int): this.type = {
+    this.numIterations = numIterations
+    this
+  }
+
+
+  def setStepSize(stepSize: Double): this.type = {
+    this.stepSize = stepSize
+    this
+  }
+
 
   def this() = this(100, 1.0, 0.0, 1.0, 1E-6, true, true, new LogisticGradient(true, true, 1.0), new SquaredL2Updater)
+
 
   /**
     * :: DeveloperApi ::
@@ -54,7 +87,7 @@ class GradientDescent(numIterations: Int,
 }
 
 object GradientDescent {
-  val logger = Logger.getLogger(getClass.getName)
+  @transient val logger = Logger.getLogger(getClass.getName)
 
   /**
     * Run stochastic gradient descent (SGD) in parallel using mini batches.

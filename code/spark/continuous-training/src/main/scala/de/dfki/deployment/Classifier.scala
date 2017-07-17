@@ -7,6 +7,7 @@ import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
 import de.dfki.core.streaming.BatchFileInputDStream
 import de.dfki.ml.classification.{LogisticRegressionWithSGD, StochasticGradientDescent}
+import de.dfki.ml.optimization.SquaredL2UpdaterWithMomentum
 import de.dfki.ml.streaming.models.{HybridLR, HybridModel, HybridSVM}
 import de.dfki.preprocessing.parsers.{CSVParser, CustomVectorParser, DataParser, SVMParser}
 import de.dfki.utils.CommandLineParser
@@ -17,7 +18,7 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat
 import org.apache.log4j.Logger
 import org.apache.spark.mllib.classification.{LogisticRegressionModel, SVMModel, SVMWithSGD}
-import org.apache.spark.mllib.regression.{GeneralizedLinearAlgorithm, GeneralizedLinearModel, LabeledPoint}
+import org.apache.spark.mllib.regression.{GeneralizedLinearModel, LabeledPoint}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming._
 import org.apache.spark.streaming.dstream.{ConstantInputDStream, DStream}
@@ -273,7 +274,7 @@ abstract class Classifier extends Serializable {
     val data = sc.textFile(trainingData).map(dataParser.parsePoint)
     val cachedData = data.cache()
     cachedData.count()
-    val model = new LogisticRegressionWithSGD(offlineStepSize, numIterations, 0.1, 1.0).run(cachedData)
+    val model = new LogisticRegressionWithSGD(offlineStepSize, numIterations, 0.0, 1.0, new SquaredL2UpdaterWithMomentum(0.9)).run(cachedData)
     cachedData.unpersist(false)
     model
   }

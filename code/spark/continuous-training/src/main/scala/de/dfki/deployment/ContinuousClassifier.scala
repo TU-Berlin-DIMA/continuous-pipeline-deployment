@@ -57,6 +57,7 @@ object ContinuousClassifier extends Classifier {
     val tempDirectory = experimentResultPath(tempRoot, parent)
     createTempFolders(tempDirectory)
     val ssc = initializeSpark()
+    ssc.sparkContext.setLogLevel("INFO")
 
     // train initial model
     val startTime = System.currentTimeMillis()
@@ -108,7 +109,7 @@ object ContinuousClassifier extends Classifier {
     scheduler.schedule()
   }
 
-  override def getApplicationName = "Continuous SVM Model"
+  override def getApplicationName = "Continuous Classifier"
 
   override def getExperimentName = "continuous"
 
