@@ -122,7 +122,7 @@ object VeloxClassifier extends Classifier {
     fw.close()
   }
 
-  override def getApplicationName = "Velox SVM Model"
+  override def getApplicationName = "Velox Classifer"
 
   override def getExperimentName = "velox"
 

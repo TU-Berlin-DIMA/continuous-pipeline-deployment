@@ -44,7 +44,7 @@ object OnlineClassifier extends Classifier {
     ssc.awaitTermination()
   }
 
-  override def getApplicationName: String = "Baseline+ SVM Model"
+  override def getApplicationName: String = "Baseline+ Classifier"
 
   override def getExperimentName = "baseline-plus"
 

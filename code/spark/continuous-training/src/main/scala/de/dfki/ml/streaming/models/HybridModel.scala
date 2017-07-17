@@ -2,9 +2,9 @@ package de.dfki.ml.streaming.models
 
 import java.io.{File, FileWriter}
 
+import de.dfki.ml.classification.StochasticGradientDescent
 import org.apache.spark.mllib.linalg.Vector
-import org.apache.spark.mllib.optimization.GradientDescent
-import org.apache.spark.mllib.regression.{GeneralizedLinearAlgorithm, GeneralizedLinearModel, LabeledPoint, StreamingLinearAlgorithm}
+import org.apache.spark.mllib.regression.{GeneralizedLinearModel, LabeledPoint, StreamingLinearAlgorithm}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
 
@@ -16,7 +16,7 @@ import scala.reflect.ClassTag
 abstract class
 
 
-HybridModel[M <: GeneralizedLinearModel, A <: GeneralizedLinearAlgorithm[M]]
+HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientDescent[M]]
   extends StreamingLinearAlgorithm[M, A] with Serializable {
 
 
@@ -31,25 +31,25 @@ HybridModel[M <: GeneralizedLinearModel, A <: GeneralizedLinearAlgorithm[M]]
   /** Set the step size for gradient descent. Default: 0.1. */
 
   def setStepSize(stepSize: Double): this.type = {
-    this.algorithm.optimizer.asInstanceOf[GradientDescent].setStepSize(stepSize)
+    this.algorithm.optimizer.setStepSize(stepSize)
     this
   }
 
   /** Set the number of iterations of gradient descent to run per update. Default: 50. */
   def setNumIterations(numIterations: Int): this.type = {
-    this.algorithm.optimizer.asInstanceOf[GradientDescent].setNumIterations(numIterations)
+    this.algorithm.optimizer.setNumIterations(numIterations)
     this
   }
 
   /** Set the fraction of each batch to use for updates. Default: 1.0. */
   def setMiniBatchFraction(miniBatchFraction: Double): this.type = {
-    this.algorithm.optimizer.asInstanceOf[GradientDescent].setMiniBatchFraction(miniBatchFraction)
+    this.algorithm.optimizer.setMiniBatchFraction(miniBatchFraction)
     this
   }
 
   /** Set the regularization parameter. Default: 0.0. */
   def setRegParam(regParam: Double): this.type = {
-    this.algorithm.optimizer.asInstanceOf[GradientDescent].setRegParam(regParam)
+    this.algorithm.optimizer.setRegParam(regParam)
     this
   }
 
@@ -60,7 +60,7 @@ HybridModel[M <: GeneralizedLinearModel, A <: GeneralizedLinearAlgorithm[M]]
     * @return
     */
   def setConvergenceTol(convergenceTol: Double): this.type = {
-    this.algorithm.optimizer.asInstanceOf[GradientDescent].setConvergenceTol(convergenceTol)
+    this.algorithm.optimizer.setConvergenceTol(convergenceTol)
     this
   }
 
@@ -84,7 +84,7 @@ HybridModel[M <: GeneralizedLinearModel, A <: GeneralizedLinearAlgorithm[M]]
     if (model.isEmpty) {
       throw new IllegalArgumentException("Model must be initialized before starting training.")
     }
-    model = Some(algorithm.run(data, model.get.weights))
+    model = Some(algorithm.run(data, model.get.weights, model.get.intercept))
   }
 
   def writeToDisk(data: DStream[LabeledPoint], resultPath: String): Unit = {
@@ -101,7 +101,14 @@ HybridModel[M <: GeneralizedLinearModel, A <: GeneralizedLinearAlgorithm[M]]
   }
 
   override def trainOn(observations: DStream[LabeledPoint]): Unit = {
-    super.trainOn(observations)
+    if (model.isEmpty) {
+      throw new IllegalArgumentException("Model must be initialized before starting training.")
+    }
+    observations.foreachRDD { (rdd, _) =>
+      if (!rdd.isEmpty) {
+        model = Some(algorithm.run(rdd, model.get.weights, model.get.intercept))
+      }
+    }
   }
 
   override def toString(): String = {

@@ -14,17 +14,19 @@ import org.apache.spark.mllib.optimization.Updater
   */
 
 abstract class AdvancedUpdaters extends Updater {
-  def name
+  def name: String
+  @transient val logger = Logger.getLogger(getClass.getName)
 }
 
 class NullUpdater extends AdvancedUpdaters {
+
   override def name = "null"
+
 
   override def compute(weightsOld: Vector, gradient: Vector, stepSize: Double, iter: Int, regParam: Double) = ???
 }
 
 class SquaredL2Updater extends AdvancedUpdaters {
-  val logger = Logger.getLogger(getClass.getName)
 
   override def compute(weightsOld: Vector,
                        gradient: Vector,
@@ -57,7 +59,6 @@ class SquaredL2Updater extends AdvancedUpdaters {
 }
 
 class SquaredL2UpdaterWithStepDecay(decaySize: Int) extends AdvancedUpdaters {
-  val logger = Logger.getLogger(getClass.getName)
 
   override def compute(weightsOld: Vector,
                        gradient: Vector,
@@ -95,7 +96,6 @@ class SquaredL2UpdaterWithStepDecay(decaySize: Int) extends AdvancedUpdaters {
 }
 
 class SquaredL2UpdaterWithConstantLearningRate extends AdvancedUpdaters {
-  val logger = Logger.getLogger(getClass.getName)
 
   override def compute(weightsOld: Vector,
                        gradient: Vector,
@@ -137,7 +137,6 @@ class SquaredL2UpdaterWithConstantLearningRate extends AdvancedUpdaters {
   * @param gamma fraction of previous update vector
   */
 class SquaredL2UpdaterWithMomentum(gamma: Double) extends AdvancedUpdaters {
-  val logger = Logger.getLogger(getClass.getName)
   var updateVector: BV[Double] = _
 
 
