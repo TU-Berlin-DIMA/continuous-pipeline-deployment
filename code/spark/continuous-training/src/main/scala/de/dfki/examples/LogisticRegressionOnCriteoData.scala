@@ -173,17 +173,17 @@ object ComputeScores {
               if (Files.exists(Paths.get(path))) {
                 val data = sc.textFile(s"$resultPath/optimizer=$opt/updater=$updater/iter=$it/step-size=$ss/reg=$reg").map(parse)
                 val cMatrix = createConfusionMatrix(data)
-                if (maxAccuracy._4 < cMatrix.accuracy) {
-                  maxAccuracy = (opt, updater, it, ss, reg, cMatrix.accuracy)
+                if (maxAccuracy._4 < cMatrix.getAccuracy) {
+                  maxAccuracy = (opt, updater, it, ss, reg, cMatrix.getAccuracy)
                 }
-                if (maxPrecision._4 < cMatrix.precision) {
-                  maxPrecision = (opt, updater, it, ss, reg, cMatrix.precision)
+                if (maxPrecision._4 < cMatrix.getPrecision) {
+                  maxPrecision = (opt, updater, it, ss, reg, cMatrix.getPrecision)
                 }
-                if (maxRecall._4 < cMatrix.recall) {
-                  maxRecall = (opt, updater, it, ss, reg, cMatrix.recall)
+                if (maxRecall._4 < cMatrix.getRecall) {
+                  maxRecall = (opt, updater, it, ss, reg, cMatrix.getRecall)
                 }
-                if (maxFMeasure._4 < cMatrix.fMeasure) {
-                  maxFMeasure = (opt, updater, it, ss, reg, cMatrix.fMeasure)
+                if (maxFMeasure._4 < cMatrix.getFMeasure) {
+                  maxFMeasure = (opt, updater, it, ss, reg, cMatrix.getFMeasure)
                 }
 
                 results = (opt, updater, it, ss, reg, cMatrix) :: results

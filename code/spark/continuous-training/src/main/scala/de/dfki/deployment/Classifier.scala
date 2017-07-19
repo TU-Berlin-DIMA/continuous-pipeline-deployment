@@ -7,6 +7,7 @@ import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
 import de.dfki.core.streaming.BatchFileInputDStream
 import de.dfki.ml.classification.{LogisticRegressionWithSGD, StochasticGradientDescent}
+import de.dfki.ml.evaluation.ConfusionMatrix
 import de.dfki.ml.optimization.SquaredL2UpdaterWithMomentum
 import de.dfki.ml.streaming.models.{HybridLR, HybridModel, HybridSVM}
 import de.dfki.preprocessing.parsers.{CSVParser, CustomVectorParser, DataParser, SVMParser}
@@ -147,43 +148,62 @@ abstract class Classifier extends Serializable {
 
     if (errorType == "cumulative") {
       predictions
+        .map {
+          v =>
+            var tp, fp, tn, fn = 0
+            if (v._1 == v._2 & v._1 == 1.0) tp = 1
+            else if (v._1 == v._2 & v._1 == 0.0) tn = 1
+            else if (v._1 != v._2 & v._1 == 1.0) fp = 1
+            else fn = 1
+            new ConfusionMatrix(tp, fp, tn, fn)
+        }
         .map(p => ("e", p))
         .mapWithState(StateSpec.function(mappingFunc _))
-        .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
-        .map(item => item._1 / item._2)
-        .foreachRDD(rdd => storeErrorRate(rdd, resultPath))
+        .reduce((c1, c2) => ConfusionMatrix.merge(c1, c2))
+        .foreachRDD(rdd => storeConfusionMatrix(rdd, resultPath))
+
     } else {
       predictions
-        .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
-        .map(item => item._1 / item._2)
-        .foreachRDD(rdd => storeErrorRate(rdd, resultPath))
+        .map {
+          v =>
+            var tp, fp, tn, fn = 0
+            if (v._1 == v._2 & v._1 == 1.0) tp = 1
+            else if (v._1 == v._2 & v._1 == 0.0) tn = 1
+            else if (v._1 != v._2 & v._1 == 1.0) fp = 1
+            else fn = 1
+            new ConfusionMatrix(tp, fp, tn, fn)
+        }
+        .reduce((c1, c2) => ConfusionMatrix.merge(c1, c2))
+        .foreachRDD(rdd => storeConfusionMatrix(rdd, resultPath))
     }
 
   }
 
-
-  private val storeErrorRate = (rdd: RDD[Double], resultPath: String) => {
-    val file = new File(s"$resultPath/error-rates.txt")
+  private val storeConfusionMatrix = (rdd: RDD[(ConfusionMatrix)], resultPath: String) => {
+    val file = new File(s"$resultPath/confusion-matrix.txt")
     file.getParentFile.mkdirs()
     val fw = new FileWriter(file, true)
     try {
-      val content = rdd.collect().toList.mkString("\n")
-      if (content == "") {}
-      else {
-        fw.write(s"$content\n")
+      val content = rdd.collect()
+      if (!content.isEmpty) {
+        val confusionMatrix = content.reduce {
+          (c1, c2) =>
+            ConfusionMatrix.merge(c1, c2)
+        }
+        fw.write(s"${confusionMatrix.resultAsCSV}\n")
       }
+
     }
     finally fw.close()
   }
 
-  private def mappingFunc(key: String, value: Option[(Double, Double)], state: State[(Double, Double)]): (Double, Double) = {
-    val currentState = state.getOption().getOrElse(0.0, 0.0)
-    val currentTuple = value.getOrElse(0.0, 0.0)
-    val error = currentTuple._1 + currentState._1
-    val sum = currentTuple._2 + currentState._2
-    //println(s"New State: ($error : $sum)")
-    state.update(error, sum)
-    (error, sum)
+
+  private def mappingFunc(key: String, value: Option[ConfusionMatrix], state: State[ConfusionMatrix]): ConfusionMatrix = {
+    val currentState = state.getOption().getOrElse(new ConfusionMatrix(0, 0, 0, 0))
+    val currentTuple = value.getOrElse(new ConfusionMatrix(0, 0, 0, 0))
+    val updatedConfusionMatrix = ConfusionMatrix.merge(currentState, currentTuple)
+    state.update(updatedConfusionMatrix)
+    updatedConfusionMatrix
   }
 
   /**
@@ -242,12 +262,16 @@ abstract class Classifier extends Serializable {
       logger.info("Instantiating a SVM Model")
       val model = trainSVMModel(ssc.sparkContext, initialDataDirectories)
       val hModel = new HybridSVM().asInstanceOf[HybridModel[GeneralizedLinearModel, StochasticGradientDescent[GeneralizedLinearModel]]]
-      hModel.setInitialModel(model).setNumIterations(1).setStepSize(onlineStepSize).setConvergenceTol(0.0)
+      // removing online step size as we are using adaptive methods
+      //hModel.setInitialModel(model).setNumIterations(1).setStepSize(onlineStepSize).setConvergenceTol(0.0)
+      hModel.setInitialModel(model).setNumIterations(1).setConvergenceTol(0.0)
     } else {
       logger.info("Instantiating a Linear Regression Model")
       val model = trainLRModel(ssc.sparkContext, initialDataDirectories)
       val hModel = new HybridLR().asInstanceOf[HybridModel[GeneralizedLinearModel, StochasticGradientDescent[GeneralizedLinearModel]]]
-      hModel.setInitialModel(model).setNumIterations(1).setStepSize(onlineStepSize).setConvergenceTol(0.0)
+      // removing online step size as we are using adaptive methods
+      //hModel.setInitialModel(model).setNumIterations(1).setStepSize(onlineStepSize).setConvergenceTol(0.0)
+      hModel.setInitialModel(model).setNumIterations(1).setConvergenceTol(0.0)
     }
   }
 
