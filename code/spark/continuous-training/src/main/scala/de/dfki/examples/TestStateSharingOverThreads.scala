@@ -26,12 +26,12 @@ object TestStateSharingOverThreads {
 
   def main(args: Array[String]): Unit = {
 
-    val streamingModel = new HybridSVM().setInitialModel(new SVMModel(new DenseVector(List(0.0, 0, 0).toArray), 0.0))
+    val streamingModel = new HybridSVM().setModel(new SVMModel(new DenseVector(List(0.0, 0, 0).toArray), 0.0))
     doStuff(streamingModel)
 
     val task = new Runnable {
       def run() = {
-        streamingModel.setInitialModel(new SVMModel(new DenseVector(List(0.0, 0, 0).toArray), Random.nextDouble()))
+        streamingModel.setModel(new SVMModel(new DenseVector(List(0.0, 0, 0).toArray), Random.nextDouble()))
       }
     }
 

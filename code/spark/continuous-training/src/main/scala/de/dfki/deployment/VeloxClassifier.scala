@@ -90,10 +90,16 @@ object VeloxClassifier extends Classifier {
         storeRetrainingPoint(streamingSource.getLastProcessedFileIndex, resultPath)
         val startTime = System.currentTimeMillis()
         val before = streamingModel.latestModelWeights()
+        // TODO FIX THIS
+        if (modelType.equals("svm")) {
+          streamingModel.setConvergenceTol(1E-6).setNumIterations(numIterations)
+        } else {
+
+        }
         val model = trainModel(ssc.sparkContext, initialDataPath + "," + tempDirectory, modelType)
         val after = streamingModel.latestModelWeights()
         val endTime = System.currentTimeMillis()
-        streamingModel.setInitialModel(model)
+        streamingModel.setModel(model)
         storeTrainingTimes(endTime - startTime, resultPath)
         logger.info(s"Delta: ${Vectors.sqdist(before, after)}")
         streamingSource.unpause()

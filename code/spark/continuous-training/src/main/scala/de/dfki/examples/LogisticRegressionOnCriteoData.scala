@@ -35,8 +35,8 @@ import org.apache.spark.{SparkConf, SparkContext}
   */
 object LogisticRegressionOnCriteoData {
 
-  val TRAINING_DATA = "data/criteo-full/initial-training/0"
-  val TEST_DATA = "data/criteo-full/streaming-day-based/1"
+  val TRAINING_DATA = "data/criteo-full/all/*"
+  val TEST_DATA = "data/criteo-full/processed/6"
   val RESULT_PATH = "data/criteo-full/temp-results"
   val STEP_SIZE = "1.0"
   val REGULARIZATION_PARAMETER = "0.0"
