@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+Local:
+~/Documents/frameworks/spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class de.dfki.classification.ContinuousClassifier --master "spark://berlin-189.b.dfki.de:7077" target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "batch-duration=1" "slack=10" "result-path=results/cover-types/continuous" "initial-training-path=data/cover-types/initial-training" "streaming-path=data/cover-types/stream-training" "temp-path=data/cover-types/temp-data"
+
+~/Documents/frameworks/spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class de.dfki.preprocessing.CriteoFeatureEngineering --master "spark://berlin-189.b.dfki.de:7077" target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=data/criteo-sample/raw/" "output-path=data/criteo-sample/"
+
+
+~/Documents/frameworks/spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class de.dfki.preprocessing.CriteoFeatureEngineering --master "spark://berlin-189.b.dfki.de:7077" /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-sample/raw" "output-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-sample/" "file-count=100"
+
+Cover Type:
+~/Documents/frameworks/spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class de.dfki.preprocessing.datasets.CoverTypePreprocesing --master "spark://berlin-187.b.dfki.de:7077" --executor-memory 5G /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/cover-types/libsvm" "output-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/cover-types/" "file-count=600" "sampling-rate=1.0" 
+
+Adult:
+~/Documents/frameworks/spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class de.dfki.preprocessing.datasets.AdultPreprocessing --master "spark://berlin-187.b.dfki.de:7077" --executor-memory 5G /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/adult/raw" "output-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/adult/" "file-count=600" "sampling-rate=1.0" 
+
+
+Cluster:
+copy jar: 
+scp target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar behrouz@cloud-11.dima.tu-berlin.de:/home/behrouz/jar
+cp /home/behrouz/jar/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar /share/hadoop/behrouz/jars/
+
+HIGGS:
+
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -mkdir hdfs://cloud-11:44000/user/behrouz/higgs/
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -mkdir hdfs://cloud-11:44000/user/behrouz/higgs/raw
+
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -copyFromLocal /share/hadoop/behrouz/data/HIGGS.csv hdfs://cloud-11:44000/user/behrouz/higgs/raw/
+
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.datasets.HiggsPreprocessing --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/user/behrouz/higgs/raw" "output-path=hdfs://cloud-11:44000/user/behrouz/higgs" "file-count=3600" "sampling-rate=1.0"
+
+~/Documents/frameworks/spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class de.dfki.preprocessing.datasets.HiggsPreprocessing --master "spark://berlin-241.b.dfki.de:7077" --executor-memory 5G /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/higgs/raw" "output-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/higgs/" "file-count=1000" "sampling-rate=1.0"
+
+scp -r behrouz@cloud-11.dima.tu-berlin.de:/share/hadoop/behrouz/experiments/higgs ./
+
+url:
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -mkdir hdfs://cloud-11:44000/user/behrouz/url-reputation/
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -mkdir hdfs://cloud-11:44000/user/behrouz/url-reputation/raw
+
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.datasets.URLRepPreprocessing --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/user/behrouz/url-reputation/raw" "output-path=hdfs://cloud-11:44000/user/behrouz/url-reputation" "file-count=30" "sampling-rate=1.0"
+
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rmr hdfs://cloud-11:44000/user/behrouz/url-reputation/temp-data
+
+scp -r behrouz@cloud-11.dima.tu-berlin.de:/share/hadoop/behrouz/experiments/url-reputation ./
+
+SUSY:
+wget https://archive.ics.uci.edu/ml/machine-learning-databases/00279/SUSY.csv.gz
+
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -mkdir hdfs://cloud-11:44000/user/behrouz/susy/
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -mkdir hdfs://cloud-11:44000/user/behrouz/susy/raw
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -copyFromLocal /share/hadoop/behrouz/data/SUSY.csv hdfs://cloud-11:44000/user/behrouz/susy/raw
+
+~/Documents/frameworks/spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class de.dfki.preprocessing.datasets.SusyPreprocessing --master "spark://berlin-241.b.dfki.de:7077" --executor-memory 5G /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/susy/raw" "output-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/susy/" "file-count=1000"
+
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.datasets.SusyPreprocessing --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/user/behrouz/susy/raw" "output-path=hdfs://cloud-11:44000/user/behrouz/susy" "file-count=3600"
+
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rmr hdfs://cloud-11:44000/user/behrouz/susy/temp-data
+
+
+scp -r behrouz@cloud-11.dima.tu-berlin.de:/share/hadoop/behrouz/experiments/susy ./
+
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rm -r hdfs://cloud-11:44000/user/behrouz/susy/initial-training
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rm -r hdfs://cloud-11:44000/user/behrouz/susy/stream-training
+
+delete criteo files:
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rmr hdfs://cloud-11:44000/user/behrouz/criteo/stream-training
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rmr hdfs://cloud-11:44000/user/behrouz/criteo/initial-training
+
+delete url-reputation files:
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rmr hdfs://cloud-11:44000/user/behrouz/url-reputation/stream-training
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rmr hdfs://cloud-11:44000/user/behrouz/url-reputation/initial-training
+
+run criteo preprocessing:
+training data:
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.datasets.CriteoPreprocessing --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/user/behrouz/criteo/raw/" "output-path=hdfs://cloud-11:44000/user/behrouz/criteo/" "file-count=1000"
+
+
+
+
+clean up temp files:
+/share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rmr hdfs://cloud-11:44000/user/behrouz/criteo/temp-data
+
+
+Copy results to local machine:
+scp -r behrouz@cloud-11.dima.tu-berlin.de:/share/hadoop/behrouz/experiments/criteo ./
+
+
+
+~/Documents/frameworks/spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class de.dfki.examples.URLTrainingBug --master "spark://berlin-189.b.dfki.de:7077" /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "initial-training-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/url-reputation-sample/initial-training" "type=1"
+
+
+~/Documents/frameworks/spark-2.1.0-bin-hadoop2.7/bin/spark-submit --class de.dfki.examples.CriteoPreprocessing --master "spark://berlin-235.b.dfki.de:7077" --executor-memory 5g /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-full/all/*" "output-path=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-full/processed" 
