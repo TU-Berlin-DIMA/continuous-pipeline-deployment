@@ -38,7 +38,7 @@ object StreamingSVM {
     }
     //sc.stop()
 
-    val streamingModel = new HybridSVM().setInitialModel(model)
+    val streamingModel = new HybridSVM().setModel(model)
     val testRdd = ssc.sparkContext.textFile("data/test/").map(new CSVParser().parsePoint)
     val rddQueue = new Queue[RDD[LabeledPoint]]()
 

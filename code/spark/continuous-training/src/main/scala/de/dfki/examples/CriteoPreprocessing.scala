@@ -24,19 +24,18 @@ object CriteoPreprocessing {
   val OUTPUT_PATH = "data/criteo-full/processed"
   val FILES_PER_DAY = 100
   // There are a total of 23 days
-  val DAYS = 4
+  val DAYS = "0,1,2,3,4,5,6"
 
   def main(args: Array[String]): Unit = {
 
     val parser = new CommandLineParser(args).parse()
     val root = parser.get("input-path", INPUT_PATH)
-    val result = parser.get("output-path", OUTPUT_PATH)
-    val days = 0 to parser.getInteger("days", DAYS)
+    val resultPath = parser.get("output-path", OUTPUT_PATH)
+    val days = parser.get("days", DAYS).split(",").map(_.trim).map(_.toInt)
     val filesPerDay = parser.getInteger("files-per-day", FILES_PER_DAY)
 
     val conf = new SparkConf().setAppName("Criteo Feature Engineering")
     val masterURL = conf.get("spark.master", "local[*]")
-    conf.set("spark.executor.memory", "5g")
     conf.setMaster(masterURL)
 
     val spark = SparkSession.builder()
@@ -87,6 +86,7 @@ object CriteoPreprocessing {
       val oneHotPipeline = new Pipeline().setStages(oneHotEncoder)
       val finalDf = oneHotPipeline.fit(indexedDf).transform(indexedDf)
 
+      dataFrame.unpersist(true)
       // assemble the preprocessed columns into vectors
       val finalColumns = (1 to 13).map(v => s"_c$v") ++ finalDf.columns.filter(c => c contains "vec")
       val assembler = new VectorAssembler()
@@ -98,9 +98,10 @@ object CriteoPreprocessing {
       output.cache()
       output.count()
 
+
       finalDf.unpersist(true)
       dataFrame.unpersist(true)
-      output.rdd.map(r => s"${r.get(0).toString} | ${r.get(1).toString}").saveAsTextFile(s"$result/$d/")
+      output.rdd.map(r => s"${r.get(0).toString} | ${r.get(1).toString}").saveAsTextFile(s"$resultPath/$d/")
       output.unpersist(true)
     }
 
@@ -112,7 +113,7 @@ object CriteoPreprocessing {
       .option("delimiter", ",")
       .option("header", "false")
       .option("inferSchema", "true")
-      .load(s"$root/all")
+      .load(s"$root/raw/backup")
 
 
     // add missing values NULL for string and 0.0 for double
@@ -143,6 +144,7 @@ object CriteoPreprocessing {
     val indexerModel = indexerPipeline.fit(filledDf)
     filledDf.unpersist(true)
     df.unpersist(true)
+    indexerModel.save(s"$root/model/")
     indexerModel
   }
 

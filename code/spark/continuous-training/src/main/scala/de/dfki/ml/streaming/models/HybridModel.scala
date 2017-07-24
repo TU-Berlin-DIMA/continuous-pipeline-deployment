@@ -23,8 +23,13 @@ HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientDescent[M]]
   protected var model: Option[M]
   protected val algorithm: A
 
-  def setInitialModel(initialModel: M): this.type = {
+  def setModel(initialModel: M): this.type = {
     this.model = Some(initialModel)
+    this
+  }
+
+  def trainInitialModel(rdd: RDD[LabeledPoint]): this.type = {
+    this.model = Some(algorithm.run(rdd))
     this
   }
 

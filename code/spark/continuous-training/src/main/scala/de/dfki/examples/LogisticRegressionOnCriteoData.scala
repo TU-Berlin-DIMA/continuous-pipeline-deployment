@@ -35,8 +35,8 @@ import org.apache.spark.{SparkConf, SparkContext}
   */
 object LogisticRegressionOnCriteoData {
 
-  val TRAINING_DATA = "data/criteo-full/initial-training/0"
-  val TEST_DATA = "data/criteo-full/streaming-day-based/1"
+  val TRAINING_DATA = "data/criteo-full/all/*"
+  val TEST_DATA = "data/criteo-full/processed/6"
   val RESULT_PATH = "data/criteo-full/temp-results"
   val STEP_SIZE = "1.0"
   val REGULARIZATION_PARAMETER = "0.0"
@@ -173,17 +173,17 @@ object ComputeScores {
               if (Files.exists(Paths.get(path))) {
                 val data = sc.textFile(s"$resultPath/optimizer=$opt/updater=$updater/iter=$it/step-size=$ss/reg=$reg").map(parse)
                 val cMatrix = createConfusionMatrix(data)
-                if (maxAccuracy._4 < cMatrix.accuracy) {
-                  maxAccuracy = (opt, updater, it, ss, reg, cMatrix.accuracy)
+                if (maxAccuracy._4 < cMatrix.getAccuracy) {
+                  maxAccuracy = (opt, updater, it, ss, reg, cMatrix.getAccuracy)
                 }
-                if (maxPrecision._4 < cMatrix.precision) {
-                  maxPrecision = (opt, updater, it, ss, reg, cMatrix.precision)
+                if (maxPrecision._4 < cMatrix.getPrecision) {
+                  maxPrecision = (opt, updater, it, ss, reg, cMatrix.getPrecision)
                 }
-                if (maxRecall._4 < cMatrix.recall) {
-                  maxRecall = (opt, updater, it, ss, reg, cMatrix.recall)
+                if (maxRecall._4 < cMatrix.getRecall) {
+                  maxRecall = (opt, updater, it, ss, reg, cMatrix.getRecall)
                 }
-                if (maxFMeasure._4 < cMatrix.fMeasure) {
-                  maxFMeasure = (opt, updater, it, ss, reg, cMatrix.fMeasure)
+                if (maxFMeasure._4 < cMatrix.getFMeasure) {
+                  maxFMeasure = (opt, updater, it, ss, reg, cMatrix.getFMeasure)
                 }
 
                 results = (opt, updater, it, ss, reg, cMatrix) :: results

@@ -82,22 +82,15 @@ object ContinuousClassifier extends Classifier {
       trainOnStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint))
     }
 
-
     // periodically schedule one iteration of the SGD
     val task = new Runnable {
       def run() {
         streamingSource.pause()
         val startTime = System.currentTimeMillis()
         val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(dataParser.parsePoint)
-        //.sample(withReplacement = false, fraction = 0.2).cache()
-        //val before = streamingModel.latestModel().weights
-        streamingModel.setStepSize(continuousStepSize)
         streamingModel.trainOn(historicalDataRDD)
-        streamingModel.setStepSize(onlineStepSize)
-        //val after = streamingModel.latestModel().weights
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)
-        //logger.info(s"Delta: ${Vectors.sqdist(before, after)}")
         streamingSource.unpause()
       }
     }
