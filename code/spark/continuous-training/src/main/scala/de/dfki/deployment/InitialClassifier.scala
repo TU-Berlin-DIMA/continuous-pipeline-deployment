@@ -21,12 +21,13 @@ object InitialClassifier extends Classifier {
     } else {
       testType = "dataset"
     }
-    val parent = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
+    val child = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
       s"slack-none/offline-step-$offlineStepSize/online-step-$onlineStepSize"
 
-    val resultPath = experimentResultPath(resultRoot, parent)
+    val resultPath = experimentResultPath(resultRoot, child)
+    val modelPath = s"$resultRoot/$child/model"
     // train initial model
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath, modelType)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath, modelType, modelPath)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 

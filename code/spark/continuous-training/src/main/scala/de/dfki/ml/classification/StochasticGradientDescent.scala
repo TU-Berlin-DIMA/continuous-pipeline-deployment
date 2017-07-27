@@ -72,4 +72,11 @@ abstract class StochasticGradientDescent[M <: GeneralizedLinearModel](val stepSi
     }
     createModel(weights, intercept)
   }
+
+  override def toString = {
+    s"${this.getClass.getName} with Params: " +
+      s"stepSize($stepSize), numIterations($numIterations), regParam($regParam)" +
+      s", miniBatchFraction($miniBatchFraction), standardization($standardization), fitIntercept($fitIntercept)" +
+      s", updater(${updater.toString})"
+  }
 }

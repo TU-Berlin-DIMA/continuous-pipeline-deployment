@@ -1,12 +1,12 @@
 package de.dfki.deployment
 
 import java.io.{File, FileWriter}
+import java.nio.file.{Files, Paths}
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
 import de.dfki.core.streaming.BatchFileInputDStream
-import de.dfki.ml.classification.{LogisticRegressionWithSGD, StochasticGradientDescent}
 import de.dfki.ml.evaluation.ConfusionMatrix
 import de.dfki.ml.optimization.SquaredL2UpdaterWithMomentum
 import de.dfki.ml.streaming.models.{HybridLR, HybridModel, HybridSVM}
@@ -18,12 +18,11 @@ import org.apache.hadoop.io.{LongWritable, NullWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat
 import org.apache.log4j.Logger
-import org.apache.spark.mllib.classification.{LogisticRegressionModel, SVMModel, SVMWithSGD}
-import org.apache.spark.mllib.regression.{GeneralizedLinearModel, LabeledPoint}
+import org.apache.spark.SparkConf
+import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming._
 import org.apache.spark.streaming.dstream.{ConstantInputDStream, DStream}
-import org.apache.spark.{SparkConf, SparkContext}
 
 
 /**
@@ -58,14 +57,15 @@ abstract class Classifier extends Serializable {
   val INITIAL_TRAINING = "initial-training"
   val STREAM_TRAINING = "stream-training"
   val TEST_DATA = "test"
+  val MODEL_PATH = "data/criteo-full/model"
 
-  var streamingModel: HybridModel[GeneralizedLinearModel, StochasticGradientDescent[GeneralizedLinearModel]] = _
+  var streamingModel: HybridModel[_, _] = _
   var dataParser: DataParser = _
 
-  def experimentResultPath(root: String, parent: String): String = {
+  def experimentResultPath(root: String, child: String): String = {
     val dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm")
     val experimentId = dateFormat.format(experimentTime)
-    s"$root/$parent/$experimentId"
+    s"$root/$child/$experimentId"
   }
 
   var numIterations: Int = _
@@ -74,6 +74,7 @@ abstract class Classifier extends Serializable {
   var offlineStepSize: Double = _
   var onlineStepSize: Double = _
   var defaultParallelism: Int = _
+  var modelPath: String = _
 
 
   def parseArgs(args: Array[String]): (String, String, String, String, String) = {
@@ -90,6 +91,8 @@ abstract class Classifier extends Serializable {
     val testDataPath = parser.get("test-path", "prequential")
     // model type
     val modelType = parser.get("model-type", defaultModelType)
+    // path to save or retrieve the model
+    modelPath = parser.get("model-path", MODEL_PATH)
     // cumulative test error
     errorType = parser.get("error-type", "cumulative")
     // number of iterations
@@ -249,49 +252,27 @@ abstract class Classifier extends Serializable {
     * @param initialDataDirectories directory of initial data
     * @return Online SVM Model
     */
-  def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String, modelType: String): HybridModel[GeneralizedLinearModel, StochasticGradientDescent[GeneralizedLinearModel]] = {
-    val hModel = if (modelType.equals("svm")) {
-      logger.info("Instantiating a SVM Model")
-      new HybridSVM(offlineStepSize, numIterations, 0.0, 1.0, new SquaredL2UpdaterWithMomentum(0.9))
-        .asInstanceOf[HybridModel[GeneralizedLinearModel, StochasticGradientDescent[GeneralizedLinearModel]]]
+  def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String, modelType: String, modelPath: String): HybridModel[_, _] = {
+    if (Files.exists(Paths.get(modelPath))) {
+      logger.info("Model exists, loading the model from disk ...")
+      HybridModel.loadFromDisk(modelPath).setConvergenceTol(0.0).setNumIterations(1)
     } else {
-      logger.info("Instantiating a Linear Regression Model")
-      new HybridLR(offlineStepSize, numIterations, 0.0, 1.0, new SquaredL2UpdaterWithMomentum(0.9))
-        .asInstanceOf[HybridModel[GeneralizedLinearModel, StochasticGradientDescent[GeneralizedLinearModel]]]
-    }
-    val data = ssc.sparkContext.textFile(initialDataDirectories).map(dataParser.parsePoint)
-    val cachedData = data.cache()
-    hModel.trainInitialModel(cachedData).setConvergenceTol(0.0).setNumIterations(1)
-  }
+      val hybridModel = if (modelType.equals("svm")) {
+        logger.info("Instantiating a SVM Model")
+        new HybridSVM(offlineStepSize, numIterations, 0.0, 1.0, new SquaredL2UpdaterWithMomentum(0.9))
+      } else {
+        logger.info("Instantiating a Linear Regression Model")
+        // regularization parameter is chosen from GridSearch
+        new HybridLR(offlineStepSize, numIterations, 0.1, 1.0, new SquaredL2UpdaterWithMomentum(0.9))
+      }
+      val data = ssc.sparkContext.textFile(initialDataDirectories).map(dataParser.parsePoint)
+      hybridModel.trainInitialModel(data)
 
-  def trainModel(sc: SparkContext, trainingData: String, modelType: String): GeneralizedLinearModel = {
-    if (modelType.equals("svm")) {
-      logger.info("Train a new SVM model")
-      trainSVMModel(sc, trainingData)
-    } else {
-      logger.info("Train a new Logistic Regression")
-      trainLRModel(sc, trainingData)
+      // save the model to disk, consecutive runs will check this directory first
+      HybridModel.saveToDisk(modelPath, hybridModel)
+      hybridModel.setConvergenceTol(0.0).setNumIterations(1)
     }
   }
-
-  def trainSVMModel(sc: SparkContext, trainingData: String): SVMModel = {
-    val data = sc.textFile(trainingData).map(dataParser.parsePoint)
-    val cachedData = data.cache()
-    cachedData.count()
-    val model = SVMWithSGD.train(cachedData, numIterations, offlineStepSize, 0.01)
-    cachedData.unpersist(false)
-    model
-  }
-
-  def trainLRModel(sc: SparkContext, trainingData: String): LogisticRegressionModel = {
-    val data = sc.textFile(trainingData).map(dataParser.parsePoint)
-    val cachedData = data.cache()
-    cachedData.count()
-    val model = new LogisticRegressionWithSGD(offlineStepSize, numIterations, 0.0, 1.0, new SquaredL2UpdaterWithMomentum(0.9)).run(cachedData)
-    cachedData.unpersist(false)
-    model
-  }
-
 
   /**
     * Create a BatchFileInputDStream object from the given path

@@ -196,6 +196,9 @@ object GradientDescent {
       */
     //var regVal = updater.compute(weights, Vectors.zeros(weights.size), 0, 1, regParam)._2
 
+    if (data.getStorageLevel.useMemory){
+      logger.warn("Dataset is not persisted!!!")
+    }
     var converged = false
     // indicates whether converged based on convergenceTol
     var i = 1

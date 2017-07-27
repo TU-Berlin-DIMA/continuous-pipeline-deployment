@@ -1,7 +1,7 @@
 package de.dfki.ml.optimization
 
 
-import breeze.linalg.{Vector => BV, axpy => brzAxpy, norm => brzNorm}
+import breeze.linalg.{DenseVector => BDV, Vector => BV, axpy => brzAxpy, norm => brzNorm}
 import de.dfki.ml.LinearAlgebra._
 import org.apache.log4j.Logger
 import org.apache.spark.mllib.linalg.Vector
@@ -15,19 +15,17 @@ import org.apache.spark.mllib.optimization.Updater
 
 abstract class AdvancedUpdaters extends Updater {
   def name: String
-  @transient val logger = Logger.getLogger(getClass.getName)
+
+  @transient lazy val logger = Logger.getLogger(getClass.getName)
 }
 
 class NullUpdater extends AdvancedUpdaters {
-
   override def name = "null"
-
 
   override def compute(weightsOld: Vector, gradient: Vector, stepSize: Double, iter: Int, regParam: Double) = ???
 }
 
 class SquaredL2Updater extends AdvancedUpdaters {
-
   override def compute(weightsOld: Vector,
                        gradient: Vector,
                        stepSize: Double,
@@ -59,7 +57,6 @@ class SquaredL2Updater extends AdvancedUpdaters {
 }
 
 class SquaredL2UpdaterWithStepDecay(decaySize: Int) extends AdvancedUpdaters {
-
   override def compute(weightsOld: Vector,
                        gradient: Vector,
                        stepSize: Double,
@@ -92,11 +89,9 @@ class SquaredL2UpdaterWithStepDecay(decaySize: Int) extends AdvancedUpdaters {
   }
 
   override def name = "l2-step-decay"
-
 }
 
 class SquaredL2UpdaterWithConstantLearningRate extends AdvancedUpdaters {
-
   override def compute(weightsOld: Vector,
                        gradient: Vector,
                        stepSize: Double,
@@ -126,7 +121,6 @@ class SquaredL2UpdaterWithConstantLearningRate extends AdvancedUpdaters {
   }
 
   override def name = "l2-constant"
-
 }
 
 /**
@@ -136,9 +130,13 @@ class SquaredL2UpdaterWithConstantLearningRate extends AdvancedUpdaters {
   *      for more detailed information
   * @param gamma fraction of previous update vector
   */
-class SquaredL2UpdaterWithMomentum(gamma: Double) extends AdvancedUpdaters {
-  var updateVector: BV[Double] = _
+class SquaredL2UpdaterWithMomentum(var gamma: Double) extends AdvancedUpdaters {
+  var updateVector: BV[Double] = BDV.zeros[Double](1)
 
+  def withUpdateVector(vector: BV[Double]): this.type = {
+    updateVector = vector
+    this
+  }
 
   override def compute(weightsOld: Vector,
                        gradient: Vector,
@@ -156,7 +154,7 @@ class SquaredL2UpdaterWithMomentum(gamma: Double) extends AdvancedUpdaters {
       brzWeights :*= (1.0 - stepSize * regParam)
     }
     val delta = asBreeze(gradient) * thisIterStepSize
-    if (updateVector == null) {
+    if (updateVector == BDV.zeros[Double](1)) {
       logger.info("updateVector is null, initializing it with delta value")
       updateVector = delta
     } else {
@@ -170,12 +168,17 @@ class SquaredL2UpdaterWithMomentum(gamma: Double) extends AdvancedUpdaters {
       val norm = brzNorm(brzWeights, 2.0)
       0.5 * regParam * norm * norm
     }
+    println(s"current step-size ($thisIterStepSize), regParam($regParam)")
     logger.info(s"current step-size ($thisIterStepSize), regParam($regParam)")
 
     (fromBreeze(brzWeights), regVal)
   }
 
   override def name = "l2-momentum"
+
+  override def toString = {
+    s"${this.getClass.getCanonicalName}, updateVector(${updateVector.toString}), gamma($gamma)"
+  }
 }
 
 class SquaredL2UpdaterWithAdaDelta extends AdvancedUpdaters {

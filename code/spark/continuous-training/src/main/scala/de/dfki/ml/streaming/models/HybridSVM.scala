@@ -30,9 +30,5 @@ class HybridSVM(private var stepSize: Double,
     super.trainOn(observations)
   }
 
-  override def toString(): String = {
-    model.get.toString()
-  }
-
-
+  override val getType = "svm"
 }

@@ -27,4 +27,7 @@ class HybridLR(private var stepSize: Double,
   protected val algorithm = new LogisticRegressionWithSGD(stepSize, numIterations, regParam, miniBatchFraction, updater)
 
   protected var model: Option[LogisticRegressionModel] = _
+
+  override val getType = "lr"
+
 }
