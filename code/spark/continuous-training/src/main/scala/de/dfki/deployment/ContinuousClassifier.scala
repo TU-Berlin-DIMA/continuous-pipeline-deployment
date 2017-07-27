@@ -1,6 +1,9 @@
 package de.dfki.deployment
 
+import java.nio.file.{Files, Paths}
+
 import de.dfki.core.scheduling.FixedIntervalScheduler
+import de.dfki.ml.streaming.models.HybridModel
 import de.dfki.utils.CommandLineParser
 
 /**
@@ -50,18 +53,20 @@ object ContinuousClassifier extends Classifier {
     } else {
       testType = "dataset"
     }
-    val parent = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
+    val child = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
       s"slack-$slack/offline-step-$offlineStepSize/online-step-$onlineStepSize/continuous-step-$continuousStepSize"
 
-    val resultPath = experimentResultPath(resultRoot, parent)
-    val tempDirectory = experimentResultPath(tempRoot, parent)
+    val resultPath = experimentResultPath(resultRoot, child)
+    val tempDirectory = experimentResultPath(tempRoot, child)
+    val modelPath = s"$resultRoot/$child/model"
     createTempFolders(tempDirectory)
     val ssc = initializeSpark()
     ssc.sparkContext.setLogLevel("INFO")
 
     // train initial model
     val startTime = System.currentTimeMillis()
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory, modelType)
+
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory, modelType, modelPath)
     val endTime = System.currentTimeMillis()
     storeTrainingTimes(endTime - startTime, resultPath)
 

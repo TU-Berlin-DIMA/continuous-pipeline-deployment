@@ -35,8 +35,8 @@ import org.apache.spark.{SparkConf, SparkContext}
   */
 object LogisticRegressionOnCriteoData {
 
-  val TRAINING_DATA = "data/criteo-full/all/*"
-  val TEST_DATA = "data/criteo-full/processed/6"
+  val TRAINING_DATA = "data/criteo-full/initial-training/0"
+  val TEST_DATA = "data/criteo-full/processed/1"
   val RESULT_PATH = "data/criteo-full/temp-results"
   val STEP_SIZE = "1.0"
   val REGULARIZATION_PARAMETER = "0.0"
@@ -50,7 +50,7 @@ object LogisticRegressionOnCriteoData {
 
     val parser = new CommandLineParser(args).parse()
     val trainingPath = parser.get("initial-training-path", TRAINING_DATA)
-    val testPath = parser.get("test-path", TRAINING_DATA)
+    val testPath = parser.get("test-path", TEST_DATA)
     val resultPath = parser.get("result-path", RESULT_PATH)
 
     val iters = parser.get("num-iterations", ITERATIONS).split(",").map(_.trim.toInt)
@@ -134,7 +134,7 @@ object ComputeScores {
     //, 0.05, 0.1, 0.5, 1.0)
     val iters = List(500)
     //, 200, 300, 400, 500)
-    val regParams = List(0.0)
+    val regParams = List(0.1)
 
     val optimizers = List("sgd")
 
@@ -159,30 +159,30 @@ object ComputeScores {
     //      .collect()
     //      .toList
     for (opt <- optimizers) {
-      val finalUpdaters = if (opt == "lbfgs") {
+      val (finalUpdaters, finalRegPars) = if (opt == "lbfgs") {
         println("Optimizer does not support learning rates, setting learning rate to null")
-        List("null")
+        (List("null"), List(0.0))
       } else {
-        updaters
+        (updaters, regParams)
       }
       for (updater <- finalUpdaters) {
         for (it <- iters) {
           for (ss <- steps) {
-            for (reg <- regParams) {
+            for (reg <- finalRegPars) {
               val path = s"$resultPath/optimizer=$opt/updater=$updater/iter=$it/step-size=$ss/reg=$reg"
               if (Files.exists(Paths.get(path))) {
                 val data = sc.textFile(s"$resultPath/optimizer=$opt/updater=$updater/iter=$it/step-size=$ss/reg=$reg").map(parse)
                 val cMatrix = createConfusionMatrix(data)
-                if (maxAccuracy._4 < cMatrix.getAccuracy) {
+                if (maxAccuracy._6 < cMatrix.getAccuracy) {
                   maxAccuracy = (opt, updater, it, ss, reg, cMatrix.getAccuracy)
                 }
-                if (maxPrecision._4 < cMatrix.getPrecision) {
+                if (maxPrecision._6 < cMatrix.getPrecision) {
                   maxPrecision = (opt, updater, it, ss, reg, cMatrix.getPrecision)
                 }
-                if (maxRecall._4 < cMatrix.getRecall) {
+                if (maxRecall._6 < cMatrix.getRecall) {
                   maxRecall = (opt, updater, it, ss, reg, cMatrix.getRecall)
                 }
-                if (maxFMeasure._4 < cMatrix.getFMeasure) {
+                if (maxFMeasure._6 < cMatrix.getFMeasure) {
                   maxFMeasure = (opt, updater, it, ss, reg, cMatrix.getFMeasure)
                 }
 

@@ -1,6 +1,6 @@
 package de.dfki.ml.streaming.models
 
-import java.io.{File, FileWriter}
+import java.io._
 
 import de.dfki.ml.classification.StochasticGradientDescent
 import org.apache.spark.mllib.linalg.Vector
@@ -29,6 +29,8 @@ HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientDescent[M]]
   }
 
   def trainInitialModel(rdd: RDD[LabeledPoint]): this.type = {
+    rdd.cache()
+    rdd.count()
     this.model = Some(algorithm.run(rdd))
     this
   }
@@ -116,9 +118,31 @@ HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientDescent[M]]
     }
   }
 
-  override def toString(): String = {
-    model.get.toString()
+  override def toString: String = {
+    s"${this.getClass.getCanonicalName}\n" +
+      s"Algorithm: ${algorithm.toString}\n" +
+      s"Model: ${if (model == null) "Model not initialized yet" else model.get.toString()}"
   }
 
-
+  val getType: String
 }
+
+object HybridModel {
+
+  def saveToDisk(path: String, model: HybridModel[_, _]) = {
+    val file = new File(path)
+    file.getParentFile.mkdirs()
+    file.createNewFile()
+    val oos = new ObjectOutputStream(new FileOutputStream(file, false))
+    oos.writeObject(model)
+    oos.close()
+  }
+
+  def loadFromDisk(path: String): HybridModel[_, _] = {
+    val ois = new ObjectInputStream(new FileInputStream(path))
+    val model = ois.readObject.asInstanceOf[HybridModel[_, _]]
+    ois.close()
+    model
+  }
+}
+

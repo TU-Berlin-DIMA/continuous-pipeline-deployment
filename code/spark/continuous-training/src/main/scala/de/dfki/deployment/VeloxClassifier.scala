@@ -52,17 +52,18 @@ object VeloxClassifier extends Classifier {
     } else {
       testType = "dataset"
     }
-    val parent = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
+    val child = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
       s"slack-$slack/offline-step-$offlineStepSize/online-step-$onlineStepSize"
 
-    val resultPath = experimentResultPath(resultRoot, parent)
-    val tempDirectory = experimentResultPath(tempRoot, parent)
+    val resultPath = experimentResultPath(resultRoot, child)
+    val tempDirectory = experimentResultPath(tempRoot, child)
+    val modelPath = s"$resultRoot/$child/model"
     createTempFolders(tempDirectory)
     val ssc = initializeSpark()
 
     // train initial model
     val startTime = System.currentTimeMillis()
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory, modelType)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory, modelType, modelPath)
     val endTime = System.currentTimeMillis()
     storeTrainingTimes(endTime - startTime, resultPath)
     val streamingSource = streamSource(ssc, streamingDataPath)
@@ -90,16 +91,13 @@ object VeloxClassifier extends Classifier {
         storeRetrainingPoint(streamingSource.getLastProcessedFileIndex, resultPath)
         val startTime = System.currentTimeMillis()
         val before = streamingModel.latestModelWeights()
-        // TODO FIX THIS
-        if (modelType.equals("svm")) {
-          streamingModel.setConvergenceTol(1E-6).setNumIterations(numIterations)
-        } else {
-
-        }
-        val model = trainModel(ssc.sparkContext, initialDataPath + "," + tempDirectory, modelType)
+        val data = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(dataParser.parsePoint)
+        // retrain the initial model
+        streamingModel.setConvergenceTol(1E-6).setNumIterations(numIterations).trainInitialModel(data)
+        //after retraining is done reset convergence tol and iteration count
+        streamingModel.setConvergenceTol(0.0).setNumIterations(1)
         val after = streamingModel.latestModelWeights()
         val endTime = System.currentTimeMillis()
-        streamingModel.setModel(model)
         storeTrainingTimes(endTime - startTime, resultPath)
         logger.info(s"Delta: ${Vectors.sqdist(before, after)}")
         streamingSource.unpause()
