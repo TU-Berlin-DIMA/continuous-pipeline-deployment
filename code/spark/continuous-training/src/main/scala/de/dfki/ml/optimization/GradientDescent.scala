@@ -3,7 +3,7 @@ package de.dfki.ml.optimization
 import breeze.linalg.norm
 import de.dfki.ml.LinearAlgebra._
 import org.apache.log4j.Logger
-import org.apache.spark.mllib.linalg.{Vector, Vectors}
+import org.apache.spark.mllib.linalg.{DenseVector, Vector, Vectors}
 import org.apache.spark.mllib.optimization.Updater
 import org.apache.spark.mllib.stat.MultivariateOnlineSummarizer
 import org.apache.spark.rdd.RDD
@@ -24,6 +24,13 @@ class GradientDescent(var numIterations: Int,
                       var fitIntercept: Boolean,
                       gradient: BatchGradient,
                       updater: Updater) extends SGDOptimizer {
+  @transient lazy val logger = Logger.getLogger(getClass.getName)
+
+
+  var featuresMean: Array[Double] = _
+  var featuresStd: Array[Double] = _
+  var numFeatures: Int = _
+  var summarizer: MultivariateOnlineSummarizer = _
 
   def setConvergenceTol(convergenceTol: Double): this.type = {
     this.convergenceTol = convergenceTol
@@ -53,7 +60,6 @@ class GradientDescent(var numIterations: Int,
     this
   }
 
-
   def this() = this(100, 1.0, 0.0, 1.0, 1E-6, true, true, new LogisticGradient(true, true, 1.0), new SquaredL2Updater)
 
 
@@ -69,7 +75,51 @@ class GradientDescent(var numIterations: Int,
     optimize(data, initialWeights, 0.0)
   }
 
+  /**
+    * calcualtes the mean and variance of incoming dataset and update the existing one
+    *
+    * @param data
+    */
+  def updateStatistics(data: RDD[(Double, Vector)]) = {
+    val newBatchSummarizer = {
+      val seqOp = (c: (MultivariateOnlineSummarizer), instance: (Double, Vector)) =>
+        c.add(instance._2)
+
+      val combOp = (c1: (MultivariateOnlineSummarizer),
+                    c2: (MultivariateOnlineSummarizer)) => c1.merge(c2)
+
+      data.treeAggregate(new MultivariateOnlineSummarizer)(seqOp, combOp)
+    }
+    summarizer = if (summarizer == null) {
+      newBatchSummarizer
+    } else {
+      summarizer.merge(newBatchSummarizer)
+    }
+    numFeatures = summarizer.mean.size
+    featuresMean = summarizer.mean.toArray
+    featuresStd = summarizer.variance.toArray.map(math.sqrt)
+
+  }
+
+  override def unStandardize(weights: Vector): Vector = {
+    val rawCoefficients = weights.toArray.clone()
+    var i = 0
+    while (i < rawCoefficients.length - 1) {
+      rawCoefficients(i) *= {
+        if (featuresStd(i) != 0.0) 1.0 / featuresStd(i) else 0.0
+      }
+      i += 1
+    }
+    new DenseVector(rawCoefficients)
+  }
+
   override def optimize(data: RDD[(Double, Vector)], initialWeights: Vector, intercept: Double): Vector = {
+    // make sure statistics are calculated on the first call to the algorithm
+    // afterwards it is the responsibility of the caller to make sure statistics are explicitly update
+    if (summarizer == null) {
+      logger.warn("Calculating the statistics for the first time...")
+      updateStatistics(data)
+    }
     GradientDescent.runMiniBatchSGD(
       data,
       gradient,
@@ -82,7 +132,10 @@ class GradientDescent(var numIterations: Int,
       convergenceTol,
       standardize,
       fitIntercept,
-      intercept)
+      intercept,
+      numFeatures,
+      featuresMean,
+      featuresStd)
   }
 }
 
@@ -125,7 +178,10 @@ object GradientDescent {
                       convergenceTol: Double,
                       standardization: Boolean,
                       fitIntercept: Boolean,
-                      intercept: Double): Vector = {
+                      intercept: Double,
+                      numFeatures: Int,
+                      featuresMean: Array[Double],
+                      featuresStd: Array[Double]): Vector = {
 
     // convergenceTol should be set with non minibatch settings
     if (miniBatchFraction < 1.0 && convergenceTol > 0.0) {
@@ -144,33 +200,18 @@ object GradientDescent {
     var previousWeights: Option[Vector] = None
     var currentWeights: Option[Vector] = None
 
-    val numExamples = data.count()
+    //    val numExamples = data.count()
+    //
+    //    // if no data, return initial weights to avoid NaNs
+    //    if (numExamples == 0) {
+    //      logger.warn("GradientDescent.runMiniBatchSGD returning initial weights, no data found")
+    //      return initialWeights
+    //    }
+    //
+    //    if (numExamples * miniBatchFraction < 1) {
+    //      logger.warn("The miniBatchFraction is too small")
+    //    }
 
-    // if no data, return initial weights to avoid NaNs
-    if (numExamples == 0) {
-      logger.warn("GradientDescent.runMiniBatchSGD returning initial weights, no data found")
-      return initialWeights
-    }
-
-    if (numExamples * miniBatchFraction < 1) {
-      logger.warn("The miniBatchFraction is too small")
-    }
-
-
-    val summarizer = {
-      val seqOp = (c: (MultivariateOnlineSummarizer), instance: (Double, Vector)) =>
-        c.add(instance._2)
-
-      val combOp = (c1: (MultivariateOnlineSummarizer),
-                    c2: (MultivariateOnlineSummarizer)) => c1.merge(c2)
-
-      data.treeAggregate(
-        new MultivariateOnlineSummarizer)(seqOp, combOp)
-    }
-
-    val numFeatures = summarizer.mean.size
-    val featuresMean = summarizer.mean.toArray
-    val featuresStd = summarizer.variance.toArray.map(math.sqrt)
     // Initialize weights as a column vector
     var weights = if (!fitIntercept) {
       Vectors.dense(initialWeights.toArray)
@@ -196,7 +237,7 @@ object GradientDescent {
       */
     //var regVal = updater.compute(weights, Vectors.zeros(weights.size), 0, 1, regParam)._2
 
-    if (data.getStorageLevel.useMemory){
+    if (data.getStorageLevel.useMemory) {
       logger.warn("Dataset is not persisted!!!")
     }
     var converged = false
@@ -211,31 +252,25 @@ object GradientDescent {
 
       val (lossSum, newGradients) = gradient.compute(sampledData, weights)
 
-
+      previousWeights = Some(weights)
       // TODO add mini batch size back
       weights = updater.compute(weights, newGradients, stepSize, i, regParam)._1
 
-      previousWeights = currentWeights
-      currentWeights = Some(newGradients)
+
+      currentWeights = Some(weights)
       if (previousWeights.isDefined && currentWeights.isDefined) {
-        converged = isConverged(previousWeights.get,
-          currentWeights.get, convergenceTol)
+        converged = isConverged(previousWeights.get, currentWeights.get, convergenceTol)
       }
       logger.info(s"Iteration ($i/$numIterations) ,loss($lossSum)")
       i += 1
     }
 
-    val rawCoefficients = weights.toArray.clone()
-    i = 0
-    while (i < numFeatures) {
-      rawCoefficients(i) *= {
-        if (featuresStd(i) != 0.0) 1.0 / featuresStd(i) else 0.0
-      }
-      i += 1
-    }
-
-    Vectors.dense(rawCoefficients).compressed
+    // do not transform the weights into the original space
+    // only do it while testing the model
+    weights
+    //Vectors.dense(rawCoefficients).compressed
   }
+
 
   private def isConverged(previousWeights: Vector,
                           currentWeights: Vector,

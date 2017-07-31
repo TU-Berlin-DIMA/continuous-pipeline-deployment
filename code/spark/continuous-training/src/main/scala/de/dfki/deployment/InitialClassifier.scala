@@ -22,10 +22,11 @@ object InitialClassifier extends Classifier {
       testType = "dataset"
     }
     val child = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
-      s"slack-none/offline-step-$offlineStepSize/online-step-$onlineStepSize"
+      s"slack-none/offline-step-$offlineStepSize"
 
     val resultPath = experimentResultPath(resultRoot, child)
     val modelPath = s"$resultRoot/$child/model"
+    println(modelPath)
     // train initial model
     streamingModel = createInitialStreamingModel(ssc, initialDataPath, modelType, modelPath)
     val streamingSource = streamSource(ssc, streamingDataPath)
@@ -52,5 +53,5 @@ object InitialClassifier extends Classifier {
 
   override def defaultTrainingSlack = 0L
 
-  override def defaultModelType = "svm"
+  override def defaultModelType = "lr"
 }

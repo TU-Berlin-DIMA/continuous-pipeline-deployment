@@ -74,7 +74,6 @@ HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientDescent[M]]
 
   def latestModelWeights() = super.latestModel().weights
 
-
   def predictOnValues[K: ClassTag](data: RDD[(K, Vector)]): RDD[(K, Double)] = {
     if (model.isEmpty) {
       throw new IllegalArgumentException("Model must be initialized before starting prediction")
@@ -84,6 +83,9 @@ HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientDescent[M]]
 
   /**
     * Update the model based on a batch of data (static data)
+    *
+    * Note: Do not call update statistic in this method, if the statistics have not been
+    * calculated before, the optimizer will automatically call the function.
     *
     * @param data RDD containing the training data to be used
     */
@@ -107,12 +109,19 @@ HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientDescent[M]]
     data.foreachRDD(storeErrorRate)
   }
 
+  /**
+    * The incoming data are assumed to be new and never seen before
+    * Therefore a call to to optimizer's updateStatistics method is required
+    *
+    * @param observations stream of training observations
+    */
   override def trainOn(observations: DStream[LabeledPoint]): Unit = {
     if (model.isEmpty) {
       throw new IllegalArgumentException("Model must be initialized before starting training.")
     }
     observations.foreachRDD { (rdd, _) =>
       if (!rdd.isEmpty) {
+        this.algorithm.optimizer.updateStatistics(rdd.map(l => (l.label, l.features)))
         model = Some(algorithm.run(rdd, model.get.weights, model.get.intercept))
       }
     }
@@ -136,6 +145,7 @@ object HybridModel {
     val oos = new ObjectOutputStream(new FileOutputStream(file, false))
     oos.writeObject(model)
     oos.close()
+    new FileWriter(s"$path-description", false).write(model.toString)
   }
 
   def loadFromDisk(path: String): HybridModel[_, _] = {

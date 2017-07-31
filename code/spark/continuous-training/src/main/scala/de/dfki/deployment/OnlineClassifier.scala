@@ -53,5 +53,5 @@ object OnlineClassifier extends Classifier {
 
   override def defaultTrainingSlack = 0L
 
-  override def defaultModelType = "svm"
+  override def defaultModelType = "lr"
 }

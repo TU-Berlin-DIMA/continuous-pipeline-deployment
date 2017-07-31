@@ -24,6 +24,7 @@ class LogisticRegressionWithSGD(stepSize: Double,
     standardization,
     fitIntercept,
     updater) with Serializable {
+  //@transient lazy val logger = Logger.getLogger(getClass.getName)
 
   def this() = this(1.0, 100, 0.1, 1.0, true, true, new SquaredL2Updater)
 
@@ -48,7 +49,7 @@ class LogisticRegressionWithSGD(stepSize: Double,
 
 
   override def createModel(weights: Vector, intercept: Double) = {
-    println(s"Creating a Logistic Regression model with features size: ${weights.size} and intercept: $intercept")
+    //logger.info(s"Creating a Logistic Regression model with features size: ${weights.size} and intercept: $intercept")
     new LogisticRegressionModel(weights, intercept)
   }
 
