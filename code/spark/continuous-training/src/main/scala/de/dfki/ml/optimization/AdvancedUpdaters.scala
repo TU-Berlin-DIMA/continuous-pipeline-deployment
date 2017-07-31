@@ -8,7 +8,6 @@ import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.optimization.Updater
 
 /**
-  * Copy of @see org.apache.spark.mllib.optimization.SquaredL2Updater
   *
   * @author bede01.
   */
@@ -143,17 +142,11 @@ class SquaredL2UpdaterWithMomentum(var gamma: Double) extends AdvancedUpdaters {
                        stepSize: Double,
                        iter: Int,
                        regParam: Double) = {
-    // add up both updates from the gradient of the loss (= step) as well as
-    // the gradient of the regularizer (= regParam * weightsOld)
-    // w' = w - thisIterStepSize * (gradient + regParam * w)
-    // w' = (1 - thisIterStepSize * regParam) * w - thisIterStepSize * gradient
-    val thisIterStepSize = stepSize
-    // / math.sqrt(iter)
     val brzWeights: BV[Double] = asBreeze(weightsOld).toDenseVector
     if (regParam != 0) {
       brzWeights :*= (1.0 - stepSize * regParam)
     }
-    val delta = asBreeze(gradient) * thisIterStepSize
+    val delta = asBreeze(gradient) * stepSize
     if (updateVector == BDV.zeros[Double](1)) {
       logger.info("updateVector is null, initializing it with delta value")
       updateVector = delta
@@ -168,8 +161,7 @@ class SquaredL2UpdaterWithMomentum(var gamma: Double) extends AdvancedUpdaters {
       val norm = brzNorm(brzWeights, 2.0)
       0.5 * regParam * norm * norm
     }
-    println(s"current step-size ($thisIterStepSize), regParam($regParam)")
-    logger.info(s"current step-size ($thisIterStepSize), regParam($regParam)")
+    logger.info(s"current step-size ($stepSize), regParam($regParam)")
 
     (fromBreeze(brzWeights), regVal)
   }

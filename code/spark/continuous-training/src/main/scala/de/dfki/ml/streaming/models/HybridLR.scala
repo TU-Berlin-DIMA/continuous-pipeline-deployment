@@ -1,9 +1,14 @@
 package de.dfki.ml.streaming.models
 
+import de.dfki.ml.LinearAlgebra
 import de.dfki.ml.classification.LogisticRegressionWithSGD
 import de.dfki.ml.optimization.SquaredL2Updater
 import org.apache.spark.mllib.classification.LogisticRegressionModel
+import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.optimization.Updater
+import org.apache.spark.rdd.RDD
+
+import scala.reflect.ClassTag
 
 /**
   * @author bede01.
@@ -29,5 +34,26 @@ class HybridLR(private var stepSize: Double,
   protected var model: Option[LogisticRegressionModel] = _
 
   override val getType = "lr"
+
+  override def predictOnValues[K: ClassTag](data: RDD[(K, Vector)]): RDD[(K, Double)] = {
+    if (model.isEmpty) {
+      throw new IllegalArgumentException("Model must be initialized before starting prediction")
+    }
+
+    data.mapValues { x => predictPoint(x, algorithm.optimizer.unStandardize(model.get.weights), model.get.intercept) }
+  }
+
+  def predictPoint(dataMatrix: Vector,
+                   weightMatrix: Vector,
+                   intercept: Double) = {
+    val margin = LinearAlgebra.dot(weightMatrix, dataMatrix) + intercept
+    val score = 1.0 / (1.0 + math.exp(-margin))
+    model.get.getThreshold match {
+      case Some(t) => if (score > t) 1.0 else 0.0
+      case None => score
+    }
+
+  }
+
 
 }

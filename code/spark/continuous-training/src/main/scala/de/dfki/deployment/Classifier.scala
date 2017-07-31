@@ -52,12 +52,15 @@ abstract class Classifier extends Serializable {
 
   // constants for the directory structures
   val DATA_DIRECTORY = "data"
-  val DATA_SET = "criteo-sample"
+  val DATA_SET = "criteo-full"
   val BASE_DATA_DIRECTORY: String = s"$DATA_DIRECTORY/$DATA_SET"
-  val INITIAL_TRAINING = "initial-training"
-  val STREAM_TRAINING = "stream-training"
+  val INITIAL_TRAINING = "initial-training/0"
+  val STREAM_TRAINING = "processed/*"
   val TEST_DATA = "test"
-  val MODEL_PATH = "data/criteo-full/model"
+  val DEFAULT_NUMBER_OF_ITERATIONS = 500
+  val DEFAULT_OFFLINE_STEP_SIZE = 1.0
+  val DEFAULT_ONLINE_STEP_SIZE = 1.0
+
 
   var streamingModel: HybridModel[_, _] = _
   var dataParser: DataParser = _
@@ -82,7 +85,7 @@ abstract class Classifier extends Serializable {
     // spark streaming batch duration
     batchDuration = parser.getLong("batch-duration", defaultBatchDuration)
     // path for storing experiments results
-    val resultRoot = parser.get("result-path", s"results/$DATA_SET/$getExperimentName")
+    val resultRoot = parser.get("result-path", s"../../../experiment-results/$DATA_SET")
     // folder path for initial training data
     val initialDataPath = parser.get("initial-training-path", s"$BASE_DATA_DIRECTORY/$INITIAL_TRAINING")
     // folder path for data to be streamed
@@ -91,19 +94,17 @@ abstract class Classifier extends Serializable {
     val testDataPath = parser.get("test-path", "prequential")
     // model type
     val modelType = parser.get("model-type", defaultModelType)
-    // path to save or retrieve the model
-    modelPath = parser.get("model-path", MODEL_PATH)
     // cumulative test error
     errorType = parser.get("error-type", "cumulative")
     // number of iterations
-    numIterations = parser.getInteger("num-iterations", 500)
+    numIterations = parser.getInteger("num-iterations", DEFAULT_NUMBER_OF_ITERATIONS)
     // offline learner step size
-    offlineStepSize = parser.getDouble("offline-step-size", 1.0)
+    offlineStepSize = parser.getDouble("offline-step-size", DEFAULT_OFFLINE_STEP_SIZE)
     // online learner step size
-    onlineStepSize = parser.getDouble("online-step-size", 1.0)
+    onlineStepSize = parser.getDouble("online-step-size", DEFAULT_ONLINE_STEP_SIZE)
 
 
-    val inputFormat = parser.get("input-format", "text")
+    val inputFormat = parser.get("input-format", "vector")
     if (inputFormat == "text") {
       dataParser = new CSVParser()
     } else if (inputFormat == "svm") {
@@ -255,7 +256,9 @@ abstract class Classifier extends Serializable {
   def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String, modelType: String, modelPath: String): HybridModel[_, _] = {
     if (Files.exists(Paths.get(modelPath))) {
       logger.info("Model exists, loading the model from disk ...")
-      HybridModel.loadFromDisk(modelPath).setConvergenceTol(0.0).setNumIterations(1)
+      val model = HybridModel.loadFromDisk(modelPath)
+      //logger.info(s"Model Description:\n${model.toString}")
+      model.setConvergenceTol(0.0).setNumIterations(1)
     } else {
       val hybridModel = if (modelType.equals("svm")) {
         logger.info("Instantiating a SVM Model")
