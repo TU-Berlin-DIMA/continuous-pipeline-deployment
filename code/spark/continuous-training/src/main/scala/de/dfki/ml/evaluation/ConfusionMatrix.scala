@@ -1,7 +1,10 @@
 package de.dfki.ml.evaluation
 
+import org.apache.spark.rdd.RDD
+
 /**
   * Confusion Matrix for calculating classification quality metrics
+  *
   * @author behrouz
   */
 class ConfusionMatrix(val tp: Int,
@@ -70,6 +73,9 @@ class ConfusionMatrix(val tp: Int,
     s"accuracy($accuracy), precision($precision), recall($recall), f-measure($fMeasure)"
   }
 
+  def toFullString = {
+    s"tp($tp),fp($fp),tn($tn),fn($fn),accuracy($accuracy), precision($precision), recall($recall), f-measure($fMeasure)"
+  }
 
   def resultAsCSV = {
     s"$tp,$fp,$tn,$fn,$accuracy,$precision,$recall,$fMeasure"
@@ -86,6 +92,20 @@ object ConfusionMatrix {
   def fromCSVLine(csv: String): ConfusionMatrix = {
     val parsed = csv.split(",").map(_.trim).map(_.toInt)
     new ConfusionMatrix(parsed(0), parsed(1), parsed(2), parsed(3))
+  }
+
+  def fromRDD(rdd: RDD[(Double, Double)]): ConfusionMatrix = {
+    rdd
+      .map {
+        v =>
+          var tp, fp, tn, fn = 0
+          if (v._1 == v._2 & v._1 == 1.0) tp = 1
+          else if (v._1 == v._2 & v._1 == 0.0) tn = 1
+          else if (v._1 != v._2 & v._1 == 1.0) fp = 1
+          else fn = 1
+          new ConfusionMatrix(tp, fp, tn, fn)
+      }
+      .reduce((c1, c2) => ConfusionMatrix.merge(c1, c2))
   }
 
   def merge(c1: ConfusionMatrix, c2: ConfusionMatrix): ConfusionMatrix = {

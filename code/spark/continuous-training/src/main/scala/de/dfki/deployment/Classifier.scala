@@ -19,6 +19,7 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
+import org.apache.spark.mllib.classification.LogisticRegressionModel
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming._
@@ -117,7 +118,7 @@ abstract class Classifier extends Serializable {
   }
 
   /**
-    * Initialization of spark streaming context and checkpointing of stateful operators
+    * Initialization of spark streaming context
     *
     * @return Spark Streaming Context object
     */
@@ -128,7 +129,7 @@ abstract class Classifier extends Serializable {
     conf.setMaster(masterURL)
     val ssc = new StreamingContext(conf, Seconds(batchDuration))
     defaultParallelism = ssc.sparkContext.defaultParallelism
-    ssc.checkpoint("checkpoints/")
+    //ssc.checkpoint("checkpoints/")
     ssc
   }
 
@@ -176,7 +177,7 @@ abstract class Classifier extends Serializable {
     }
     finally fw.close()
   }
-  
+
 
   /**
     *
@@ -234,6 +235,11 @@ abstract class Classifier extends Serializable {
       logger.info("Model exists, loading the model from disk ...")
       val model = HybridModel.loadFromDisk(modelPath)
       //logger.info(s"Model Description:\n${model.toString}")
+      model.getUnderlyingModel match {
+        case m: LogisticRegressionModel =>
+          m.setThreshold(0.9)
+        case _ =>
+      }
       model.setConvergenceTol(0.0).setNumIterations(1)
     } else {
       val hybridModel = if (modelType.equals("svm")) {

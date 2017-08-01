@@ -28,6 +28,10 @@ HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientDescent[M]]
     this
   }
 
+  def getUnderlyingModel: M = {
+    this.model.get
+  }
+
   def trainInitialModel(rdd: RDD[LabeledPoint]): this.type = {
     rdd.cache()
     rdd.count()
