@@ -142,36 +142,20 @@ abstract class Classifier extends Serializable {
     // periodically check test error
     val predictions = streamingModel.predictOnValues(testData.map(lp => (lp.label, lp.features)))
 
-    if (errorType == "cumulative") {
-      predictions
-        .map {
-          v =>
-            var tp, fp, tn, fn = 0
-            if (v._1 == v._2 & v._1 == 1.0) tp = 1
-            else if (v._1 == v._2 & v._1 == 0.0) tn = 1
-            else if (v._1 != v._2 & v._1 == 1.0) fp = 1
-            else fn = 1
-            new ConfusionMatrix(tp, fp, tn, fn)
-        }
-        .map(p => ("e", p))
-        .mapWithState(StateSpec.function(mappingFunc _))
-        .reduce((c1, c2) => ConfusionMatrix.merge(c1, c2))
-        .foreachRDD(rdd => storeConfusionMatrix(rdd, resultPath))
 
-    } else {
-      predictions
-        .map {
-          v =>
-            var tp, fp, tn, fn = 0
-            if (v._1 == v._2 & v._1 == 1.0) tp = 1
-            else if (v._1 == v._2 & v._1 == 0.0) tn = 1
-            else if (v._1 != v._2 & v._1 == 1.0) fp = 1
-            else fn = 1
-            new ConfusionMatrix(tp, fp, tn, fn)
-        }
-        .reduce((c1, c2) => ConfusionMatrix.merge(c1, c2))
-        .foreachRDD(rdd => storeConfusionMatrix(rdd, resultPath))
-    }
+    predictions
+      .map {
+        v =>
+          var tp, fp, tn, fn = 0
+          if (v._1 == v._2 & v._1 == 1.0) tp = 1
+          else if (v._1 == v._2 & v._1 == 0.0) tn = 1
+          else if (v._1 != v._2 & v._1 == 1.0) fp = 1
+          else fn = 1
+          new ConfusionMatrix(tp, fp, tn, fn)
+      }
+      .reduce((c1, c2) => ConfusionMatrix.merge(c1, c2))
+      .foreachRDD(rdd => storeConfusionMatrix(rdd, resultPath))
+
 
   }
 
@@ -192,15 +176,7 @@ abstract class Classifier extends Serializable {
     }
     finally fw.close()
   }
-
-
-  private def mappingFunc(key: String, value: Option[ConfusionMatrix], state: State[ConfusionMatrix]): ConfusionMatrix = {
-    val currentState = state.getOption().getOrElse(new ConfusionMatrix(0, 0, 0, 0))
-    val currentTuple = value.getOrElse(new ConfusionMatrix(0, 0, 0, 0))
-    val updatedConfusionMatrix = ConfusionMatrix.merge(currentState, currentTuple)
-    state.update(updatedConfusionMatrix)
-    updatedConfusionMatrix
-  }
+  
 
   /**
     *
