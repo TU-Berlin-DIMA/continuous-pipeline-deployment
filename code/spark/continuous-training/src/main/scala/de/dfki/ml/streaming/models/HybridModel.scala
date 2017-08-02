@@ -4,6 +4,7 @@ import java.io._
 
 import de.dfki.ml.classification.StochasticGradientDescent
 import org.apache.spark.mllib.linalg.Vector
+import org.apache.spark.mllib.optimization.Updater
 import org.apache.spark.mllib.regression.{GeneralizedLinearModel, LabeledPoint, StreamingLinearAlgorithm}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
@@ -72,6 +73,16 @@ HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientDescent[M]]
     */
   def setConvergenceTol(convergenceTol: Double): this.type = {
     this.algorithm.optimizer.setConvergenceTol(convergenceTol)
+    this
+  }
+
+  /**
+    * Set the updater
+    * @param updater updater
+    * @return
+    */
+  def setUpdater(updater: Updater): this.type = {
+    this.algorithm.optimizer.setUpdater(updater)
     this
   }
 

@@ -23,7 +23,7 @@ class GradientDescent(var numIterations: Int,
                       var standardize: Boolean,
                       var fitIntercept: Boolean,
                       gradient: BatchGradient,
-                      updater: Updater) extends SGDOptimizer {
+                      var updater: Updater) extends SGDOptimizer {
   @transient lazy val logger = Logger.getLogger(getClass.getName)
 
 
@@ -57,6 +57,11 @@ class GradientDescent(var numIterations: Int,
 
   def setStepSize(stepSize: Double): this.type = {
     this.stepSize = stepSize
+    this
+  }
+
+  def setUpdater(updater: Updater): this.type = {
+    this.updater = updater
     this
   }
 

@@ -20,7 +20,9 @@ import org.apache.spark.mllib.linalg.Vectors
   * @author Behrouz Derakhshan
   */
 object VeloxClassifier extends Classifier {
-
+  var slack: Long = _
+  var tempRoot: String = _
+  var incremental: Boolean = _
 
   /**
     * @param args arguments to the main class should be a set of key, value pairs in the format of key=value
@@ -34,18 +36,16 @@ object VeloxClassifier extends Classifier {
     run(args)
   }
 
-  def parseVeloxArgs(args: Array[String]): (Long, String, String, String, String, String, Boolean, String) = {
+  override def parseArgs(args: Array[String]) = {
+    super.parseArgs(args)
     val parser = new CommandLineParser(args).parse()
-    val (resultPath, initialDataPath, streamingDataPath, testDataPath, modelType) = parseArgs(args)
-    val slack = parser.getLong("slack", defaultTrainingSlack)
-    val tempDirectory = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
-    val incremental = parser.getBoolean("incremental", default = true)
-    (slack, resultPath, initialDataPath, streamingDataPath,
-      testDataPath, tempDirectory, incremental, modelType)
+    slack = parser.getLong("slack", defaultTrainingSlack)
+    tempRoot = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
+    incremental = parser.getBoolean("incremental", default = true)
   }
 
   override def run(args: Array[String]): Unit = {
-    val (slack, resultRoot, initialDataPath, streamingDataPath, testDataPath, tempRoot, incremental, modelType) = parseVeloxArgs(args)
+    parseArgs(args)
     var testType = ""
     if (testDataPath == "prequential") {
       testType = "prequential"
@@ -57,13 +57,15 @@ object VeloxClassifier extends Classifier {
 
     val resultPath = experimentResultPath(resultRoot, child)
     val tempDirectory = experimentResultPath(tempRoot, child)
-    val modelPath = s"$resultRoot/$child/model"
+    if (modelPath == DEFAULT_MODEL_PATH) {
+      modelPath = s"$resultRoot/$child/model"
+    }
     createTempFolders(tempDirectory)
     val ssc = initializeSpark()
 
     // train initial model
     val startTime = System.currentTimeMillis()
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory, modelType, modelPath)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory, modelType)
     val endTime = System.currentTimeMillis()
     storeTrainingTimes(endTime - startTime, resultPath)
     val streamingSource = streamSource(ssc, streamingDataPath)

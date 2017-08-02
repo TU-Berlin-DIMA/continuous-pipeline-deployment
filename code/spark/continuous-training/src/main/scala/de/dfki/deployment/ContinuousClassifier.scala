@@ -1,9 +1,6 @@
 package de.dfki.deployment
 
-import java.nio.file.{Files, Paths}
-
 import de.dfki.core.scheduling.FixedIntervalScheduler
-import de.dfki.ml.streaming.models.HybridModel
 import de.dfki.utils.CommandLineParser
 
 /**
@@ -21,6 +18,13 @@ import de.dfki.utils.CommandLineParser
   * @author Behrouz Derakhshan
   */
 object ContinuousClassifier extends Classifier {
+  var slack: Long = _
+  var tempRoot: String = _
+  var incremental: Boolean = _
+  var continuousStepSize: Double = _
+  var samplingRate: Double = _
+
+  val DEFAULT_SAMPLING_RATE = 1.0
 
   /**
     * @param args arguments to the main class should be a set of key, value pairs in the format of key=value
@@ -34,19 +38,20 @@ object ContinuousClassifier extends Classifier {
     run(args)
   }
 
-  def parseContinuousArgs(args: Array[String]): (String, Long, String, String, String, String, Boolean, Double, String) = {
+  override def parseArgs(args: Array[String]) {
+    // must be called to initialize the common parameters
+    super.parseArgs(args)
     val parser = new CommandLineParser(args).parse()
-    val (resultRoot, initialDataPath, streamingDataPath, testDataPath, modelType) = parseArgs(args)
-    val slack = parser.getLong("slack", defaultTrainingSlack)
-    val tempRoot = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
-    val incremental = parser.getBoolean("incremental", default = true)
+    slack = parser.getLong("slack", defaultTrainingSlack)
+    tempRoot = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
+    incremental = parser.getBoolean("incremental", default = true)
     // optional parameter for step of size of sgd iterations in continuous deployment method
-    val continuousStepSize = parser.getDouble("continuous-step-size", onlineStepSize)
-    (resultRoot, slack, initialDataPath, streamingDataPath, testDataPath, tempRoot, incremental, continuousStepSize, modelType)
+    continuousStepSize = parser.getDouble("continuous-step-size", onlineStepSize)
+    samplingRate = parser.getDouble("sampling-rate", DEFAULT_SAMPLING_RATE)
   }
 
   override def run(args: Array[String]): Unit = {
-    val (resultRoot, slack, initialDataPath, streamingDataPath, testDataPath, tempRoot, incremental, continuousStepSize, modelType) = parseContinuousArgs(args)
+    parseArgs(args)
     var testType = ""
     if (testDataPath == "prequential") {
       testType = s"prequential"
@@ -58,7 +63,9 @@ object ContinuousClassifier extends Classifier {
 
     val resultPath = experimentResultPath(resultRoot, child)
     val tempDirectory = experimentResultPath(tempRoot, child)
-    val modelPath = s"$resultRoot/$child/model"
+    if (modelPath == DEFAULT_MODEL_PATH) {
+      modelPath = s"$resultRoot/$child/model"
+    }
     createTempFolders(tempDirectory)
     val ssc = initializeSpark()
     ssc.sparkContext.setLogLevel("INFO")
@@ -66,7 +73,7 @@ object ContinuousClassifier extends Classifier {
     // train initial model
     val startTime = System.currentTimeMillis()
 
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory, modelType, modelPath)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory, modelType)
     val endTime = System.currentTimeMillis()
     storeTrainingTimes(endTime - startTime, resultPath)
 

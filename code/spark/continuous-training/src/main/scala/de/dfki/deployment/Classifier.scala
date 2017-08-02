@@ -8,7 +8,7 @@ import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
 import de.dfki.core.streaming.BatchFileInputDStream
 import de.dfki.ml.evaluation.ConfusionMatrix
-import de.dfki.ml.optimization.SquaredL2UpdaterWithMomentum
+import de.dfki.ml.optimization.{SquaredL2Updater, SquaredL2UpdaterWithMomentum}
 import de.dfki.ml.streaming.models.{HybridLR, HybridModel, HybridSVM}
 import de.dfki.preprocessing.parsers.{CSVParser, CustomVectorParser, DataParser, SVMParser}
 import de.dfki.utils.CommandLineParser
@@ -60,7 +60,8 @@ abstract class Classifier extends Serializable {
   val TEST_DATA = "test"
   val DEFAULT_NUMBER_OF_ITERATIONS = 500
   val DEFAULT_OFFLINE_STEP_SIZE = 1.0
-  val DEFAULT_ONLINE_STEP_SIZE = 1.0
+  val DEFAULT_ONLINE_STEP_SIZE = 0.01
+  val DEFAULT_MODEL_PATH = "generated"
 
 
   var streamingModel: HybridModel[_, _] = _
@@ -79,22 +80,27 @@ abstract class Classifier extends Serializable {
   var onlineStepSize: Double = _
   var defaultParallelism: Int = _
   var modelPath: String = _
+  var resultRoot: String = _
+  var initialDataPath: String = _
+  var streamingDataPath: String = _
+  var testDataPath: String = _
+  var modelType: String = _
 
 
-  def parseArgs(args: Array[String]): (String, String, String, String, String) = {
+  def parseArgs(args: Array[String]) = {
     val parser = new CommandLineParser(args).parse()
     // spark streaming batch duration
     batchDuration = parser.getLong("batch-duration", defaultBatchDuration)
     // path for storing experiments results
-    val resultRoot = parser.get("result-path", s"../../../experiment-results/$DATA_SET")
+    resultRoot = parser.get("result-path", s"../../../experiment-results/$DATA_SET")
     // folder path for initial training data
-    val initialDataPath = parser.get("initial-training-path", s"$BASE_DATA_DIRECTORY/$INITIAL_TRAINING")
+    initialDataPath = parser.get("initial-training-path", s"$BASE_DATA_DIRECTORY/$INITIAL_TRAINING")
     // folder path for data to be streamed
-    val streamingDataPath = parser.get("streaming-path", s"$BASE_DATA_DIRECTORY/$STREAM_TRAINING")
+    streamingDataPath = parser.get("streaming-path", s"$BASE_DATA_DIRECTORY/$STREAM_TRAINING")
     // folder (file) for test data
-    val testDataPath = parser.get("test-path", "prequential")
+    testDataPath = parser.get("test-path", "prequential")
     // model type
-    val modelType = parser.get("model-type", defaultModelType)
+    modelType = parser.get("model-type", defaultModelType)
     // cumulative test error
     errorType = parser.get("error-type", "cumulative")
     // number of iterations
@@ -103,6 +109,9 @@ abstract class Classifier extends Serializable {
     offlineStepSize = parser.getDouble("offline-step-size", DEFAULT_OFFLINE_STEP_SIZE)
     // online learner step size
     onlineStepSize = parser.getDouble("online-step-size", DEFAULT_ONLINE_STEP_SIZE)
+    // optional model path parameter, if not provided the model is searched in the experiment
+    // result folder
+    modelPath = parser.get("model-path", DEFAULT_MODEL_PATH)
 
 
     val inputFormat = parser.get("input-format", "vector")
@@ -113,8 +122,6 @@ abstract class Classifier extends Serializable {
     } else {
       dataParser = new CustomVectorParser()
     }
-
-    (resultRoot, initialDataPath, streamingDataPath, testDataPath, modelType)
   }
 
   /**
@@ -230,7 +237,7 @@ abstract class Classifier extends Serializable {
     * @param initialDataDirectories directory of initial data
     * @return Online SVM Model
     */
-  def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String, modelType: String, modelPath: String): HybridModel[_, _] = {
+  def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String, modelType: String): HybridModel[_, _] = {
     if (Files.exists(Paths.get(modelPath))) {
       logger.info("Model exists, loading the model from disk ...")
       val model = HybridModel.loadFromDisk(modelPath)
@@ -255,7 +262,10 @@ abstract class Classifier extends Serializable {
 
       // save the model to disk, consecutive runs will check this directory first
       HybridModel.saveToDisk(modelPath, hybridModel)
-      hybridModel.setConvergenceTol(0.0).setNumIterations(1)
+      hybridModel.setConvergenceTol(0.0)
+        .setNumIterations(1)
+        .setStepSize(onlineStepSize)
+        .setUpdater(new SquaredL2Updater)
     }
   }
 

@@ -13,7 +13,7 @@ object InitialClassifier extends Classifier {
   }
 
   override def run(args: Array[String]): Unit = {
-    val (resultRoot, initialDataPath, streamingDataPath, testDataPath, modelType) = parseArgs(args)
+    parseArgs(args)
     val ssc = initializeSpark()
     var testType = ""
     if (testDataPath == "prequential") {
@@ -25,10 +25,11 @@ object InitialClassifier extends Classifier {
       s"slack-none/offline-step-$offlineStepSize"
 
     val resultPath = experimentResultPath(resultRoot, child)
-    val modelPath = s"$resultRoot/$child/model"
-    println(modelPath)
+    if (modelPath == DEFAULT_MODEL_PATH) {
+      modelPath = s"$resultRoot/$child/model"
+    }
     // train initial model
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath, modelType, modelPath)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath, modelType)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, testDataPath)
 
@@ -44,6 +45,8 @@ object InitialClassifier extends Classifier {
 
   }
 
+
+  override def parseArgs(args: Array[String]) = super.parseArgs(args)
 
   override def getApplicationName = "Baseline Classifier"
 
