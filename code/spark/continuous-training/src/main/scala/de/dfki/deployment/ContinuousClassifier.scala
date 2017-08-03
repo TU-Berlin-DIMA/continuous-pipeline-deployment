@@ -24,7 +24,7 @@ object ContinuousClassifier extends Classifier {
   var continuousStepSize: Double = _
   var samplingRate: Double = _
 
-  val DEFAULT_SAMPLING_RATE = 1.0
+  val DEFAULT_SAMPLING_RATE = 0.1
 
   /**
     * @param args arguments to the main class should be a set of key, value pairs in the format of key=value
@@ -99,8 +99,11 @@ object ContinuousClassifier extends Classifier {
       def run() {
         streamingSource.pause()
         val startTime = System.currentTimeMillis()
-        val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(dataParser.parsePoint)
-        streamingModel.trainOn(historicalDataRDD)
+        val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory)
+          .map(dataParser.parsePoint)
+          .sample(withReplacement = false, samplingRate)
+        streamingModel.setStepSize(continuousStepSize).trainOn(historicalDataRDD)
+        streamingModel.setStepSize(onlineStepSize)
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)
         streamingSource.unpause()

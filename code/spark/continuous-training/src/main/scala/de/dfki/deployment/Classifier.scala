@@ -247,7 +247,10 @@ abstract class Classifier extends Serializable {
           m.setThreshold(0.9)
         case _ =>
       }
-      model.setConvergenceTol(0.0).setNumIterations(1)
+      model.setConvergenceTol(0.0)
+        .setNumIterations(1)
+        .setStepSize(onlineStepSize)
+        .setUpdater(new SquaredL2Updater)
     } else {
       val hybridModel = if (modelType.equals("svm")) {
         logger.info("Instantiating a SVM Model")

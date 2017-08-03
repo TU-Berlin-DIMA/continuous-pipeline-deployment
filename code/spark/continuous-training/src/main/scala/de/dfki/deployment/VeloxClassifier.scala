@@ -3,6 +3,7 @@ package de.dfki.deployment
 import java.io.{File, FileWriter}
 
 import de.dfki.core.scheduling.{FixedIntervalScheduler, FolderBasedScheduler}
+import de.dfki.ml.optimization.{SquaredL2Updater, SquaredL2UpdaterWithMomentum}
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.mllib.linalg.Vectors
 
@@ -95,9 +96,17 @@ object VeloxClassifier extends Classifier {
         val before = streamingModel.latestModelWeights()
         val data = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(dataParser.parsePoint)
         // retrain the initial model
-        streamingModel.setConvergenceTol(1E-6).setNumIterations(numIterations).trainInitialModel(data)
+        streamingModel
+          .setConvergenceTol(1E-6)
+          .setNumIterations(numIterations).trainInitialModel(data)
+          .setUpdater(new SquaredL2UpdaterWithMomentum(0.9))
         //after retraining is done reset convergence tol and iteration count
-        streamingModel.setConvergenceTol(0.0).setNumIterations(1)
+        streamingModel
+          .setConvergenceTol(0.0)
+          .setNumIterations(1)
+          .setStepSize(onlineStepSize)
+          .setUpdater(new SquaredL2Updater)
+
         val after = streamingModel.latestModelWeights()
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)
