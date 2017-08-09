@@ -143,10 +143,11 @@ class SquaredL2UpdaterWithMomentum(var gamma: Double) extends AdvancedUpdaters {
                        iter: Int,
                        regParam: Double) = {
     val brzWeights: BV[Double] = asBreeze(weightsOld).toDenseVector
+    val thisIterStepSize = stepSize / math.sqrt(iter)
     if (regParam != 0) {
-      brzWeights :*= (1.0 - stepSize * regParam)
+      brzWeights :*= (1.0 - thisIterStepSize * regParam)
     }
-    val delta = asBreeze(gradient) * stepSize
+    val delta = asBreeze(gradient) * thisIterStepSize
     if (updateVector == BDV.zeros[Double](1)) {
       logger.info("updateVector is null, initializing it with delta value")
       updateVector = delta
@@ -161,7 +162,7 @@ class SquaredL2UpdaterWithMomentum(var gamma: Double) extends AdvancedUpdaters {
       val norm = brzNorm(brzWeights, 2.0)
       0.5 * regParam * norm * norm
     }
-    logger.info(s"current step-size ($stepSize), regParam($regParam)")
+    logger.info(s"current step-size ($thisIterStepSize), regParam($regParam)")
 
     (fromBreeze(brzWeights), regVal)
   }

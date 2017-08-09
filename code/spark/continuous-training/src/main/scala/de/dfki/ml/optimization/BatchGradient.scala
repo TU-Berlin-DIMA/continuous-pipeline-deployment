@@ -8,7 +8,7 @@ import org.apache.spark.rdd.RDD
 /**
   * @author behrouz
   */
-abstract class BatchGradient extends Serializable{
+abstract class BatchGradient extends Serializable {
 
   def compute(data: RDD[(Double, Vector)], weights: Vector): (Double, Vector)
 
@@ -41,7 +41,7 @@ class LogisticGradient(fitIntercept: Boolean,
   }
 
 
-  override def compute(instances: RDD[(Double, Vector)], weights: Vector) = {
+  override def compute(instances: RDD[(Double, Vector)], weights: Vector): (Double, Vector) = {
     val numFeatures = featuresMean.length
     val localFeaturesStd = featuresStd
 
@@ -60,42 +60,42 @@ class LogisticGradient(fitIntercept: Boolean,
     val totalGradientArray = logisticAggregator.gradient.toArray
 
     // regVal is the sum of coefficients squares excluding intercept for L2 regularization.
-    val regVal = if (regParamL2 == 0.0) {
-      0.0
-    } else {
-      var sum = 0.0
-      weights.foreachActive { (index, value) =>
-        // If `fitIntercept` is true, the last term which is intercept doesn't
-        // contribute to the regularization.
-        if (index != numFeatures) {
-          // The following code will compute the loss of the regularization; also
-          // the gradient of the regularization, and add back to totalGradientArray.
-          sum += {
-            if (standardization) {
-              totalGradientArray(index) += regParamL2 * value
-              value * value
-            } else {
-              if (featuresStd(index) != 0.0) {
-                // If `standardization` is false, we still standardize the data
-                // to improve the rate of convergence; as a result, we have to
-                // perform this reverse standardization by penalizing each component
-                // differently to get effectively the same objective function when
-                // the training dataset is not standardized.
-                val temp = value / (featuresStd(index) * featuresStd(index))
-                totalGradientArray(index) += regParamL2 * temp
-                value * temp
-              } else {
-                0.0
-              }
-            }
-          }
-        }
-      }
-      0.5 * regParamL2 * sum
-    }
+    //    val regVal = if (regParamL2 == 0.0) {
+    //      0.0
+    //    } else {
+    //      var sum = 0.0
+    //      weights.foreachActive { (index, value) =>
+    //        // If `fitIntercept` is true, the last term which is intercept doesn't
+    //        // contribute to the regularization.
+    //        if (index != numFeatures) {
+    //          // The following code will compute the loss of the regularization; also
+    //          // the gradient of the regularization, and add back to totalGradientArray.
+    //          sum += {
+    //            if (standardization) {
+    //              totalGradientArray(index) += regParamL2 * value
+    //              value * value
+    //            } else {
+    //              if (featuresStd(index) != 0.0) {
+    //                // If `standardization` is false, we still standardize the data
+    //                // to improve the rate of convergence; as a result, we have to
+    //                // perform this reverse standardization by penalizing each component
+    //                // differently to get effectively the same objective function when
+    //                // the training dataset is not standardized.
+    //                val temp = value / (featuresStd(index) * featuresStd(index))
+    //                totalGradientArray(index) += regParamL2 * temp
+    //                value * temp
+    //              } else {
+    //                0.0
+    //              }
+    //            }
+    //          }
+    //        }
+    //      }
+    //      0.5 * regParamL2 * sum
+    //    }
 
+    val regVal = 0
     (logisticAggregator.loss + regVal, new DenseVector(totalGradientArray))
-
   }
 }
 

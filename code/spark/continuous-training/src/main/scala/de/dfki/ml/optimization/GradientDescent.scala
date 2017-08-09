@@ -246,6 +246,8 @@ object GradientDescent {
       logger.warn("Dataset is not persisted!!!")
     }
     var converged = false
+    var prevLoss = Double.MaxValue
+    var currLoss = Double.MaxValue
     // indicates whether converged based on convergenceTol
     var i = 1
     while (!converged && i <= numIterations) {
@@ -255,18 +257,20 @@ object GradientDescent {
       else
         data.sample(withReplacement = false, miniBatchFraction, 42 + i)
 
+      prevLoss = currLoss
       val (lossSum, newGradients) = gradient.compute(sampledData, weights)
 
       previousWeights = Some(weights)
       // TODO add mini batch size back
-      weights = updater.compute(weights, newGradients, stepSize, i, regParam)._1
-
+      val newParams = updater.compute(weights, newGradients, stepSize, i, regParam)
+      weights = newParams._1
+      currLoss = lossSum + newParams._2
 
       currentWeights = Some(weights)
       if (previousWeights.isDefined && currentWeights.isDefined) {
         converged = isConverged(previousWeights.get, currentWeights.get, convergenceTol)
       }
-      logger.info(s"Iteration ($i/$numIterations) ,loss($lossSum)")
+      logger.info(s"Iteration ($i/$numIterations) ,loss($currLoss)")
       i += 1
     }
 
@@ -276,6 +280,12 @@ object GradientDescent {
     //Vectors.dense(rawCoefficients).compressed
   }
 
+
+  private def isConverged(previousLoss: Double,
+                          currentLoss: Double,
+                          convergenceTol: Double): Boolean = {
+    Math.abs(previousLoss - currentLoss) < convergenceTol
+  }
 
   private def isConverged(previousWeights: Vector,
                           currentWeights: Vector,

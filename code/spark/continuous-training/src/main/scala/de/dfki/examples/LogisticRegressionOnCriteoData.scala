@@ -42,7 +42,7 @@ object LogisticRegressionOnCriteoData {
   val REGULARIZATION_PARAMETER = "0.0"
   val ITERATIONS = "500"
   val OPTIMIZER = "sgd"
-  val LEARNING_RATE = "l2-momentum"
+  val LEARNING_RATE = "l2-adadelta"
   val GAMMA = 0.9
   val DECAY_SIZE = 10
 
@@ -112,9 +112,7 @@ object LogisticRegressionOnCriteoData {
         }
       }
     }
-
   }
-
 }
 
 object ComputeScores {
