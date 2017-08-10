@@ -15,6 +15,7 @@
 *.blg
 *.log
 *.synctex.gz
+*.out
 
 # Folders:
 vldb/figures/
@@ -31,4 +32,4 @@ checkpoints/
 experiment-results/*/*.eps
 
 # Files:
-main.pdf
+*.pdf
