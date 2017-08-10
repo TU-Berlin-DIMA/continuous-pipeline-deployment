@@ -61,7 +61,7 @@ object LogisticRegressionOnCriteoData {
       case "l2" => new SquaredL2Updater()
       case "l2-momentum" => new SquaredL2UpdaterWithMomentum(parser.getDouble("gamma", GAMMA))
       case "l2-step-decay" => new SquaredL2UpdaterWithStepDecay(parser.getInteger("decay-size", DECAY_SIZE))
-      case "l2-adadelta" => new SquaredL2UpdaterWithAdaDelta()
+      case "l2-adadelta" => new SquaredL2UpdaterWithAdaDelta(parser.getDouble("gamma", GAMMA))
       case "l2-constant" => new SquaredL2UpdaterWithConstantLearningRate()
       // dummy updater for LBFGS
       case _ => new NullUpdater()

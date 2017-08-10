@@ -267,9 +267,10 @@ object GradientDescent {
       currLoss = lossSum + newParams._2
 
       currentWeights = Some(weights)
-      if (previousWeights.isDefined && currentWeights.isDefined) {
-        converged = isConverged(previousWeights.get, currentWeights.get, convergenceTol)
-      }
+      //      if (previousWeights.isDefined && currentWeights.isDefined) {
+      //        converged = isConverged(previousWeights.get, currentWeights.get, convergenceTol)
+      //      }
+      converged = isConverged(prevLoss, currLoss, convergenceTol)
       logger.info(s"Iteration ($i/$numIterations) ,loss($currLoss)")
       i += 1
     }
@@ -284,7 +285,9 @@ object GradientDescent {
   private def isConverged(previousLoss: Double,
                           currentLoss: Double,
                           convergenceTol: Double): Boolean = {
-    Math.abs(previousLoss - currentLoss) < convergenceTol
+    val diff = Math.abs(previousLoss - currentLoss)
+    logger.info(s"diff($diff) and convergenceTol($convergenceTol)")
+    diff < convergenceTol
   }
 
   private def isConverged(previousWeights: Vector,
