@@ -1,50 +1,12 @@
-% This is "sig-alternate.tex" V2.1 April 2013
-% This file should be compiled with V2.5 of "sig-alternate.cls" May 2012
+% IEEE Paper Template for US-LETTER Page Size (V1)
+% Sample Conference Paper using IEEE LaTeX style file for US-LETTER pagesize.
+% Copyright (C) 2006-2008 Causal Productions Pty Ltd.
+% Permission is granted to distribute and revise this file provided that
+% this header remains intact.
 %
-% This example file demonstrates the use of the 'sig-alternate.cls'
-% V2.5 LaTeX2e document class file. It is for those submitting
-% articles to ACM Conference Proceedings WHO DO NOT WISH TO
-% STRICTLY ADHERE TO THE SIGS (PUBS-BOARD-ENDORSED) STYLE.
-% The 'sig-alternate.cls' file will produce a similar-looking,
-% albeit, 'tighter' paper resulting in, invariably, fewer pages.
-%
-% ----------------------------------------------------------------------------------------------------------------
-% This .tex file (and associated .cls V2.5) produces:
-%       1) The Permission Statement
-%       2) The Conference (location) Info information
-%       3) The Copyright Line with ACM data
-%       4) NO page numbers
-%
-% as against the acm_proc_article-sp.cls file which
-% DOES NOT produce 1) thru' 3) above.
-%
-% Using 'sig-alternate.cls' you have control, however, from within
-% the source .tex file, over both the CopyrightYear
-% (defaulted to 200X) and the ACM Copyright Data
-% (defaulted to X-XXXXX-XX-X/XX/XX).
-% e.g.
-% \CopyrightYear{2007} will cause 2007 to appear in the copyright line.
-% \crdata{0-12345-67-8/90/12} will cause 0-12345-67-8/90/12 to appear in the copyright line.
-%
-% ---------------------------------------------------------------------------------------------------------------
-% This .tex source is an example which *does* use
-% the .bib file (from which the .bbl file % is produced).
-% REMEMBER HOWEVER: After having produced the .bbl file,
-% and prior to final submission, you *NEED* to 'insert'
-% your .bbl file into your source .tex file so as to provide
-% ONE 'self-contained' source file.
-%
-% ================= IF YOU HAVE QUESTIONS =======================
-% Questions regarding the SIGS styles, SIGS policies and
-% procedures, Conferences etc. should be sent to
-% Adrienne Griscti (griscti@acm.org)
-%
-% Technical questions _only_ to
-% Gerald Murray (murray@hq.acm.org)
-% ===============================================================
-%
-% For tracking purposes - this is V2.0 - May 2012
-
+% REVISION HISTORY
+% 20080211 changed some space characters in the title-author block
+%!TEX encoding = UTF-8 Unicode
 \documentclass[10pt,conference,letterpaper]{IEEEtran}
 
 \usepackage{booktabs} % For formal tables
@@ -60,6 +22,7 @@
 %\copyrightyear{2016}
 
 \usepackage{url}
+\usepackage[normalem]{ulem}
 \usepackage{lipsum}% http://ctan.org/pkg/lipsum
 \usepackage{graphicx}% http://ctan.org/pkg/graphicx
 \usepackage{color,soul}
@@ -105,7 +68,7 @@ Once the model is trained, it is deployed into a system where it can answer pred
 Current deployment systems perform online training and periodical batch retraining to maintain the quality of the model.
 However, retraining of models is a time-consuming and resource-intensive process.
 
-We propose a novel deployment method for continuously training stochastic gradient descent (SGD)-based machine learning models.
+\hl{We propose a novel deployment method for continuously training machine learning models using stochastic gradient descent (SGD) optimization method.}
 We utilize the iterative nature of SGD and replace the retraining process with a series of consecutive SGD iterations.
 We show that individual iterations of SGD are light-weight and can be executed while the system is answering prediction queries.
 Our deployment method updates models two to five times faster than current deployment methods without decreasing the quality of the model.
@@ -116,7 +79,7 @@ Our deployment method updates models two to five times faster than current deplo
 \section{Introduction} \label{introduction}
 \todo[inline]{Add BBDC and streamline funding id}
 Deploying and maintaining models is a crucial step in the lifecycle of a machine learning (ML) application. 
-The deployment and serving of ML models in production has received very little attention by the research community despite the fact that it is the aspect that delivers the actual (business) value.
+\hl{The deployment and serving of ML models in production has received little attention by the research community despite being a crucial step in end to end machine learning applications.}
 In order to sustain the performance of a model in a dynamic environment, where data and thus models may change, we have to monitor the performance of the model in real-time during its deployment and update the model when necessary.
 
 However, incremental updates alone are not enough to maintain model quality. 
@@ -209,9 +172,7 @@ TensorFlow Serving provides mechanisms for real-time queries, deployment and ver
 It has out-of-the-box support for models created using TensorFlow and provides several interfaces for users to deploy their custom models.
 However, it does not provide incremental updates to the model.
 Contrary to our system, models have to be retrained outside of the system and have to be redeployed to TensorFlow Serving once the training is complete.
-Moreover, TensorFlow is designed to create and train only deep neural network models and does not work with other machine learning models.
 Our system supports incremental and batch updates to the model and automatically applies these updates to the model currently being served.
-Furthermore, our system can work with any machine learning model that uses stochastic gradient descent as optimization algorithm.
 
 Velox is an implementation of the common machine learning serving practice \cite{crankshaw2014missing}, explained in Section \ref{introduction}.
 Velox supports incremental learning and can answer prediction queries in real-time.
@@ -242,6 +203,7 @@ Once models are trained, they have to be deployed and used for serving manually 
 Our system, on the contrary, is designed for deployment and maintenance of already trained models.
 
 \section{Stochastic Gradient Descent} \label{sgd}
+\todo[inline]{Schelter: rewrite!!}
 Machine learning minimizes an objective function (often referred to as the loss function).
 Usually, this requires us to calculate the gradient of the function at different data points and update the function parameters based on the gradient values.
 A common optimization method is gradient descent, an iterative process where each iteration uses the entire training data set to calculate the gradient value.
@@ -261,8 +223,7 @@ However, for very large datasets, SGD has to perform many iterations in order to
 To decrease the running time, large datasets can be distributed among multiple nodes, where each node will compute the gradients on a subset of the data in parallel.
 One drawback of this approach is that a synchronization step is required before applying the updates to the model, which slows down the optimization process.
 To alleviate this, several asynchronous SGD methods are proposed \cite{recht2011hogwild, dean2012large}. 
-\todo[inline]{R1: In Section 3.1, the last sentence is a very strong claim (that Async SGD works as well as synchronous SGD). We know this to be true only in limited cases, and these techniques often require careful tuning of hyper-parameters to work well.}
-Experiments using these methods show that the quality of the produced model is similar to the synchronized SGD approach.
+\hl{Experiments using these methods show that the quality of the produced model in some cases is similar to the synchronized SGD approach.}
 
 \subsection{Machine Learning Models based on SGD}\label{subsec:ml-models-sgd}
 SGD is a common optimization methods that has been used in classification \cite{zhang2004solving}, clustering \cite{bottou1995convergence}, neural networks \cite{dean2012large}, and matrix factorization \cite{funk2006netflix}.
@@ -273,16 +234,12 @@ In the CTR prediction example of Section \ref{introduction}, we use logistic reg
 Logistic regression models typically output a probability instead of a class label that indicates how likely an item belongs to a specific class \cite{hosmer2013applied}.
 In our example, logistic regression predicts the click probabilities for all the available advertisements and the ones with the highest probabilities are displayed.
 Support vector machines (SVM) represent another common class of classification models \cite{steinwart2008support}.
-While logistic regression aims to find parameters of a function that accurately fit the data points to the labels, SVM tries to separate the data points belonging to different classes. 
-In many cases, both types of models work equally well.
-However, depending on the data (whether it is linearly separable or not) and result requirements (probability values or class labels) one method may be preferred to the other.
 
 \textbf{Matrix Factorization} is a common method used in recommender systems \cite{koren2009matrix}. 
 Matrix factorization is used to derive the latent factors (e.g., for users and items) for recommender systems.
 It relies on the fact that each user and item can be described in a few dimensions (10 to 40 usually) based on the available ratings.
 These latent factors automatically capture the similarity of users and items based on the ratings provided by the users.
 Hence, any unknown rating can be predicted by computing the dot product of the user vector with the item vector.
-A scalable version of the algorithm was proposed by Gemulla et al. \cite{gemulla2011large}.
 
 \textbf{Neural Networks} or deep learning -- inspired by biological neural networks in the brain -- are used to learn and approximate complex functions. 
 They have been used for more than half a century to model functions and have been successfully applied to training machine learning models.
@@ -294,6 +251,7 @@ The success of the Google's Deepmind team in achieving Neural Networks that were
 
 SGD is the ideal optimization algorithm for training neural networks since it works very well with large datasets (which are required for training neural networks).
 In fact, almost all recent work on neural networks uses SGD for training them.
+\todo[inline]{Schelter: too much blabla, not ....}
 
 \begin{figure}[t]
 \centering
@@ -304,7 +262,8 @@ In fact, almost all recent work on neural networks uses SGD for training them.
 
 \section{Continuous Training and Serving} \label{continious-training-serving}
 Our proposed deployment and maintenance system uses SGD as its underlying learning algorithm.
-As a result, it can update the model incrementally (one training item at a time) or use mini-batches of data (1 iteration of SGD).
+As a result, it can update the model incrementally (one training item at a time) or use mini-batches of data.
+\todo[inline]{schelter: awful?}
 The core design principles of our deployment system are threefold.
 First, we incrementally update the model so that it can adapt to changes in the distribution of the incoming data.
 Second, we eliminate retraining and replace it with a series of consecutive iterations of SGD.
