@@ -2,6 +2,7 @@ package de.dfki.ml.optimization
 
 
 import breeze.linalg.{DenseVector => BDV, Vector => BV, axpy => brzAxpy, norm => brzNorm}
+import breeze.numerics.sqrt
 import de.dfki.ml.LinearAlgebra._
 import org.apache.log4j.Logger
 import org.apache.spark.mllib.linalg.Vector
@@ -130,7 +131,7 @@ class SquaredL2UpdaterWithConstantLearningRate extends AdvancedUpdaters {
   * @param gamma fraction of previous update vector
   */
 class SquaredL2UpdaterWithMomentum(var gamma: Double) extends AdvancedUpdaters {
-  var updateVector: BV[Double] = BDV.zeros[Double](1)
+  var updateVector: BV[Double] = _
 
   def withUpdateVector(vector: BV[Double]): this.type = {
     updateVector = vector
@@ -142,19 +143,22 @@ class SquaredL2UpdaterWithMomentum(var gamma: Double) extends AdvancedUpdaters {
                        stepSize: Double,
                        iter: Int,
                        regParam: Double) = {
-    val brzWeights: BV[Double] = asBreeze(weightsOld).toDenseVector
+
+    if (updateVector == null) {
+      updateVector = BDV.zeros[Double](weightsOld.size)
+    }
+    var brzWeights: BV[Double] = asBreeze(weightsOld).toDenseVector
     val thisIterStepSize = stepSize / math.sqrt(iter)
     if (regParam != 0) {
       brzWeights :*= (1.0 - thisIterStepSize * regParam)
     }
-    val delta = asBreeze(gradient) * thisIterStepSize
-    if (updateVector == BDV.zeros[Double](1)) {
-      logger.info("updateVector is null, initializing it with delta value")
-      updateVector = delta
-    } else {
-      updateVector = updateVector * gamma + delta
-    }
-    brzAxpy(-1.0, updateVector, brzWeights)
+
+    // momentum update vector formula: v = v * gamma + learningRate * gradient
+    updateVector = updateVector * gamma + asBreeze(gradient) * thisIterStepSize
+
+    // w' = w - v
+    brzWeights = brzWeights - updateVector
+    //brzAxpy(-1.0, updateVector, brzWeights)
     val regVal = if (regParam == 0) {
       regParam
     }
@@ -174,9 +178,35 @@ class SquaredL2UpdaterWithMomentum(var gamma: Double) extends AdvancedUpdaters {
   }
 }
 
-class SquaredL2UpdaterWithAdaDelta extends AdvancedUpdaters {
-  override def compute(weightsOld: Vector, gradient: Vector, stepSize: Double, iter: Int, regParam: Double) = ???
+class SquaredL2UpdaterWithAdaDelta(var gamma: Double) extends AdvancedUpdaters {
+  var gradientsSquared: BV[Double] = _
+  var deltasSquared: BV[Double] = _
 
-  override def name() = ???
+  val eps = 1E-6
+
+  override def compute(weightsOld: Vector,
+                       gradient: Vector,
+                       stepSize: Double,
+                       iter: Int,
+                       regParam: Double) = {
+    val brzGradient = asBreeze(gradient)
+    // initialize the update vectors
+    if (gradientsSquared == null) {
+      gradientsSquared = BDV.zeros[Double](weightsOld.size)
+      deltasSquared = BDV.zeros[Double](weightsOld.size)
+    }
+    // E[g^2] = gamma * E[g^2] + (1 - gamma)g^2
+    gradientsSquared = (gradientsSquared * gamma) + (brzGradient :* brzGradient) * (1 - gamma)
+
+    // delta = (RMS(deltasSquared) / RMS(gradientsSquared)) * gradient
+    val deltas = (sqrt(deltasSquared + eps) / sqrt(gradientsSquared + eps)) :* brzGradient
+    deltasSquared = (deltasSquared * gamma) + ((deltas :* deltas) * (1 - gamma))
+    var brzWeights = asBreeze(weightsOld).toDenseVector
+
+    brzWeights = brzWeights - deltas
+    (fromBreeze(brzWeights), 0.0)
+  }
+
+  override def name = "l2-adadelta"
 }
 
