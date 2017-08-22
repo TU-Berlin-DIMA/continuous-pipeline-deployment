@@ -10,9 +10,9 @@ import org.apache.spark.{SparkConf, SparkContext}
   */
 object HiggsPreprocessing {
   val INPUT_PATH = "data/higgs/raw"
-  val OUTPUT_PATH = "data/higgs-sample"
+  val OUTPUT_PATH = "data/higgs"
   val FILE_COUNT = 100
-  val SAMPLING_RATE = 0.01
+  val SAMPLING_RATE = 1.0
 
   def main(args: Array[String]): Unit = {
     val parser = new CommandLineParser(args).parse()

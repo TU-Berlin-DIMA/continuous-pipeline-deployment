@@ -63,7 +63,6 @@ abstract class Classifier extends Serializable {
   val DEFAULT_ONLINE_STEP_SIZE = 0.01
   val DEFAULT_MODEL_PATH = "generated"
 
-
   var streamingModel: HybridModel[_, _] = _
   var dataParser: DataParser = _
 
@@ -150,7 +149,6 @@ abstract class Classifier extends Serializable {
     // periodically check test error
     val predictions = streamingModel.predictOnValues(testData.map(lp => (lp.label, lp.features)))
 
-
     predictions
       .map {
         v =>
@@ -163,8 +161,6 @@ abstract class Classifier extends Serializable {
       }
       .reduce((c1, c2) => ConfusionMatrix.merge(c1, c2))
       .foreachRDD(rdd => storeConfusionMatrix(rdd, resultPath))
-
-
   }
 
   private val storeConfusionMatrix = (rdd: RDD[(ConfusionMatrix)], resultPath: String) => {
