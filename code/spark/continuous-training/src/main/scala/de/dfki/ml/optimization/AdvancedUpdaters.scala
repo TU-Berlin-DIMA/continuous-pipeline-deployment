@@ -179,6 +179,7 @@ class SquaredL2UpdaterWithMomentum(var gamma: Double) extends AdvancedUpdaters {
 }
 
 class SquaredL2UpdaterWithAdaDelta(var gamma: Double) extends AdvancedUpdaters {
+
   var gradientsSquared: BV[Double] = _
   var deltasSquared: BV[Double] = _
 
@@ -208,5 +209,39 @@ class SquaredL2UpdaterWithAdaDelta(var gamma: Double) extends AdvancedUpdaters {
   }
 
   override def name = "l2-adadelta"
+}
+
+class SquaredL2UpdaterWithRMSProp(gamma: Double) extends AdvancedUpdaters {
+
+  var gradientsSquared: BV[Double] = _
+
+  val eps = 1E-6
+  val stepSize = 0.001
+
+  override def compute(weightsOld: Vector,
+                       gradient: Vector,
+                       stepSize: Double,
+                       iter: Int,
+                       regParam: Double) = {
+    val brzGradient = asBreeze(gradient)
+    // seems using any value greater than 0.001 diverges the solution
+    val thisIterStepSize = if (stepSize > this.stepSize) this.stepSize else stepSize
+    // initialize the update vectors
+    if (gradientsSquared == null) {
+      gradientsSquared = BDV.zeros[Double](weightsOld.size)
+    }
+
+    // E[g^2] = gamma * E[g^2] + (1 - gamma)g^2
+    gradientsSquared = (gradientsSquared * gamma) + (brzGradient :* brzGradient) * (1 - gamma)
+
+    val deltas = (thisIterStepSize / sqrt(gradientsSquared + eps)) :* brzGradient
+    var brzWeights = asBreeze(weightsOld).toDenseVector
+
+    brzWeights = brzWeights - deltas
+
+    (fromBreeze(brzWeights), 0.0)
+  }
+
+  override def name = "l2-rmsprop"
 }
 

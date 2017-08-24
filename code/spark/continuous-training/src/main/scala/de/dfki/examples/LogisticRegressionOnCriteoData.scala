@@ -62,6 +62,7 @@ object LogisticRegressionOnCriteoData {
       case "l2-momentum" => new SquaredL2UpdaterWithMomentum(parser.getDouble("gamma", GAMMA))
       case "l2-step-decay" => new SquaredL2UpdaterWithStepDecay(parser.getInteger("decay-size", DECAY_SIZE))
       case "l2-adadelta" => new SquaredL2UpdaterWithAdaDelta(parser.getDouble("gamma", GAMMA))
+      case "l2-rmsprop" => new SquaredL2UpdaterWithRMSProp(parser.getDouble("gamma", GAMMA))
       case "l2-constant" => new SquaredL2UpdaterWithConstantLearningRate()
       // dummy updater for LBFGS
       case _ => new NullUpdater()
@@ -71,7 +72,7 @@ object LogisticRegressionOnCriteoData {
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
     val sc = new SparkContext(conf)
-    sc.setLogLevel("INFO")
+
     val vecParser = new CustomVectorParser()
 
     val training = sc.textFile(trainingPath).map(vecParser.parsePoint).cache()
