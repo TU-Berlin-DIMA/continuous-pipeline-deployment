@@ -45,6 +45,8 @@ object LogisticRegressionOnCriteoData {
   val LEARNING_RATE = "l2-adadelta"
   val GAMMA = 0.9
   val DECAY_SIZE = 10
+  val BETA1 = 0.9
+  val BETA2 = 0.999
 
   def main(args: Array[String]): Unit = {
 
@@ -63,6 +65,10 @@ object LogisticRegressionOnCriteoData {
       case "l2-step-decay" => new SquaredL2UpdaterWithStepDecay(parser.getInteger("decay-size", DECAY_SIZE))
       case "l2-adadelta" => new SquaredL2UpdaterWithAdaDelta(parser.getDouble("gamma", GAMMA))
       case "l2-rmsprop" => new SquaredL2UpdaterWithRMSProp(parser.getDouble("gamma", GAMMA))
+      case "l2-adam" => new SquaredL2UpdaterWithAdam(
+        parser.getDouble("beta1", BETA1),
+        parser.getDouble("beta2", BETA2)
+      )
       case "l2-constant" => new SquaredL2UpdaterWithConstantLearningRate()
       // dummy updater for LBFGS
       case _ => new NullUpdater()

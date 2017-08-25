@@ -216,6 +216,11 @@ class SquaredL2UpdaterWithRMSProp(gamma: Double) extends AdvancedUpdaters {
   var gradientsSquared: BV[Double] = _
 
   val eps = 1E-6
+  /**
+    * recommend constant size value for RMSProp
+    * Step size values greater than these are ignored and replaced
+    * by 0.001
+    */
   val stepSize = 0.001
 
   override def compute(weightsOld: Vector,
@@ -235,13 +240,56 @@ class SquaredL2UpdaterWithRMSProp(gamma: Double) extends AdvancedUpdaters {
     gradientsSquared = (gradientsSquared * gamma) + (brzGradient :* brzGradient) * (1 - gamma)
 
     val deltas = (thisIterStepSize / sqrt(gradientsSquared + eps)) :* brzGradient
-    var brzWeights = asBreeze(weightsOld).toDenseVector
 
+    var brzWeights = asBreeze(weightsOld).toDenseVector
     brzWeights = brzWeights - deltas
 
     (fromBreeze(brzWeights), 0.0)
   }
 
   override def name = "l2-rmsprop"
+}
+
+class SquaredL2UpdaterWithAdam(beta1: Double,
+                               beta2: Double) extends AdvancedUpdaters {
+
+  var gradientsSquared: BV[Double] = _
+  var gradients: BV[Double] = _
+
+  val eps = 1E-8
+
+  override def compute(weightsOld: Vector,
+                       gradient: Vector,
+                       stepSize: Double,
+                       iter: Int,
+                       regParam: Double) = {
+    val brzGradient = asBreeze(gradient)
+
+    if (gradientsSquared == null) {
+      gradientsSquared = BDV.zeros[Double](weightsOld.size)
+      gradients = BDV.zeros[Double](weightsOld.size)
+    }
+
+    // m = beta1 * m + (1 - beta1) * g
+    gradients = gradients * beta1 + brzGradient * (1 - beta1)
+    // v ^ 2 = beta2 * v & 2 + (1 - beta2) * g ^ 2
+    gradientsSquared = (gradientsSquared * beta2) + (brzGradient :* brzGradient) * (1 - beta2)
+
+    // m_ = m / (1 - beta1^t)
+    val bias_g = gradients / (1 - math.pow(beta1, iter))
+
+    // v_t = v / (1 - beta2^2)
+    val bias_gs = gradientsSquared / (1 - math.pow(beta2, iter))
+
+    // d = (lr / (sqrt(v_) + eps)) * m_
+    val deltas = (stepSize / (sqrt(bias_gs) + eps)) :* bias_g
+
+    var brzWeights = asBreeze(weightsOld).toDenseVector
+    brzWeights = brzWeights - deltas
+
+    (fromBreeze(brzWeights), 0.0)
+  }
+
+  override def name = "l2-adam"
 }
 
