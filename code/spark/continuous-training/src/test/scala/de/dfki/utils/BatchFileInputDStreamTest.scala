@@ -22,10 +22,10 @@ class BatchFileInputDStreamTest extends FunSuite with BeforeAndAfterEach {
   }
 
   override def afterEach() {
-
+    ssc.stop(stopSparkContext = true, stopGracefully = true)
   }
 
-  test("sortFiles") {
+  ignore("sortFiles") {
     val path = "data/url-reputation/stream-training/"
     val source = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](ssc, path)
 
@@ -39,7 +39,7 @@ class BatchFileInputDStreamTest extends FunSuite with BeforeAndAfterEach {
     print(source.currentFolder)
   }
 
-  test("dummy2"){
+  test("dummy2") {
     val v1 = "file:/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-full/processed/3/part-00090"
     val v2 = "file:/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-full/processed/4/part-00000"
 

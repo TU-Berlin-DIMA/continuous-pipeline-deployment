@@ -29,7 +29,7 @@ class Serialization extends FunSuite with BeforeAndAfterEach {
     println(readUpdater.toString)
   }
 
-  test("Model Serialization") {
+  ignore("Model Serialization") {
     val model = new HybridLR(1.0, 100, 0.0, 1.0, new SquaredL2UpdaterWithMomentum(0.9))
 
     HybridModel.saveToDisk("target/test/serializable/lr-model", model)
@@ -38,8 +38,7 @@ class Serialization extends FunSuite with BeforeAndAfterEach {
     println(deserialized.toString())
   }
 
-  test("Model Serialization 2"){
-
+  ignore("Model Serialization 2"){
     val deserialized = HybridModel.loadFromDisk("data/criteo-full/model/500/model")
     println(deserialized.toString())
   }

@@ -174,7 +174,7 @@ class SquaredL2UpdaterWithMomentum(var gamma: Double) extends AdvancedUpdaters {
   override def name = "l2-momentum"
 
   override def toString = {
-    s"${this.getClass.getCanonicalName}, updateVector(${updateVector.toString}), gamma($gamma)"
+    s"${this.getClass.getCanonicalName}, updateVector($updateVector), gamma($gamma)"
   }
 }
 
