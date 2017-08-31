@@ -43,6 +43,7 @@ object LogisticRegressionOnCriteoData {
   val ITERATIONS = "500"
   val OPTIMIZER = "sgd"
   val LEARNING_RATE = "l2-adadelta"
+  val MINI_BATCH_FRACTION = "0.2"
   val GAMMA = 0.9
   val DECAY_SIZE = 10
   val BETA1 = 0.9
@@ -59,6 +60,7 @@ object LogisticRegressionOnCriteoData {
     val steps = parser.get("step-size", STEP_SIZE).split(",").map(_.trim.toDouble)
     val regParams = parser.get("reg-param", REGULARIZATION_PARAMETER).split(",").map(_.trim.toDouble)
     val optimzers = parser.get("optimizer", OPTIMIZER).split(",").map(_.trim)
+    val miniBatchFraction = parser.get("mini-batch-fraction", MINI_BATCH_FRACTION).split(",").map(_.trim)
     val updaters = parser.get("updater", LEARNING_RATE).split(",").map(_.trim).map {
       case "l2" => new SquaredL2Updater()
       case "l2-momentum" => new SquaredL2UpdaterWithMomentum(parser.getDouble("gamma", GAMMA))
@@ -87,11 +89,11 @@ object LogisticRegressionOnCriteoData {
 
 
     for (optimizer <- optimzers) {
-      val finalUpdaters = if (optimizer == "lbfgs") {
-        println("Optimizer does not support learning rates, setting learning rate to null")
-        List(new NullUpdater()).toArray
-      } else {
-        updaters
+      val finalUpdaters = optimizer match {
+        case "lbfgs" =>
+          println("Optimizer does not support learning rates, setting learning rate to null")
+          List(new NullUpdater()).toArray
+        case "sgd" => updaters
       }
       for (updater <- finalUpdaters) {
         for (it <- iters) {

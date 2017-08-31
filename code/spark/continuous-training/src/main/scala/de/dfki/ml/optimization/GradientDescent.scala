@@ -205,17 +205,17 @@ object GradientDescent {
     var previousWeights: Option[Vector] = None
     var currentWeights: Option[Vector] = None
 
-    //    val numExamples = data.count()
-    //
-    //    // if no data, return initial weights to avoid NaNs
-    //    if (numExamples == 0) {
-    //      logger.warn("GradientDescent.runMiniBatchSGD returning initial weights, no data found")
-    //      return initialWeights
-    //    }
-    //
-    //    if (numExamples * miniBatchFraction < 1) {
-    //      logger.warn("The miniBatchFraction is too small")
-    //    }
+    val numExamples = data.count()
+
+    // if no data, return initial weights to avoid NaNs
+    if (numExamples == 0) {
+      logger.warn("GradientDescent.runMiniBatchSGD returning initial weights, no data found")
+      return initialWeights
+    }
+
+    if (numExamples * miniBatchFraction < 1) {
+      logger.warn("The miniBatchFraction is too small")
+    }
 
     // Initialize weights as a column vector
     var weights = if (!fitIntercept) {
@@ -261,7 +261,10 @@ object GradientDescent {
       val (lossSum, newGradients) = gradient.compute(sampledData, weights)
 
       previousWeights = Some(weights)
-      // TODO add mini batch size back
+      // TODO: investigate whether or not the gradient should be divided by miniBatchSize
+      // original code from spark divides the gradient by the mini batch size, but to me
+      // it seems illogical and actually the opposite have to be done
+      // investigate this and either add a bug report in spark or fix the implementation here
       val newParams = updater.compute(weights, newGradients, stepSize, i, regParam)
       weights = newParams._1
       currLoss = lossSum + newParams._2

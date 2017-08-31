@@ -7,7 +7,7 @@ import org.scalatest.{BeforeAndAfterEach, FunSuite}
   * @author behrouz
   */
 class VectorOperationBenchmarking extends FunSuite with BeforeAndAfterEach {
-  
+
   //@Ignore
   ignore("axpy vs explicit") {
     val size = 1000000

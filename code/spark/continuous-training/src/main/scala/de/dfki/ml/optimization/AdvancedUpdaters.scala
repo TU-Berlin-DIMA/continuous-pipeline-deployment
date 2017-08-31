@@ -153,12 +153,15 @@ class SquaredL2UpdaterWithMomentum(var gamma: Double) extends AdvancedUpdaters {
       brzWeights :*= (1.0 - thisIterStepSize * regParam)
     }
 
-    // momentum update vector formula: v = v * gamma + learningRate * gradient
-    updateVector = updateVector * gamma + asBreeze(gradient) * thisIterStepSize
+    // break momentum update vector formula: v = v * gamma + learningRate * gradient
+    // into to parts
+    // part1 : v = v * gamma
+    updateVector = updateVector * gamma + thisIterStepSize * asBreeze(gradient)
+    // part 2: v = v + learningRate * gradient
+    //brzAxpy(thisIterStepSize, asBreeze(gradient), updateVector)
 
     // w' = w - v
-    brzWeights = brzWeights - updateVector
-    //brzAxpy(-1.0, updateVector, brzWeights)
+    brzAxpy(-1.0, updateVector, brzWeights)
     val regVal = if (regParam == 0) {
       regParam
     }
@@ -196,15 +199,25 @@ class SquaredL2UpdaterWithAdaDelta(var gamma: Double) extends AdvancedUpdaters {
       gradientsSquared = BDV.zeros[Double](weightsOld.size)
       deltasSquared = BDV.zeros[Double](weightsOld.size)
     }
-    // E[g^2] = gamma * E[g^2] + (1 - gamma)g^2
-    gradientsSquared = (gradientsSquared * gamma) + (brzGradient :* brzGradient) * (1 - gamma)
+    /**
+      * break E[g^2] = gamma * E[g^2] + (1 - gamma)g^^2
+      * into 2 parts for efficiency
+      */
+    gradientsSquared :*= gamma
+    brzAxpy(1 - gamma, brzGradient :* brzGradient, gradientsSquared)
 
     // delta = (RMS(deltasSquared) / RMS(gradientsSquared)) * gradient
     val deltas = (sqrt(deltasSquared + eps) / sqrt(gradientsSquared + eps)) :* brzGradient
-    deltasSquared = (deltasSquared * gamma) + ((deltas :* deltas) * (1 - gamma))
-    var brzWeights = asBreeze(weightsOld).toDenseVector
 
-    brzWeights = brzWeights - deltas
+    /**
+      * break deltasSquared = (deltasSquared * gamma) + ((deltas :* deltas) * (1 - gamma))
+      * into 2 parts for efficiency
+      */
+    deltasSquared :*= gamma
+    brzAxpy(1 - gamma, deltas :* deltas, deltasSquared)
+    val brzWeights = asBreeze(weightsOld)
+
+    brzAxpy(-1.0, deltas, brzWeights)
     (fromBreeze(brzWeights), 0.0)
   }
 
@@ -235,15 +248,16 @@ class SquaredL2UpdaterWithRMSProp(gamma: Double) extends AdvancedUpdaters {
     if (gradientsSquared == null) {
       gradientsSquared = BDV.zeros[Double](weightsOld.size)
     }
-
-    // E[g^2] = gamma * E[g^2] + (1 - gamma)g^2
-    gradientsSquared = (gradientsSquared * gamma) + (brzGradient :* brzGradient) * (1 - gamma)
-
+    /**
+      * break gradientsSquared = (gradientsSquared * gamma) + (brzGradient :* brzGradient) * (1 - gamma)
+      * into 2 parts for efficiency
+      */
+    gradientsSquared :*= gamma
+    brzAxpy(1 - gamma, brzGradient :* brzGradient, gradientsSquared)
     val deltas = (thisIterStepSize / sqrt(gradientsSquared + eps)) :* brzGradient
 
-    var brzWeights = asBreeze(weightsOld).toDenseVector
-    brzWeights = brzWeights - deltas
-
+    val brzWeights = asBreeze(weightsOld)
+    brzAxpy(-1.0, deltas, brzWeights)
     (fromBreeze(brzWeights), 0.0)
   }
 
@@ -264,16 +278,19 @@ class SquaredL2UpdaterWithAdam(beta1: Double,
                        iter: Int,
                        regParam: Double) = {
     val brzGradient = asBreeze(gradient)
-
+    val thisIterStepSize = stepSize / sqrt(iter)
     if (gradientsSquared == null) {
       gradientsSquared = BDV.zeros[Double](weightsOld.size)
       gradients = BDV.zeros[Double](weightsOld.size)
     }
 
     // m = beta1 * m + (1 - beta1) * g
-    gradients = gradients * beta1 + brzGradient * (1 - beta1)
+    gradients = gradients * beta1
+    brzAxpy(1 - beta1, brzGradient, gradients)
+
     // v ^ 2 = beta2 * v & 2 + (1 - beta2) * g ^ 2
-    gradientsSquared = (gradientsSquared * beta2) + (brzGradient :* brzGradient) * (1 - beta2)
+    gradientsSquared = gradientsSquared * beta2
+    brzAxpy(1 - beta2, brzGradient :* brzGradient, gradientsSquared)
 
     // m_ = m / (1 - beta1^t)
     val bias_g = gradients / (1 - math.pow(beta1, iter))
@@ -282,11 +299,13 @@ class SquaredL2UpdaterWithAdam(beta1: Double,
     val bias_gs = gradientsSquared / (1 - math.pow(beta2, iter))
 
     // d = (lr / (sqrt(v_) + eps)) * m_
-    val deltas = (stepSize / (sqrt(bias_gs) + eps)) :* bias_g
+    val deltas = (thisIterStepSize / (sqrt(bias_gs) + eps)) :* bias_g
 
-    var brzWeights = asBreeze(weightsOld).toDenseVector
-    brzWeights = brzWeights - deltas
+    val brzWeights = asBreeze(weightsOld)
 
+    logger.info(s"current step-size ($thisIterStepSize), regParam($regParam)")
+
+    brzAxpy(-1.0, deltas, brzWeights)
     (fromBreeze(brzWeights), 0.0)
   }
 
