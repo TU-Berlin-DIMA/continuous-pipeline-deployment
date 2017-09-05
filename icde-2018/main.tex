@@ -28,7 +28,7 @@
 \usepackage{color,soul}
 \usepackage{float}
 %\usepackage{todonotes}
-\usepackage{todonotes}
+\usepackage[disable]{todonotes}
 \usepackage[outdir=./figures/]{epstopdf}
 \usepackage{listings}
 \PassOptionsToPackage{table}{colorx}
@@ -78,86 +78,84 @@ Our deployment method updates models two to five times faster than current deplo
 
 \section{Introduction} \label{introduction}
 \todo[inline]{Add BBDC and streamline funding id}
-Deploying and maintaining models is a crucial step in the lifecycle of a machine learning (ML) application. 
-\hl{The deployment and serving of ML models in production has received little attention by the research community despite being a crucial step in end to end machine learning applications.}
-In order to sustain the performance of a model in a dynamic environment, where data and thus models may change, we have to monitor the performance of the model in real-time during its deployment and update the model when necessary.
+Deploying machine learning pipeline is the last and very important step in the life cycle of machine learning applications.
+A machine learning pipeline is the result of a rigorous and time consuming process where a machine learning experts defines a set of operations from data preprocessing, feature extraction, hyper-parameter tuning, and model training.
+The pipeline is then deployed into an environment where it can answer prediction queries and based on the feedback of the users it is further improved.
+Many platforms, e.g., Velox \cite{crankshaw2014missing}, Clipper \cite{crankshaw2016clipper}, Laser \cite{agarwal2014laser}, TensorFlow Serving \cite{abadi2016tensorflow}, have been proposed to provide support for deployment of machine learning pipelines. 
 
-However, incremental updates alone are not enough to maintain model quality. 
-When the data distribution changes quickly, the model will not adjust in a timely fashion. 
-Furthermore, new batch datasets from external sources may become available while the system is running.
-Lastly, incrementally updating may not arrive at the same model quality as a complete, batched retraining.
-Therefore, in order to prevent the model's quality from degrading, the model should be retrained periodically using the data that has arrived at the system since the last training.
+One common optimization techniques to train machine learning models is Stochastic Gradient Descent (SGD) \cite{bottou2010large}.
+It is suitable for both large scale and online learning.
 
-Most of the current machine learning research focuses on training and providing tools to make model training and search easier. 
-Kumar et al. provided an overview of existing machine learning systems \cite{kumar2015survey}. 
-They find that most of the surveyed systems provide little to no support after the model has been trained.
-Only few systems support deploying and maintaining the models \cite{akdere2011case, crankshaw2014missing}.
-However, these are still lacking continuous monitoring and fast and accurate updates of the model.
+\textbf{An Example Application.} 
+Online advertising is a multi-billion industry.
+An Ads provider receives ads from different businesses and shows them on different websites.
+Typically, businesses are charged based on the number of clicks users make on their ads.
+To maximize the benefit for both the ads provider and the business, ads provider design machine learning pipelines to predict the click through rate (CTR) of different ads for different users on different websites.
+Ads providers employ machine learning experts to design predictive models for them.
+The input data consists of data related to the user, website the ads will be shown, and the information about the ads itself.
+The features are a combination of numerical and categorical parameters.
+The pipeline is designed as follows; first, label indexing is performed to map string values to numerical. 
+Second, one-hot encoding of the features are performed to transform the categorical variables into a series of binary features.
+Then, data binning on the numerical values are performed.
+All columns are standardized to have mean of 0 and standard deviation of 1.
+A logistic regression model is then trained on the data.
+Once the pipeline is created, it should be deployed.
+Based on users session and the available ads the ads that are predicted to have the highest click through rate are shown the users.
+Depending on whether the user clicks on the ad or not, new training examples are creating which are send back to the user for further training.
+The model is then either training online using the new incoming stream of training items, or it is retrained on a daily basis using the newly arrived (and the existing) data.
+Sometimes, both online and static batch training are performed together.
 
-Figure \ref{fig:velox-work-flow} demonstrates the most common model deployment approach.
-First, an initial model is trained based on an existing dataset residing on disk.
-Deploying this model to a production environment enables it to answer prediction queries arriving at the system.
-During production, the system continuously receives feedback in the form of new training observations.
-This enables the system to update the model incrementally.
-Note that not every machine learning model supports incremental updates.
-The underlying optimization strategy determines whether a model can be updated incrementally.
-\begin{figure}[t]
-\centering
-\includegraphics[width=1\columnwidth]{../images/velox-final.pdf}
-\caption{Current Model Deployment Method}
-\label{fig:velox-work-flow}
-\end{figure}
+\textbf{Goal.}
+Motivated by the example application, we realized that deployment platforms should provide high quality predictions with low latency.
+Moreover, in real-world applications, there are many prediction requests and new training data arriving at the system.
+Our goal is to design a deployment platform that can handle such traffic and provide a guarantee on the quality of the prediction provided to the end user.
 
+\textbf{Problem.} 
+To ensure high quality prediction continuous training should be performed.
+In many applications, online learning alone is not enough to guarantee the quality.
+Therefore, batch trainings are incorporated to periodically trained the model.
+The batch training is time consuming and resource intensive.
+To ensure that this does not stall the process of predicting the ctr, batch training is performed outside of the deployment platform.
+However, this will remove any chance of optimizing the workflow.
 
-\textbf{Example application:} to illustrate this model deployment approach, consider the task of predicting the click through rate (CTR) of online advertisements.
-Figure \ref{fig:click-rate} demonstrates the CTR prediction example for a search engine provider.
-Search engine providers use machine learning models to estimate the expected click rate of different advertisements.
-They train machine learning models based on the available data, which typically includes content of the page, search query, user information, content, and meta-data of the available advertisements. 
-Once such a model is deployed, prediction queries of the form of ad requests arrive at the system.
-The model determines the advertisements that have the highest probabilities of being clicked by the user.
-Based on whether or not advertisements are clicked on, the system sends feedback in the form of new training observations.
-The deployment system incrementally updates the underlying prediction model based on the new training observation. 
-However, incremental updates alone are not enough to maintain the quality of the CTR prediction model.
-As a result, the deployment system periodically retrains the model using the entire data.
-This retraining may take hours or even days depending on the size of the data.
-Our proposed deployment method eliminates the need for this time-consuming retraining.
+\textbf{Solution.} 
+We propose a hybrid architecture for a deployment platform that supports both real-time and batch (offline) training of the deployed pipeline.
+Moreover, we take advantage of the iterative nature of the SGD optimization technique. 
+The architecture allows for two key optimizations.
 
-\begin{figure}[h]
-\centering
-\includegraphics[width=\columnwidth]{../images/use-case-final.pdf}
-\caption{Use Case: Click Through Rate Prediction}
-\label{fig:click-rate}
-\end{figure}
+\textit{Optimization 1.} 
+We gather valuable statistics during the online processing of the data. 
+These statistics allow us to make the offline batch training of the pipeline more efficient.
+Statistics such as, column mean, column standard deviation, string label distribution will essentially speeds up the training of the pipeline described in the motivating example orders of magnitude faster, since it removes the required scan of the data to calculate these statistics which are necessary to perform, label indexing, one-hot encoding, data binning, and standardization of the data.
 
-Some emerging machine learning systems have tried to automate this process \cite{crankshaw2014missing}.
-They automatically deploy the model into a production environment, monitor its quality, and initiate a retraining when required.
-However, they treat the underlying machine learning models as black boxes. 
-As a result, they miss many opportunities for optimizing the training and deployment process.
+\textit{Optimization 2.}
+Typical offline retraining is performed out of core in order to not to stall the prediction query answering component of the deployment platform.
+However, the underlying optimization strategy (SGD) is an iterative training algorithm where iterations are independent and typically light weight.
+By utilizing these features of SGD, we replace the time-consuming and resource intensive batch training of the pipeline by a series of single iterations of SGD that are scheduled to execute while the system is running.
+This allows us to train the model more frequently and as a result, increases the quality of the model.
 
-Our key observation is that, by exploiting the iterative nature of the underlying optimization algorithm, i.e., stochastic gradient descent (SGD), the model training process can be seamlessly executed with the serving and query answering component.
-Based on this observation, we present a system, that supports deployment, maintenance, and incremental and fast batch updates of machine learning models.
-Our contributions are as follows:
-\todo[inline]{R2: The first contribution item says the proposed method works for any SGD based models. However, the API in Listing 1 does not consider unsupervised models which can also be trained using SGD, like RBM (restricted boltzmann machine). BD: I think the contribution is still valid, we just have to clarify that the prototype only supports supervised learning for now.}
+In summary our contributions are:
 \begin{itemize}
-\item We define a flexible system for machine learning models deployment and maintenance that allows any SGD-based machine learning model to be incorporated. We provide a prototypical implementation with several different machine learning model types
-\todo[inline]{TR: Maybe we should talk about the process here.
-BD: The deployment process? I'm not really sure how to summarize in 1 2 sentences }
-\item We allow for incremental updates to the model, thus handling changes in the data distribution
-\item We eliminate the lengthy offline batch retraining and replace it with a series of single iteration of SGD without affecting the final quality of the model
+\item A hybrid architecture for deployment that caters to both online and offline learning
+\item Efficient training process by using statistics calculated during the online phase
+\item Remove the overhead of retraining by using incremental mini-batch training instead
 \end{itemize}
-Our experiments show that our approach improves the runtime of model training and deployment two to five times over the state of the art while retaining the quality of the model. 
-The speedup is due to the fact that we are able to completely eliminate batch retraining. 
-Our method can also adapt to changes in the distribution faster than the existing methods.
-Furthermore, while the deployment system is serving the model, new batch training datasets may become available.
-Our proposed deployment method is capable of utilizing the new datasets to further train the model without delay.
 
-% Outline: The rest of this document is structured as follows. ...
+\textbf{Paper Outline.}
 The rest of this paper is organized as follows. 
 Section \ref {related-work} discusses related work.
 In Section \ref{sgd}, we describe the underlying optimization method.
 Section \ref{continious-training-serving} and \ref{sec:system-architecutre} introduce the design principles and architecture of our deployment system.
 In Section \ref{evaluation}, we evaluate our system against different workloads and compare the performance of our method to other model deployment and maintenance approaches. 
 Finally, Section \ref{conclusion} presents our conclusion and future work.
+%
+%\begin{figure}[t]
+%\centering
+%\includegraphics[width=1\columnwidth]{../images/velox-final.pdf}
+%\caption{Current Model Deployment Method}
+%\label{fig:velox-work-flow}
+%\end{figure}
+
 
 \section{Related Work} \label{related-work}
 Traditional machine learning systems focus solely on training models and leave the task of deploying and maintaining these models to the users.
