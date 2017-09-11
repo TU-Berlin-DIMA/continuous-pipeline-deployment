@@ -39,7 +39,7 @@
 \makeatother
 %\lstset{numbers=left, numberstyle=\small, numbersep=8pt, frame = single, language=Pascal, framexleftmargin=15pt}
 
-\title{Continuous Training of Large Scale Machine Learning Models}
+\title{Continuous Training of Machine Learning Pipelines}
 %\author{
 %{Behrouz Derakhshan{\small $~^{\# 1}$}, Tilmann Rabl{\small $~^{\# *2}$}, Volker Markl{\small $~^{\# *3}$} }%
 %\vspace{1.6mm}\\
@@ -78,67 +78,79 @@ Our deployment method updates models two to five times faster than current deplo
 
 \section{Introduction} \label{introduction}
 \todo[inline]{Add BBDC and streamline funding id}
-Deploying machine learning pipeline is the last and very important step in the life cycle of machine learning applications.
-A machine learning pipeline is the result of a rigorous and time consuming process where a machine learning experts defines a set of operations from data preprocessing, feature extraction, hyper-parameter tuning, and model training.
-The pipeline is then deployed into an environment where it can answer prediction queries and based on the feedback of the users it is further improved.
-Many platforms, e.g., Velox \cite{crankshaw2014missing}, Clipper \cite{crankshaw2016clipper}, Laser \cite{agarwal2014laser}, TensorFlow Serving \cite{abadi2016tensorflow}, have been proposed to provide support for deployment of machine learning pipelines. 
+A machine learning pipeline is the result of a complex data analytics process where an expert designs a set of operations to create complex predictive models from a training dataset.
+To fully utilize such a pipeline, it has to be deployed into an environment where it can answer prediction queries in real-time.
+Continuous training and maintenance of such pipelines is necessary to guarantee an acceptable prediction accuracy.
+Many platforms, e.g., Velox \cite{crankshaw2014missing}, Clipper \cite{crankshaw2016clipper}, Laser \cite{agarwal2014laser}, and TensorFlow Serving \cite{abadi2016tensorflow}, have been proposed to provide support for deployment and continuous training of machine learning pipelines. 
 
-One common optimization techniques to train machine learning models is Stochastic Gradient Descent (SGD) \cite{bottou2010large}.
-It is suitable for both large scale and online learning.
+%The most common optimization technique to train machine learning models is Stochastic Gradient Descent (SGD) \cite{bottou2010large} as it is able to cater both large and real-time workloads.
 
 \textbf{An Example Application.} 
 Online advertising is a multi-billion industry.
-An Ads provider receives ads from different businesses and shows them on different websites.
-Typically, businesses are charged based on the number of clicks users make on their ads.
-To maximize the benefit for both the ads provider and the business, ads provider design machine learning pipelines to predict the click through rate (CTR) of different ads for different users on different websites.
-Ads providers employ machine learning experts to design predictive models for them.
-The input data consists of data related to the user, website the ads will be shown, and the information about the ads itself.
-The features are a combination of numerical and categorical parameters.
-The pipeline is designed as follows; first, label indexing is performed to map string values to numerical. 
-Second, one-hot encoding of the features are performed to transform the categorical variables into a series of binary features.
-Then, data binning on the numerical values are performed.
-All columns are standardized to have mean of 0 and standard deviation of 1.
-A logistic regression model is then trained on the data.
-Once the pipeline is created, it should be deployed.
-Based on users session and the available ads the ads that are predicted to have the highest click through rate are shown the users.
-Depending on whether the user clicks on the ad or not, new training examples are creating which are send back to the user for further training.
-The model is then either training online using the new incoming stream of training items, or it is retrained on a daily basis using the newly arrived (and the existing) data.
-Sometimes, both online and static batch training are performed together.
+An advertising network receives ads from different businesses (ads providers) and shows them on different websites (publishers).
+Typically, businesses are charged based on the number of clicks users make on their published ads.
+To maximize the benefit for the ads provider, publisher, and the advertising network itself, advertising networks use machine learning pipelines to estimate the click rate of different ads.
+The input data consists of several numerical and categorical variables related to the user, publisher's website, and the ads itself.
+A basic click rate prediction pipeline contains the following components:
+\begin{itemize}
+\item A \textbf{missing value imputer} that replaces missing values with appropriate values
+\item A \textbf{label indexer} that finds the different unique values in a categorical feature 
+\item A \textbf{one-hot encoder} that creates a new binary feature for every unique value in a categorical feature
+\item A \textbf{data bucketizer} that transforms continuous variables into a series of binary variables
+\item A \textbf{standard scaler} that scales the data columns to have unit standard deviation and zero mean
+\item A \textbf{logistic regression model} trained using Stochastic Gradient Descent (SGD) optimization technique
+\end{itemize}
 
-\textbf{Goal.}
-Motivated by the example application, we realized that deployment platforms should provide high quality predictions with low latency.
-Moreover, in real-world applications, there are many prediction requests and new training data arriving at the system.
-Our goal is to design a deployment platform that can handle such traffic and provide a guarantee on the quality of the prediction provided to the end user.
+Once this pipeline is created, it is deployed into a platform to be used in production.
+Whenever a user visits a publisher website, the pipeline is used to estimate the click rate of the user for the available ads on the website.
+One or a few ads with the highest click rate estimates are then shown to the user.
+Depending on whether the user clicks on the ad or not, feedback is sent to the deployment platform.
+Based on this feedback, the pipeline is continuously updated.
+To further increase the accuracy of the predictions, the pipeline is also periodically retrained using the data collected by the deployment platform.
+
+This example demonstrates the complex work flow of a deployment platforms.
+Moreover, the deployment platform must be able to guarantee predictions with high accuracy and low latency, all the while accommodating  all the requests and new training data arriving at the system. 
+Our goal is to design a deployment platform that can handle such traffic and provide a guarantee on the accuracy of the predictions provided to the end user.
 
 \textbf{Problem.} 
-To ensure high quality prediction continuous training should be performed.
-In many applications, online learning alone is not enough to guarantee the quality.
-Therefore, batch trainings are incorporated to periodically trained the model.
-The batch training is time consuming and resource intensive.
-To ensure that this does not stall the process of predicting the ctr, batch training is performed outside of the deployment platform.
-However, this will remove any chance of optimizing the workflow.
+To ensure high quality predictions, pipelines should be frequently updated.
+Platforms such as Velox update the pipeline in real-time.
+However, real-time updates alone are not enough to guarantee a high accuracy for the predictions \cite{crankshaw2014missing}.
+As a result, the deployed pipelines are periodically retrained offline when the quality of the model goes below a threshold.
+Other platforms, such as Clipper and TensorFlow Serving do not offer real-time training.
+They operate on the assumption that pipelines are always created and trained offline.
+Once the pipelines are trained, they are deployed into these platforms.
+Data scientists must continuously enhance the existing pipeline offline and redeploy them into the platform upon a decrease in the quality of the predictions.
+
+In both operation mode, the overhead of offline training is large and updated pipelines are not immediately available in the deployment environment.
+As a result, a high quality of predictions cannot be guaranteed at all time.
+Moreover, in order not to stall the prediction query answering capabilities of the deployment platforms, offline training is performed out of core.
+As a result, any information gathered during the online processing is not available for the offline training.
 
 \textbf{Solution.} 
-We propose a hybrid architecture for a deployment platform that supports both real-time and batch (offline) training of the deployed pipeline.
-Moreover, we take advantage of the iterative nature of the SGD optimization technique. 
+We found that during the prediction query answering and real-time learning, various statistics can be collected which will speed up the offline training of the pipeline.
+Moreover, instead of a reactive offline training of the pipeline, we can update the pipeline proactively in smaller batches. 
+Proactive training guarantees a higher average quality since the pipeline is updated more frequently.
+We propose a hybrid architecture for a deployment platform that supports both real-time and proactive (offline) training of the deployed pipeline.
 The architecture allows for two key optimizations.
 
 \textit{Optimization 1.} 
 We gather valuable statistics during the online processing of the data. 
-These statistics allow us to make the offline batch training of the pipeline more efficient.
-Statistics such as, column mean, column standard deviation, string label distribution will essentially speeds up the training of the pipeline described in the motivating example orders of magnitude faster, since it removes the required scan of the data to calculate these statistics which are necessary to perform, label indexing, one-hot encoding, data binning, and standardization of the data.
+These statistics allow us to make the offline training more efficient since calculating them requires a complete scan of the entire dataset.
+In our motivating example, label indexing, one-hot encoding, data bucketing, and standard scaling require the mean, standard deviation, and distribution of the features.
 
 \textit{Optimization 2.}
-Typical offline retraining is performed out of core in order to not to stall the prediction query answering component of the deployment platform.
-However, the underlying optimization strategy (SGD) is an iterative training algorithm where iterations are independent and typically light weight.
-By utilizing these features of SGD, we replace the time-consuming and resource intensive batch training of the pipeline by a series of single iterations of SGD that are scheduled to execute while the system is running.
-This allows us to train the model more frequently and as a result, increases the quality of the model.
+The underlying optimization technique (SGD) for the offline training is an iterative algorithm.
+Individual Iteration are independent and are typically light weight.
+By exploiting these two features of SGD, we replace the time-consuming and resource intensive reactive batch training of the pipeline by a series of single iterations of SGD that are scheduled to execute proactively.
 
-In summary our contributions are:
+Our experiments show that proactive training of the pipelines achieves more accurate predictions overtime and requires less resources when compared to reactive retraining.
+
+\textbf{Contributions.} In summary our contributions are:
 \begin{itemize}
-\item A hybrid architecture for deployment that caters to both online and offline learning
-\item Efficient training process by using statistics calculated during the online phase
-\item Remove the overhead of retraining by using incremental mini-batch training instead
+\item A hybrid architecture for machine learning pipeline deployment platform that caters to both online and offline learning
+\item Efficient training of the machine learning pipeline using statistics calculated during the online data processing
+\item Remove the overhead of reactive offline training by replacing it with proactive mini-batch training
 \end{itemize}
 
 \textbf{Paper Outline.}
