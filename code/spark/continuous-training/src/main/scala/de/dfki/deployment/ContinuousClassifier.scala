@@ -68,7 +68,7 @@ object ContinuousClassifier extends Classifier {
     }
     createTempFolders(tempDirectory)
     val ssc = initializeSpark()
-    ssc.sparkContext.setLogLevel("INFO")
+    //ssc.sparkContext.setLogLevel("INFO")
 
     // train initial model
     val startTime = System.currentTimeMillis()

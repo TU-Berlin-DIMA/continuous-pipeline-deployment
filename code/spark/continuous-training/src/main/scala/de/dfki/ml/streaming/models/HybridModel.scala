@@ -78,6 +78,7 @@ HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientDescent[M]]
 
   /**
     * Set the updater
+    *
     * @param updater updater
     * @return
     */
@@ -109,6 +110,26 @@ HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientDescent[M]]
       throw new IllegalArgumentException("Model must be initialized before starting training.")
     }
     model = Some(algorithm.run(data, model.get.weights, model.get.intercept))
+  }
+
+  def trainOnStream(data: RDD[LabeledPoint]): RDD[LabeledPoint] = {
+    if (model.isEmpty) {
+      throw new IllegalArgumentException("Model must be initialized before starting training.")
+    }
+    model = Some(algorithm.run(data, model.get.weights, model.get.intercept))
+    data
+  }
+
+  def trainOnHybrid(fast: RDD[LabeledPoint], history: RDD[LabeledPoint]): RDD[LabeledPoint] = {
+    println("HYBRID TRAIN")
+    val startTime = System.currentTimeMillis()
+    if (model.isEmpty) {
+      throw new IllegalArgumentException("Model must be initialized before starting training.")
+    }
+    model = Some(algorithm.run(fast.union(history), model.get.weights, model.get.intercept))
+    val total = System.currentTimeMillis() - startTime
+    println(s"HYBRID TRAIN FINISHED IN ${total/1000} seconds")
+    fast
   }
 
   def writeToDisk(data: DStream[LabeledPoint], resultPath: String): Unit = {
