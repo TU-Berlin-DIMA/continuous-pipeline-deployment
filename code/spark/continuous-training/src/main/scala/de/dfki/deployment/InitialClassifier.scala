@@ -16,7 +16,7 @@ object InitialClassifier extends Classifier {
     parseArgs(args)
     val ssc = initializeSpark()
     var testType = ""
-    if (testDataPath == "prequential") {
+    if (evaluationDataPath == "prequential") {
       testType = "prequential"
     } else {
       testType = "dataset"
@@ -31,13 +31,13 @@ object InitialClassifier extends Classifier {
     // train initial model
     streamingModel = createInitialStreamingModel(ssc, initialDataPath, modelType)
     val streamingSource = streamSource(ssc, streamingDataPath)
-    val testData = constantInputDStreaming(ssc, testDataPath)
+    val testData = constantInputDStreaming(ssc, evaluationDataPath)
 
     // evaluate the stream
-    if (testDataPath == "prequential") {
+    if (evaluationDataPath == "prequential") {
       evaluateStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint), resultPath)
     } else {
-      evaluateStream(testData, resultPath)
+      evaluateStream(testData.map(dataParser.parsePoint), resultPath)
     }
 
     ssc.start()

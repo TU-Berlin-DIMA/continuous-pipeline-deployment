@@ -1,6 +1,6 @@
 package de.dfki.ml.classification
 
-import de.dfki.ml.optimization.{BatchGradient, GradientDescent, SquaredL2Updater}
+import de.dfki.ml.optimization.{BatchGradient, GradientDescent}
 import org.apache.spark.SparkException
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.mllib.optimization.Updater

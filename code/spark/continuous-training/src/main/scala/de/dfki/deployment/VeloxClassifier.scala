@@ -48,7 +48,7 @@ object VeloxClassifier extends Classifier {
   override def run(args: Array[String]): Unit = {
     parseArgs(args)
     var testType = ""
-    if (testDataPath == "prequential") {
+    if (evaluationDataPath == "prequential") {
       testType = "prequential"
     } else {
       testType = "dataset"
@@ -70,15 +70,15 @@ object VeloxClassifier extends Classifier {
     val endTime = System.currentTimeMillis()
     storeTrainingTimes(endTime - startTime, resultPath)
     val streamingSource = streamSource(ssc, streamingDataPath)
-    val testData = constantInputDStreaming(ssc, testDataPath)
+    val testData = constantInputDStreaming(ssc, evaluationDataPath)
 
     writeStreamToDisk(streamingSource.map(_._2.toString), tempDirectory)
 
     // evaluate the stream and incrementally update the model
-    if (testDataPath == "prequential") {
+    if (evaluationDataPath == "prequential") {
       evaluateStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint), resultPath)
     } else {
-      evaluateStream(testData, resultPath)
+      evaluateStream(testData.map(dataParser.parsePoint), resultPath)
     }
 
     if (incremental) {
@@ -93,7 +93,6 @@ object VeloxClassifier extends Classifier {
 
         storeRetrainingPoint(streamingSource.getLastProcessedFileIndex, resultPath)
         val startTime = System.currentTimeMillis()
-        val before = streamingModel.latestModelWeights()
         val data = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(dataParser.parsePoint)
         // retrain the initial model
         streamingModel
@@ -107,10 +106,8 @@ object VeloxClassifier extends Classifier {
           .setStepSize(onlineStepSize)
           .setUpdater(new SquaredL2Updater)
 
-        val after = streamingModel.latestModelWeights()
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)
-        logger.info(s"Delta: ${Vectors.sqdist(before, after)}")
         streamingSource.unpause()
       }
     }

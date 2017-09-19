@@ -1,6 +1,6 @@
 package de.dfki.ml.optimization
 
-import org.apache.spark.mllib.linalg.{DenseVector, Vector}
+import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.optimization.Optimizer
 import org.apache.spark.rdd.RDD
 

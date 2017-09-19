@@ -242,7 +242,7 @@ object GradientDescent {
       */
     //var regVal = updater.compute(weights, Vectors.zeros(weights.size), 0, 1, regParam)._2
 
-    if (data.getStorageLevel.useMemory) {
+    if (!data.getStorageLevel.useMemory) {
       logger.warn("Dataset is not persisted!!!")
     }
     var converged = false
@@ -255,7 +255,7 @@ object GradientDescent {
       val sampledData = if (miniBatchFraction == 1.0)
         data
       else
-        data.sample(withReplacement = false, miniBatchFraction, 42 + i)
+        data.sample(withReplacement = false, miniBatchFraction)
 
       prevLoss = currLoss
       val (lossSum, newGradients) = gradient.compute(sampledData, weights)
