@@ -119,7 +119,7 @@ object AdvancedBatchStreamExample {
       .transform(rdd => model.trainOn(rdd))
       // combining the last data items
       .window(Seconds(sgdSlack), Seconds(sgdSlack))
-//      // train on union of streaming and batch
+      // train on union of streaming and batch
       .transform(rdd => model.trainOnHybrid(rdd, batch))
       // unparse
       .map(dataParser.unparsePoint)
@@ -130,9 +130,9 @@ object AdvancedBatchStreamExample {
     testData
       // parser the data
       .map(d => {
-        val parsed = dataParser.parsePoint(d)
-        (parsed.label, parsed.features)
-      })
+      val parsed = dataParser.parsePoint(d)
+      (parsed.label, parsed.features)
+    })
       // predict
       .transform(rdd => model.predictOnValues(rdd))
       // calculate logistic loss
