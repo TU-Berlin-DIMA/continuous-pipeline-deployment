@@ -21,7 +21,7 @@ object BatchClassifier extends Classifier {
 
     val trainingRDD = sc.textFile(initialDataPath + "," + streamingDataPath).map(dataParser.parsePoint).cache()
 
-    val testRDD = sc.textFile(testDataPath).map(dataParser.parsePoint)
+    val testRDD = sc.textFile(evaluationDataPath).map(dataParser.parsePoint)
 
     val model = SVMWithSGD.train(trainingRDD, 100)
 

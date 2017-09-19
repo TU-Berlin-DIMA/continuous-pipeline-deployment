@@ -1,23 +1,12 @@
 package de.dfki.deployment
 
-import de.dfki.core.scheduling.FixedIntervalScheduler
 import de.dfki.utils.CommandLineParser
+import org.apache.spark.streaming.Seconds
 
 /**
-  * Novel training and testing model
-  * Online training is supplemented with occasional one iteration of SGD on the historical data
-  *
-  *
-  * Algorithm:
-  * 1. Train initial model
-  * 2. Write the incoming data into persistent storage
-  * 3. Evaluate on the incoming data
-  * 4. Train Incrementally on the incoming data
-  * 5. periodically perform 1 iteration of SGD on full (or a sample of)historical data
-  *
-  * @author Behrouz Derakhshan
+  * @author behrouz
   */
-object ContinuousClassifier extends Classifier {
+object OptimizedContinuousClassifier extends Classifier {
   var slack: Long = _
   var tempRoot: String = _
   var incremental: Boolean = _
@@ -68,7 +57,6 @@ object ContinuousClassifier extends Classifier {
     }
     createTempFolders(tempDirectory)
     val ssc = initializeSpark()
-    //ssc.sparkContext.setLogLevel("INFO")
 
     // train initial model
     val startTime = System.currentTimeMillis()
@@ -80,8 +68,9 @@ object ContinuousClassifier extends Classifier {
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, evaluationDataPath)
 
-    // store the incoming stream to disk for further re-training
-    writeStreamToDisk(streamingSource.map(_._2.toString), tempDirectory)
+    def historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory)
+      .map(dataParser.parsePoint)
+      .sample(withReplacement = false, samplingRate)
 
     // evaluate the stream and incrementally update the model
     if (evaluationDataPath == "prequential") {
@@ -90,34 +79,27 @@ object ContinuousClassifier extends Classifier {
       evaluateStream(testData.map(dataParser.parsePoint), resultPath)
     }
 
-    if (incremental) {
-      trainOnStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint))
-    }
+    streamingSource
+      // parse input
+      .map(input => dataParser.parsePoint(input._2.toString))
+      // online training and updating the statistics
+      .transform(rdd => streamingModel.trainOn(rdd))
+      // create a window
+      .window(Seconds(slack), Seconds(slack))
+      // hybrid proactive training
+      .transform(rdd => streamingModel.trainOnHybrid(rdd, historicalDataRDD))
+      // unparse
+      .map(dataParser.unparsePoint)
+      // write to disk
+      .foreachRDD((rdd, time) => storeRDD(rdd, time, tempDirectory))
 
-    // periodically schedule one iteration of the SGD
-    val task = new Runnable {
-      def run() {
-        streamingSource.pause()
-        val startTime = System.currentTimeMillis()
-        val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory)
-          .map(dataParser.parsePoint)
-          .sample(withReplacement = false, samplingRate)
-        streamingModel.setStepSize(continuousStepSize).trainOn(historicalDataRDD)
-        streamingModel.setStepSize(onlineStepSize)
-        val endTime = System.currentTimeMillis()
-        storeTrainingTimes(endTime - startTime, resultPath)
-        streamingSource.unpause()
-      }
-    }
-
-    val scheduler = new FixedIntervalScheduler(streamingSource, ssc, task, slack)
 
     ssc.start()
-    scheduler.init()
-    scheduler.schedule()
+    ssc.awaitTermination()
+
   }
 
-  override def getApplicationName = "Continuous Classifier"
+  override def getApplicationName = "Optimized Continuous Classifier"
 
   override def getExperimentName = "continuous"
 

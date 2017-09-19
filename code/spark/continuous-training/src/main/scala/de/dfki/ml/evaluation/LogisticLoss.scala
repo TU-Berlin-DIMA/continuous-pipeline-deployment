@@ -1,7 +1,8 @@
 package de.dfki.ml.evaluation
 
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.rdd.RDD
+import org.apache.spark.streaming.dstream.DStream
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * @author behrouz
@@ -15,12 +16,20 @@ object LogisticLoss {
     res._1 / res._2
   }
 
-  def logisticLoss(prediction: Double, label: Double): Double = {
-    if (prediction == 0)
-      prediction
+  def logisticLoss(stream: DStream[(Double, Double)]): DStream[Double] = {
+    stream
+      .map(i => (logisticLoss(i._1, i._2), 1))
+      .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
+      .map(ll => ll._1 / ll._2)
+  }
+
+  def logisticLoss(label: Double, prediction: Double): Double = {
+    if (prediction == label)
+      0
     else {
-      val eps = 1E-20
-      -1 * (label * math.log(prediction + eps) + (1 - label) * math.log(1 - prediction))
+      val eps = 10E-20
+      val a = -1 * (label * math.log(prediction + eps) + (1 - label) * math.log(1 - prediction + eps))
+      a
     }
   }
 

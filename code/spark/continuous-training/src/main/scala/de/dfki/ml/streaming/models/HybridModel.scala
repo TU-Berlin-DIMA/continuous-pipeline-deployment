@@ -14,10 +14,7 @@ import scala.reflect.ClassTag
 /**
   * @author behrouz
   */
-abstract class
-
-
-HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientDescent[M]]
+abstract class HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientDescent[M]]
   extends StreamingLinearAlgorithm[M, A] with Serializable {
 
 
@@ -87,62 +84,82 @@ HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientDescent[M]]
     this
   }
 
-
+  /**
+    * easy getter for accessing model parameters
+    *
+    * @return
+    */
   def latestModelWeights() = super.latestModel().weights
 
+  /**
+    * use this instead of the [[predictOnValues(DStream)]]
+    * It unstandardized the weights once for the entire rdd
+    *
+    * @param data input data
+    * @tparam K label type (implict)
+    * @return rdd of (label,prediction)
+    */
   def predictOnValues[K: ClassTag](data: RDD[(K, Vector)]): RDD[(K, Double)] = {
     if (model.isEmpty) {
       throw new IllegalArgumentException("Model must be initialized before starting prediction")
     }
-    data.mapValues { x => model.get.predict(x) }
+    // the weights have to be un standardized before making a prediction
+    val scaledWeights = algorithm.optimizer.unStandardize(model.get.weights)
+    data.mapValues { x => predictPoint(x, scaledWeights, model.get.intercept) }
+  }
+
+  override def predictOnValues[K: ClassTag](data: DStream[(K, Vector)]): DStream[(K, Double)] = {
+    if (model.isEmpty) {
+      throw new IllegalArgumentException("Model must be initialized before starting prediction")
+    }
+    // the weights have to be un standardized before making a prediction
+    data.mapValues { x => predictPoint(x, algorithm.optimizer.unStandardize(model.get.weights), model.get.intercept) }
+  }
+
+  def predictPoint(data: Vector, weight: Vector, intercept: Double): Double
+
+
+  /**
+    * Similar to [[trainOn]]
+    * designed to work with the [[org.apache.spark.streaming.StreamingContext.transform()]]
+    * method instead
+    * The incoming data are assumed to be new and never seen before
+    * Therefore a call to to optimizer's updateStatistics method is required
+    *
+    * @param observations stream of training observations
+    * @return the same input rdd for downstream processing
+    */
+  def trainOn(observations: RDD[LabeledPoint]): RDD[LabeledPoint] = {
+    if (model.isEmpty) {
+      throw new IllegalArgumentException("Model must be initialized before starting training.")
+    }
+    this.algorithm.optimizer.updateStatistics(observations.map(l => (l.label, l.features)))
+    model = Some(algorithm.run(observations, model.get.weights, model.get.intercept))
+    observations
   }
 
   /**
-    * Update the model based on a batch of data (static data)
+    * train the model on combined batch (history) and stream (fast) data
+    * designed to work with the [[org.apache.spark.streaming.StreamingContext.transform()]]
     *
-    * Note: Do not call update statistic in this method, if the statistics have not been
-    * calculated before, the optimizer will automatically call the function.
+    * NOTE: do not call the update statistics method of the optimizer. Statistics are already
+    * updated using these data
     *
-    * @param data RDD containing the training data to be used
+    * @param fast    rdd of the streaming data
+    * @param history rdd of the batch data
+    * @return the same input rdd for downstream processing
     */
-  def trainOn(data: RDD[LabeledPoint]): Unit = {
-    if (model.isEmpty) {
-      throw new IllegalArgumentException("Model must be initialized before starting training.")
-    }
-    model = Some(algorithm.run(data, model.get.weights, model.get.intercept))
-  }
-
-  def trainOnStream(data: RDD[LabeledPoint]): RDD[LabeledPoint] = {
-    if (model.isEmpty) {
-      throw new IllegalArgumentException("Model must be initialized before starting training.")
-    }
-    model = Some(algorithm.run(data, model.get.weights, model.get.intercept))
-    data
-  }
-
   def trainOnHybrid(fast: RDD[LabeledPoint], history: RDD[LabeledPoint]): RDD[LabeledPoint] = {
-    println("HYBRID TRAIN")
-    val startTime = System.currentTimeMillis()
     if (model.isEmpty) {
       throw new IllegalArgumentException("Model must be initialized before starting training.")
+    }
+
+    if (!history.getStorageLevel.useMemory) {
+      history.cache()
     }
     model = Some(algorithm.run(fast.union(history), model.get.weights, model.get.intercept))
-    val total = System.currentTimeMillis() - startTime
-    println(s"HYBRID TRAIN FINISHED IN ${total/1000} seconds")
+    history.unpersist()
     fast
-  }
-
-  def writeToDisk(data: DStream[LabeledPoint], resultPath: String): Unit = {
-    val storeErrorRate = (rdd: RDD[LabeledPoint]) => {
-      val file = new File(s"$resultPath/model-parameters.txt")
-      file.getParentFile.mkdirs()
-      val fw = new FileWriter(file, true)
-      try {
-        fw.write(s"${model.get.weights.toString}\n")
-      }
-      finally fw.close()
-    }
-    data.foreachRDD(storeErrorRate)
   }
 
   /**
@@ -155,11 +172,12 @@ HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientDescent[M]]
     if (model.isEmpty) {
       throw new IllegalArgumentException("Model must be initialized before starting training.")
     }
-    observations.foreachRDD { (rdd, _) =>
-      if (!rdd.isEmpty) {
-        this.algorithm.optimizer.updateStatistics(rdd.map(l => (l.label, l.features)))
-        model = Some(algorithm.run(rdd, model.get.weights, model.get.intercept))
-      }
+    observations.foreachRDD {
+      (rdd, _) =>
+        if (!rdd.isEmpty) {
+          this.algorithm.optimizer.updateStatistics(rdd.map(l => (l.label, l.features)))
+          model = Some(algorithm.run(rdd, model.get.weights, model.get.intercept))
+        }
     }
   }
 

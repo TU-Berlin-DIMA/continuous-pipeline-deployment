@@ -50,7 +50,7 @@ class LogisticRegressionWithSGD(stepSize: Double,
 
   override def createModel(weights: Vector, intercept: Double) = {
     //logger.info(s"Creating a Logistic Regression model with features size: ${weights.size} and intercept: $intercept")
-    new LogisticRegressionModel(weights, intercept)
+    new LogisticRegressionModel(weights, intercept).clearThreshold()
   }
 
 

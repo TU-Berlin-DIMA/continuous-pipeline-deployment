@@ -1,7 +1,7 @@
 package de.dfki.examples
 
-import de.dfki.preprocessing.parsers.CSVParser
 import de.dfki.ml.streaming.models.HybridSVM
+import de.dfki.preprocessing.parsers.CSVParser
 import org.apache.spark.SparkConf
 import org.apache.spark.mllib.classification.SVMWithSGD
 import org.apache.spark.mllib.regression.LabeledPoint

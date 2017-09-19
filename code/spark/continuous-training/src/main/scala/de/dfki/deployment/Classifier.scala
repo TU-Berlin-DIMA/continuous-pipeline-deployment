@@ -7,8 +7,8 @@ import java.util.Calendar
 import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
 import de.dfki.core.streaming.BatchFileInputDStream
-import de.dfki.ml.evaluation.ConfusionMatrix
-import de.dfki.ml.optimization.{SquaredL2Updater, SquaredL2UpdaterWithMomentum}
+import de.dfki.ml.evaluation.{ConfusionMatrix, LogisticLoss}
+import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
 import de.dfki.ml.streaming.models.{HybridLR, HybridModel, HybridSVM}
 import de.dfki.preprocessing.parsers.{CSVParser, CustomVectorParser, DataParser, SVMParser}
 import de.dfki.utils.CommandLineParser
@@ -19,7 +19,6 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
-import org.apache.spark.mllib.classification.LogisticRegressionModel
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming._
@@ -73,7 +72,7 @@ abstract class Classifier extends Serializable {
   }
 
   var numIterations: Int = _
-  var errorType: String = _
+  var evaluationMetric: String = _
   var batchDuration: Long = _
   var offlineStepSize: Double = _
   var onlineStepSize: Double = _
@@ -82,7 +81,7 @@ abstract class Classifier extends Serializable {
   var resultRoot: String = _
   var initialDataPath: String = _
   var streamingDataPath: String = _
-  var testDataPath: String = _
+  var evaluationDataPath: String = _
   var modelType: String = _
 
 
@@ -97,11 +96,11 @@ abstract class Classifier extends Serializable {
     // folder path for data to be streamed
     streamingDataPath = parser.get("streaming-path", s"$BASE_DATA_DIRECTORY/$STREAM_TRAINING")
     // folder (file) for test data
-    testDataPath = parser.get("test-path", "prequential")
+    evaluationDataPath = parser.get("test-path", "prequential")
     // model type
     modelType = parser.get("model-type", defaultModelType)
     // cumulative test error
-    errorType = parser.get("error-type", "cumulative")
+    evaluationMetric = parser.get("evaluation-metric", "logloss")
     // number of iterations
     numIterations = parser.getInteger("num-iterations", DEFAULT_NUMBER_OF_ITERATIONS)
     // offline learner step size
@@ -145,22 +144,42 @@ abstract class Classifier extends Serializable {
     * @param testData test Data DStream
     */
   def evaluateStream(testData: DStream[LabeledPoint], resultPath: String) {
+    evaluationMetric match {
+      case "logloss" => streamingModel.predictOnValues(testData
+        .map(lp => (lp.label, lp.features)))
+        .map(pre => (LogisticLoss.logisticLoss(pre._1, pre._2), 1))
+        .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
+        .map(v => v._1 / v._2)
+        .foreachRDD(rdd => storeLogisticLoss(rdd, resultPath))
+      case "confusion-matrix" => streamingModel
+        .predictOnValues(
+          testData
+            .map(lp => (lp.label, lp.features))
+        )
+        .map {
+          v =>
+            var tp, fp, tn, fn = 0
+            if (v._1 == v._2 & v._1 == 1.0) tp = 1
+            else if (v._1 == v._2 & v._1 == 0.0) tn = 1
+            else if (v._1 != v._2 & v._1 == 1.0) fp = 1
+            else fn = 1
+            new ConfusionMatrix(tp, fp, tn, fn)
+        }
+        .reduce((c1, c2) => ConfusionMatrix.merge(c1, c2))
+        .foreachRDD(rdd => storeConfusionMatrix(rdd, resultPath))
+    }
+  }
 
-    // periodically check test error
-    val predictions = streamingModel.predictOnValues(testData.map(lp => (lp.label, lp.features)))
+  val storeLogisticLoss = (rdd: RDD[Double], resultPath: String) => {
+    val file = new File(s"$resultPath/loss.txt")
+    file.getParentFile.mkdirs()
+    val fw = new FileWriter(file, true)
+    try {
+      val content = rdd.collect()
 
-    predictions
-      .map {
-        v =>
-          var tp, fp, tn, fn = 0
-          if (v._1 == v._2 & v._1 == 1.0) tp = 1
-          else if (v._1 == v._2 & v._1 == 0.0) tn = 1
-          else if (v._1 != v._2 & v._1 == 1.0) fp = 1
-          else fn = 1
-          new ConfusionMatrix(tp, fp, tn, fn)
-      }
-      .reduce((c1, c2) => ConfusionMatrix.merge(c1, c2))
-      .foreachRDD(rdd => storeConfusionMatrix(rdd, resultPath))
+      fw.write(s"${content.toList}\n")
+    }
+    finally fw.close()
   }
 
   private val storeConfusionMatrix = (rdd: RDD[(ConfusionMatrix)], resultPath: String) => {
@@ -210,6 +229,13 @@ abstract class Classifier extends Serializable {
     stream.foreachRDD(storeRDD)
   }
 
+  val storeRDD = (rdd: RDD[String], time: Time, path: String) => {
+    val hadoopConf = new Configuration()
+    hadoopConf.set("mapreduce.output.basename", time.toString())
+    rdd.map(str => (null, str)).saveAsNewAPIHadoopFile(s"$path", classOf[NullWritable], classOf[String],
+      classOf[TextOutputFormat[NullWritable, String]], hadoopConf)
+  }
+
   /**
     * store captured running time into the given path
     *
@@ -237,24 +263,16 @@ abstract class Classifier extends Serializable {
     if (Files.exists(Paths.get(modelPath))) {
       logger.info("Model exists, loading the model from disk ...")
       val model = HybridModel.loadFromDisk(modelPath)
-      //logger.info(s"Model Description:\n${model.toString}")
-      model.getUnderlyingModel match {
-        case m: LogisticRegressionModel =>
-          m.setThreshold(0.9)
-        case _ =>
-      }
       model.setConvergenceTol(0.0)
         .setNumIterations(1)
-        .setStepSize(onlineStepSize)
-        .setUpdater(new SquaredL2Updater)
     } else {
       val hybridModel = if (modelType.equals("svm")) {
         logger.info("Instantiating a SVM Model")
-        new HybridSVM(offlineStepSize, numIterations, 0.0, 1.0, new SquaredL2UpdaterWithMomentum(0.9))
+        new HybridSVM(offlineStepSize, numIterations, 0.0, 1.0, new SquaredL2UpdaterWithAdam(0.9, 0.999))
       } else {
         logger.info("Instantiating a Linear Regression Model")
         // regularization parameter is chosen from GridSearch
-        new HybridLR(offlineStepSize, numIterations, 0.1, 1.0, new SquaredL2UpdaterWithMomentum(0.9))
+        new HybridLR(offlineStepSize, numIterations, 0.1, 1.0, new SquaredL2UpdaterWithAdam(0.9, 0.999))
       }
       val data = ssc.sparkContext.textFile(initialDataDirectories).map(dataParser.parsePoint)
       hybridModel.trainInitialModel(data)
@@ -263,8 +281,6 @@ abstract class Classifier extends Serializable {
       HybridModel.saveToDisk(modelPath, hybridModel)
       hybridModel.setConvergenceTol(0.0)
         .setNumIterations(1)
-        .setStepSize(onlineStepSize)
-        .setUpdater(new SquaredL2Updater)
     }
   }
 
@@ -286,9 +302,9 @@ abstract class Classifier extends Serializable {
     * @param path input directory
     * @return DStream object
     */
-  def constantInputDStreaming(ssc: StreamingContext, path: String): DStream[LabeledPoint] = {
-    val rdd = ssc.sparkContext.textFile(path).map(dataParser.parsePoint)
-    new ConstantInputDStream[LabeledPoint](ssc, rdd)
+  def constantInputDStreaming(ssc: StreamingContext, path: String): DStream[String] = {
+    val rdd = ssc.sparkContext.textFile(path)
+    new ConstantInputDStream[String](ssc, rdd)
   }
 
 
