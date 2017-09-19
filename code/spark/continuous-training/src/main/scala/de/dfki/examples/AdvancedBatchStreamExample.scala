@@ -118,9 +118,9 @@ object AdvancedBatchStreamExample {
       // online training
       .transform(rdd => model.trainOn(rdd))
       // combining the last data items
-//      .window(Seconds(sgdSlack), Seconds(sgdSlack))
+      .window(Seconds(sgdSlack), Seconds(sgdSlack))
 //      // train on union of streaming and batch
-//      .transform(rdd => model.trainOnHybrid(rdd, batch))
+      .transform(rdd => model.trainOnHybrid(rdd, batch))
       // unparse
       .map(dataParser.unparsePoint)
       // store the data
