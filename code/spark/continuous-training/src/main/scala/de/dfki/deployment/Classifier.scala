@@ -142,19 +142,19 @@ abstract class Classifier extends Serializable {
     */
   def evaluateStream(testData: DStream[LabeledPoint], resultPath: String) {
     evaluationMetric match {
-      case "logloss" =>
-        testData
-          .map(lp => (lp.label, lp.features))
-          // predict
-          .transform(rdd => streamingModel.predictOnValues(rdd))
-          // calculate logistic loss
-          .map(pre => (LogisticLoss.logisticLoss(pre._1, pre._2), 1))
-          // sum over logistic loss
-          .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
-          // find total logistic loss
-          .map(v => v._1 / v._2)
-          // store the logistic loss into file
-          .foreachRDD(rdd => storeLogisticLoss(rdd, resultPath))
+      //      case "logloss" =>
+      //        testData
+      //          .map(lp => (lp.label, lp.features))
+      //          // predict
+      //          .transform(rdd => streamingModel.predictOnValues(rdd))
+      //          // calculate logistic loss
+      //          .map(pre => (LogisticLoss.logisticLoss(pre._1, pre._2), 1))
+      //          // sum over logistic loss
+      //          .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
+      //          // find total logistic loss
+      //          .map(v => v._1 / v._2)
+      //          // store the logistic loss into file
+      //          .foreachRDD(rdd => storeLogisticLoss(rdd, resultPath))
       case "confusion-matrix" =>
         testData
           .map(lp => (lp.label, lp.features))
@@ -174,14 +174,23 @@ abstract class Classifier extends Serializable {
     }
   }
 
-  val storeLogisticLoss = (rdd: RDD[Double], resultPath: String) => {
+  def evaluate(rdd: RDD[LabeledPoint], testData: RDD[LabeledPoint], resultPath: String) = {
+    val totalLogLoss = streamingModel
+      .predictOnValues(testData.map(lp => (lp.label, lp.features)))
+      .map(pre => (LogisticLoss.logisticLoss(pre._1, pre._2), 1))
+      // sum over logistic loss
+      .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
+    // store the average logistic loss into file
+    storeLogisticLoss(totalLogLoss._1 / totalLogLoss._2, resultPath)
+    rdd
+  }
+
+  val storeLogisticLoss = (logLoss: Double, resultPath: String) => {
     val file = new File(s"$resultPath/loss.txt")
     file.getParentFile.mkdirs()
     val fw = new FileWriter(file, true)
     try {
-      val content = rdd.collect().head
-
-      fw.write(s"$content\n")
+      fw.write(s"$logLoss\n")
     }
     finally fw.close()
   }
@@ -243,7 +252,10 @@ abstract class Classifier extends Serializable {
     if (Files.exists(Paths.get(modelPath))) {
       logger.info("Model exists, loading the model from disk ...")
       val model = HybridModel.loadFromDisk(modelPath)
-      model.setConvergenceTol(0.0)
+      model
+        // sampling is done manually
+        .setMiniBatchFraction(1.0)
+        .setConvergenceTol(0.0)
         .setNumIterations(1)
     } else {
       val hybridModel = if (modelType.equals("svm")) {

@@ -1,6 +1,9 @@
 package de.dfki.deployment
 
+import de.dfki.ml.evaluation.LogisticLoss
 import de.dfki.utils.CommandLineParser
+import org.apache.spark.mllib.regression.LabeledPoint
+import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.Seconds
 
 /**
@@ -57,17 +60,21 @@ object OptimizedContinuousClassifier extends Classifier {
     storeTrainingTimes(endTime - startTime, resultPath)
 
     val streamingSource = streamSource(ssc, streamingDataPath)
-    val testData = constantInputDStreaming(ssc, evaluationDataPath)
+    val testData = ssc.sparkContext.textFile(evaluationDataPath).map(dataParser.parsePoint)
 
-    def historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + streamingSource.getProcessedFiles.mkString(","))
-      .map(dataParser.parsePoint)
-      .sample(withReplacement = false, samplingRate)
-
+    def historicalDataRDD = {
+      logger.info(s"scheduling a batch iteration on ${streamingSource.getProcessedFiles.length} files ")
+      ssc.sparkContext.textFile(initialDataPath + "," + streamingSource.getProcessedFiles.mkString(","))
+        .map(dataParser.parsePoint)
+        .sample(withReplacement = false, samplingRate, seed = 42)
+    }
 
     streamingSource
       .map(_._2.toString)
       // parse input
       .map(dataParser.parsePoint)
+      // evaluate using the evaluation data
+      .transform(rdd => evaluate(rdd, testData, resultPath))
       // online training and updating the statistics
       .transform(rdd => streamingModel.trainOn(rdd))
       // create a window
@@ -76,14 +83,10 @@ object OptimizedContinuousClassifier extends Classifier {
       .transform(rdd => streamingModel.trainOnHybrid(rdd, historicalDataRDD))
       // dummy action
       .foreachRDD(_ => dummyAction())
-    // do nothing
-
 
     // evaluate the stream and incrementally update the model
     if (evaluationDataPath == "prequential") {
       evaluateStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint), resultPath)
-    } else {
-      evaluateStream(testData.map(dataParser.parsePoint), resultPath)
     }
 
 
