@@ -6,11 +6,10 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 
 import de.dfki.core.streaming.BatchFileInputDStream
-import de.dfki.deployment.ContinuousClassifier.constantInputDStreaming
 import de.dfki.ml.evaluation.LogisticLoss
 import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
 import de.dfki.ml.streaming.models.{HybridLR, HybridModel}
-import de.dfki.preprocessing.parsers.CustomVectorParser
+import de.dfki.preprocessing.parsers.{CustomVectorParser, DataParser}
 import de.dfki.utils.CommandLineParser
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.io.{LongWritable, NullWritable, Text}
@@ -18,6 +17,7 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
+import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.{Seconds, StreamingContext, Time}
 
@@ -69,13 +69,18 @@ object AdvancedBatchStreamExample {
     val stream = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](ssc, streamPath)
       .map(_._2.toString)
 
-    val testData = constantInputDStreaming(ssc, validationPath)
+    val evaluationDataSet = ssc.sparkContext.textFile(validationPath)
+      .map(dataParser.parsePoint)
+      .map(lp => (lp.label, lp.features))
 
-    val storeRDD = (rdd: RDD[String], time: Time, path: String) => {
+    val storeRDD = (rdd: RDD[LabeledPoint], time: Time, path: String, parser: DataParser) => {
       val hadoopConf = new Configuration()
       hadoopConf.set("mapreduce.output.basename", time.toString())
-      rdd.map(str => (null, str)).saveAsNewAPIHadoopFile(s"$path", classOf[NullWritable], classOf[String],
+      rdd
+        .map(a => parser.unparsePoint(a))
+        .map(str => (null, str)).saveAsNewAPIHadoopFile(s"$path", classOf[NullWritable], classOf[String],
         classOf[TextOutputFormat[NullWritable, String]], hadoopConf)
+      rdd
     }
 
 
@@ -112,30 +117,35 @@ object AdvancedBatchStreamExample {
     model.setNumIterations(1)
 
 
-    // proactive training
+    //    // online training
+    //    model
+    //      .trainOn(mapped)
+    //
+    //    mapped
+    //      .transform(rdd => model.trainOn(rdd))
+    //      .transform(_ => model.predictOnValues(evaluationDataSet))
+    //      .map(pre => (LogisticLoss.logisticLoss(pre._1, pre._2), 1))
+    //      // sum over logistic loss
+    //      .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
+    //      // find total logistic loss
+    //      .map(v => v._1 / v._2)
+    //      // store the logistic loss into file
+    //      .foreachRDD(rdd => storeLogisticLoss(rdd, resultPath))
+
+    // pipeline
     stream
       .map(dataParser.parsePoint)
-      // online training
+      // online
       .transform(rdd => model.trainOn(rdd))
       // combining the last data items
       .window(Seconds(sgdSlack), Seconds(sgdSlack))
       // train on union of streaming and batch
       .transform(rdd => model.trainOnHybrid(rdd, batch))
-      // unparse
-      .map(dataParser.unparsePoint)
-      // store the data
-      .foreachRDD((r, t) => storeRDD(r, t, tempPath))
-
-
-    testData
-      // parser the data
-      .map(d => {
-      val parsed = dataParser.parsePoint(d)
-      (parsed.label, parsed.features)
-    })
-      // predict
-      .transform(rdd => model.predictOnValues(rdd))
-      // calculate logistic loss
+      // store for next batch
+      .transform((r, t) => storeRDD(r, t, tempPath, dataParser))
+      // calculate error
+      .transform(_ => model.predictOnValues(evaluationDataSet))
+      // calculate per logistic loss
       .map(pre => (LogisticLoss.logisticLoss(pre._1, pre._2), 1))
       // sum over logistic loss
       .reduce((a, b) => (a._1 + b._1, a._2 + b._2))

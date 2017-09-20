@@ -59,7 +59,7 @@ object ContinuousClassifier extends Classifier {
       testType = "dataset"
     }
     val child = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
-      s"slack-$slack/offline-step-$offlineStepSize/online-step-$onlineStepSize/continuous-step-$continuousStepSize"
+      s"slack-$slack/offline-step-$stepSize/online-step-$onlineStepSize/continuous-step-$continuousStepSize"
 
     val resultPath = experimentResultPath(resultRoot, child)
     val tempDirectory = experimentResultPath(tempRoot, child)

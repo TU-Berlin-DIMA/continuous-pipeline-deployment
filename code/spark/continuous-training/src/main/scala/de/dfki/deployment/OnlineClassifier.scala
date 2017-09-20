@@ -22,7 +22,7 @@ object OnlineClassifier extends Classifier {
       testType = "dataset"
     }
     val child = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
-      s"slack-none/offline-step-$offlineStepSize/online-step-$onlineStepSize"
+      s"slack-none/offline-step-$stepSize/online-step-$onlineStepSize"
 
     val resultPath = experimentResultPath(resultRoot, child)
     if (modelPath == DEFAULT_MODEL_PATH) {

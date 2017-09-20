@@ -22,7 +22,7 @@ object InitialClassifier extends Classifier {
       testType = "dataset"
     }
     val child = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
-      s"slack-none/offline-step-$offlineStepSize"
+      s"slack-none/offline-step-$stepSize"
 
     val resultPath = experimentResultPath(resultRoot, child)
     if (modelPath == DEFAULT_MODEL_PATH) {

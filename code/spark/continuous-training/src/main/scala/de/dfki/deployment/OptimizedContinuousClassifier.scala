@@ -13,7 +13,7 @@ object OptimizedContinuousClassifier extends Classifier {
   var continuousStepSize: Double = _
   var samplingRate: Double = _
 
-  val DEFAULT_SAMPLING_RATE = 0.1
+  val DEFAULT_SAMPLING_RATE = 0.2
 
   /**
     * @param args arguments to the main class should be a set of key, value pairs in the format of key=value
@@ -34,8 +34,6 @@ object OptimizedContinuousClassifier extends Classifier {
     slack = parser.getLong("slack", defaultTrainingSlack)
     tempRoot = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
     incremental = parser.getBoolean("incremental", default = true)
-    // optional parameter for step of size of sgd iterations in continuous deployment method
-    continuousStepSize = parser.getDouble("continuous-step-size", onlineStepSize)
     samplingRate = parser.getDouble("sampling-rate", DEFAULT_SAMPLING_RATE)
   }
 
@@ -48,13 +46,11 @@ object OptimizedContinuousClassifier extends Classifier {
       testType = "dataset"
     }
     val child = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
-      s"slack-$slack/offline-step-$offlineStepSize/online-step-$onlineStepSize/continuous-step-$continuousStepSize"
+      s"slack-$slack/updater-adam/step-size-$stepSize/"
 
     val resultPath = experimentResultPath(resultRoot, child)
     val tempDirectory = experimentResultPath(tempRoot, child)
-    if (modelPath == DEFAULT_MODEL_PATH) {
-      modelPath = s"$resultRoot/$child/model"
-    }
+
     createTempFolders(tempDirectory)
     val ssc = initializeSpark()
 
@@ -72,16 +68,11 @@ object OptimizedContinuousClassifier extends Classifier {
       .map(dataParser.parsePoint)
       .sample(withReplacement = false, samplingRate)
 
-    // evaluate the stream and incrementally update the model
-    if (evaluationDataPath == "prequential") {
-      evaluateStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint), resultPath)
-    } else {
-      evaluateStream(testData.map(dataParser.parsePoint), resultPath)
-    }
 
     streamingSource
+      .map(_._2.toString)
       // parse input
-      .map(input => dataParser.parsePoint(input._2.toString))
+      .map(dataParser.parsePoint)
       // online training and updating the statistics
       .transform(rdd => streamingModel.trainOn(rdd))
       // create a window
@@ -92,6 +83,14 @@ object OptimizedContinuousClassifier extends Classifier {
       .map(dataParser.unparsePoint)
       // write to disk
       .foreachRDD((rdd, time) => storeRDD(rdd, time, tempDirectory))
+
+
+    // evaluate the stream and incrementally update the model
+    if (evaluationDataPath == "prequential") {
+      evaluateStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint), resultPath)
+    } else {
+      evaluateStream(testData.map(dataParser.parsePoint), resultPath)
+    }
 
 
     ssc.start()
