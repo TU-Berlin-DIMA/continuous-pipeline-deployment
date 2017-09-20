@@ -8,7 +8,6 @@ import org.apache.spark.streaming.Seconds
   */
 object OptimizedContinuousClassifier extends Classifier {
   var slack: Long = _
-  var tempRoot: String = _
   var incremental: Boolean = _
   var continuousStepSize: Double = _
   var samplingRate: Double = _
@@ -19,7 +18,6 @@ object OptimizedContinuousClassifier extends Classifier {
     * @param args arguments to the main class should be a set of key, value pairs in the format of key=value
     *             Continuous Classifier:
     *             slack: delay between in periodic sgd iteration
-    *             temp-path: path to write the observed data for retraining purposed
     *             refer to [[Classifier]] to view the rest of the arguments
     *
     */
@@ -32,7 +30,6 @@ object OptimizedContinuousClassifier extends Classifier {
     super.parseArgs(args)
     val parser = new CommandLineParser(args).parse()
     slack = parser.getLong("slack", defaultTrainingSlack)
-    tempRoot = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
     incremental = parser.getBoolean("incremental", default = true)
     samplingRate = parser.getDouble("sampling-rate", DEFAULT_SAMPLING_RATE)
   }
@@ -49,22 +46,20 @@ object OptimizedContinuousClassifier extends Classifier {
       s"slack-$slack/updater-adam/step-size-$stepSize/"
 
     val resultPath = experimentResultPath(resultRoot, child)
-    val tempDirectory = experimentResultPath(tempRoot, child)
 
-    createTempFolders(tempDirectory)
     val ssc = initializeSpark()
 
     // train initial model
     val startTime = System.currentTimeMillis()
 
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory, modelType)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath, modelType)
     val endTime = System.currentTimeMillis()
     storeTrainingTimes(endTime - startTime, resultPath)
 
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, evaluationDataPath)
 
-    def historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory)
+    def historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + streamingSource.getProcessedFiles.mkString(","))
       .map(dataParser.parsePoint)
       .sample(withReplacement = false, samplingRate)
 
@@ -79,10 +74,9 @@ object OptimizedContinuousClassifier extends Classifier {
       .window(Seconds(slack), Seconds(slack))
       // hybrid proactive training
       .transform(rdd => streamingModel.trainOnHybrid(rdd, historicalDataRDD))
-      // unparse
-      .map(dataParser.unparsePoint)
-      // write to disk
-      .foreachRDD((rdd, time) => storeRDD(rdd, time, tempDirectory))
+      // dummy action
+      .foreachRDD(_ => dummyAction())
+    // do nothing
 
 
     // evaluate the stream and incrementally update the model

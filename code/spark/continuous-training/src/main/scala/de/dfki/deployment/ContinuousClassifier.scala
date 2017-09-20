@@ -19,7 +19,6 @@ import de.dfki.utils.CommandLineParser
   */
 object ContinuousClassifier extends Classifier {
   var slack: Long = _
-  var tempRoot: String = _
   var incremental: Boolean = _
   var continuousStepSize: Double = _
   var samplingRate: Double = _
@@ -30,7 +29,6 @@ object ContinuousClassifier extends Classifier {
     * @param args arguments to the main class should be a set of key, value pairs in the format of key=value
     *             Continuous Classifier:
     *             slack: delay between in periodic sgd iteration
-    *             temp-path: path to write the observed data for retraining purposed
     *             refer to [[Classifier]] to view the rest of the arguments
     *
     */
@@ -43,7 +41,6 @@ object ContinuousClassifier extends Classifier {
     super.parseArgs(args)
     val parser = new CommandLineParser(args).parse()
     slack = parser.getLong("slack", defaultTrainingSlack)
-    tempRoot = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
     incremental = parser.getBoolean("incremental", default = true)
     // optional parameter for step of size of sgd iterations in continuous deployment method
     continuousStepSize = parser.getDouble("continuous-step-size", onlineStepSize)
@@ -62,26 +59,23 @@ object ContinuousClassifier extends Classifier {
       s"slack-$slack/offline-step-$stepSize/online-step-$onlineStepSize/continuous-step-$continuousStepSize"
 
     val resultPath = experimentResultPath(resultRoot, child)
-    val tempDirectory = experimentResultPath(tempRoot, child)
     if (modelPath == DEFAULT_MODEL_PATH) {
       modelPath = s"$resultRoot/$child/model"
     }
-    createTempFolders(tempDirectory)
+
     val ssc = initializeSpark()
     //ssc.sparkContext.setLogLevel("INFO")
 
     // train initial model
     val startTime = System.currentTimeMillis()
 
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory, modelType)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath, modelType)
     val endTime = System.currentTimeMillis()
     storeTrainingTimes(endTime - startTime, resultPath)
 
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, evaluationDataPath)
 
-    // store the incoming stream to disk for further re-training
-    writeStreamToDisk(streamingSource.map(_._2.toString), tempDirectory)
 
     // evaluate the stream and incrementally update the model
     if (evaluationDataPath == "prequential") {
@@ -99,14 +93,14 @@ object ContinuousClassifier extends Classifier {
       def run() {
         streamingSource.pause()
         val startTime = System.currentTimeMillis()
-        val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory)
+        val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + streamingSource.getProcessedFiles.mkString(","))
           .map(dataParser.parsePoint)
           .sample(withReplacement = false, samplingRate)
         streamingModel.setStepSize(continuousStepSize).trainOn(historicalDataRDD)
         streamingModel.setStepSize(onlineStepSize)
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)
-        streamingSource.unpause()
+        streamingSource.resume()
       }
     }
 

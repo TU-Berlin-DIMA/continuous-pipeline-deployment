@@ -30,7 +30,7 @@ class FolderBasedScheduler(streamingSource: BatchFileInputDStream[LongWritable, 
   override def init() = {
     super.init()
     streamingSource.setSchedulingPolicy(schedulingType())
-    currentFolder = streamingSource.currentFolder
+    currentFolder = streamingSource.getCurrentFolder
 
   }
 
@@ -40,7 +40,7 @@ class FolderBasedScheduler(streamingSource: BatchFileInputDStream[LongWritable, 
   }
 
   override def schedule() = {
-    var nextFolder = streamingSource.nextFolder
+    var nextFolder = streamingSource.getNextFolder
     if (streamingSource.isCompleted | ssc.sparkContext.isStopped) {
       logger.warn("Streaming source is depleted")
       logger.info("Terminating the Job")
@@ -48,10 +48,10 @@ class FolderBasedScheduler(streamingSource: BatchFileInputDStream[LongWritable, 
     } else {
       while (nextFolder == currentFolder) {
         Thread.sleep(5000)
-        nextFolder = streamingSource.nextFolder
+        nextFolder = streamingSource.getNextFolder
         logger.info("waiting for retraining to be scheduled ...")
       }
-      currentFolder = streamingSource.currentFolder
+      currentFolder = streamingSource.getCurrentFolder
       logger.info("Executing a new batch retraining")
       runNow()
       while (!future.isDone) {

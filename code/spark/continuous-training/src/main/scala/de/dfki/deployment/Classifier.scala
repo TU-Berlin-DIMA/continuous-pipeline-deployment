@@ -12,11 +12,8 @@ import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
 import de.dfki.ml.streaming.models.{HybridLR, HybridModel, HybridSVM}
 import de.dfki.preprocessing.parsers.{CSVParser, CustomVectorParser, DataParser, SVMParser}
 import de.dfki.utils.CommandLineParser
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FileSystem, Path}
-import org.apache.hadoop.io.{LongWritable, NullWritable, Text}
+import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
 import org.apache.spark.mllib.regression.LabeledPoint
@@ -220,30 +217,6 @@ abstract class Classifier extends Serializable {
   }
 
   /**
-    * Write content of the DStream to the specified location
-    * This is used for further retraining
-    *
-    * @param stream input stream
-    * @param path   output location
-    */
-  def writeStreamToDisk(stream: DStream[String], path: String): Unit = {
-    val storeRDD = (rdd: RDD[String], time: Time) => {
-      val hadoopConf = new Configuration()
-      hadoopConf.set("mapreduce.output.basename", time.toString())
-      rdd.map(str => (null, str)).saveAsNewAPIHadoopFile(s"$path", classOf[NullWritable], classOf[String],
-        classOf[TextOutputFormat[NullWritable, String]], hadoopConf)
-    }
-    stream.foreachRDD(storeRDD)
-  }
-
-  val storeRDD = (rdd: RDD[String], time: Time, path: String) => {
-    val hadoopConf = new Configuration()
-    hadoopConf.set("mapreduce.output.basename", time.toString())
-    rdd.map(str => (null, str)).saveAsNewAPIHadoopFile(s"$path", classOf[NullWritable], classOf[String],
-      classOf[TextOutputFormat[NullWritable, String]], hadoopConf)
-  }
-
-  /**
     * store captured running time into the given path
     *
     * @param duration   duration of the training
@@ -316,10 +289,7 @@ abstract class Classifier extends Serializable {
   }
 
 
-  protected def createTempFolders(path: String): Unit = {
-    val fs = FileSystem.get(new Configuration())
-    fs.mkdirs(new Path(path))
-  }
+  def dummyAction() = {}
 
 
   def getApplicationName: String

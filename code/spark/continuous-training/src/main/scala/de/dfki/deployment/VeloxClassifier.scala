@@ -22,14 +22,12 @@ import org.apache.spark.mllib.linalg.Vectors
   */
 object VeloxClassifier extends Classifier {
   var slack: Long = _
-  var tempRoot: String = _
   var incremental: Boolean = _
 
   /**
     * @param args arguments to the main class should be a set of key, value pairs in the format of key=value
     *             Velox Classifier:
     *             slack: delay between in periodic sgd iteration
-    *             temp-path: path to write the observed data for retraining purposed
     *             refer to [[Classifier]] to view the rest of the arguments
     *
     */
@@ -41,7 +39,6 @@ object VeloxClassifier extends Classifier {
     super.parseArgs(args)
     val parser = new CommandLineParser(args).parse()
     slack = parser.getLong("slack", defaultTrainingSlack)
-    tempRoot = parser.get("temp-path", s"$BASE_DATA_DIRECTORY/temp-data")
     incremental = parser.getBoolean("incremental", default = true)
   }
 
@@ -57,22 +54,18 @@ object VeloxClassifier extends Classifier {
       s"slack-$slack/offline-step-$stepSize/online-step-$onlineStepSize"
 
     val resultPath = experimentResultPath(resultRoot, child)
-    val tempDirectory = experimentResultPath(tempRoot, child)
     if (modelPath == DEFAULT_MODEL_PATH) {
       modelPath = s"$resultRoot/$child/model"
     }
-    createTempFolders(tempDirectory)
     val ssc = initializeSpark()
 
     // train initial model
     val startTime = System.currentTimeMillis()
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath + "," + tempDirectory, modelType)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath , modelType)
     val endTime = System.currentTimeMillis()
     storeTrainingTimes(endTime - startTime, resultPath)
     val streamingSource = streamSource(ssc, streamingDataPath)
     val testData = constantInputDStreaming(ssc, evaluationDataPath)
-
-    writeStreamToDisk(streamingSource.map(_._2.toString), tempDirectory)
 
     // evaluate the stream and incrementally update the model
     if (evaluationDataPath == "prequential") {
@@ -90,10 +83,9 @@ object VeloxClassifier extends Classifier {
       def run() {
         //println(streamingModel.latestModel().weights.toString)
         streamingSource.pause()
-
-        storeRetrainingPoint(streamingSource.getLastProcessedFileIndex, resultPath)
         val startTime = System.currentTimeMillis()
-        val data = ssc.sparkContext.textFile(initialDataPath + "," + tempDirectory).map(dataParser.parsePoint)
+        val data = ssc.sparkContext.textFile(initialDataPath + "," + streamingSource.getProcessedFiles.mkString(","))
+          .map(dataParser.parsePoint)
         // retrain the initial model
         streamingModel
           .setConvergenceTol(1E-6)
@@ -108,7 +100,7 @@ object VeloxClassifier extends Classifier {
 
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)
-        streamingSource.unpause()
+        streamingSource.resume()
       }
     }
 
