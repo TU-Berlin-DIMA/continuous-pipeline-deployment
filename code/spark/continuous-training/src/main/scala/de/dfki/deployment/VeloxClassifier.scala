@@ -3,7 +3,7 @@ package de.dfki.deployment
 import java.io.{File, FileWriter}
 
 import de.dfki.core.scheduling.{FixedIntervalScheduler, FolderBasedScheduler}
-import de.dfki.ml.optimization.{SquaredL2Updater, SquaredL2UpdaterWithMomentum}
+import de.dfki.ml.optimization.{AdvancedUpdaters, SquaredL2Updater, SquaredL2UpdaterWithMomentum}
 import de.dfki.utils.CommandLineParser
 
 /**
@@ -50,7 +50,7 @@ object VeloxClassifier extends Classifier {
       testType = "dataset"
     }
     val child = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
-      s"slack-$slack/offline-step-$stepSize/online-step-$onlineStepSize"
+      s"slack-$slack/updater-$updater/step-size-$stepSize/"
 
     val resultPath = experimentResultPath(resultRoot, child)
     if (modelPath == DEFAULT_MODEL_PATH) {
@@ -87,15 +87,16 @@ object VeloxClassifier extends Classifier {
           .map(dataParser.parsePoint)
         // retrain the initial model
         streamingModel
-          .setConvergenceTol(1E-6)
-          .setNumIterations(numIterations).trainInitialModel(data)
-          .setUpdater(new SquaredL2UpdaterWithMomentum(0.9))
+          .setMiniBatchFraction(0.1)
+          .setConvergenceTol(0.0)
+          .setNumIterations(numIterations)
+          .setUpdater(AdvancedUpdaters.getUpdater(updater))
+          .trainInitialModel(data)
+
         //after retraining is done reset convergence tol and iteration count
         streamingModel
           .setConvergenceTol(0.0)
-          .setNumIterations(1)
-          .setStepSize(onlineStepSize)
-          .setUpdater(new SquaredL2Updater)
+          .setNumIterations(5)
 
         val endTime = System.currentTimeMillis()
         storeTrainingTimes(endTime - startTime, resultPath)

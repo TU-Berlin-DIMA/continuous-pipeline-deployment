@@ -1,7 +1,5 @@
 package de.dfki.deployment
 
-import de.dfki.deployment.InitialClassifier.{dataParser, dummyAction, evaluateStream, evaluationDataPath}
-
 /**
   * Baseline+ classifier
   * Train an initial model and apply incremental learning after deployment
@@ -24,7 +22,7 @@ object OnlineClassifier extends Classifier {
       testType = "dataset"
     }
     val child = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
-      s"slack-none/offline-step-$stepSize/online-step-$onlineStepSize"
+      s"slack-0/updater-$updater/step-size-$stepSize/"
 
     val resultPath = experimentResultPath(resultRoot, child)
     if (modelPath == DEFAULT_MODEL_PATH) {

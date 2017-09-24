@@ -9,7 +9,6 @@ import org.apache.spark.streaming.Seconds
 object ContinuousClassifier extends Classifier {
   var slack: Long = _
   var incremental: Boolean = _
-  var continuousStepSize: Double = _
   var samplingRate: Double = _
 
   val DEFAULT_SAMPLING_RATE = 0.1
@@ -67,7 +66,7 @@ object ContinuousClassifier extends Classifier {
         .repartition(ssc.sparkContext.defaultParallelism)
         .cache()
     }
-    
+
 
     evaluateStream(testData, testData, resultPath)
     streamingSource

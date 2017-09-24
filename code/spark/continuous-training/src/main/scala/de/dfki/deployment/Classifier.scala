@@ -56,7 +56,7 @@ abstract class Classifier extends Serializable {
   val STREAM_TRAINING = "processed/*"
   val TEST_DATA = "test"
   val DEFAULT_NUMBER_OF_ITERATIONS = 500
-  val STEP_SIZE = 1.0
+  val STEP_SIZE = 0.001
   val DEFAULT_MODEL_PATH = "generated"
   val DEFAULT_UPDATER = "adam"
 
@@ -73,7 +73,6 @@ abstract class Classifier extends Serializable {
   var evaluationMetric: String = _
   var batchDuration: Long = _
   var stepSize: Double = _
-  var onlineStepSize: Double = _
   var defaultParallelism: Int = _
   var modelPath: String = _
   var resultRoot: String = _
@@ -103,7 +102,7 @@ abstract class Classifier extends Serializable {
     // number of iterations
     numIterations = parser.getInteger("num-iterations", DEFAULT_NUMBER_OF_ITERATIONS)
     // offline learner step size
-    stepSize = parser.getDouble("offline-step-size", STEP_SIZE)
+    stepSize = parser.getDouble("step-size", STEP_SIZE)
     // optional model path parameter, if not provided the model is searched in the experiment
     modelPath = parser.get("model-path", DEFAULT_MODEL_PATH)
     // updater type

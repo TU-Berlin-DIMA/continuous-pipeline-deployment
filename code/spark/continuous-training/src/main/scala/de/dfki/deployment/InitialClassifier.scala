@@ -1,6 +1,6 @@
 package de.dfki.deployment
 
-import de.dfki.deployment.ContinuousClassifier.{dataParser, dummyAction, evaluateStream, evaluationDataPath}
+import de.dfki.deployment.ContinuousClassifier._
 
 /**
   * Baseline classifier
@@ -24,7 +24,7 @@ object InitialClassifier extends Classifier {
       testType = "dataset"
     }
     val child = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
-      s"slack-none/offline-step-$stepSize"
+      s"slack-0/updater-$updater/step-size-$stepSize/"
 
     val resultPath = experimentResultPath(resultRoot, child)
     if (modelPath == DEFAULT_MODEL_PATH) {
