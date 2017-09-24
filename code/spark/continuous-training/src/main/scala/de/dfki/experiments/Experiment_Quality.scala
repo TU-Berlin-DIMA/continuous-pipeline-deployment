@@ -111,9 +111,10 @@ object TrainLogisticRegressionModelOnCriteoData {
     new HybridLR()
       .setStepSize(0.001)
       .setUpdater(new SquaredL2UpdaterWithAdam(0.9, 0.999))
-      .setMiniBatchFraction(0.2)
-      //  .setRegParam(0.001)
-      .setNumIterations(100)
+      .setMiniBatchFraction(0.1)
+      .setRegParam(0.001)
+      .setConvergenceTol(0.0)
+      .setNumIterations(500)
       .trainInitialModel(trainingData)
   }
 

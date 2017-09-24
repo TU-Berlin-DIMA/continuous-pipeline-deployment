@@ -72,7 +72,9 @@ object ContinuousClassifier extends Classifier {
       .map(_._2.toString)
       // parse input
       .map(dataParser.parsePoint)
-      // online training and updating the statistics
+      // updating the statistics
+      //.transform(rdd => streamingModel.updateStatistics(rdd))
+      // online training
       .transform(rdd => streamingModel.trainOn(rdd))
       // evaluate the model
       .transform(rdd => evaluateStream(rdd, testData, resultPath))

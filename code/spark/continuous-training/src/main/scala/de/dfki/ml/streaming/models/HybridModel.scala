@@ -118,13 +118,25 @@ abstract class HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientD
 
   def predictPoint(data: Vector, weight: Vector, intercept: Double): Double
 
+  /**
+    * update the statistics of the underlying optimizer
+    * designed to work with the [[org.apache.spark.streaming.StreamingContext.transform()]]
+    *
+    * @param observations stream of training observations
+    * @return the same input rdd for downstream processing
+    */
+  def updateStatistics(observations: RDD[LabeledPoint]): RDD[LabeledPoint] = {
+    if (model.isEmpty) {
+      throw new IllegalArgumentException("Model must be initialized before starting training.")
+    }
+    this.algorithm.optimizer.updateStatistics(observations.map(l => (l.label, l.features)))
+    observations
+  }
 
   /**
     * Similar to [[trainOn]]
     * designed to work with the [[org.apache.spark.streaming.StreamingContext.transform()]]
     * method instead
-    * The incoming data are assumed to be new and never seen before
-    * Therefore a call to to optimizer's updateStatistics method is required
     *
     * @param observations stream of training observations
     * @return the same input rdd for downstream processing
@@ -133,7 +145,6 @@ abstract class HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientD
     if (model.isEmpty) {
       throw new IllegalArgumentException("Model must be initialized before starting training.")
     }
-    this.algorithm.optimizer.updateStatistics(observations.map(l => (l.label, l.features)))
     model = Some(algorithm.run(observations, model.get.weights, model.get.intercept))
     observations
   }

@@ -36,6 +36,12 @@ abstract class SGDOptimizer extends Optimizer {
     */
   def updateStatistics(data: RDD[(Double, Vector)])
 
+  /**
+    * return the requested statistics
+    * @param statisticsType requested statistics type
+    * @return requested statistics value
+    */
+  def getStatistics(statisticsType: String): Array[Double]
 
   /**
     * explicitly called by the test unit to transform the model into the non standardized

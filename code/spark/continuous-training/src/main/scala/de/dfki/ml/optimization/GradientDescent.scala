@@ -81,11 +81,11 @@ class GradientDescent(var numIterations: Int,
   }
 
   /**
-    * calcualtes the mean and variance of incoming dataset and update the existing one
+    * calculates the mean and variance of incoming dataset and update the existing one
     *
-    * @param data
+    * @param data incoming rdd to update the statistics
     */
-  def updateStatistics(data: RDD[(Double, Vector)]) = {
+  override def updateStatistics(data: RDD[(Double, Vector)]) = {
     val newBatchSummarizer = {
       val seqOp = (c: (MultivariateOnlineSummarizer), instance: (Double, Vector)) =>
         c.add(instance._2)
@@ -103,7 +103,14 @@ class GradientDescent(var numIterations: Int,
     numFeatures = summarizer.mean.size
     featuresMean = summarizer.mean.toArray
     featuresStd = summarizer.variance.toArray.map(math.sqrt)
+  }
 
+  override def getStatistics(statisticsType: String) = {
+    statisticsType match {
+      case "mean" => featuresMean
+      case "std" => featuresStd
+      case "size" => Array(numFeatures)
+    }
   }
 
   override def unStandardize(weights: Vector): Vector = {
