@@ -1,21 +1,10 @@
 package de.dfki.deployment
 
-import de.dfki.core.scheduling.FixedIntervalScheduler
 import de.dfki.utils.CommandLineParser
+import org.apache.spark.streaming.Seconds
 
 /**
-  * Novel training and testing model
-  * Online training is supplemented with occasional one iteration of SGD on the historical data
-  *
-  *
-  * Algorithm:
-  * 1. Train initial model
-  * 2. Write the incoming data into persistent storage
-  * 3. Evaluate on the incoming data
-  * 4. Train Incrementally on the incoming data
-  * 5. periodically perform 1 iteration of SGD on full (or a sample of)historical data
-  *
-  * @author Behrouz Derakhshan
+  * @author behrouz
   */
 object ContinuousClassifier extends Classifier {
   var slack: Long = _
@@ -42,8 +31,6 @@ object ContinuousClassifier extends Classifier {
     val parser = new CommandLineParser(args).parse()
     slack = parser.getLong("slack", defaultTrainingSlack)
     incremental = parser.getBoolean("incremental", default = true)
-    // optional parameter for step of size of sgd iterations in continuous deployment method
-    continuousStepSize = parser.getDouble("continuous-step-size", onlineStepSize)
     samplingRate = parser.getDouble("sampling-rate", DEFAULT_SAMPLING_RATE)
   }
 
@@ -56,15 +43,11 @@ object ContinuousClassifier extends Classifier {
       testType = "dataset"
     }
     val child = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
-      s"slack-$slack/offline-step-$stepSize/online-step-$onlineStepSize/continuous-step-$continuousStepSize"
+      s"slack-$slack/updater-adam/step-size-$stepSize/"
 
     val resultPath = experimentResultPath(resultRoot, child)
-    if (modelPath == DEFAULT_MODEL_PATH) {
-      modelPath = s"$resultRoot/$child/model"
-    }
 
     val ssc = initializeSpark()
-    //ssc.sparkContext.setLogLevel("INFO")
 
     // train initial model
     val startTime = System.currentTimeMillis()
@@ -74,44 +57,39 @@ object ContinuousClassifier extends Classifier {
     storeTrainingTimes(endTime - startTime, resultPath)
 
     val streamingSource = streamSource(ssc, streamingDataPath)
-    val testData = constantInputDStreaming(ssc, evaluationDataPath)
+    val testData = ssc.sparkContext.textFile(evaluationDataPath).map(dataParser.parsePoint)
 
-
-    // evaluate the stream and incrementally update the model
-    if (evaluationDataPath == "prequential") {
-      evaluateStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint), resultPath)
-    } else {
-      evaluateStream(testData.map(dataParser.parsePoint), resultPath)
+    def historicalDataRDD = {
+      logger.info(s"scheduling a batch iteration on ${streamingSource.getProcessedFiles.length} files ")
+      ssc.sparkContext.textFile(streamingSource.getProcessedFiles.mkString(","))
+        .map(dataParser.parsePoint)
+        .sample(withReplacement = false, samplingRate, seed = 42)
+        .repartition(ssc.sparkContext.defaultParallelism)
+        .cache()
     }
 
-    if (incremental) {
-      trainOnStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint))
-    }
+    streamingSource
+      .map(_._2.toString)
+      // parse input
+      .map(dataParser.parsePoint)
+      // online training and updating the statistics
+      .transform(rdd => streamingModel.trainOn(rdd))
+      // evaluate the model
+      .transform(rdd => evaluateStream(rdd, testData, resultPath))
+      // create a window
+      .window(Seconds(slack), Seconds(slack))
+      // hybrid proactive training
+      .transform(rdd => streamingModel.trainOnHybrid(rdd, historicalDataRDD))
+      // dummy action
+      .foreachRDD(_ => dummyAction())
 
-    // periodically schedule one iteration of the SGD
-    val task = new Runnable {
-      def run() {
-        streamingSource.pause()
-        val startTime = System.currentTimeMillis()
-        val historicalDataRDD = ssc.sparkContext.textFile(initialDataPath + "," + streamingSource.getProcessedFiles.mkString(","))
-          .map(dataParser.parsePoint)
-          .sample(withReplacement = false, samplingRate)
-        streamingModel.setStepSize(continuousStepSize).trainOn(historicalDataRDD)
-        streamingModel.setStepSize(onlineStepSize)
-        val endTime = System.currentTimeMillis()
-        storeTrainingTimes(endTime - startTime, resultPath)
-        streamingSource.resume()
-      }
-    }
-
-    val scheduler = new FixedIntervalScheduler(streamingSource, ssc, task, slack)
 
     ssc.start()
-    scheduler.init()
-    scheduler.schedule()
+    ssc.awaitTermination()
+
   }
 
-  override def getApplicationName = "Continuous Classifier"
+  override def getApplicationName = "Optimized Continuous Classifier"
 
   override def getExperimentName = "continuous"
 

@@ -5,7 +5,6 @@ import java.io.{File, FileWriter}
 import de.dfki.core.scheduling.{FixedIntervalScheduler, FolderBasedScheduler}
 import de.dfki.ml.optimization.{SquaredL2Updater, SquaredL2UpdaterWithMomentum}
 import de.dfki.utils.CommandLineParser
-import org.apache.spark.mllib.linalg.Vectors
 
 /**
   * Training and Serving of SVM classifier using the architecture described in Velox: https://arxiv.org/abs/1409.3809
@@ -61,22 +60,22 @@ object VeloxClassifier extends Classifier {
 
     // train initial model
     val startTime = System.currentTimeMillis()
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath , modelType)
+    streamingModel = createInitialStreamingModel(ssc, initialDataPath, modelType)
     val endTime = System.currentTimeMillis()
     storeTrainingTimes(endTime - startTime, resultPath)
     val streamingSource = streamSource(ssc, streamingDataPath)
-    val testData = constantInputDStreaming(ssc, evaluationDataPath)
+    val testData = ssc.sparkContext.textFile(evaluationDataPath).map(dataParser.parsePoint)
 
-    // evaluate the stream and incrementally update the model
-    if (evaluationDataPath == "prequential") {
-      evaluateStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint), resultPath)
-    } else {
-      evaluateStream(testData.map(dataParser.parsePoint), resultPath)
-    }
-
-    if (incremental) {
-      trainOnStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint))
-    }
+    streamingSource
+      .map(_._2.toString)
+      // parse input
+      .map(dataParser.parsePoint)
+      // evaluate the model
+      .transform(rdd => evaluateStream(rdd, testData, resultPath))
+      // online training and updating the statistics
+      .transform(rdd => streamingModel.trainOn(rdd))
+      // dummy action
+      .foreachRDD(_ => dummyAction())
 
     // periodically retrain the model from scratch using the historical data
     val task = new Runnable {

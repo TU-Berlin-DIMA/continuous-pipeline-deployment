@@ -1,6 +1,7 @@
 package de.dfki.ml.optimization
 
 import breeze.linalg.norm
+import de.dfki.ml.LinearAlgebra
 import de.dfki.ml.LinearAlgebra._
 import org.apache.log4j.Logger
 import org.apache.spark.mllib.linalg.{DenseVector, Vector, Vectors}
@@ -9,7 +10,6 @@ import org.apache.spark.mllib.stat.MultivariateOnlineSummarizer
 import org.apache.spark.rdd.RDD
 
 /**
-  * TODO: Fix the mini batch
   * Technically mini batch is a property of stochastic gradient descent
   * in gradient descent the mini batch ratio is always 1
   *
@@ -243,7 +243,7 @@ object GradientDescent {
     //var regVal = updater.compute(weights, Vectors.zeros(weights.size), 0, 1, regParam)._2
 
     if (!data.getStorageLevel.useMemory) {
-      logger.warn("Dataset is not persisted!!!")
+      logger.warn(s"Dataset is not persisted (${data.getStorageLevel.toString()})!!")
     }
     var converged = false
     var prevLoss = Double.MaxValue
@@ -257,6 +257,7 @@ object GradientDescent {
       else
         data.sample(withReplacement = false, miniBatchFraction)
 
+      val miniBatchSize = sampledData.count()
       prevLoss = currLoss
       val (lossSum, newGradients) = gradient.compute(sampledData, weights)
 
@@ -265,9 +266,12 @@ object GradientDescent {
       // original code from spark divides the gradient by the mini batch size, but to me
       // it seems illogical and actually the opposite have to be done
       // investigate this and either add a bug report in spark or fix the implementation here
-      val newParams = updater.compute(weights, newGradients, stepSize, i, regParam)
+      val newParams = updater.compute(weights,
+        LinearAlgebra.fromBreeze(newGradients / miniBatchSize.toDouble),
+        stepSize, i, regParam)
       weights = newParams._1
-      currLoss = lossSum + newParams._2
+      // divide loss by the mini batch size
+      currLoss = lossSum / miniBatchSize.toDouble + newParams._2
 
       currentWeights = Some(weights)
       //      if (previousWeights.isDefined && currentWeights.isDefined) {
@@ -281,7 +285,6 @@ object GradientDescent {
     // do not transform the weights into the original space
     // only do it while testing the model
     weights
-    //Vectors.dense(rawCoefficients).compressed
   }
 
 

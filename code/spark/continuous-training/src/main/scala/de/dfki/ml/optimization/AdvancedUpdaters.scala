@@ -303,13 +303,24 @@ class SquaredL2UpdaterWithAdam(beta1: Double,
     // d = (lr / (sqrt(v_) + eps)) * m_
     val deltas = (thisIterStepSize / (sqrt(bias_gs) + eps)) :* bias_g
 
-    val brzWeights = asBreeze(weightsOld)
 
+    val brzWeights = asBreeze(weightsOld)
+    if (regParam != 0) {
+      brzWeights :*= (1.0 - thisIterStepSize * regParam)
+    }
+
+    val regVal = if (regParam == 0) {
+      regParam
+    }
+    else {
+      val norm = brzNorm(brzWeights, 2.0)
+      0.5 * regParam * norm * norm
+    }
     logger.info(s"current step-size ($thisIterStepSize), regParam($regParam)")
 
     brzAxpy(-1.0, deltas, brzWeights)
     iterCounter = iterCounter + 1
-    (fromBreeze(brzWeights), 0.0)
+    (fromBreeze(brzWeights), regVal)
   }
 
   override def name = "l2-adam"

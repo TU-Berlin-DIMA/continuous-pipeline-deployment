@@ -55,8 +55,7 @@ abstract class Classifier extends Serializable {
   val STREAM_TRAINING = "processed/*"
   val TEST_DATA = "test"
   val DEFAULT_NUMBER_OF_ITERATIONS = 500
-  val DEFAULT_OFFLINE_STEP_SIZE = 1.0
-  val DEFAULT_ONLINE_STEP_SIZE = 0.01
+  val STEP_SIZE = 1.0
   val DEFAULT_MODEL_PATH = "generated"
 
   var streamingModel: HybridModel[_, _] = _
@@ -101,11 +100,8 @@ abstract class Classifier extends Serializable {
     // number of iterations
     numIterations = parser.getInteger("num-iterations", DEFAULT_NUMBER_OF_ITERATIONS)
     // offline learner step size
-    stepSize = parser.getDouble("offline-step-size", DEFAULT_OFFLINE_STEP_SIZE)
-    // online learner step size
-    onlineStepSize = parser.getDouble("online-step-size", DEFAULT_ONLINE_STEP_SIZE)
+    stepSize = parser.getDouble("offline-step-size", STEP_SIZE)
     // optional model path parameter, if not provided the model is searched in the experiment
-    // result folder
     modelPath = parser.get("model-path", DEFAULT_MODEL_PATH)
 
 
@@ -135,31 +131,25 @@ abstract class Classifier extends Serializable {
     ssc
   }
 
-  /**
-    * Store the cumulative error rate of the incoming stream in the given result directory
-    *
-    * @param testData test Data DStream
-    */
-  def evaluateStream(testData: DStream[LabeledPoint], resultPath: String) {
+  def evaluateStream(stream: RDD[LabeledPoint],
+                     evaluationData: RDD[LabeledPoint],
+                     resultPath: String) = {
+    val testData = evaluationDataPath match {
+      case "prequential" => stream
+      case _ => evaluationData
+    }
     evaluationMetric match {
-      //      case "logloss" =>
-      //        testData
-      //          .map(lp => (lp.label, lp.features))
-      //          // predict
-      //          .transform(rdd => streamingModel.predictOnValues(rdd))
-      //          // calculate logistic loss
-      //          .map(pre => (LogisticLoss.logisticLoss(pre._1, pre._2), 1))
-      //          // sum over logistic loss
-      //          .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
-      //          // find total logistic loss
-      //          .map(v => v._1 / v._2)
-      //          // store the logistic loss into file
-      //          .foreachRDD(rdd => storeLogisticLoss(rdd, resultPath))
+      case "logloss" =>
+        val totalLogLoss = streamingModel
+          .predictOnValues(testData.map(lp => (lp.label, lp.features)))
+          .map(pre => (LogisticLoss.logisticLoss(pre._1, pre._2), 1))
+          // sum over logistic loss
+          .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
+        // store the average logistic loss into file
+        storeLogisticLoss(totalLogLoss._1 / totalLogLoss._2, resultPath)
       case "confusion-matrix" =>
-        testData
-          .map(lp => (lp.label, lp.features))
-          // predict
-          .transform(rdd => streamingModel.predictOnValues(rdd))
+        val cm = streamingModel
+          .predictOnValues(testData.map(lp => (lp.label, lp.features)))
           .map {
             v =>
               var tp, fp, tn, fn = 0
@@ -170,19 +160,9 @@ abstract class Classifier extends Serializable {
               new ConfusionMatrix(tp, fp, tn, fn)
           }
           .reduce((c1, c2) => ConfusionMatrix.merge(c1, c2))
-          .foreachRDD(rdd => storeConfusionMatrix(rdd, resultPath))
+        storeConfusionMatrix(cm, resultPath)
     }
-  }
-
-  def evaluate(rdd: RDD[LabeledPoint], testData: RDD[LabeledPoint], resultPath: String) = {
-    val totalLogLoss = streamingModel
-      .predictOnValues(testData.map(lp => (lp.label, lp.features)))
-      .map(pre => (LogisticLoss.logisticLoss(pre._1, pre._2), 1))
-      // sum over logistic loss
-      .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
-    // store the average logistic loss into file
-    storeLogisticLoss(totalLogLoss._1 / totalLogLoss._2, resultPath)
-    rdd
+    stream
   }
 
   val storeLogisticLoss = (logLoss: Double, resultPath: String) => {
@@ -195,20 +175,12 @@ abstract class Classifier extends Serializable {
     finally fw.close()
   }
 
-  private val storeConfusionMatrix = (rdd: RDD[(ConfusionMatrix)], resultPath: String) => {
+  private val storeConfusionMatrix = (confusionMatrix: ConfusionMatrix, resultPath: String) => {
     val file = new File(s"$resultPath/confusion-matrix.txt")
     file.getParentFile.mkdirs()
     val fw = new FileWriter(file, true)
     try {
-      val content = rdd.collect()
-      if (!content.isEmpty) {
-        val confusionMatrix = content.reduce {
-          (c1, c2) =>
-            ConfusionMatrix.merge(c1, c2)
-        }
-        fw.write(s"${confusionMatrix.resultAsCSV}\n")
-      }
-
+      fw.write(s"${confusionMatrix.resultAsCSV}\n")
     }
     finally fw.close()
   }
@@ -255,8 +227,9 @@ abstract class Classifier extends Serializable {
       model
         // sampling is done manually
         .setMiniBatchFraction(1.0)
+        .setRegParam(0.001)
         .setConvergenceTol(0.0)
-        .setNumIterations(1)
+        .setNumIterations(5)
     } else {
       val hybridModel = if (modelType.equals("svm")) {
         logger.info("Instantiating a SVM Model")
@@ -301,7 +274,8 @@ abstract class Classifier extends Serializable {
   }
 
 
-  def dummyAction() = {}
+  def dummyAction() = {
+  }
 
 
   def getApplicationName: String

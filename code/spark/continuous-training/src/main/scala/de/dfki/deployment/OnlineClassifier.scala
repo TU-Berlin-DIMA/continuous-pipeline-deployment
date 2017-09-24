@@ -1,5 +1,7 @@
 package de.dfki.deployment
 
+import de.dfki.deployment.InitialClassifier.{dataParser, dummyAction, evaluateStream, evaluationDataPath}
+
 /**
   * Baseline+ classifier
   * Train an initial model and apply incremental learning after deployment
@@ -30,16 +32,18 @@ object OnlineClassifier extends Classifier {
     }
     streamingModel = createInitialStreamingModel(ssc, initialDataPath, modelType)
     val streamingSource = streamSource(ssc, streamingDataPath)
-    val testData = constantInputDStreaming(ssc, evaluationDataPath)
+    val testData = ssc.sparkContext.textFile(evaluationDataPath).map(dataParser.parsePoint)
 
-    // evaluate the stream and incrementally update the model
-    if (evaluationDataPath == "prequential") {
-      evaluateStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint), resultPath)
-    } else {
-      evaluateStream(testData.map(dataParser.parsePoint), resultPath)
-    }
-
-    trainOnStream(streamingSource.map(_._2.toString).map(dataParser.parsePoint))
+    streamingSource
+      .map(_._2.toString)
+      // parse input
+      .map(dataParser.parsePoint)
+      // evaluate the model
+      .transform(rdd => evaluateStream(rdd, testData, resultPath))
+      // online training and updating the statistics
+      .transform(rdd => streamingModel.trainOn(rdd))
+      // dummy action
+      .foreachRDD(_ => dummyAction())
 
 
     ssc.start()

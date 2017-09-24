@@ -3,6 +3,7 @@ package de.dfki.ml.optimization
 
 import de.dfki.ml.LinearAlgebra
 import org.apache.spark.mllib.linalg.{DenseVector, Vector, Vectors}
+import breeze.linalg.{DenseVector => BDV, SparseVector => BSV, Vector => BV}
 import org.apache.spark.rdd.RDD
 
 /**
@@ -10,7 +11,7 @@ import org.apache.spark.rdd.RDD
   */
 abstract class BatchGradient extends Serializable {
 
-  def compute(data: RDD[(Double, Vector)], weights: Vector): (Double, Vector)
+  def compute(data: RDD[(Double, Vector)], weights: Vector): (Double, BV[Double])
 
   def setFeaturesMean(means: Array[Double])
 
@@ -41,7 +42,7 @@ class LogisticGradient(fitIntercept: Boolean,
   }
 
 
-  override def compute(instances: RDD[(Double, Vector)], weights: Vector): (Double, Vector) = {
+  override def compute(instances: RDD[(Double, Vector)], weights: Vector): (Double, BV[Double]) = {
     val numFeatures = featuresMean.length
     val localFeaturesStd = featuresStd
 
@@ -95,7 +96,7 @@ class LogisticGradient(fitIntercept: Boolean,
     //    }
 
     val regVal = 0
-    (logisticAggregator.loss + regVal, new DenseVector(totalGradientArray))
+    (logisticAggregator.loss + regVal, new BDV[Double](totalGradientArray))
   }
 }
 

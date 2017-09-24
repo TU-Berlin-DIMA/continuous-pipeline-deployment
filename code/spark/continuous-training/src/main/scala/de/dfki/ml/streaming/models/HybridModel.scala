@@ -199,7 +199,6 @@ object HybridModel {
     val oos = new ObjectOutputStream(new FileOutputStream(file, false))
     oos.writeObject(model)
     oos.close()
-    new FileWriter(s"$path-description", false).write(model.toString)
   }
 
   def loadFromDisk(path: String): HybridModel[_, _] = {
