@@ -8,7 +8,7 @@ import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
 import de.dfki.core.streaming.BatchFileInputDStream
 import de.dfki.ml.evaluation.{ConfusionMatrix, LogisticLoss}
-import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
+import de.dfki.ml.optimization.{AdvancedUpdaters, SquaredL2UpdaterWithAdam}
 import de.dfki.ml.streaming.models.{HybridLR, HybridModel, HybridSVM}
 import de.dfki.preprocessing.parsers.{CSVParser, CustomVectorParser, DataParser, SVMParser}
 import de.dfki.utils.CommandLineParser
@@ -33,6 +33,7 @@ import org.apache.spark.streaming.dstream.{ConstantInputDStream, DStream}
   * initial-training-path: data used for initial training
   * streaming-path: data used for online training (and prequential evaluation)
   * test-path: data used for evaluation (if not specified, prequential evaluation is used)
+  * updater: [[de.dfki.ml.optimization.AdvancedUpdaters]] used for learning rate tuning
   *
   * [[ContinuousClassifier]] and [[VeloxClassifier]] require extra arguments
   *
@@ -57,6 +58,7 @@ abstract class Classifier extends Serializable {
   val DEFAULT_NUMBER_OF_ITERATIONS = 500
   val STEP_SIZE = 1.0
   val DEFAULT_MODEL_PATH = "generated"
+  val DEFAULT_UPDATER = "adam"
 
   var streamingModel: HybridModel[_, _] = _
   var dataParser: DataParser = _
@@ -79,6 +81,7 @@ abstract class Classifier extends Serializable {
   var streamingDataPath: String = _
   var evaluationDataPath: String = _
   var modelType: String = _
+  var updater: String = _
 
 
   def parseArgs(args: Array[String]) = {
@@ -103,6 +106,8 @@ abstract class Classifier extends Serializable {
     stepSize = parser.getDouble("offline-step-size", STEP_SIZE)
     // optional model path parameter, if not provided the model is searched in the experiment
     modelPath = parser.get("model-path", DEFAULT_MODEL_PATH)
+    // updater type
+    updater = parser.get("updater", DEFAULT_UPDATER)
 
 
     val inputFormat = parser.get("input-format", "vector")
@@ -233,20 +238,27 @@ abstract class Classifier extends Serializable {
     } else {
       val hybridModel = if (modelType.equals("svm")) {
         logger.info("Instantiating a SVM Model")
-        new HybridSVM(stepSize, numIterations, 0.0, 1.0, new SquaredL2UpdaterWithAdam(0.9, 0.999))
+        new HybridSVM(stepSize, numIterations, 0.0, 0.1, AdvancedUpdaters.getUpdater(updater))
+          .setConvergenceTol(0.0)
       } else {
         logger.info("Instantiating a Linear Regression Model")
         // regularization parameter is chosen from GridSearch
-        new HybridLR(stepSize, numIterations, 0.0, 1.0, new SquaredL2UpdaterWithAdam(0.9, 0.999))
+        new HybridLR(stepSize, numIterations, 0.0, 0.1, AdvancedUpdaters.getUpdater(updater))
+          .setConvergenceTol(0.0)
       }
-      val data = ssc.sparkContext.textFile(initialDataDirectories).map(dataParser.parsePoint).cache()
+      val data = ssc.sparkContext.textFile(initialDataDirectories)
+        .map(dataParser.parsePoint)
+        .repartition(ssc.sparkContext.defaultParallelism)
+        .cache()
       hybridModel.trainInitialModel(data)
       data.unpersist()
 
       // save the model to disk, consecutive runs will check this directory first
       HybridModel.saveToDisk(modelPath, hybridModel)
-      hybridModel.setConvergenceTol(0.0)
-        .setNumIterations(1)
+      hybridModel
+        .setMiniBatchFraction(1.0)
+        .setConvergenceTol(0.0)
+        .setNumIterations(5)
     }
   }
 

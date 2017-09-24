@@ -19,7 +19,7 @@ abstract class StochasticGradientDescent[M <: GeneralizedLinearModel](val stepSi
                                                                       val standardization: Boolean,
                                                                       val fitIntercept: Boolean,
                                                                       val updater: Updater)
-  extends GeneralizedLinearAlgorithm[M]{
+  extends GeneralizedLinearAlgorithm[M] {
 
   setIntercept(fitIntercept)
 
@@ -40,12 +40,12 @@ abstract class StochasticGradientDescent[M <: GeneralizedLinearModel](val stepSi
   /**
     * run method that allows initial intercept
     *
-    * @param input          input dataset
-    * @param initialWeights initial weights
-    * @param intercept      initial intercept
+    * @param input            input dataset
+    * @param initialWeights   initial weights
+    * @param initialIntercept initial intercept
     * @return instance of model
     */
-  def run(input: RDD[LabeledPoint], initialWeights: Vector, intercept: Double): M = {
+  def run(input: RDD[LabeledPoint], initialWeights: Vector, initialIntercept: Double): M = {
     if (input.getStorageLevel == StorageLevel.NONE) {
       logWarning("The input data is not directly cached, which may hurt performance if its"
         + " parent RDDs are also uncached.")
@@ -57,7 +57,7 @@ abstract class StochasticGradientDescent[M <: GeneralizedLinearModel](val stepSi
     }
 
 
-    val weightsWithIntercept = optimizer.optimize(input.map(l => (l.label, l.features)), initialWeights)
+    val weightsWithIntercept = optimizer.optimize(input.map(l => (l.label, l.features)), initialWeights, initialIntercept)
 
 
     val (weights, intercept) = if (!addIntercept) {

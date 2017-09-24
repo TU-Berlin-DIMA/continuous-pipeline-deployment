@@ -43,7 +43,7 @@ object ContinuousClassifier extends Classifier {
       testType = "dataset"
     }
     val child = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
-      s"slack-$slack/updater-adam/step-size-$stepSize/"
+      s"slack-$slack/updater-$updater/step-size-$stepSize/"
 
     val resultPath = experimentResultPath(resultRoot, child)
 
@@ -63,11 +63,13 @@ object ContinuousClassifier extends Classifier {
       logger.info(s"scheduling a batch iteration on ${streamingSource.getProcessedFiles.length} files ")
       ssc.sparkContext.textFile(streamingSource.getProcessedFiles.mkString(","))
         .map(dataParser.parsePoint)
-        .sample(withReplacement = false, samplingRate, seed = 42)
+        .sample(withReplacement = false, samplingRate)
         .repartition(ssc.sparkContext.defaultParallelism)
         .cache()
     }
+    
 
+    evaluateStream(testData, testData, resultPath)
     streamingSource
       .map(_._2.toString)
       // parse input
@@ -75,13 +77,13 @@ object ContinuousClassifier extends Classifier {
       // updating the statistics
       //.transform(rdd => streamingModel.updateStatistics(rdd))
       // online training
-      .transform(rdd => streamingModel.trainOn(rdd))
-      // evaluate the model
-      .transform(rdd => evaluateStream(rdd, testData, resultPath))
+      //.transform(rdd => streamingModel.trainOn(rdd))
       // create a window
       .window(Seconds(slack), Seconds(slack))
       // hybrid proactive training
       .transform(rdd => streamingModel.trainOnHybrid(rdd, historicalDataRDD))
+      // evaluate the model
+      .transform(rdd => evaluateStream(rdd, testData, resultPath))
       // dummy action
       .foreachRDD(_ => dummyAction())
 

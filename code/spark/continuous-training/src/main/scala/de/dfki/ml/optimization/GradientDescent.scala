@@ -67,19 +67,6 @@ class GradientDescent(var numIterations: Int,
 
   def this() = this(100, 1.0, 0.0, 1.0, 1E-6, true, true, new LogisticGradient(true, true, 1.0), new SquaredL2Updater)
 
-
-  /**
-    * :: DeveloperApi ::
-    * Runs gradient descent on the given training data.
-    *
-    * @param data           training data
-    * @param initialWeights initial weights
-    * @return solution vector
-    */
-  def optimize(data: RDD[(Double, Vector)], initialWeights: Vector): Vector = {
-    optimize(data, initialWeights, 0.0)
-  }
-
   /**
     * calculates the mean and variance of incoming dataset and update the existing one
     *
@@ -96,6 +83,7 @@ class GradientDescent(var numIterations: Int,
       data.treeAggregate(new MultivariateOnlineSummarizer)(seqOp, combOp)
     }
     summarizer = if (summarizer == null) {
+      logger.info("Calculating the statistics for the first time !!")
       newBatchSummarizer
     } else {
       summarizer.merge(newBatchSummarizer)
@@ -123,6 +111,19 @@ class GradientDescent(var numIterations: Int,
       i += 1
     }
     new DenseVector(rawCoefficients)
+  }
+
+
+  /**
+    * :: DeveloperApi ::
+    * Runs gradient descent on the given training data.
+    *
+    * @param data           training data
+    * @param initialWeights initial weights
+    * @return solution vector
+    */
+  def optimize(data: RDD[(Double, Vector)], initialWeights: Vector): Vector = {
+    optimize(data, initialWeights, 0.0)
   }
 
   override def optimize(data: RDD[(Double, Vector)], initialWeights: Vector, intercept: Double): Vector = {

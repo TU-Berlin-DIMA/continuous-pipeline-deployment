@@ -44,5 +44,10 @@ class GradientDescentTest extends FunSuite with BeforeAndAfterEach {
     //assert(Array(1, 2, 3) sameElements optimizer.getStatistics("std"))
     assert(Array(3) sameElements optimizer.getStatistics("size"))
 
+    optimizer.updateStatistics(second)
+    assert(Array(4.0/3, 8.0/3, 4) sameElements optimizer.getStatistics("mean"))
+    //assert(Array(1, 2, 3) sameElements optimizer.getStatistics("std"))
+    assert(Array(3) sameElements optimizer.getStatistics("size"))
+
   }
 }

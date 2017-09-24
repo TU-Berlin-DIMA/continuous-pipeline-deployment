@@ -40,25 +40,25 @@ abstract class HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientD
   /** Set the step size for gradient descent. Default: 0.1. */
 
   def setStepSize(stepSize: Double): this.type = {
-    this.algorithm.optimizer.setStepSize(stepSize)
+    algorithm.optimizer.setStepSize(stepSize)
     this
   }
 
   /** Set the number of iterations of gradient descent to run per update. Default: 50. */
   def setNumIterations(numIterations: Int): this.type = {
-    this.algorithm.optimizer.setNumIterations(numIterations)
+    algorithm.optimizer.setNumIterations(numIterations)
     this
   }
 
   /** Set the fraction of each batch to use for updates. Default: 1.0. */
   def setMiniBatchFraction(miniBatchFraction: Double): this.type = {
-    this.algorithm.optimizer.setMiniBatchFraction(miniBatchFraction)
+    algorithm.optimizer.setMiniBatchFraction(miniBatchFraction)
     this
   }
 
   /** Set the regularization parameter. Default: 0.0. */
   def setRegParam(regParam: Double): this.type = {
-    this.algorithm.optimizer.setRegParam(regParam)
+    algorithm.optimizer.setRegParam(regParam)
     this
   }
 
@@ -69,7 +69,7 @@ abstract class HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientD
     * @return
     */
   def setConvergenceTol(convergenceTol: Double): this.type = {
-    this.algorithm.optimizer.setConvergenceTol(convergenceTol)
+    algorithm.optimizer.setConvergenceTol(convergenceTol)
     this
   }
 
@@ -80,7 +80,7 @@ abstract class HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientD
     * @return
     */
   def setUpdater(updater: Updater): this.type = {
-    this.algorithm.optimizer.setUpdater(updater)
+    algorithm.optimizer.setUpdater(updater)
     this
   }
 
@@ -113,7 +113,9 @@ abstract class HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientD
       throw new IllegalArgumentException("Model must be initialized before starting prediction")
     }
     // the weights have to be un standardized before making a prediction
-    data.mapValues { x => predictPoint(x, algorithm.optimizer.unStandardize(model.get.weights), model.get.intercept) }
+    data.mapValues { x => predictPoint(x,
+      algorithm.optimizer.unStandardize(model.get.weights),
+      model.get.intercept) }
   }
 
   def predictPoint(data: Vector, weight: Vector, intercept: Double): Double
@@ -129,7 +131,7 @@ abstract class HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientD
     if (model.isEmpty) {
       throw new IllegalArgumentException("Model must be initialized before starting training.")
     }
-    this.algorithm.optimizer.updateStatistics(observations.map(l => (l.label, l.features)))
+    algorithm.optimizer.updateStatistics(observations.map(l => (l.label, l.features)))
     observations
   }
 
@@ -186,7 +188,7 @@ abstract class HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientD
     observations.foreachRDD {
       (rdd, _) =>
         if (!rdd.isEmpty) {
-          this.algorithm.optimizer.updateStatistics(rdd.map(l => (l.label, l.features)))
+          algorithm.optimizer.updateStatistics(rdd.map(l => (l.label, l.features)))
           model = Some(algorithm.run(rdd, model.get.weights, model.get.intercept))
         }
     }
