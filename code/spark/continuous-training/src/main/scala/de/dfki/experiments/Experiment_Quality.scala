@@ -4,7 +4,7 @@ import java.io.{File, FileWriter}
 import java.nio.file.{Files, Paths}
 
 import de.dfki.ml.evaluation.LogisticLoss
-import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
+import de.dfki.ml.optimization.{AdvancedUpdaters, SquaredL2UpdaterWithAdaDelta, SquaredL2UpdaterWithAdam}
 import de.dfki.ml.streaming.models.{HybridLR, HybridModel}
 import de.dfki.preprocessing.parsers.{CustomVectorParser, DataParser}
 import de.dfki.utils.CommandLineParser
@@ -171,8 +171,9 @@ object CriteoModelEvaluation {
 object CriteoTrainingWithEvaluationData {
   val DATA_PATH = "data/criteo-full/all/0"
   val VALIDATION_INPUT = "data/criteo-full/evaluation-data"
-  val RESULT_PATH = "../../../experiment-results/criteo-full/quality/training-loss.txt"
+  val RESULT_PATH = "../../../experiment-results/criteo-full/quality/learning-rate/adadelta/training-loss.txt"
   val REG_PARAM = 0.001
+  val UPDATER = "adam"
 
 
   def main(args: Array[String]): Unit = {
@@ -189,6 +190,7 @@ object CriteoTrainingWithEvaluationData {
     val validationPath = parser.get("validation-path", VALIDATION_INPUT)
     val trainingLossPath = parser.get("result-path", RESULT_PATH)
     val regParam = parser.getDouble("reg-param", REG_PARAM)
+    val updater = parser.get("updater", UPDATER)
 
     val increments = 20
     val trainingData = sc.textFile(dataPath).map(dataParser.parsePoint).repartition(sc.defaultParallelism).cache()
@@ -204,7 +206,7 @@ object CriteoTrainingWithEvaluationData {
 
     val model = new HybridLR()
       .setStepSize(0.001)
-      .setUpdater(new SquaredL2UpdaterWithAdam(0.9, 0.999))
+      .setUpdater(AdvancedUpdaters.getUpdater(updater))
       .setMiniBatchFraction(0.1)
       .setConvergenceTol(0.0)
       .setRegParam(regParam)
@@ -214,7 +216,7 @@ object CriteoTrainingWithEvaluationData {
     file.getParentFile.mkdirs()
 
     var iter = increments
-    while (iter < 400) {
+    while (iter < 500) {
       val loss = LogisticLoss.logisticLoss(model.predictOnValues(evaluationDataSet))
       val fw = new FileWriter(file, true)
       try {

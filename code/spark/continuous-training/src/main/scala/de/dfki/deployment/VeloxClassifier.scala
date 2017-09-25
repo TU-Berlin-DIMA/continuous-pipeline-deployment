@@ -3,7 +3,7 @@ package de.dfki.deployment
 import java.io.{File, FileWriter}
 
 import de.dfki.core.scheduling.{FixedIntervalScheduler, FolderBasedScheduler}
-import de.dfki.ml.optimization.{AdvancedUpdaters, SquaredL2Updater, SquaredL2UpdaterWithMomentum}
+import de.dfki.ml.optimization.AdvancedUpdaters
 import de.dfki.utils.CommandLineParser
 
 /**
