@@ -174,6 +174,7 @@ object CriteoTrainingWithEvaluationData {
   val RESULT_PATH = "../../../experiment-results/criteo-full/quality/learning-rate/adadelta/training-loss.txt"
   val REG_PARAM = 0.001
   val UPDATER = "adam"
+  val STEP_SIZE = 0.001
 
 
   def main(args: Array[String]): Unit = {
@@ -191,6 +192,7 @@ object CriteoTrainingWithEvaluationData {
     val trainingLossPath = parser.get("result-path", RESULT_PATH)
     val regParam = parser.getDouble("reg-param", REG_PARAM)
     val updater = parser.get("updater", UPDATER)
+    val stepSize = parser.getDouble("step-size", STEP_SIZE)
 
     val increments = 20
     val trainingData = sc.textFile(dataPath).map(dataParser.parsePoint).repartition(sc.defaultParallelism).cache()
@@ -205,7 +207,7 @@ object CriteoTrainingWithEvaluationData {
     evaluationDataSet.count()
 
     val model = new HybridLR()
-      .setStepSize(0.001)
+      .setStepSize(stepSize)
       .setUpdater(AdvancedUpdaters.getUpdater(updater))
       .setMiniBatchFraction(0.1)
       .setConvergenceTol(0.0)
