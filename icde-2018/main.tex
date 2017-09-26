@@ -552,9 +552,9 @@ Since neural networks do not gain much benefit by revisiting the same items, inc
 Based on our findings, we conclude that increasing the sampling and scheduling rate does not always affect the quality.
 In both the Movie Lens 100k and MNIST datasets, the change in scheduling and sampling rate have small to no effect on the overall quality.
 However, the running time of the methods are heavily influenced by these parameters.
-\todo[inline]{R3:  Similarly, the treatment of buffer size is also shallow. "Setting these parameters to small values decreases the running time considerably and save computation resources regardless of the type of model the system is serving." What about setting the buffer size as 1? BD: Reviewer's confusion is because I have used both scheduling rate and buffer size in the text, although they both control how often a training iteration is executed, they are 'opposite' of each other. Increasing the scheduling rate means we have a smaller buffer size and decreasing the scheduling rate means we have a bigger buffer size. }
+\todo[inline]{R3: Similarly, the treatment of buffer size is also shallow. "Setting these parameters to small values decreases the running time considerably and save computation resources regardless of the type of model the system is serving." What about setting the buffer size as 1? BD: Reviewer's confusion is because I have used both scheduling rate and buffer size in the text, although they both control how often a training iteration is executed, they are 'opposite' of each other. Increasing the scheduling rate means we have a smaller buffer size and decreasing the scheduling rate means we have a bigger buffer size. }
 Setting these parameters to small values decreases the running time considerably and save computation resources regardless of the type of model the system is serving.
-\subsection{Learning rate adaptation}
+\textbf{Learning rate adaptation}
 A very important parameter of stochastic gradient descent is the learning rate adaptation technique. 
 Learning rate controls the degree to which in each iteration SGD the weights are updated.
 Momentum \cite{qian1999momentum}, Adam \cite{kingma2014adam}, RMSPROP \cite{tieleman2012lecture}, and AdaDelta \cite{zeiler2012adaptive} are the most effective learning rate tuning methods for stochastic gradient descent. 
