@@ -91,6 +91,7 @@ An advertising network receives ads from different businesses (ads providers) an
 Typically, businesses are charged based on the number of clicks users make on their published ads.
 Advertising networks use machine learning pipelines to estimate the click rate of different ads.
 The input data consists of several numerical and categorical variables related to the user, publisher's website, and the ads themselves.
+\todo[inline]{draw a diagram for the example}
 A basic click rate prediction pipeline contains the following components:
 \begin{itemize}
 \item A \textbf{missing value imputer} replaces missing values with appropriate values
@@ -289,6 +290,7 @@ Any further scheduled iteration of SGD incorporates the new data without requiri
 
 \todo[inline]{R3: Section 5 has many unclear and informal descriptions, without formal methodology.}
 \section{System Architecture} \label{sec:system-architecutre}
+\todo[inline]{explain the statistics collection unit and the scheduler (in more detail)}
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{../images/system-architecture-final.pdf}
