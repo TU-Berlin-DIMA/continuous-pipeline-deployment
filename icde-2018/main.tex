@@ -412,132 +412,41 @@ In this section we evaluate the performance of our system using various datasets
 We report both the quality (error rate) and performance of our proposed method. 
 
 \subsection{Setup}\label{subsec:setup}
-\textbf{Environments:} We evaluate our deployment method on two environments; local and distributed.
-We use a single node OS X machine with  a quad-core Intel i7 and 16 GB of RAM for our local experiments.
-The distributed environment consists of 11 nodes (1 master, 10 slaves).
+We evaluate our deployment method in distributed environment consists of 11 nodes (1 master, 10 slaves).
 Each node is running on an Intel Xeon 2.40 GHz 16 core processor and has 28 GB of dedicated memory for running our prototype.
 
-\textbf{Prototypes:} We implement two versions of our deployment method.
-Version 1 is implemented in python and utilizes the scikit-learn machine learning library \cite{sklearn_api}.
-This version works in local environments.
-It supports incremental updates to the model, one item at a time (as opposed to the micro-batching of Apache Spark).
-As a result, we are able to investigate the effects of scheduling and sampling rates more accurately.
-Version 1 supports neural networks (multi-layer perceptron) and recommender algorithms (matrix factorization).
-In our evaluations, we use Version 1 to investigate the effect of scheduling and sampling rate on the running time and quality of the models.
-Version 2 is implemented on top of Apache Spark \cite{zaharia2010spark}.
+We implement a prototype of our deployment method on top of Apache Spark \cite{zaharia2010spark}.
 It uses the SGD implementation available in the machine learning library of Apache Spark.
-This version works in both the local and cluster environment and supports different types of linear models (SVM, Logistic Regression, and Linear Regression).
+To demonstrate the deployment platform designed two machine learning pipelines.
 
-\begin{table}\centering
-\begin{tabular}{lrrr}
- \toprule
-Name & \#Users & \#Items & \#Ratings
-\\\midrule 
-Movie Lens 1M  & 6000 & 4000 & 1000000 \\
-Movie Lens 100k & 1000 & 1700 & 100000 
-\\\bottomrule 
-\end{tabular}
-\caption{Recommender System Datasets}
-\label{table:recommender-systems}
-\end{table}
+\textit{Criteo pipeline.} The Criteo pipeline consists of 5 operations: missing value imputer, column indexer, one hot encoder, vectorizer, standard scaler, and logistic regression model trainer. 
+The Terabyte Criteo click log dataset is used for benchmarking algorithms for clickthrough rate (CTR) prediction \cite{criteo-log}.
+It contains \hl{24} days of user click logs. 
+The dataset  contains 13 numerical and 26 categorical features. 
+After applying the indexer and one hot encoding number of features increased to \hl{1,000,000}.
 
-\begin{table}\centering
-\begin{tabular}{lrr}
- \toprule
-Name & \#Features  & \#Instances 
-\\\midrule 
-Higgs  & 28 & 11000000 \\
-URL Reputation & 3231961 & 2396130 \\
-Cover Type & 52 & 581012 \\
-MNIST & 784 & 60000 \\
-SEA & 3 & 60000 \\
-Adult & 123 & 48882
-\\\bottomrule 
-\end{tabular}
-\caption{Classification Datasets}
-\end{table}
+\textit{XXX pipeline.} 
 
-\textbf{Datasets:} We perform our experiments on two different types of datasets.
-To evaluate the recommender system we use 2 versions (100k ratings and 1M ratings) of the Movie Lens datasets, which are collections of movie ratings \cite{harper2016movielens}.
-Table \ref{table:recommender-systems} shows the details of the Movie Lens dataset.
-We have sorted the Movie Lens dataset based on the timestamp of the ratings.
-Every item is examined one by one according to their timestamp.
-This is to evaluate how each of the implemented methods react to the changes in the distribution of the data.
-For these two datasets, we use an evolving test set to evaluate the performance of the deployment methods.
-We start with an empty test set.
-\todo[inline]{R1: Section 6.1, the paragraph on test increments and test sets needs to be clearer. BD: I think it is better to stick to prequential error rate for all the experiments.}
-Upon receiving new test items, we add them to the test set and calculate the error on the current test set (we call this a test increment).
-For Movie Lens 100k, the total size of the test set is 5,000 and for Movie Lens 1M, the test size is 50,000. 
-
-To evaluate the classifier, we use a collection of classification datasets (mostly from the UCI Machine Learning Repository\footnote{\url{http://archive.ics.uci.edu/ml/}}).
-Higgs is a physics datasets which is produced using Monte Carlo simulations \cite{baldi2014searching}.
-For this dataset, the task is to distinguish between a signal process that produces a target particle (Higgs bosons) and a background process which does not.
-Cover Type is a dataset used for predicting forest cover types from cartographic variables \cite{collobert2002parallel}.
-We use a binary class version of this dataset\footnote{\url{https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/}}.
-URL Reputation is a collection of URLs and the task is to identify malicious URLs \cite{ma2009identifying}. 
-This dataset is collected over 120 days.
-The features of this dataset are anonymized, but they correspond to lexical and host-based information gathered for each URL.
-MNIST is a dataset of handwritten digits \cite{lecun-mnist}.
-Each image has 28x28 pixels and the labels are the 10 digits (0 to 9) the images are representing.
-SEA is an artificially generated dataset that has been injected with concept drift (change in data distribution) \cite{street2001streaming}.
-Attributes are floating point values between 0 and 10 and there are a total of 4 concepts (15,000 instances in each concept).
-Adult is a dataset extracted from a census database \cite{platt199912}.
-It contains information such as education level, occupation, relationship status, and salary of individuals from multiple countries.
-The task in this dataset is to predict whether an individual earns more than \$50K a year. 
-For all of the datasets we use 10\% of the data for initial training and 90\% for online prediction/training.
-Except for URL Reputation and the Movie Lens datasets that are timestamped, the order of the incoming data are arbitrary for the rest of the datasets.
 For all of the classification datasets, we report the prequential error when receiving a new training instances \cite{gama2009issues} .
-%\textbf{Criteo \cite{criteo-kaggle}}: to implement our CTR prediction example we use Criteo's Kaggle advertising challenge dataset.
-%The dataset includes both categorical and numerical features.
-%However, in our evaluations we only used the numerical features.
-%Similar to MovieLens datasets, we use 10\% of the data for initial training and the rest is streamed to the system.
-%The training data consists of a sample of Criteo's traffic over a period of 7 days.
-%We use prequential evaluation \cite{gama2009issues} to calculate the misclassification rate of the implemented deployment methods.
 
-\textbf{Deployment methods:} In this section, we briefly describe the methods we have implemented.
+\textit{Deployment scenario.} 
+Pipelines are trained on an initial part of the data and then continuously trained using the remaining of the data.
+We define 3 different deployment scenarios.
+\begin{itemize}
+\item A: Periodical retraining with no statistics collection
+\item B: Periodical retraining with statistics collection
+\item C: Proactive training with statistics collection
+\end{itemize}
 
-\textbf{Baseline} is the naive and simplest deployment model. 
-In Baseline, we train a model from the initial data.
-We use this model throughout the lifetime of the application without any further incremental or batch training.
-
-\textbf{Baseline+} is similar to Baseline with the added incremental learning.
-After the initial model is deployed, it is incrementally updated with new training items that arrive at the system.
-
-\textbf{Velox} is an implementation of the common deployment scenario described in Section \ref{introduction}.
-It is based on the the proposed system by Crankshaw \cite{crankshaw2014missing}. 
-After the initial model is deployed, the model is incrementally updated with new training item.
-Velox also retrains the model periodically using the entire training data.
-
-
-\textbf{Continuous} is the implementation of our proposed method. 
-Similar to Velox and Baseline+, a model is trained using the initial data.
-Continuous also updates the model incrementally with new training data.
-Based on the rate of incoming training data, the scheduler component triggers new iterations of SGD.
-The data used in this new iteration of SGD consists of the new data that arrived in the system since the last scheduled iteration plus a sample of the existing historical data.
-
-\subsection{Implementation of ML Models}
-
-\textbf{Recommender system:} We implement a recommender system based on the matrix factorization using SGD \cite{funk2006netflix}.
-Based on our initial experiments, we set the number of latent factors to 40.
-To produce more accurate predictions, we include user, item, and global bias values as described by Simon Funk \cite{koren2009matrix}.
-After the initial training, we deploy the model and use the new training observations to incrementally update the model.
-Training observations are of the form \textit{\((user\_id, item\_id, rating\))}.
-Based on the training observation, the bias values as well as the factors are updated for the specified user and item.
-
-\textbf{SVM Classifier:} We implement a simple SVM classifier by extending the existing SVM classifier of Apache Spark.
-We implement the necessary methods; \textit{update} and \textit{update\_iteration} as described in Section \ref{sec:system-architecutre}.
-\textit{Update} takes one (or a micro-batch in Spark Streaming) item and incrementally update the model.
-\textit{Update\_iteration} takes a dataset and executes one iteration of SGD on the given data.
-
-\textbf{Neural Network:} To evaluate our system on an image classification task, we implement a multi-layer perceptron neural network using back propagation \cite{collobert2004links}.
-We set the number of hidden layers to 50 and use a softmax output function \cite{bishop2006pattern}.
-The training observations are of the form of \textit{\((X,y)\)}, where X is a vector of 784 dimension (1 for each pixel) and y is the digit the image is representing.
+For Criteo pipeline, the pipeline is retrained on a daily basis.
 
 \subsection{Tuning parameters} \label{tuning}
 In Section \ref{continious-training-serving}, we discussed how system parameters such as sampling and scheduling rate affect the performance and quality of the system.
 In this section, we analyze the effects of different sampling and scheduling rates on the system.
 
-\textbf{Scheduling rate:} This parameter specifies how often a new iteration of SGD should be scheduled. 
+\textbf{Scheduling rate:} 
+\todo[inline]{redo this part using the criteo dataset}
+This parameter specifies how often a new iteration of SGD should be scheduled. 
 In our prototype, the scheduling rate is governed by a parameter called buffer size, which dictates how many new items should be stored in the buffer before a new iteration of SGD is executed. 
 Executing one iteration of SGD, even using the entire data, is not a resource heavy process, and can be executed simultaneously with the serving component of the system. 
 
@@ -590,7 +499,9 @@ Therefore, a dynamic scheduling maximizes the performance of the system, by perf
 \todo[inline]{R1: "Moreover, since training and serving ... only update the weights when the training iteration is over". Why? Why not apply the updates to the model in-place? This allows you to serve every request with the absolute freshest model. At least for the single-machine case. BD: the updated model is the result of the training iterations, therefore, we have to wait until the iteration is over. The sentence seems clear to me. I should it run it by TR}
 Moreover, since training and serving can be done in parallel, we can perform training in a background process and only update the weights when the training iteration is over. 
 
-\textbf{Sampling rate:} In each iteration of SGD the data inside the buffer and a sample of the historical data is combined to update the model.
+\textbf{Sampling rate:} 
+\todo[inline]{redo this part, compare weighted time-based sampling vs random sampling different sizes}
+In each iteration of SGD the data inside the buffer and a sample of the historical data is combined to update the model.
 In this section, we investigate the effect of the sampling rate on the model quality and the running time of the system.
 Figure \ref{fig:movie-lens-100k-sample-rate} shows that a larger sampling rate increases the quality of the model.
 However, similar to the scheduling rate, the decrease in error rate is negligible considering the effect it has on running time. 
@@ -643,200 +554,62 @@ In both the Movie Lens 100k and MNIST datasets, the change in scheduling and sam
 However, the running time of the methods are heavily influenced by these parameters.
 \todo[inline]{R3:  Similarly, the treatment of buffer size is also shallow. "Setting these parameters to small values decreases the running time considerably and save computation resources regardless of the type of model the system is serving." What about setting the buffer size as 1? BD: Reviewer's confusion is because I have used both scheduling rate and buffer size in the text, although they both control how often a training iteration is executed, they are 'opposite' of each other. Increasing the scheduling rate means we have a smaller buffer size and decreasing the scheduling rate means we have a bigger buffer size. }
 Setting these parameters to small values decreases the running time considerably and save computation resources regardless of the type of model the system is serving.
+\subsection{Learning rate adaptation}
+A very important parameter of stochastic gradient descent is the learning rate adaptation technique. 
+Learning rate controls the degree to which in each iteration SGD the weights are updated.
+Momentum \cite{qian1999momentum}, Adam \cite{kingma2014adam}, RMSPROP \cite{tieleman2012lecture}, and AdaDelta \cite{zeiler2012adaptive} are the most effective learning rate tuning methods for stochastic gradient descent. 
+However, all of the above methods are defined methods are tested for batch training of the models.
+To assess how effective these methods are on hybrid training (scenario C), we experimented the methods on Criteo Dataset.
 
-\subsection{Experiments in the Local Environment}\label{subsec:experiment-local}
-In this set of experiments, we investigate the error rate and training time for the different deployment methods on the smaller datasets in the local environment.
-For all of the datasets, the sampling rate of Continuous is set to 0.2.
-
-\begin{figure}[h]
-\begin{subfigure}{\columnwidth}
-	\includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-100k-quality-improved.eps}
-	\caption{Movie Lens 100k}
-	\label{fig:movie-lens-100k-score}
-\end{subfigure}
-\begin{subfigure}{\columnwidth}
-  \includegraphics[width=\columnwidth]{../images/experiment-results/movie-lens-1m-quality-improved.eps}
-\caption{Movie Lens 1M}
-\label{fig:movie-lens-1M-score}
+\begin{figure}[H]
+\begin{subfigure}{0.5\columnwidth}
+\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-learning-rate-comparison-1.eps}
+\caption{}
+\label{fig:criteo-learning-rate-1}
+\end{subfigure}%
+\begin{subfigure}{0.5\columnwidth}
+\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-learning-rate-comparison.eps}
+\caption{}
+\label{fig:criteo-learning-rate}
 \end{subfigure}
 \vspace{2mm}
-\caption{Mean Squared Error of Recommender Systems}
+\caption{Different Learning rate adaptation methods for Continuous training of Criteo Pipeline}
 \end{figure}
 
-Figure \ref{fig:movie-lens-100k-score} shows the mean squared error for Continuous, Velox, Baseline+, and Baseline on Movie Lens 100k.
-\todo[inline]{R3: Why? This reflects another flaw in evaluation. Since both Continuous and Velox have tunable parameters, it is not convincing to just compare two specific parameter choices.}
-The scheduling rate (buffer size) is set to 500 for Continuous and 15,000 for Velox.
-All four methods perform an initial training, therefore they have similar error rates in the beginning.
-However, the error rate of Baseline gradually increases since it does not incrementally update the model.
-Baseline+ incrementally updates the model.
-As a result, it has a lower error rate than Baseline.
-The error rate of Velox is similar to Baseline+ until the first scheduled retraining for Velox.
-After the retraining, there is a sudden drop in the error rate.
-For the remainder of the data, Velox performs as expected.
-After every retraining the error rate immediately decreases.
-This decrease in the error rate is followed by a slow increase.
-The increase is due the fact that Velox only incrementally updates the model until the next scheduled retraining, which as discussed earlier is not handling the change in the data distribution gracefully.
-Initial error rate of Continuous is similar to the other methods.
-However, the error rate starts to decrease rapidly.
-The reason for the fast decrease in error rate is that immediately after the deployment of the model, Continuous executes iterations of SGD.
-It consistently manages to adapt to the changes in data and decreases the error rate.
-As expected, except for immediately after a full retraining of Velox, Continuous always performs better than all the other methods.
+Figure \ref{fig:criteo-learning-rate-1} shows the log loss for different learning adaptation methods. 
+\todo[inline]{All the methods except for rmsprop and adam seems not work properly without extensive grid search (or not working well at all). I should make sure there's no problem with the code and it is the algorithm that function poorly.}
 
-Figure \ref{fig:movie-lens-1M-score} shows the mean squared error rate achieved by the implemented methods on Movie Lens 1M.
-Similar to Movie Lens 100k, Continuous has the lowest error rate among all the implemented methods.
-The difference in error rate between Continuous and Velox is even greater than the error rate for Movie Lens 100k.
-This is because the change in data distribution in Movie Lens 1M is greater than Movie Lens 100k (data in Movie Lens 1M is gathered from a longer period of time).
-Since Continuous adapts to the changes in distribution faster than Velox, it maintains a lower error rate throughout.
-The error rate of Velox follows the same trend as in the case of Movie Lens 100k. 
-After every retraining, the error rate first drops then slowly increases until the next retraining.
-Similar to Movie Lens 100k, the error rate of Baseline is the highest among all the implemented methods, followed by Baseline+ , where due to the incremental updates of the model the error rate is lower.
-
-\begin{figure}[h]
-	\centering
-\begin{subfigure}[b]{\columnwidth}
-	\includegraphics[width=\columnwidth]{../images/experiment-results/cover-types-quality.eps}
-	\caption{Cover Types}
-	\label{fig:cover-types-quality}
-\end{subfigure}
-\begin{subfigure}[b]{\columnwidth}
-  	\includegraphics[width=\columnwidth]{../images/experiment-results/sea-quality.eps}
-	\caption{SEA}
-	\label{fig:sea-quality}
-\end{subfigure}
-\begin{subfigure}[b]{\columnwidth}
-  	\includegraphics[width=\columnwidth]{../images/experiment-results/adult-quality.eps}
-	\caption{Adult}
-	\label{fig:adult-quality}
-\end{subfigure}
-\vspace{2mm}
-\caption{Error rate of the SVM Classifiers}
-\label{fig:local-classification-results}
-\end{figure}
-
-Figure \ref{fig:local-classification-results} shows the misclassification rate over time for the implemented deployment methods on several classification datasets.
-Contrary to the recommender system use case, the data used in these experiments is not time dependent (except for SEA) and as a result the deployment methods behave differently.
-For Cover type (Figure \ref{fig:cover-types-quality}), Continuous achieves the lowest error rate overall, followed by Baseline+.
-Baseline method has the highest error rate because it is not performing incremental updates on the model.
-\todo[inline]{R1: I don't understand figure 9a. Are you saying there's in your scheduling approach that prevents over-fitting? That opens up the larger question of how you're guarding against over-fitting in any of these approaches. How do you determine how many epochs of incremental training to schedule over a batch of data in your own setup, and why does your approach never suffer from over-fitting? BD: The problem of overfitting has to be addressed in a more systematic approach. I have used overfitting as one reason why retraining is not a good idea but haven't clearly specified why our method is not causing overfitting}
-The error rate of Velox slightly increases after the first retraining and it never recovers from this increase.
-By performing a retraining, the underlying model in Velox overfits to the existing data.
-As a result, the test error on incoming data does not decrease the same way that it does in the case of Baseline+ and Continuous.
-The error rate for all of the deployment methods, except for Baseline is very similar on SEA (Figure \ref{fig:sea-quality}).
-Continuous still perform slightly better than Baseline+ and Velox, although with a very small margin.
-Figure \ref{fig:adult-quality} shows the error rate of different deployment methods on Adult dataset.
-In this dataset, the different deployment methods perform rather similarly.
-Baseline has the highest error rate overall, however after the 6th retraining the difference between the error rate of Velox and Baseline becomes smaller.
-This is, similar to the Cover types dataset, due to the over training of the underlying model in Velox.
-Baseline+ and Continuous maintain a steady error rate overall, with Continuous slightly outperforming Baseline+.
-
-\begin{figure*}[h]
-\begin{subfigure}[b]{0.2\textwidth}
-	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/cover-types-times.eps}
-	\caption{Cover Types}
-	\label{fig:cover-types-times}
-\end{subfigure}%
-\begin{subfigure}[b]{0.2\textwidth}
-	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/sea-times.eps}
-	\caption{SEA}
-	\label{fig:sea-times}
-\end{subfigure}%
-\begin{subfigure}[b]{0.2\textwidth}
-	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/adult-times.eps}
-	\caption{Adult}
-	\label{fig:adult-times}
-\end{subfigure}%
-\begin{subfigure}[b]{0.2\textwidth}
-	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/movie-lens-100k-times.eps}
-	\caption{Movie Lens 100k}
-	\label{fig:movie-lens-100k-times}
-\end{subfigure}%
-\begin{subfigure}[b]{0.2\textwidth}
-  	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/movie-lens-1M-times.eps}
-	\caption{Movie Lens 1M}
-	\label{fig:movie-lens-1M-times}
-\end{subfigure}%
-\vspace{2mm}
-\caption{Total Training Time}
- \label{fig:local-training-time}
-\end{figure*}
-
-Figure \ref{fig:local-training-time} shows the total training time for the deployment methods on local datasets.
-To measure this the total training time, we calculate the total time that each method spent in training the model.
-We excluded the incremental training time as both Velox and Continuous perform incremental training as part of their process.
-The total training time of Baseline is equal to the initial training time.
-Both Continuous and Velox perform the same initial training, as a result, their total training time cannot be smaller than Baseline.
-For the classification datasets (Figure \ref{fig:cover-types-times}, \ref{fig:sea-times}, \ref{fig:adult-times}), Continuous and Velox are approximately 25 and 50 times slower than Baseline.
-This is expected, since Baseline only trains the model once.
-Moreover, this training is executed over a smaller dataset (10\% of the entire data).
-For recommender system experiments, the difference in total training time is smaller.
-In our python prototype, the entire dataset is first loaded into the memory and then it is streamed to the deployment system one by one.
-As a result, both Continuous and Velox can train the model faster.
-In all of the evaluated datasets, the total training time of Continuous is 2 to 5 times smaller than that of Velox.
-This is because a full retraining incurs a higher overhead than continuously training the method.
-Another reason for the difference in training time is that as the size of the data increases, the time for running a new iteration in Continuous stays approximately the same, whereas the time for a full retraining increases exponentially.
-
-\subsection{Experiments in the Distributed Environment}
-In this set of experiments, we investigate the performance of the deployment methods on large datasets in the distributed environment.
-Figure \ref{fig:cluster-classification-results} shows the error rate of different deployment methods on classification datasets.
-Since the URL Reputation data was gathered over 120 days, it is very likely that the data contains changes in the distribution.
-This concept drift is reflected in Figure \ref{fig:url-quality}.
-The error rate of Baseline is increasing with a steady rate as it cannot adapt to the changes in the data.
-All the other three methods perform similarly in the beginning.
-However, after the 4th retraining the error rate of Velox increases slightly.
-Similar to the previous experiments, Velox is overfitting to the data after a few retraining processes and as a result, it does not recover from the increase in the error rate.
-Continuous and Baseline+ maintain a lower error rate throughout with Continuous performing slightly better than Baseline+.
-
-Figure \ref{fig:higgs-quality} shows the error rate on the Higgs dataset.
-Similar to the local classification datasets, the error rate for Baseline is the highest among all of the deployment methods.
-Velox, Baseline+, and Continuous maintain the same error rate until the first retraining of Velox, after which due to possible overfitting, the error rate of Velox slightly increases.
-Continuous performs slightly better than Baseline+ in the beginning, however, the underlying models of both deployment methods slowly converges.
-Therefore, the error rates of both of the deployment methods become similar.
-
-\begin{figure}[h]
-	\centering
-\begin{subfigure}[b]{\columnwidth}
-	\includegraphics[width=\columnwidth,height=0.4\columnwidth]{../images/experiment-results/url-reputation-quality.eps}
-	\caption{URL Reputation}
-	\label{fig:url-quality}
-\end{subfigure}
-\begin{subfigure}[b]{\columnwidth}
-  	\includegraphics[width=\columnwidth,height=0.4\columnwidth]{../images/experiment-results/higgs-quality.eps}
-	\caption{Higgs}
-	\label{fig:higgs-quality}
-\end{subfigure}
-\vspace{2mm}
-\caption{Error rate of the SVM Classifiers}
-\label{fig:cluster-classification-results}
-\end{figure}
-
-
+\subsection{Quality}
+Quality achieved continuous compared with retraining method.
 \begin{figure}[h]
 \centering
-\begin{subfigure}[b]{0.5\columnwidth}
-	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/url-reputation-times.eps}
-	\caption{URL Reputation}
-	\label{fig:url-times}
-\end{subfigure}%
-\begin{subfigure}[b]{0.5\columnwidth}
-	\includegraphics[width=\linewidth, height=\linewidth,keepaspectratio]{../images/experiment-results/higgs-times.eps}
-	\caption{Higgs}
-	\label{fig:higgs-times}
-\end{subfigure}
+\includegraphics[width=\columnwidth]{../images/placeholder.jpeg}
+\caption{Log Loss Continuous vs Daily retraining Criteo }
+\label{fig:continuous-vs-daily-criteo}
 \vspace{2mm}
-\caption{Total Training Time}
- \label{fig:cluster-training-time}
 \end{figure}
 
-Figure \ref{fig:cluster-training-time} shows the total training time for the URL Reputation and Higgs experiments.
-Similar to local datasets, Baseline has the smallest total training time.
-However, the difference between the training time of Baseline and other methods is not as large.
-In our local experiments, the entire resources of the computer were being consumed to perform the training.
-However, in the distributed environment, the cluster is underutilized in the beginning as the amount of data is small.
-\todo[inline]{TR: can we have a graph?
-BD: I will keep this todo in the document and will do it for the next revision}
-As more data arrives at the system, the utilization of the cluster increases.
-However, the training time for Continuous and Velox does not increase linearly with size.
-Therefore, the total training time for Continuous is only 5 to 10 times larger than that of Baseline (instead of 20 to 25 times for the local datasets) and the total training time for Velox is 20 to 25 times larger than that of Baseline (instead of 50 to 55 times for the local datasets).
+\subsection{Training Time}
+Total time spent training the pipeline for each scenario.
+\begin{figure}[h]
+\centering
+\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-log-loss-continuous-vs-daily.eps}
+\caption{Total training time of the pipeline for each scenario}
+\label{fig:training-time-criteo}
+\vspace{2mm}
+\end{figure}
+\subsection{Model Freshness}
+How recent the pipeline was trained. 
+The lower the value, the better quality the predictions are since they are made by a more recent model.
+\begin{figure}[h]
+\centering
+\includegraphics[width=\columnwidth]{../images/placeholder.jpeg}
+\caption{Model Freshness for deployment scenarios}
+\label{fig:model-freshness-criteo}
+\vspace{2mm}
+\end{figure}
+\subsection{Prediction Latency}
+
 
 \subsection{Discussion} \label{subsec:discussion}
 \begin{figure*}[t]

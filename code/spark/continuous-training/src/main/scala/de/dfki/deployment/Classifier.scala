@@ -8,7 +8,7 @@ import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
 import de.dfki.core.streaming.BatchFileInputDStream
 import de.dfki.ml.evaluation.{ConfusionMatrix, LogisticLoss}
-import de.dfki.ml.optimization.{AdvancedUpdaters, SquaredL2UpdaterWithAdam}
+import de.dfki.ml.optimization.AdvancedUpdaters
 import de.dfki.ml.streaming.models.{HybridLR, HybridModel, HybridSVM}
 import de.dfki.preprocessing.parsers.{CSVParser, CustomVectorParser, DataParser, SVMParser}
 import de.dfki.utils.CommandLineParser

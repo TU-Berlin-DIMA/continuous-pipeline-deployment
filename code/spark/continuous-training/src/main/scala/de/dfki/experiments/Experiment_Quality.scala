@@ -4,7 +4,7 @@ import java.io.{File, FileWriter}
 import java.nio.file.{Files, Paths}
 
 import de.dfki.ml.evaluation.LogisticLoss
-import de.dfki.ml.optimization.{AdvancedUpdaters, SquaredL2UpdaterWithAdaDelta, SquaredL2UpdaterWithAdam}
+import de.dfki.ml.optimization.{AdvancedUpdaters, SquaredL2UpdaterWithAdam, SquaredL2UpdaterWithRMSProp}
 import de.dfki.ml.streaming.models.{HybridLR, HybridModel}
 import de.dfki.preprocessing.parsers.{CustomVectorParser, DataParser}
 import de.dfki.utils.CommandLineParser
@@ -18,7 +18,7 @@ object Experiment_Quality {
   val BATCH_PATH_ROOT = "data/criteo-full/all"
   val VALIDATION_PATH = "data/criteo-full/evaluation-data"
   val RESULT_PATH = "../../../experiment-results/criteo-full/quality/experiment-quality-0.1-l2-500.txt"
-  val MODEL_PATH_ROOT = "data/criteo-full/models/daily/stochastic-0.1-l2-500"
+  val MODEL_PATH_ROOT = "data/criteo-full/models/daily/stochastic-0.1-rmsprop-500"
 
   @transient val logger = Logger.getLogger(getClass.getName)
 
@@ -63,12 +63,12 @@ object Experiment_Quality {
       logger.info(s"training model for day $i")
 
       val model = new HybridLR()
-        .setStepSize(0.001)
-        .setUpdater(new SquaredL2UpdaterWithAdam(0.9, 0.999))
+        .setStepSize(1.0)
+        .setUpdater(new SquaredL2UpdaterWithRMSProp())
         .setMiniBatchFraction(0.1)
         .setRegParam(0.001)
         .setConvergenceTol(0.0)
-        .setNumIterations(400)
+        .setNumIterations(500)
       model.trainInitialModel(trainingData)
       trainingData.unpersist(true)
       HybridModel.saveToDisk(s"$modelPath/$i/model", model)
