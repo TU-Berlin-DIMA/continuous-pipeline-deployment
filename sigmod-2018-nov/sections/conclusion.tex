@@ -1,0 +1,14 @@
+\section{Conclusions} \label{conclusion}
+We propose a system for deploying and maintaining machine learning models that are trained using the SGD optimization method.
+Our deployment approach eliminates the need for offline retraining of the model, without affecting the quality.
+In our system, we schedule iterations of SGD to run while the machine learning model is answering the prediction queries.
+After every iteration, the model is updated with the new parameters.
+The frequent updates help in adapting the model to changes in the data distribution.
+Moreover, our system is applicable to a wide range of machine learning models as demonstrated in our evaluation.
+
+Our experiments show that the continuous training of the machine learning models is much faster than full retraining, which is the most common approach in deployment and maintenance of machine learning models. 
+We show that not only continuous training requires less resources but it also produces models with lower error rates that adapt to the changes in data faster.
+Comparing to simple techniques such incremental learning or initial batch training, our technique produces a model with higher quality.
+
+In future work, we will explore more advanced methods for sampling of historical data in order to investigate their effect on the performance of the system. Moreover, we plan to investigate the trade off between prediction latency and prediction accuracy.
+
