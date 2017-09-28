@@ -32,15 +32,27 @@ ggsave(pl , filename = 'criteo-learning-rate-comparison.eps',
        width = 14, height = 5, 
        units = "in")
 
-daily = read.csv('quality/experiment-quality-0.1-rmsprop-500.txt', header = FALSE, col.names = c('day','fraction','logloss'))
+daily = read.csv('quality/experiment-quality-0.1-l2-500.txt', header = FALSE, col.names = c('day','fraction','logloss'))
+adam = read.csv('continuous/model-type-lr/num-iterations-500/slack-10/updater-adam/step-size-0.001/2017-09-26-00-08/loss.txt', header = FALSE, col.names = 'adam')
 
 
-ggplot() +
+pl = ggplot() +
   geom_point(data = daily, aes(x = day, y = logloss,color='retraining'), pch=16, size = 5) + 
-  geom_line(data=continuous, aes(x=seq(0.0,4.9,0.1), y=continuous, color='continuous')) + 
+  geom_line(data=adam, aes(x=seq(0.0,4.9,0.1), y=adam, color='continuous')) + 
   xlab("Day") + ylab("LogLoss") +
-  labs(title="Logistic Loss for Criteo Dataset") 
+  labs(title="Logistic Loss for Criteo Dataset") + 
+  theme(legend.text = element_text(size = 30, color = "black"), 
+        legend.key = element_rect(colour = "transparent", fill = "transparent"), 
+        legend.background = element_rect(colour = "transparent", fill = "transparent"), 
+        axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=30, color= "black"),  
+        legend.key.width = unit(3, "cm"), 
+        legend.key.height = unit(0.8, "cm")) 
   
+ggsave(pl , filename = 'criteo-log-loss-continuous-vs-daily.eps', 
+       device = 'eps', 
+       width = 14, height = 5, 
+       units = "in")
 
 
   
