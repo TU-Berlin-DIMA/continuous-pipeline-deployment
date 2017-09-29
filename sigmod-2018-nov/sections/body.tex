@@ -42,7 +42,12 @@ However, they only work with batch datasets.
 Once models are trained, they have to be deployed and used for serving manually by the users.
 Our system, on the contrary, is designed for deployment and maintenance of already trained models.
 
-\section{Stochastic Gradient Descent} \label{sgd}
+
+\section{Continuous Training and Serving} \label{continious-training-serving}
+Our proposed deployment and maintenance system uses SGD as its underlying learning algorithm.
+As a result, it can update the model incrementally (one training item at a time) or use mini-batches of data.
+\todo[inline]{schelter: awful?}
+\subsection{Stochastic Gradient Descent} \label{sgd}
 \todo[inline]{Schelter: rewrite!!}
 Machine learning minimizes an objective function (often referred to as the loss function).
 Usually, this requires us to calculate the gradient of the function at different data points and update the function parameters based on the gradient values.
@@ -56,7 +61,7 @@ Each iteration of SGD executes in a short amount of time because it only works w
 We are leveraging this property of SGD and design our deployment system so that it performs one iteration of SGD at a time without interrupting the query answering component.
 In Section \ref{evaluation}, we show that the overhead from executing a single iteration of SGD is very small and does not affect the query answering component.
 
-\subsection{Distributed SGD}
+\textbf{Distributed SGD. }
 To efficiently train machine learning models on large datasets, scalable techniques have to be employed.
 SGD inherently works well with large amounts of data because it does not need to scan every data point during every iteration.
 However, for very large datasets, SGD has to perform many iterations in order to converge.
@@ -65,7 +70,7 @@ One drawback of this approach is that a synchronization step is required before 
 To alleviate this, several asynchronous SGD methods are proposed \cite{recht2011hogwild, dean2012large}. 
 \hl{Experiments using these methods show that the quality of the produced model in some cases is similar to the synchronized SGD approach.}
 
-\subsection{Machine Learning Models based on SGD}\label{subsec:ml-models-sgd}
+\textbf{Machine Learning Models based on SGD. }
 SGD is a common optimization methods that has been used in classification \cite{zhang2004solving}, clustering \cite{bottou1995convergence}, neural networks \cite{dean2012large}, and matrix factorization \cite{funk2006netflix}.
 Some examples of machine learning models that use SGD are: 
 
@@ -95,15 +100,10 @@ In fact, almost all recent work on neural networks uses SGD for training them.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{../images/continuous-final.pdf}
+\includegraphics[width=\columnwidth]{../images/improved-example.pdf}
 \caption{Continuous Training and Serving}
 \label{fig:cont-training-serving}
 \end{figure}
-
-\section{Continuous Training and Serving} \label{continious-training-serving}
-Our proposed deployment and maintenance system uses SGD as its underlying learning algorithm.
-As a result, it can update the model incrementally (one training item at a time) or use mini-batches of data.
-\todo[inline]{schelter: awful?}
 The core design principles of our deployment system are threefold.
 First, we incrementally update the model so that it can adapt to changes in the distribution of the incoming data.
 Second, we eliminate retraining and replace it with a series of consecutive iterations of SGD.
