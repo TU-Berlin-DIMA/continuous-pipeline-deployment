@@ -44,22 +44,42 @@ Our system, on the contrary, is designed for deployment and maintenance of alrea
 
 
 \section{Continuous Training and Serving} \label{continious-training-serving}
-Our proposed deployment and maintenance system uses SGD as its underlying learning algorithm.
-As a result, it can update the model incrementally (one training item at a time) or use mini-batches of data.
-\todo[inline]{schelter: awful?}
+In this section, we describe our continuous deployment approach.
+We describe optimization technique for training the model and how we utilize it to work in hybrid environment.
+We also provide detailed description of how we implement each of the proposed optimizations (proactive training and statistics collections).
+
 \subsection{Stochastic Gradient Descent} \label{sgd}
-\todo[inline]{Schelter: rewrite!!}
-Machine learning minimizes an objective function (often referred to as the loss function).
-Usually, this requires us to calculate the gradient of the function at different data points and update the function parameters based on the gradient values.
-A common optimization method is gradient descent, an iterative process where each iteration uses the entire training data set to calculate the gradient value.
-One drawback of gradient descent is that in presence of large datasets it performs very slow.
-Stochastic gradient descent \cite{bottou2010large} is an approximation of the gradient descent method. 
-Similar to gradient descent, it is an iterative process.
-However, in each iteration it calculates the gradient at a single element (or a small sample) and updates the parameters of the model accordingly. 
-Although it converges after a higher number of iterations, the overall convergence time is lower (sometimes by orders of magnitude) than gradient descent \cite{bottou2010large}. 
-Each iteration of SGD executes in a short amount of time because it only works with a sample of the data.
-We are leveraging this property of SGD and design our deployment system so that it performs one iteration of SGD at a time without interrupting the query answering component.
-In Section \ref{evaluation}, we show that the overhead from executing a single iteration of SGD is very small and does not affect the query answering component.
+\textit{Stochastic Gradient Descent (SGD) } is a optimization strategy used by many machine learning algorithms for training a model.
+SGD is an iterative optimization algorithm where in each iteration a sample of the data is used to make updates to the model.
+It works well in presence of large datasets \cite{bottou2010large}, as it does not require scanning the entire data in every iterations.
+SGD is has been used in many machine learning algorithms and tasks.
+SGD is used in different classification \cite{zhang2004solving} tasks to build logistic regression models for Ads click rate prediction \cite{macmahan2013}.
+It is in clustering \cite{bottou1995convergence} to build k-means clustering models.
+It is used in matrix factorization \cite{funk2006netflix} to build recommender systems  \cite{koren2009matrix}. .
+And it is used in neural networks \cite{dean2012large} for training the networks on large datasets.
+Some recent examples of SGD in neural networks are Google deepmind that managed to train a NN that defeat humans in the game of Go  \cite{silver2016mastering} and mastering Atari games \cite{mnih2013playing} .
+
+In our example application, a logistic regression model is trained using the SGD optimization method \cite{macmahan2013}.
+In logistic regression, the goal is to find the vector ($w$ that maximizes the conditional likelihood of labels ($y$) based on the given data ($x$) in the training dataset,
+
+$w^* = \argmin_w ln[\prod_{i=1}^{N} P(y^i | x^i, w)]$
+
+To use SGD to find the optimal $w$, we start from an initial random weights and in each step make small updates based on the gradient of the loss function. 
+
+${w}^{t+1} = {w}^t + \eta \sum_{i \in S} x^i [y^i - \hat{P}(Y^i = 1 | x^i w)]$
+
+where $\eta$ is the learning rate parameter and $S$ is the random sample in the current iteration.
+The algorithm continues until convergence (weight vector does not changes).
+
+\textbf{Learning Rate. }
+A very important parameter of stochastic gradient descent is the learning rate adaptation technique. 
+Learning rate controls the degree to which in each iteration SGD the weights are updated.
+Momentum \cite{qian1999momentum}, Adam \cite{kingma2014adam}, RMSPROP \cite{tieleman2012lecture}, and AdaDelta \cite{zeiler2012adaptive} are the most effective learning rate tuning methods for stochastic gradient descent. 
+Moreover, some of the methods perform per coordinate modification. 
+This is important because not all the parameters of the model contribute the same way and some changes more rapidly based on the training data.
+
+\textbf{Sample Size}
+Another parameter of stochastic gradient descent is the sample size.
 
 \textbf{Distributed SGD. }
 To efficiently train machine learning models on large datasets, scalable techniques have to be employed.
@@ -68,68 +88,63 @@ However, for very large datasets, SGD has to perform many iterations in order to
 To decrease the running time, large datasets can be distributed among multiple nodes, where each node will compute the gradients on a subset of the data in parallel.
 One drawback of this approach is that a synchronization step is required before applying the updates to the model, which slows down the optimization process.
 To alleviate this, several asynchronous SGD methods are proposed \cite{recht2011hogwild, dean2012large}. 
-\hl{Experiments using these methods show that the quality of the produced model in some cases is similar to the synchronized SGD approach.}
+Experiments show that in certain cases asynchronous SGD performs well and the final quality of the model is comparable with the synchronous approach.
 
-\textbf{Machine Learning Models based on SGD. }
-SGD is a common optimization methods that has been used in classification \cite{zhang2004solving}, clustering \cite{bottou1995convergence}, neural networks \cite{dean2012large}, and matrix factorization \cite{funk2006netflix}.
-Some examples of machine learning models that use SGD are: 
+\subsection{Proactive Training}
+We use the iterative nature of SGD in the design of continuous deployment process.
+Iterations of SGD are independent.
+We use this to schedule iterations and execute them while the prediction requests are being answered.
+However, the two parameters of SGD (learning rate and sample size) play an important role.
+They have to be tuned to increase the efficiency of the training.
+In our experiment we show that which learning rate adaptation technique works the best.
+The existing learning rate adaptation techniques either study the effect in a batch environment or in streaming environment.
+However, in our deployment system the pipelines are trained both in batch and real-time therefore the effect of the learning rates should be studied in the hybrid environment.
+Some the methods also adapt to the batch sizes and control the step size accordingly.
+We have to pay attention to the step size as updating the model parameter by a large amount while doing real-time streaming may lower the accuracy of the predictions.
+We also perform different sampling methods (random and weighted).
+In our experiment we show that what are the most useful sampling technique.
+The size of the sample also plays an important role the quality and total overhead on the system.
+We study the effect of sampling rate on both of these metrics in the evaluation as well.
+To increase the efficiency of the system a scheduler component is designed that is tasked with scheduling new iterations of SGD.
+The new iterations are scheduled based on the rate of the incoming data.
 
-\textbf{Linear Classifiers} are arguably the most common type of machine learning models built using the SGD optimization method. 
-In the CTR prediction example of Section \ref{introduction}, we use logistic regression to train the model for predicting the click through rate \cite{macmahan2013}. 
-Logistic regression models typically output a probability instead of a class label that indicates how likely an item belongs to a specific class \cite{hosmer2013applied}.
-In our example, logistic regression predicts the click probabilities for all the available advertisements and the ones with the highest probabilities are displayed.
-Support vector machines (SVM) represent another common class of classification models \cite{steinwart2008support}.
 
-\textbf{Matrix Factorization} is a common method used in recommender systems \cite{koren2009matrix}. 
-Matrix factorization is used to derive the latent factors (e.g., for users and items) for recommender systems.
-It relies on the fact that each user and item can be described in a few dimensions (10 to 40 usually) based on the available ratings.
-These latent factors automatically capture the similarity of users and items based on the ratings provided by the users.
-Hence, any unknown rating can be predicted by computing the dot product of the user vector with the item vector.
+\subsection{Statistics Collection}
+To increase the efficiency of offline training we collect statistics while the system is running.
+Whenever new training data arrives at the system they will pass through a component that will scan the incoming data and update the incoming statistics.
+Statistics required can be defined by the pipeline.
+In chapter \ref{sec:system-architecutre} we describe how the system exposes an API that allows both proactive training and statistics collection.
+These statistics can then be used for training the pipeline.
+The statistics basically come free since the data has to be scanned for training anyway.
+The statistics can also be exported for use outside of the system.
+There are cases that changes have to be made to the existing pipeline or new components should be added.
+In these cases the pipeline is manually retrained.
+Statistics related to the dataset collected while the system was running can be used to speed up the offline training of the pipeline.
 
-\textbf{Neural Networks} or deep learning -- inspired by biological neural networks in the brain -- are used to learn and approximate complex functions. 
-They have been used for more than half a century to model functions and have been successfully applied to training machine learning models.
-However, due to the slow training process and the lack of large amount of training data, they have not been used extensively in the machine learning community in the past.
-In the last decade, there was a drastic change due to several seminal publications.
-Hinton et al. proposed methods for speeding up the training of neural networks \cite{hinton2006fast}.
-The ImageNet competition \cite{ILSVRC15} in 2012 was won by a neural network proposed by Krizhevsky et al. where they significantly reduced the error rate \cite{krizhevsky2012imagenet}. 
-The success of the Google's Deepmind team in achieving Neural Networks that were capable of defeating humans in the game of Go \cite{silver2016mastering} and mastering Atari games \cite{mnih2013playing} was also instrumental in popularizing neural networks in the machine learning community.
-
-SGD is the ideal optimization algorithm for training neural networks since it works very well with large datasets (which are required for training neural networks).
-In fact, almost all recent work on neural networks uses SGD for training them.
-\todo[inline]{Schelter: too much blabla, not ....}
+\subsection{Improved Example Application}
+\todo[inline]{add statistic collection unit}
+Figure \ref{fig:improved-example} shows how our deployment approach improves the example application described in section \ref{introduction}.
+After the training of the initial model \textcircled{A}, it is deployed in the deployment environment \textcircled{B}.
+Prediction requests are send by the user to the deployment environment \textcircled{1} where based on the current model for each ad a score is predicted\textcircled{2}.
+Based on the score a few ads are shown to the user \textcircled{3}.
+Depending whether or not the user clicks on them, feedback are send back to the deployment system \textcircled{4}.
+Similar to current approaches the data is stored in the click log database.
+However, contrary to existing methods, the data is routed to the deployment system immediately.
+The data is first used to update the statistics for the pipeline.
+After which the data is appended with a sample of the data stored in the click log.
+Based on this new dataset an iteration of SGD is performed which updates the logistic regression model on the spot.
+The updates are available immediately and as a result any new prediction requests that arrive at the system will predicted by a more up-to-date model.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{../images/improved-example.pdf}
-\caption{Continuous Training and Serving}
-\label{fig:cont-training-serving}
+\caption{Ads Serving Continuous Training}
+\label{fig:improved-example}
 \end{figure}
-The core design principles of our deployment system are threefold.
-First, we incrementally update the model so that it can adapt to changes in the distribution of the incoming data.
-Second, we eliminate retraining and replace it with a series of consecutive iterations of SGD.
-And finally, we immediately use new batch datasets that are available to the system.
-Figure \ref{fig:cont-training-serving} shows how our deployment method works.
-First, using the existing data residing on disk, we train an initial model and deploy it into the system.
-The system receives prediction queries and training observations in a streaming fashion.
-The deployed model answers incoming prediction queries as soon as they are received.
-Once the system receives a training observation it updates the model incrementally.
-The system also keeps track of incoming training observations and adds them to an intermediate buffer.
-A scheduler component, triggers new iterations of SGD based on the rate of incoming training observations. 
-The scheduler can also decide to run an iteration when the system is not under heavy load.
-Each new iteration uses a random sample of the data in storage and the data in the buffer. 
-Moreover, our system stores new batch datasets in the buffer (or the persistent storage unit) as soon as they become available.
-Any further scheduled iteration of SGD incorporates the new data without requiring the model to be retrained from scratch.
 
-\todo[inline]{R3: Section 5 has many unclear and informal descriptions, without formal methodology.}
+
 \section{System Architecture} \label{sec:system-architecutre}
 \todo[inline]{explain the statistics collection unit and the scheduler (in more detail)}
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{../images/system-architecture-final.pdf}
-\caption{System Architecture}
-\label{fig:system-architecture}
-\end{figure}
-
 The proposed system comprises three main components; model manager, data manager and scheduler, and an independent SGD run-time. 
 Figure \ref{fig:system-architecture} gives an overview of the architecture of our system and the interactions among its components.
 The data manager first stores the incoming training observations in a buffer and then passes them on to the model manager.
@@ -139,6 +154,15 @@ Once it receives a request, it uses the latest version of the model to make a pr
 Both the scheduler and the data manager components are constantly communicating with each other and with the model manager, to obtain the latest statistics, such as the model quality and buffer size.
 This in turn helps us to tune the scheduling and sampling rate for future iterations of SGD. 
 Next, we explain each component of the system in more detail.
+
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{../images/system-architecture-final.pdf}
+\caption{System Architecture}
+\label{fig:system-architecture}
+\end{figure}
+
 
 \subsection{Scheduler}\label{scheduler}
 The scheduler component is responsible for scheduling new iterations of SGD.
