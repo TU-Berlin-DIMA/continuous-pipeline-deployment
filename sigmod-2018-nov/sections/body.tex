@@ -44,6 +44,8 @@ Our system, on the contrary, is designed for deployment and maintenance of alrea
 
 
 \section{Continuous Training and Serving} \label{continious-training-serving}
+\todo[inline]{text not polished, but structure is complete}
+\todo[inline]{add algorithm for continuous training}
 In this section, we describe our continuous deployment approach.
 We describe optimization technique for training the model and how we utilize it to work in hybrid environment.
 We also provide detailed description of how we implement each of the proposed optimizations (proactive training and statistics collections).
@@ -144,7 +146,10 @@ The updates are available immediately and as a result any new prediction request
 
 
 \section{System Architecture} \label{sec:system-architecutre}
+\todo[inline]{structure is finalized text is incomplete and not polished}
 \todo[inline]{explain the statistics collection unit and the scheduler (in more detail)}
+\todo[inline]{update the figure (system architecture)}
+
 The proposed system comprises three main components; model manager, data manager and scheduler, and an independent SGD run-time. 
 Figure \ref{fig:system-architecture} gives an overview of the architecture of our system and the interactions among its components.
 The data manager first stores the incoming training observations in a buffer and then passes them on to the model manager.
@@ -211,7 +216,9 @@ In our current prototype, new data sets first have to be stored on disk, and dat
 Newly available data sets are used in the subsequent SGD iterations.
 
 \todo[inline]{R2: The difference of incremental update and SGD update needs clarification. In the experiment, they are used in different approaches (baseline+ is using incremental update and Continuous is using SGD). But, the second sentence of the last paragraph of sec 5.3 says both updates are applied in Continuous. BD: I have used incremental to refer to online learning. Whereas in some literature incremental may also refer to mini batch updates. I think the reviewers comment is already addressed in section \ref{subsec:setup}}
-\subsection{Model Manager} \label{model-manager} 
+\subsection{Pipeline Manager} \label{model-manager} 
+\todo[inline]{discuss statistics collection and update the Listing to show apis for statistics gathering. Discuss what are default ones that being collected and how users can have custom statistics collected and use them inside or outside of the system.}
+\todo[inline]{Mention how pipelines that are trained outside can be used in the system and how they can be exported again (current prototype uses spark serialized object and we (can) support  PMML}
 An important part of the system is the model manager component.
 It is responsible for storing the model, answering prediction queries, and performing incremental and batch updates to the model.
 Listing \ref{model-manager-api} shows the API of the model manager.
