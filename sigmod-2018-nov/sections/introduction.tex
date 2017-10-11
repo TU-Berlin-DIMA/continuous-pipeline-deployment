@@ -1,15 +1,15 @@
 \section{Introduction} \label{introduction}
-A machine learning pipeline consists of a set of data processing steps, chained together, that result in a machine learning model.
+A machine learning pipeline consists of a set of data processing steps, chained together, that results in a machine learning model.
 To fully utilize the model,  the model and the pipeline have to be deployed into an environment where they are used to answer prediction queries in real-time.
 Typically, feedback in the form of new training data will become available after the model is deployed.
 In order to adapt to the new training data and guarantee a high prediction accuracy, new models are constantly trained and re-deployed.
 Many platforms, e.g., Velox \cite{crankshaw2014missing}, Clipper \cite{crankshaw2016clipper}, Laser \cite{agarwal2014laser}, and TensorFlow Extended \cite{baylor2017tfx}, provide support for deployment and continuous training of machine learning pipelines. 
 These platforms, either automatically or manually, facilitate the training and re-deployment of the models.
-In many real-world use cases, training datasets are very large which makes training a model that guarantees a high quality, a resource-intensive and time-consuming process.
-Therefore, new models are trained periodically (typically daily).
+In many real-world use cases, training datasets are very large which may require hours of training to obtain a model that guarantees a high quality.
+Therefore, it is not feasible to train new models frequently.
 This means that the model being used for answering prediction requests is not always up-to-date.
 Online learning methods can be used to provide fresh and up-to-date models.
-However, unless the online learning method used in training the model is highly tuned to the specific use case \cite{ma2009identifying}, a high quality model cannot be guaranteed.
+However, unless the online learning method is highly tuned to the specific use case \cite{ma2009identifying}, a high quality model cannot be guaranteed.
 This results in a trade-off between model quality and model freshness.
 
 \begin{figure}[t]
@@ -19,10 +19,11 @@ This results in a trade-off between model quality and model freshness.
 \label{fig:motivational-example}
 \end{figure}
 \textbf{Example Application.} 
+
 Online advertising is a multi-billion dollar industry.
 An advertising network receives ads from different businesses (ads providers) and shows them on different websites (publishers).
-Typically, businesses are charged based on the number of clicks users make on their published ads.
-Advertising networks use machine learning pipelines to estimate the click rate of different ads.
+The advertising network charges business based on the number of clicks users make on their published ads.
+Advertising networks utilize machine learning pipelines to estimate the click rate of different ads.
 Figure \ref{fig:motivational-example} shows the work flow of an advertising firm.
 The input data (Click Log) consists of several numerical and categorical variables related to the user, publisher's website,  the ads,  and whether or not the users clicked on those ads.
 \textcircled{1} A basic click rate prediction pipeline contains the following components:
@@ -32,43 +33,41 @@ The input data (Click Log) consists of several numerical and categorical variabl
 \item A \textbf{one-hot encoder} creates a new binary feature for every unique value in a categorical feature
 %\item \hl{A \textbf{data bucketizer} transforms continuous variables into a series of binary variables}
 \item A \textbf{standard scaler} scales the data columns to have unit standard deviation and zero mean
-\item An finally a \textbf{logistic regression model} is trained using Stochastic Gradient Descent (SGD) optimization technique
+\item And finally a \textbf{model trainer} trains a logistic regression model over the processed data
 \end{itemize}
-The pipeline is trained on the click log dataset.
-Once the pipeline is created, \textcircled{2} it is deployed into a platform to be used in production.
-\textcircled{3} Whenever a user visits a publisher website, a series of prediction queries are sent to the deployment system where the pipeline is used to \textcircled{4} estimate the click rate of the user for the available ads on the website.
-\textcircled{5} Ads with the highest click rate estimates are then shown to the user.
+Once the pipeline is created, \textcircled{2} the deployment platform serves the model and prepares it for receiving prediction queries.
+\textcircled{3} Whenever a user visits a publisher website, a series of prediction queries are sent to the deployment platform.
+The deployment platform uses the trained pipeline to \textcircled{4} estimate the click rate of the user for the available ads on the website.
+\textcircled{5} An ads selector unit shows the ads with the highest click rate estimates to the user.
 Depending on whether the user clicks on the ad or not, \textcircled{6} the platform generates new training data.
-The new training data is combined with the existing click log.
+The deployment platform appends the new training data to the existing click log.
 Moreover, new users, ads, and websites may become available while the model is being served.
-Therefore, the pipeline is periodically (typically on a daily basis) retrained using the data collected by the deployment platform.
+Therefore, the deployment platform periodically (typically on a daily basis) retrain the pipeline using the updated click log.
 
 The example above demonstrates the complex work flow of a deployment platform.
 The deployment platform must be able to guarantee predictions with high accuracy and low latency.
 This requires the platform to address the trade-off between quality and freshness.
-Moreover, it must accommodates all the prediction requests and new training data arriving at the system. 
+Moreover, the deployment platform must accommodate all the prediction requests and the new training data arriving at the system. 
 Our goal is to design a deployment platform that can handle such traffic, provide more accurate predictions to the end user ,and provide a balance between model quality and model freshness.
 
 \textbf{Existing Deployment methods.} 
 To ensure high quality predictions, new models should be trained frequently.
 However, existing solutions recognize training new models as a resource intensive and time consuming process \cite{crankshaw2014missing, agarwal2014laser, baylor2017tfx}.
 To address the trade-off between model quality and model freshness, existing solutions propose periodical training of new models.
-However, the periods between trainings are typically long (daily) and while they are appropriate for some use cases \cite{baylor2017tfx}, they are not suitable for every use case.
+However, the periods between trainings are typically long (daily).
+While daily training is appropriate for some use cases \cite{baylor2017tfx}, it is not suitable for every use case.
 This leads to a high quality but out-dated model.
 Therefore, the model does not consider the recent training data when answering predictions.
 Moreover, existing solutions treat the model training and model serving as two separate processes. 
-First, new models are fully trained in isolation then they are pushed to the deployment environment.
-As a result, the information that can be collected during while the model is being served is not available for the training. 
+New models are fully trained in isolation then they are pushed to the deployment environment.
 
-By merging these two operations (training and deployment) we can optimize the process of training new models.
-We utilize the properties of the optimization method used for training the model to update the model being served more frequently.
-We also collect information while the model is being served that are useful to training new models.
-We propose an architecture for a deployment platform that continuously updates the models (thus providing fresh models) without sacrificing the quality.
+We realized by merging these two processes (training and serving) we can optimize the process of training new models.
+We propose a method for a deployment platform that continuously updates the models (thus providing fresh models) without sacrificing the quality.
 Our solution offers two key optimizations.
 
 \textit{Statistics collection.} 
 We compute and update the statistics of the training dataset in real-time while the model is being served. 
-Many of the statistics are needed to process the data before training the model.
+These statistics are required to process the data before training the model.
 Therefore, these statistics enable us to speed up the training process of the model.
 In our motivating example, label indexing, one-hot encoding, 
 %data bucketing, 
@@ -81,7 +80,6 @@ By exploiting these two features of SGD, we replace the time-consuming and resou
 Our strategy in continuously updating the model is similar to how parameter servers train large models \cite{li2014scaling} .
 Parameter servers use the Stochastic Gradient Descent optimization method to calculate partial updates and push these updates to the model iteratively.
 In our solution, instead of training new models in isolation, we also make partial updates based on a combination of the existing data and the newly arrived data, and propagate the partial update to the model being served.
-We call this approach proactive training.
 Proactive training guarantees model freshness without sacrificing the model quality.
 \hl{Theoretical bound on the quality?}
 Our experiments show that proactive training of the model achieves more accurate predictions overtime and requires less resources when compared to full training of new models.
