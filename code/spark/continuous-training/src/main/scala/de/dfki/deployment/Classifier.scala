@@ -58,7 +58,7 @@ abstract class Classifier extends Serializable {
   val DEFAULT_NUMBER_OF_ITERATIONS = 500
   val STEP_SIZE = 0.001
   val DEFAULT_MODEL_PATH = "generated"
-  val DEFAULT_UPDATER = "adam"
+  val DEFAULT_UPDATER = "rmsprop"
 
   var streamingModel: HybridModel[_, _] = _
   var dataParser: DataParser = _
@@ -220,8 +220,50 @@ abstract class Classifier extends Serializable {
     * Initialize an Online SVM model by first using the data in the given directory to train a static model
     * and then load the model into the Online SVM model
     *
+    * @param ssc  Spark Streaming Context
+    * @param data Data set for initial training
+    * @return Online SVM Model
+    */
+  def createInitialStreamingModel(ssc: StreamingContext, data: RDD[LabeledPoint], modelType: String): HybridModel[_, _] = {
+    if (Files.exists(Paths.get(modelPath))) {
+      logger.info("Model exists, loading the model from disk ...")
+      val model = HybridModel.loadFromDisk(modelPath)
+      model
+        // sampling is done manually
+        .setMiniBatchFraction(1.0)
+        .setRegParam(0.001)
+        .setConvergenceTol(0.0)
+        .setNumIterations(5)
+    } else {
+      val hybridModel = if (modelType.equals("svm")) {
+        logger.info("Instantiating a SVM Model")
+        new HybridSVM(stepSize, numIterations, 0.0, 0.1, AdvancedUpdaters.getUpdater(updater))
+          .setConvergenceTol(0.0)
+      } else {
+        logger.info("Instantiating a Linear Regression Model")
+        // regularization parameter is chosen from GridSearch
+        new HybridLR(stepSize, numIterations, 0.0, 0.1, AdvancedUpdaters.getUpdater(updater))
+          .setConvergenceTol(0.0)
+      }
+
+      hybridModel.trainInitialModel(data)
+      data.unpersist()
+
+      // save the model to disk, consecutive runs will check this directory first
+      HybridModel.saveToDisk(modelPath, hybridModel)
+      hybridModel
+        .setMiniBatchFraction(1.0)
+        .setConvergenceTol(0.0)
+        .setNumIterations(5)
+    }
+  }
+
+  /**
+    * Initialize an Online SVM model by first using the data in the given directory to train a static model
+    * and then load the model into the Online SVM model
+    *
     * @param ssc                    Spark Streaming Context
-    * @param initialDataDirectories directory of initial data
+    * @param initialDataDirectories directory for initial dataset
     * @return Online SVM Model
     */
   def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String, modelType: String): HybridModel[_, _] = {
@@ -245,10 +287,13 @@ abstract class Classifier extends Serializable {
         new HybridLR(stepSize, numIterations, 0.0, 0.1, AdvancedUpdaters.getUpdater(updater))
           .setConvergenceTol(0.0)
       }
+
+
       val data = ssc.sparkContext.textFile(initialDataDirectories)
         .map(dataParser.parsePoint)
         .repartition(ssc.sparkContext.defaultParallelism)
         .cache()
+
       hybridModel.trainInitialModel(data)
       data.unpersist()
 
@@ -260,6 +305,7 @@ abstract class Classifier extends Serializable {
         .setNumIterations(5)
     }
   }
+
 
   /**
     * Create a BatchFileInputDStream object from the given path

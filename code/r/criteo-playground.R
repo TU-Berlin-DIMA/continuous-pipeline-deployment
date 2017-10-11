@@ -2,11 +2,11 @@ setwd("~/Documents/work/phd-papers/continuous-training/experiment-results/criteo
 library(ggplot2)
 library(reshape)
 
-adam = read.csv('continuous/model-type-lr/num-iterations-500/slack-10/updater-adam/step-size-0.001/2017-09-26-00-08/loss.txt', header = FALSE, col.names = 'adam')
-rmsprop = read.csv('continuous/model-type-lr/num-iterations-500/slack-10/updater-rmsprop/step-size-1.0/2017-09-26-01-17/loss.txt', header = FALSE, col.names = 'rmsprop')
-decreasing = read.csv('continuous/model-type-lr/num-iterations-500/slack-10/updater-l2/step-size-0.001/2017-09-24-21-48/loss.txt', header = FALSE, col.names = 'decreasing')
-adadelta = read.csv('continuous/model-type-lr/num-iterations-500/slack-10/updater-adadelta/step-size-0.001/2017-09-24-21-34/loss.txt', header = FALSE, col.names = 'adadelta')
-momentum = read.csv('continuous/model-type-lr/num-iterations-500/slack-10/updater-momentum/step-size-0.01/2017-09-24-21-00/loss.txt', header = FALSE, col.names = 'momentum')
+#adam = read.csv('continuous/model-type-lr/num-iterations-500/slack-10/updater-adam/step-size-0.001/2017-09-26-00-08/loss.txt', header = FALSE, col.names = 'adam')
+rmsprop-without = read.csv('continuous/model-type-lr/num-iterations-500/slack-10/updater-rmsprop/step-size-1.0/2017-10-11-15-43/loss.txt', header = FALSE, col.names = 'rmsprop')
+#decreasing = read.csv('continuous/model-type-lr/num-iterations-500/slack-10/updater-l2/step-size-0.001/2017-09-24-21-48/loss.txt', header = FALSE, col.names = 'decreasing')
+#adadelta = read.csv('continuous/model-type-lr/num-iterations-500/slack-10/updater-adadelta/step-size-0.001/2017-09-24-21-34/loss.txt', header = FALSE, col.names = 'adadelta')
+#momentum = read.csv('continuous/model-type-lr/num-iterations-500/slack-10/updater-momentum/step-size-0.01/2017-09-24-21-00/loss.txt', header = FALSE, col.names = 'momentum')
 
 df = data.frame(time = 1:nrow(adam),
                 rmsprop = rmsprop, 

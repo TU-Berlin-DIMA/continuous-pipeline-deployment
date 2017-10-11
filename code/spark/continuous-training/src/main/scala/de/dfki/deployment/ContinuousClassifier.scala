@@ -51,7 +51,13 @@ object ContinuousClassifier extends Classifier {
     // train initial model
     val startTime = System.currentTimeMillis()
 
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath, modelType)
+    val data = ssc.sparkContext
+      .textFile(initialDataPath)
+      .map(dataParser.parsePoint)
+      .repartition(ssc.sparkContext.defaultParallelism)
+      .cache()
+
+    streamingModel = createInitialStreamingModel(ssc, data, modelType)
     val endTime = System.currentTimeMillis()
     storeTrainingTimes(endTime - startTime, resultPath)
 
@@ -62,6 +68,7 @@ object ContinuousClassifier extends Classifier {
       logger.info(s"scheduling a batch iteration on ${streamingSource.getProcessedFiles.length} files ")
       ssc.sparkContext.textFile(streamingSource.getProcessedFiles.mkString(","))
         .map(dataParser.parsePoint)
+        .union(data)
         .sample(withReplacement = false, samplingRate)
         .repartition(ssc.sparkContext.defaultParallelism)
         .cache()
@@ -74,7 +81,7 @@ object ContinuousClassifier extends Classifier {
       // parse input
       .map(dataParser.parsePoint)
       // updating the statistics
-      //.transform(rdd => streamingModel.updateStatistics(rdd))
+      .transform(rdd => streamingModel.updateStatistics(rdd))
       // online training
       //.transform(rdd => streamingModel.trainOn(rdd))
       // create a window
