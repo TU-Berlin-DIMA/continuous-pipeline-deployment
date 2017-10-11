@@ -2,10 +2,11 @@
 A machine learning pipeline is a workflow comprised of several steps: source selection, data preparation, feature engineering, and model training. 
 Once the model is trained, the model (and the pipeline) is deployed into a system where it can answer prediction queries reliably and in real-time.
 Current deployment systems perform online training, periodical batch training, or a combination of both to maintain the quality of the model.
-However, the batch training of models is a time-consuming and resource-intensive process.
+However, training models to meet a high quality threshold is a time-consuming and resource-intensive process and cannot be performed very frequently.
+This leads to a trade-off between model freshness (how up-to-date the model is) and model quality.
 
-We propose a novel deployment platform for serving and continuously updating machine learning models and pipelines.
-The deployment platform offers two key optimizations: proactive mini-batch training and hybrid (online and offline) pipeline training.
-We show that, our deployment platform manages to update the pipeline more frequently while using less resources.
-As a result, the accuracy and latency of prediction queries are improved \hl{x times} by using \hl{y times} less resources.
+We propose a novel continuous training approach for deployed pipelines and models that increases the model freshness without sacrificing the model quality.
+Our approach is similar to how parameter servers train large machine learning models, where different samples of the training data are used to compute partial updates which are propagated to the model.
+Moreover, by computing statistics during model serving, we further decrease the training time.
+We show that, our continuous training approach updates the model more frequently while using less resources which results in more accurate predictions.
 \end{abstract}
