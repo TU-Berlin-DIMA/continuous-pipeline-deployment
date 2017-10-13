@@ -71,7 +71,7 @@ delete url-reputation files:
 
 run criteo preprocessing:
 training data:
-/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.datasets.CriteoPreprocessing --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/user/behrouz/criteo/raw/" "output-path=hdfs://cloud-11:44000/user/behrouz/criteo/" "file-count=1000"
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.datasets.CriteoPreprocessingOneDay --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/criteo/day_0" "output-path=hdfs://cloud-11:44000/user/behrouz/criteo/day_0" "file-count=1000" "model-path=/share/hadoop/behrouz/experiments/criteo/models/indexer/model"
 
 
 
