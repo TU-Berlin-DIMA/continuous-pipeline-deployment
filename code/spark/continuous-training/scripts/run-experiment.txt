@@ -36,7 +36,7 @@ url:
 /share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -mkdir hdfs://cloud-11:44000/user/behrouz/url-reputation/
 /share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -mkdir hdfs://cloud-11:44000/user/behrouz/url-reputation/raw
 
-/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.datasets.URLRepPreprocessing --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/user/behrouz/url-reputation/raw" "output-path=hdfs://cloud-11:44000/user/behrouz/url-reputation" "file-count=30" "sampling-rate=1.0"
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.datasets.URLRepPreprocessing --driver-memory 10g --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/user/behrouz/url-reputation/raw" "output-path=hdfs://cloud-11:44000/user/behrouz/url-reputation" "file-count=30" "sampling-rate=1.0"
 
 /share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -rmr hdfs://cloud-11:44000/user/behrouz/url-reputation/temp-data
 
@@ -71,7 +71,7 @@ delete url-reputation files:
 
 run criteo preprocessing:
 training data:
-/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.preprocessing.datasets.CriteoPreprocessingOneDay --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/criteo/day_0" "output-path=hdfs://cloud-11:44000/user/behrouz/criteo/day_0" "file-count=1000" "model-path=/share/hadoop/behrouz/experiments/criteo/models/indexer/model"
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.examples.CriteoPreprocessingOneDay --driver-memory 10g --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input-path=hdfs://cloud-11:44000/criteo/day_0" "output-path=hdfs://cloud-11:44000/user/behrouz/criteo/day_0" "file-count=1000" "model-path=/share/hadoop/behrouz/experiments/criteo/models/indexer/model"
 
 
 

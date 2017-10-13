@@ -222,12 +222,10 @@ object CriteoPreprocessingOneDay {
       .option("inferSchema", "true")
       .load(s"$inputData")
 
-    dataFrame.cache()
-    dataFrame.count()
     var indexerModel: PipelineModel = null
     try {
       // load the model if it already exists
-      indexerModel = PipelineModel.load(s"$inputData/model/")
+      indexerModel = PipelineModel.load(s"$modelPath")
     }
     catch {
       case iie: IOException =>
@@ -257,7 +255,6 @@ object CriteoPreprocessingOneDay {
     val oneHotPipeline = new Pipeline().setStages(oneHotEncoder)
     val finalDf = oneHotPipeline.fit(indexedDf).transform(indexedDf)
 
-    dataFrame.unpersist(true)
     // assemble the preprocessed columns into vectors
     val finalColumns = (1 to 13).map(v => s"_c$v") ++ finalDf.columns.filter(c => c contains "vec")
     val assembler = new VectorAssembler()
@@ -266,19 +263,12 @@ object CriteoPreprocessingOneDay {
 
     val output = assembler.transform(finalDf).select("_c0", "features").repartition(filesPerDay)
     // without explicitly caching the dataset, the program runs out of memory on my local machine
-    output.cache()
-    output.count()
 
-
-    finalDf.unpersist(true)
-    dataFrame.unpersist(true)
     output.rdd.map(r => s"${r.get(0).toString} | ${r.get(1).toString}").saveAsTextFile(s"$resultPath/")
-    output.unpersist(true)
-
-
+    dataFrame.unpersist()
   }
 
-  def createIndexerModel(spark: SparkSession, df: DataFrame, modelOutput: String): PipelineModel = {
+  def createIndexerModel(spark: SparkSession, df: DataFrame, modelPath: String): PipelineModel = {
     // add missing values NULL for string and 0.0 for double
     var columnMapping = collection.mutable.Map[String, Any]()
     for (t <- df.schema.fields) {
@@ -307,7 +297,7 @@ object CriteoPreprocessingOneDay {
     val indexerModel = indexerPipeline.fit(filledDf)
     filledDf.unpersist(true)
     df.unpersist(true)
-    indexerModel.save(s"$modelOutput")
+    indexerModel.save(s"$modelPath")
     indexerModel
   }
 }
