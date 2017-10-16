@@ -19,14 +19,13 @@ This results in a trade-off between model quality and model freshness.
 \label{fig:motivational-example}
 \end{figure}
 \textbf{Example Application.} 
-
 Online advertising is a multi-billion dollar industry.
 An advertising network receives ads from different businesses (ads providers) and shows them on different websites (publishers).
 The advertising network charges businesses based on the number of clicks users make on their published ads.
 Advertising networks utilize machine learning pipelines to estimate the click rate of different ads.
 Figure \ref{fig:motivational-example} shows the workflow of an advertising firm.
 The input data (Click Log) consists of several numerical and categorical variables related to the user, publisher's website,  the ads,  and whether or not the users clicked on those ads.
-\textcircled{1} A basic click rate prediction pipeline contains the following components:
+A basic click rate prediction pipeline contains the following components \textcircled{1}:
 \begin{itemize}
 \item A \textbf{missing value imputer} replaces missing values with appropriate values
 \item A \textbf{label indexer} finds the different unique values in a categorical feature 
@@ -35,11 +34,11 @@ The input data (Click Log) consists of several numerical and categorical variabl
 \item A \textbf{standard scaler} scales the data columns to have unit standard deviation and zero mean
 \item And finally a \textbf{model trainer} trains a logistic regression model over the processed data
 \end{itemize}
-Once the pipeline is created, \textcircled{2} the deployment platform serves the model and prepares it for receiving prediction queries.
-\textcircled{3} Whenever a user visits a publisher website, a series of prediction queries are sent to the deployment platform.
-The deployment platform uses the trained pipeline to \textcircled{4} estimate the click rate of the user for the available ads on the website.
-\textcircled{5} An ads selector unit shows the ads with the highest click rate estimates to the user.
-Depending on whether the user clicks on the ad or not, \textcircled{6} the platform generates new training data.
+Once the pipeline is created, the deployment platform serves the model and prepares it for receiving prediction queries \textcircled{2}.
+Whenever a user visits a publisher website, a series of prediction queries are sent to the deployment platform \textcircled{3} .
+The deployment platform uses the trained pipeline to estimate the click rate of the user for the available ads on the website \textcircled{4} .
+An ads selector unit shows the ads with the highest click rate estimates to the user \textcircled{5} .
+Depending on whether the user clicks on the ad or not, the platform generates new training data \textcircled{6}.
 The deployment platform appends the new training data to the existing click log.
 Moreover, new users, ads, and websites may become available while the model is being served.
 Therefore, the deployment platform periodically (typically on a daily basis) retrain the pipeline using the updated click log.
@@ -65,7 +64,7 @@ We realized by merging these two processes (training and serving) we can optimiz
 We propose a method for a deployment platform that continuously updates the models (thus providing fresh models) without sacrificing the quality.
 Our solution offers two key optimizations.
 
-\textit{Live Statistics Collection. } 
+\textit{Online Statistics Computation. } 
 We compute and update the statistics of the training dataset in real-time while the model is being served. 
 The statistics are required to process the data before training the model.
 In our motivating example, label indexing, one-hot encoding, 
