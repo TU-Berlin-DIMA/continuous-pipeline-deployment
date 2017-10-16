@@ -121,3 +121,8 @@ The updates are available immediately and as a result, any new prediction reques
 \label{fig:improved-example}
 \end{figure}
 
+\subsection{Model Stability}
+\hl{We cannot blindly update the deployed model. Reviewers will ask about this now that I am mentioning TFX (it was one of their features).
+A very simple approach that I can quickly implement is to evaluate the model against he evaluation set before merging the changes with the deployed model.
+But then there are other concerns: 1. What should I do if the quality goes down after an update? Simply ignore the update? 2. The overhead it has on the system? This should be very small only depends on the size of the evaluation set.}
+
