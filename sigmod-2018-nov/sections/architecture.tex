@@ -1,17 +1,6 @@
 \section{System Architecture} \label{sec:system-architecutre}
-\todo[inline]{explain the statistics collection unit and the scheduler (in more detail)}
-\todo[inline]{update the figure (system architecture)}
 Our proposed deployment platform comprises four components; pipeline manager, data manager, scheduler, and SGD runner.
 Figure \ref{fig:system-architecture} gives an overview of the architecture of our system and the interactions among its components.
-
-%The data manager first stores the incoming training observations in a buffer and then passes them on to the model manager.
-%The model manager incrementally updates the model using the training observations.
-%The model manager is also responsible for receiving prediction requests.
-%Once it receives a request, it uses the latest version of the model to make a prediction and returns the result to the user.
-%Both the scheduler and the data manager components are constantly communicating with each other and with the model manager, to obtain the latest statistics, such as the model quality and buffer size.
-%This in turn helps us to tune the scheduling and sampling rate for future iterations of SGD. 
-%Next, we explain each component of the system in more detail.
-
 
 \begin{figure}[t]
 \centering
