@@ -64,7 +64,7 @@ We realized by merging these two processes (training and serving) we can optimiz
 We propose a method for a deployment platform that continuously updates the models (thus providing fresh models) without sacrificing the quality.
 Our solution offers two key optimizations.
 
-\textit{Online Statistics Computation. } 
+\textit{Online Data Analysis \hl{and Materialization}} 
 We compute and update the statistics of the training dataset in real-time while the model is being served. 
 The statistics are required to process the data before training the model.
 In our motivating example, label indexing, one-hot encoding, 
@@ -74,6 +74,7 @@ Due to the size of the training dataset, computing these statistics every time b
 Updating the statistics in real-time requires minimal amount of resources. 
 To compute mean and standard deviation, we need to update the column sum and dataset size.
 To index the labels and perform one-hot encoding, we need to perform a lookup (and in case a new categorical variable is detected, an update) in a hash-table. 
+\hl{Discuss materialization of the preprocessed training data}
 
 \textit{Proactive training.}
 The underlying optimization technique, Stochastic Gradient Descent (SGD), for the training approach is an iterative algorithm.
