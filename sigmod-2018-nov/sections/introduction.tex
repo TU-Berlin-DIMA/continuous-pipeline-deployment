@@ -54,7 +54,7 @@ To ensure high quality predictions, new models should be trained frequently.
 However, existing solutions recognize training new models as a resource intensive and time consuming process \cite{crankshaw2014missing, agarwal2014laser, baylor2017tfx}.
 To address the trade-off between model quality and model freshness, existing solutions propose periodical training of new models.
 However, the periods between trainings are typically long (daily).
-While daily training is appropriate for some use cases \cite{baylor2017tfx}, it is not suitable for other use cases \hl{citation}.
+While daily training is appropriate for some use cases \cite{baylor2017tfx}, it is not suitable for other use cases \hl{citation??}.
 This leads to a high quality but out-dated model.
 Therefore, the model does not consider the recent training data when answering predictions.
 Moreover, existing solutions treat the model training and model serving as two separate processes. 
@@ -64,7 +64,7 @@ We realized by merging these two processes (training and serving) we can optimiz
 We propose a method for a deployment platform that continuously updates the models (thus providing fresh models) without sacrificing the quality.
 Our solution offers two key optimizations.
 
-\textit{Online Data Analysis \hl{and Materialization}} 
+\textit{Online Statistics Computation \hl{and Data Materialization}} 
 We compute and update the statistics of the training dataset in real-time while the model is being served. 
 The statistics are required to process the data before training the model.
 In our motivating example, label indexing, one-hot encoding, 
@@ -91,7 +91,7 @@ In summary our contributions are:
 \begin{itemize}
 \item Management and continuous deployment of machine learning pipelines
 \item Proactive training of the model being served using a parameter server style approach
-\item \hl{Can this be a contribution?}Guaranteeing model freshness without sacrificing the model quality
+\item Efficient training of the model by online statistics computation and data materialization, thus guaranteeing the model freshness without sacrificing the model quality
 \end{itemize}
 
 The rest of this paper is organized as follows:
