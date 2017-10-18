@@ -32,6 +32,6 @@ checkpoints/
 experiment-results/*/*.eps
 
 # Files:
-
 *.dvi
 *.ps
+*.pdf
