@@ -26,13 +26,13 @@ For each prediction request, it uses the model with the highest confidence.
 However, it does not incrementally train the models in production, which over time leads to models becoming outdated.
 Our deployment method on the other hand, focuses on maintenance and continuous updates of the models.
 
-\hl{TensorFlow Extended (TFX) is a platform that provides continuous training and deployment of machine learning models.
+TensorFlow Extended (TFX) is a platform that provides continuous training and deployment of machine learning models.
 TFX automatically stores new training data, performs analysis and validation of the data, retrain new and fresh models, and finally redeploy the new models. 
 However, data analysis and validation and model retraining are done periodically on batch datasets.
 As a result, TFX targets use cases that typically require daily updates to the model as the overhead of performing more frequent training and data analysis is too high.
 TFX provides warmstarting optimization to speed up the process of training new and fresh models.
 Our continuous training method can be used as a replacement of the continuous training component of TFX.
-By exploiting the properties of SGD optimization technique, our continuous training method can provide more fresh and up-to-date models (seconds to minutes instead of several hours or days) without increasing the overhead.}
+By exploiting the properties of SGD optimization technique, our continuous training method can provide more fresh and up-to-date models (seconds to minutes instead of several hours or days) without increasing the overhead.
 
 Weka \cite{hall2009weka}, Apache Mahout \cite{Owen:2011:MA:2132656}, and Madlib \cite{hellerstein2012madlib} are systems that provide the necessary toolkits to train machine learning models. 
 All of these systems provide a range training algorithms for machine learning methods. 
