@@ -89,7 +89,7 @@ A simple method is used for tuning the scheduling rate based on the rate of the 
 The scheduling rate is increased as the rate of the incoming training data increases and vice versa.
 This helps in adapting the model to the new training data.
 
-\subsection{Online Statistics Computation}
+\subsection{Online Statistics Computation and Data Materialization}
 Before training the machine learning model the training dataset has to be processed the pipeline.
 Different components of the pipeline require statistics over the dataset to be calculated before they process the data.
 Computing these statistics require scans of the data.
@@ -99,8 +99,12 @@ The above components require the mean, standard deviation, and for the one-hot e
 Our deployment platform also accommodates custom pipeline components.
 When new training data arrives at the system, the platform directs the data to the given component so they update their underlying statistics and data structures.
 Computing the required statistics online reduces the model training time as computing these statistics offline is time-consuming.
-
-\subsection{Online Materialization of Training Data}
+Every pipeline component needs to transform the data when it is updating its statistics.
+The component then passes the transformed data to the next component.
+Once every pipeline component updates their statistics, the resulting transformed data is ready for model training.
+We provide an optional feature that allows materialization and storage of the transformed data on disk.
+As a result, during the next SGD iterations, the system skips the preprocessing steps of the pipelines and directly accesses the transformed data to train the model.
+Storing the transformed data significantly reduces the model training time.
 
 \subsection{Improved Example Application}
 \begin{figure}[t]

@@ -54,7 +54,7 @@ To ensure high quality predictions, new models should be trained frequently.
 However, existing solutions recognize training new models as a resource intensive and time consuming process \cite{crankshaw2014missing, agarwal2014laser, baylor2017tfx}.
 To address the trade-off between model quality and model freshness, existing solutions propose periodical training of new models.
 However, the periods between trainings are typically long (daily).
-While daily training is appropriate for some use cases \cite{baylor2017tfx}, it is not suitable for other use cases \hl{citation??}.
+While daily training is appropriate for some use cases, it is not suitable for other use cases \cite{baylor2017tfx}.
 This leads to a high quality but out-dated model.
 Therefore, the model does not consider the recent training data when answering predictions.
 Moreover, existing solutions treat the model training and model serving as two separate processes. 
@@ -64,7 +64,7 @@ We realized by merging these two processes (training and serving) we can optimiz
 We propose a method for a deployment platform that continuously updates the models (thus providing fresh models) without sacrificing the quality.
 Our solution offers two key optimizations.
 
-\textit{Online Statistics Computation \hl{and Data Materialization}} 
+\textit{Online Statistics Computation and Data Materialization}
 We compute and update the statistics of the training dataset in real-time while the model is being served. 
 The statistics are required to process the data before training the model.
 In our motivating example, label indexing, one-hot encoding, 
@@ -74,7 +74,9 @@ Due to the size of the training dataset, computing these statistics every time b
 Updating the statistics in real-time requires minimal amount of resources. 
 To compute mean and standard deviation, we need to update the column sum and dataset size.
 To index the labels and perform one-hot encoding, we need to perform a lookup (and in case a new categorical variable is detected, an update) in a hash-table. 
-\hl{Discuss materialization of the preprocessed training data}
+After updating the statistics, each pipeline component transforms the data and passes the data to the next component.
+When every component updates their statistics the resulting data is materialized and stored on disk.
+As a result, we can directly use the materialized data to train a new model and skip the preprocessing steps of the pipeline.
 
 \textit{Proactive training.}
 The underlying optimization technique, Stochastic Gradient Descent (SGD), for the training approach is an iterative algorithm.
@@ -83,8 +85,8 @@ By exploiting these two features of SGD, we replace the time-consuming and resou
 Our strategy in continuously updating the model is similar to how parameter servers train large models \cite{li2014scaling}.
 Parameter servers use the Stochastic Gradient Descent optimization method to iteratively compute partial updates and push these updates to the model.
 In our solution, we continuously compute the partial updates based on a combination of the existing data and the newly arrived data, and then propagate the partial update to the deployed model.
+\todo{Theoretical bound on the quality?}
 Proactive training increases model freshness without sacrificing the model quality.
-\hl{Theoretical bound on the quality?}
 Our experiments show that proactive training of the model achieves more accurate predictions overtime and requires less resources when compared to full training of new models.
 
 In summary our contributions are:
