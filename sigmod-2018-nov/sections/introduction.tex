@@ -11,13 +11,13 @@ This means that the model being used for answering prediction requests is not al
 Online learning methods can be utilized to provide fresh and up-to-date models.
 However, unless the online learning method is highly tuned to the specific use case \cite{ma2009identifying}, a high-quality model cannot be guaranteed.
 This results in a trade-off between model quality and model freshness.
-
-\begin{figure}[t]
+\begin{figure}[h!]
 \centering
-\includegraphics[width=\columnwidth]{../images/motivational-example-vertical-small.pdf}
-\caption{Ads Serving Scenario}
+\includegraphics[width=\columnwidth]{../images/motivational-example-vertical-small-cropped.pdf}
+\caption{Example Application: Ads Serving}
 \label{fig:motivational-example}
 \end{figure}
+
 \textbf{Example Application.} 
 Online advertising is a multi-billion dollar industry.
 An advertising network receives ads from different businesses (ads providers) and shows them on different websites (publishers).
@@ -25,15 +25,13 @@ The advertising network charges businesses based on the number of clicks users m
 Advertising networks utilize machine learning pipelines to estimate the click rate of different ads.
 Figure \ref{fig:motivational-example} shows the workflow of an advertising firm.
 The input data (Click Log) consists of several numerical and categorical variables related to the user, publisher's website, the ads, and whether or not the users clicked on those ads.
-A basic click rate prediction pipeline is designed the following way \textcircled{1}:
-\begin{itemize}
-\item A \textbf{missing value imputer} replaces missing values with appropriate values
-\item A \textbf{label indexer} finds the different unique values in a categorical feature 
-\item A \textbf{one-hot encoder} creates a new binary feature for every unique value in a categorical feature
-%\item \hl{A \textbf{data bucketizer} transforms continuous variables into a series of binary variables}
-\item A \textbf{standard scaler} scales the data columns to have unit standard deviation and zero mean
-\item And finally a \textbf{model trainer} trains a logistic regression model over the processed data
-\end{itemize}
+A basic click rate prediction pipeline is designed the following way \textcircled{1}. 
+A \textbf{missing value imputer} replaces missing values with appropriate values.
+A \textbf{label indexer} finds the different unique values in a categorical feature. 
+A \textbf{one-hot encoder} creates a new binary feature for every unique value in a categorical feature.
+%A \textbf{data bucketizer} transforms continuous variables into a series of binary variables.
+A \textbf{standard scaler} scales the data columns to have unit standard deviation and zero mean.
+And finally a \textbf{model trainer} trains a logistic regression model over the processed data.
 Once the pipeline is created, the deployment platform serves the pipeline and model and prepares them for receiving prediction queries \textcircled{2}.
 Whenever a user visits a publisher website, a series of prediction queries are sent to the deployment platform \textcircled{3} .
 The deployment platform uses the pipeline to process the request and the model to estimate the click rate of the user for the available ads on the website \textcircled{4}.
@@ -99,7 +97,7 @@ In summary our contributions are:
 
 The rest of this paper is organized as follows:
 Section \ref{continuous-training-serving} describes the details of our continuous training approach.
-In Section \ref{sec:system-architecture}, we introduce the design principles and architecture of our deployment system.
-In Section \ref{evaluation}, we evaluate our continuous training approach and compare the performance of our platform with other model deployment approaches.
+In Section \ref{sec:system-architecture}, we introduce the architecture of our deployment system.
+In Section \ref{evaluation}, we evaluate the performance of our continuous deployment approach.
 Section \ref {related-work} discusses the related work.
 Finally, Section \ref{conclusion} presents our conclusion and future work.
