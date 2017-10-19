@@ -67,13 +67,13 @@ Once the gradients are computed, we update the deployed model.
 However, the two parameters of SGD (learning rate and sample size) play an important role.
 They have to be tuned to increase the efficiency of the training.
 Choosing very small sample size may result in inaccurate updates and as a result, degrade the quality of the deployed model.
-Very large sample size leads to lengthy training process and less frequent model updates.
+Very large sample size leads to a lengthy training process and less frequent model updates.
 Similarly, learning rate should be adapted accordingly.
 We view proactive training as an extension of the offline batch training.
 Therefore, the process of choosing the best sample size and learning rate adaptation technique is similar to static training.
 Different hyperparameter tuning techniques are proposed for finding the best set of hyperparameters.
 Most common and simplest approaches are grid search and random search \cite{bergstra2012random}.
-We use a simple grid search over the initial training data to find the best hyperparamters (in our system, learning rate adaptation technique and sample size).
+We use a simple grid search over the initial training data to find the best hyperparameters (in our system, learning rate adaptation technique and sample size).
 Once the initial model is trained and deployed, the same set of parameters are used for the proactive training.
 
 \textit{Scheduling rate.}
@@ -81,7 +81,7 @@ An extra parameter of proactive training is the scheduling rate.
 In offline training, iterations of SGD are executed one after the other until convergence.
 In proactive training, scheduling rate defines the frequency of SGD iteration execution.
 Scheduling rate plays an important role as it directly affects the freshness of the deployed model.
-However, a high scheduling rate results in many frequent SGD iterations which incurs an overhead on the deployment system as it is using a lot of resources.
+However, a high scheduling rate results in many frequent SGD iterations which incur an overhead on the deployment system as it is using a lot of resources.
 Small scheduling rate also affects the model freshness.
 To increase the efficiency of the system a scheduler component is designed that is tasked with scheduling new iterations of SGD.
 Similar to learning rate tuning, we use an adaptive approach to adjust the scheduling rate.
@@ -109,7 +109,7 @@ Storing the transformed data significantly reduces the model training time.
 \subsection{Improved Example Application}
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{../images/improved-example-vertical.pdf}
+\includegraphics[width=\columnwidth]{../images/improved-example-vertical-small.pdf}
 \caption{Ads Serving Continuous Training}
 \label{fig:improved-example}
 \end{figure}
