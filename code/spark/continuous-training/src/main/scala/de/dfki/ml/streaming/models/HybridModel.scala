@@ -175,25 +175,6 @@ abstract class HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientD
     fast
   }
 
-  /**
-    * The incoming data are assumed to be new and never seen before
-    * Therefore a call to to optimizer's updateStatistics method is required
-    *
-    * @param observations stream of training observations
-    */
-  override def trainOn(observations: DStream[LabeledPoint]): Unit = {
-    if (model.isEmpty) {
-      throw new IllegalArgumentException("Model must be initialized before starting training.")
-    }
-    observations.foreachRDD {
-      (rdd, _) =>
-        if (!rdd.isEmpty) {
-          algorithm.optimizer.updateStatistics(rdd.map(l => (l.label, l.features)))
-          model = Some(algorithm.run(rdd, model.get.weights, model.get.intercept))
-        }
-    }
-  }
-
   override def toString: String = {
     s"${this.getClass.getCanonicalName}\n" +
       s"Algorithm: ${algorithm.toString}\n" +

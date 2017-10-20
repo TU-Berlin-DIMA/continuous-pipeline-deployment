@@ -127,12 +127,6 @@ class GradientDescent(var numIterations: Int,
   }
 
   override def optimize(data: RDD[(Double, Vector)], initialWeights: Vector, intercept: Double): Vector = {
-    // make sure statistics are calculated on the first call to the algorithm
-    // afterwards it is the responsibility of the caller to make sure statistics are explicitly update
-    if (summarizer == null) {
-      logger.warn("Calculating the statistics for the first time...")
-      updateStatistics(data)
-    }
     GradientDescent.runMiniBatchSGD(
       data,
       gradient,
@@ -145,10 +139,7 @@ class GradientDescent(var numIterations: Int,
       convergenceTol,
       standardize,
       fitIntercept,
-      intercept,
-      numFeatures,
-      featuresMean,
-      featuresStd)
+      intercept)
   }
 }
 
@@ -191,10 +182,7 @@ object GradientDescent {
                       convergenceTol: Double,
                       standardization: Boolean,
                       fitIntercept: Boolean,
-                      intercept: Double,
-                      numFeatures: Int,
-                      featuresMean: Array[Double],
-                      featuresStd: Array[Double]): Vector = {
+                      intercept: Double): Vector = {
 
     // convergenceTol should be set with non minibatch settings
     if (miniBatchFraction < 1.0 && convergenceTol > 0.0) {
@@ -225,6 +213,8 @@ object GradientDescent {
       logger.warn("The miniBatchFraction is too small")
     }
 
+    val numFeatures = initialWeights.size
+    gradient.setNumFeatures(numFeatures)
     // Initialize weights as a column vector
     var weights = if (!fitIntercept) {
       Vectors.dense(initialWeights.toArray)
@@ -238,11 +228,6 @@ object GradientDescent {
       initialCoefficientsWithIntercept(numFeatures) = intercept
       Vectors.dense(initialCoefficientsWithIntercept)
     }
-    if (standardization) {
-      gradient.setFeaturesMean(featuresMean)
-      gradient.setFeaturesStd(featuresStd)
-    }
-
 
     /**
       * For the first iteration, the regVal will be initialized as sum of weight squares
@@ -290,8 +275,6 @@ object GradientDescent {
       i += 1
     }
 
-    // do not transform the weights into the original space
-    // only do it while testing the model
     weights
   }
 

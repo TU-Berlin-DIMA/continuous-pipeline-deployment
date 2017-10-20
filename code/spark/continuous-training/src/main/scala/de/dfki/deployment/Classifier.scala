@@ -189,18 +189,6 @@ abstract class Classifier extends Serializable {
     finally fw.close()
   }
 
-
-  /**
-    *
-    * incrementally update the [[streamingModel]] using the incoming data stream
-    *
-    * @param observations training data stream of [[LabeledPoint]]
-    *
-    */
-  def trainOnStream(observations: DStream[LabeledPoint]): Unit = {
-    streamingModel.trainOn(observations)
-  }
-
   /**
     * store captured running time into the given path
     *

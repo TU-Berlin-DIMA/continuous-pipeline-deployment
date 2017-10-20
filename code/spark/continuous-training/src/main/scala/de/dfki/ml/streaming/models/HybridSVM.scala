@@ -27,10 +27,6 @@ class HybridSVM(private var stepSize: Double,
   def this() = this(0.1, 50, 1.0, 0.0, new SquaredL2Updater)
 
 
-  override def trainOn(observations: DStream[LabeledPoint]): Unit = {
-    super.trainOn(observations)
-  }
-
   override val getType = "svm"
 
   // TODO: Implement this

@@ -13,9 +13,11 @@ abstract class BatchGradient extends Serializable {
 
   def compute(data: RDD[(Double, Vector)], weights: Vector): (Double, BV[Double])
 
-  def setFeaturesMean(means: Array[Double])
+  def setNumFeatures(size: Int)
 
-  def setFeaturesStd(std: Array[Double])
+ // def setFeaturesMean(means: Array[Double])
+
+ // def setFeaturesStd(std: Array[Double])
 }
 
 
@@ -30,26 +32,18 @@ class LogisticGradient(fitIntercept: Boolean,
                        standardization: Boolean,
                        regParamL2: Double) extends BatchGradient {
 
-  var featuresMean: Array[Double] = _
-  var featuresStd: Array[Double] = _
+  var numFeatures = 0
 
-  override def setFeaturesMean(means: Array[Double]) = {
-    this.featuresMean = means
-  }
 
-  override def setFeaturesStd(std: Array[Double]) = {
-    this.featuresStd = std
+  override def setNumFeatures(size: Int) = {
+    this.numFeatures = size
   }
 
 
   override def compute(instances: RDD[(Double, Vector)], weights: Vector): (Double, BV[Double]) = {
-    val numFeatures = featuresMean.length
-    val localFeaturesStd = featuresStd
-
-
     val logisticAggregator = {
       val seqOp = (c: LogisticAggregator, instance: (Double, Vector)) =>
-        c.add(instance, weights, localFeaturesStd)
+        c.add(instance, weights)
       val combOp = (c1: LogisticAggregator, c2: LogisticAggregator) => c1.merge(c2)
 
       instances.treeAggregate(
@@ -132,12 +126,10 @@ class LogisticAggregator(private val numFeatures: Int,
     *
     * @param instance     The instance of data point to be added.
     * @param coefficients The coefficients corresponding to the features.
-    * @param featuresStd  The standard deviation values of the features.
     * @return This LogisticAggregator object.
     */
   def add(instance: (Double, Vector),
-          coefficients: Vector,
-          featuresStd: Array[Double]): this.type = {
+          coefficients: Vector): this.type = {
     val label = instance._1
     val features = instance._2
     require(numFeatures == features.size, s"Dimensions mismatch when adding new instance." +
@@ -157,8 +149,8 @@ class LogisticAggregator(private val numFeatures: Int,
         val margin = - {
           var sum = 0.0
           features.foreachActive { (index, value) =>
-            if (featuresStd(index) != 0.0 && value != 0.0) {
-              sum += coefficientsArray(index) * (value / featuresStd(index))
+            if (value != 0.0) {
+              sum += coefficientsArray(index) * value
             }
           }
           sum + {
@@ -169,8 +161,8 @@ class LogisticAggregator(private val numFeatures: Int,
         val multiplier = 1.0 / (1.0 + math.exp(margin)) - label
 
         features.foreachActive { (index, value) =>
-          if (featuresStd(index) != 0.0 && value != 0.0) {
-            localGradientSumArray(index) += multiplier * (value / featuresStd(index))
+          if (value != 0.0) {
+            localGradientSumArray(index) += multiplier * value
           }
         }
 
