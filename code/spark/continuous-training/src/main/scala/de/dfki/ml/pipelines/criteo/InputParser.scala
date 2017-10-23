@@ -15,11 +15,14 @@ class InputParser(delim: String = ",") extends Component[String, RawType] {
       val label = features.take(NUM_LABELS).head.toInt
       val numericalFeature = features.slice(NUM_LABELS, NUM_LABELS + NUM_INTEGER_FEATURES)
         .map(string => if (string.isEmpty) 0.0 else string.toDouble)
-      val categoricalFeatures = features.slice(NUM_LABELS + NUM_INTEGER_FEATURES, NUM_FEATURES)
+      val categoricalFeatures = features
+        .slice(NUM_LABELS + NUM_INTEGER_FEATURES, NUM_FEATURES)
 
       RawType(label, numericalFeature, categoricalFeatures)
     }
   }
 
   override def update(input: RDD[String]) = ???
+
+  override def updateAndTransform(spark: SparkContext, input: RDD[String]) = ???
 }

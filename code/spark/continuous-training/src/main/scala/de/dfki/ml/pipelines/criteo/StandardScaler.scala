@@ -21,7 +21,7 @@ class StandardScaler extends Component[RawType, RawType] {
     input.map {
       row =>
         val scaledValues = (row.numerical, broadcastMean.value, broadcastStd.value).zipped.toList.map {
-          case (feature, mean, variance) => (feature - mean) / variance
+          case (feature, mean, standardDeviation) => (feature - mean) / standardDeviation
         }.toArray
         RawType(row.label, scaledValues, row.categorical)
     }
@@ -44,5 +44,10 @@ class StandardScaler extends Component[RawType, RawType] {
     }
     featuresMean = summarizer.mean.toArray
     featuresStd = summarizer.variance.toArray.map(math.sqrt)
+  }
+
+  override def updateAndTransform(spark: SparkContext, input: RDD[RawType]) = {
+    update(input)
+    transform(spark,input)
   }
 }
