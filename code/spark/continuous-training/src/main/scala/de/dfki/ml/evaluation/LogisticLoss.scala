@@ -9,6 +9,11 @@ import org.apache.spark.{SparkConf, SparkContext}
   */
 object LogisticLoss {
 
+  /**
+    *
+    * @param rdd input rdd (label, prediction)
+    * @return
+    */
   def logisticLoss(rdd: RDD[(Double, Double)]): Double = {
     val res = rdd
       .map(i => (logisticLoss(i._1, i._2), 1))
@@ -16,6 +21,11 @@ object LogisticLoss {
     res._1 / res._2
   }
 
+  /**
+    *
+    * @param stream input dstream (label, prediction)
+    * @return
+    */
   def logisticLoss(stream: DStream[(Double, Double)]): DStream[Double] = {
     stream
       .map(i => (logisticLoss(i._1, i._2), 1))

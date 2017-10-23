@@ -16,9 +16,9 @@ import org.apache.spark.{SparkConf, SparkContext}
   */
 object Experiment_Quality {
   val BATCH_PATH_ROOT = "data/criteo-full/all"
-  val VALIDATION_PATH = "data/criteo-full/evaluation-data"
-  val RESULT_PATH = "../../../experiment-results/criteo-full/quality/experiment-quality-0.1-l2-500.txt"
-  val MODEL_PATH_ROOT = "data/criteo-full/models/daily/stochastic-0.1-rmsprop-500"
+  val VALIDATION_PATH = "data/criteo-full/all/6"
+  val RESULT_PATH = "../../../experiment-results/criteo-full/quality/experiment-quality-0.1-l2-100.txt"
+  val MODEL_PATH_ROOT = "data/criteo-full/models/daily/stochastic-0.1-rmsprop-200"
 
   @transient val logger = Logger.getLogger(getClass.getName)
 
@@ -42,10 +42,10 @@ object Experiment_Quality {
 
     // if model root path exists, perform evaluations
     if (Files.exists(Paths.get(modelPath))) {
-      evaluateDailyModels(sc, List(0, 1, 2, 3, 4), modelPath, validationPath, resultPath, dataParser)
+      evaluateDailyModels(sc, List(0), modelPath, validationPath, resultPath, dataParser)
     } else {
       val startingDays: List[String] = List()
-      trainDailyModels(sc, startingDays, List(0, 1, 2, 3, 4, 5), batchRoot, modelPath, dataParser)
+      trainDailyModels(sc, startingDays, List(0), batchRoot, modelPath, dataParser)
     }
   }
 
@@ -65,10 +65,10 @@ object Experiment_Quality {
       val model = new HybridLR()
         .setStepSize(1.0)
         .setUpdater(new SquaredL2UpdaterWithRMSProp())
-        .setMiniBatchFraction(0.1)
-        .setRegParam(0.001)
+        .setMiniBatchFraction(1.0)
+        .setRegParam(0.0)
         .setConvergenceTol(0.0)
-        .setNumIterations(500)
+        .setNumIterations(100)
       model.trainInitialModel(trainingData)
       trainingData.unpersist(true)
       HybridModel.saveToDisk(s"$modelPath/$i/model", model)
@@ -87,7 +87,7 @@ object Experiment_Quality {
     for (i <- days) {
       val model = HybridModel.loadFromDisk(s"$modelPath/$i/model")
       val loss = LogisticLoss.logisticLoss(model.predictOnValues(evaluationDataSet))
-
+      println(s"loss = $loss")
       val file = new File(s"$resultPath")
       file.getParentFile.mkdirs()
       val fw = new FileWriter(file, true)

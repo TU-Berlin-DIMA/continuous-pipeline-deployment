@@ -39,13 +39,12 @@ object LogisticRegressionOnCriteoData {
   val TRAINING_DATA = "data/criteo-full/initial-training/0"
   val TEST_DATA = "data/criteo-full/processed/1"
   val RESULT_PATH = "data/criteo-full/temp-results"
-  val STEP_SIZE = "1.0"
+  val STEP_SIZE = "0.001"
   val REGULARIZATION_PARAMETER = "0.0"
-  val ITERATIONS = "500"
+  val ITERATIONS = "100"
   val OPTIMIZER = "sgd"
-  val LEARNING_RATE = "l2-adadelta"
-  val MINI_BATCH_FRACTION = 0.2
-  val GAMMA = 0.9
+  val LEARNING_RATE = "l2-rmsprop"
+  val MINI_BATCH_FRACTION = 1.0
   val DECAY_SIZE = 10
   val BETA1 = 0.9
   val BETA2 = 0.999
@@ -64,14 +63,11 @@ object LogisticRegressionOnCriteoData {
     val miniBatchFraction = parser.getDouble("mini-batch-fraction", MINI_BATCH_FRACTION)
     val updaters = parser.get("updater", LEARNING_RATE).split(",").map(_.trim).map {
       case "l2" => new SquaredL2Updater()
-      case "l2-momentum" => new SquaredL2UpdaterWithMomentum(parser.getDouble("gamma", GAMMA))
-      case "l2-step-decay" => new SquaredL2UpdaterWithStepDecay(parser.getInteger("decay-size", DECAY_SIZE))
-      case "l2-adadelta" => new SquaredL2UpdaterWithAdaDelta(parser.getDouble("gamma", GAMMA))
-      case "l2-rmsprop" => new SquaredL2UpdaterWithRMSProp(parser.getDouble("gamma", GAMMA))
-      case "l2-adam" => new SquaredL2UpdaterWithAdam(
-        parser.getDouble("beta1", BETA1),
-        parser.getDouble("beta2", BETA2)
-      )
+      case "l2-momentum" => new SquaredL2UpdaterWithMomentum()
+      case "l2-step-decay" => new SquaredL2UpdaterWithStepDecay()
+      case "l2-adadelta" => new SquaredL2UpdaterWithAdaDelta()
+      case "l2-rmsprop" => new SquaredL2UpdaterWithRMSProp()
+      case "l2-adam" => new SquaredL2UpdaterWithAdam()
       case "l2-constant" => new SquaredL2UpdaterWithConstantLearningRate()
       // dummy updater for LBFGS
       case _ => new NullUpdater()
@@ -102,23 +98,20 @@ object LogisticRegressionOnCriteoData {
           for (ss <- steps) {
             for (reg <- regParams) {
 
-              val algorithm =
-                if (optimizer == "sgd")
-                  new LogisticRegressionWithSGD(ss, it, reg, miniBatchFraction, updater)
-                else {
-                  val alg = new LogisticRegressionWithLBFGS()
-                  alg.optimizer.setNumIterations(it)
-                  alg.optimizer.setRegParam(reg)
-                  alg
-                }
+
+              val algorithm = new LogisticRegressionWithSGD(ss, it, reg, miniBatchFraction, updater)
+              algorithm.optimizer.setConvergenceTol(0.0)
               val model = algorithm.run(training)
-              //val model = new LogisticRegressionWithSGD(ss, it, reg, 1.0).run(training)
-              val predictionAndLabels = test.map { case LabeledPoint(label, features) =>
-                val prediction = predictPoint(features, model)
-                (prediction, label)
+              val weights = algorithm.optimizer.unStandardize(model.weights)
+              val results = test.map { case LabeledPoint(label, features) =>
+                val prediction = predictPoint(features, weights, model.intercept)
+                (label, prediction)
               }
-              predictionAndLabels.repartition(8).saveAsTextFile(s"$resultPath/optimizer=$optimizer/updater=${updater.name}/iter=$it/step-size=$ss/reg=$reg")
-              println(s"Execution with iter=$it\tstep-size=$ss\treg=$reg is completed")
+              val loss = LogisticLoss.logisticLoss(results)
+              println(s"loss = $loss")
+              //              predictionAndLabels.repartition(8).saveAsTextFile(s"$resultPath/optimizer=$optimizer/updater=${updater.name}/iter=$it/step-size=$ss/reg=$reg")
+              //              println(s"Execution with iter=$it\tstep-size=$ss\treg=$reg is completed")
+
             }
 
           }
@@ -128,8 +121,9 @@ object LogisticRegressionOnCriteoData {
   }
 
   def predictPoint(dataMatrix: Vector,
-                   model: LogisticRegressionModel) = {
-    val margin = LinearAlgebra.dot(model.weights, dataMatrix) + model.intercept
+                   weights: Vector,
+                   intercept: Double) = {
+    val margin = LinearAlgebra.dot(weights, dataMatrix) + intercept
     val score = 1.0 / (1.0 + math.exp(-margin))
     score
   }
@@ -162,10 +156,10 @@ object ComputeScores {
     //, 0.01, 0.05, 0.1, 0.5, 1.0)
     // iterations, step-size, reg
     var results: List[(String, String, Int, Double, Double, Double)] = List()
-//    var maxAccuracy = ("", "", 0, 0.0, 0.0, -1.0)
-//    var maxPrecision = ("", "", 0, 0.0, 0.0, -1.0)
-//    var maxRecall = ("", "", 0, 0.0, 0.0, -1.0)
-//    var maxFMeasure = ("", "", 0, 0.0, 0.0, -1.0)
+    //    var maxAccuracy = ("", "", 0, 0.0, 0.0, -1.0)
+    //    var maxPrecision = ("", "", 0, 0.0, 0.0, -1.0)
+    //    var maxRecall = ("", "", 0, 0.0, 0.0, -1.0)
+    //    var maxFMeasure = ("", "", 0, 0.0, 0.0, -1.0)
 
 
     //    val data = sc.textFile(s"$resultPath/optimizer=sgd/iter=10000/step-size=1.0/reg=0.0")
@@ -208,12 +202,12 @@ object ComputeScores {
       println(s"optimizer(${r._1}), updater(${r._2}), iter(${r._3}), step(${r._4}), reg(${r._5}) -> ${r._6}")
     }
 
-//    println(s"Max Performance")
-//    println(s"accuracy(${maxAccuracy._6}) => optimizer(${maxAccuracy._1}), updater(${maxAccuracy._2}),iter(${maxAccuracy._3}), step(${maxAccuracy._4}), reg(${maxAccuracy._5})")
-//    println(s"precision(${maxPrecision._6}) => optimizer(${maxPrecision._1}), updater(${maxPrecision._2}),iter(${maxPrecision._3}), step(${maxPrecision._4}), reg(${maxPrecision._5})")
-//    println(s"recall(${maxRecall._6}) => optimizer(${maxRecall._1}), updater(${maxRecall._2}), iter(${maxRecall._3}), step(${maxRecall._4}), reg(${maxRecall._5})")
-//    println(s"f-measure(${maxFMeasure._6}) => optimizer(${maxFMeasure._1}), updater(${maxFMeasure._2}), iter(${maxFMeasure._3}), step(${maxFMeasure._4}), reg(${maxFMeasure._5})")
-//    //println(s"test-size($totalSize), class-dist(${classDist.toString})")
+    //    println(s"Max Performance")
+    //    println(s"accuracy(${maxAccuracy._6}) => optimizer(${maxAccuracy._1}), updater(${maxAccuracy._2}),iter(${maxAccuracy._3}), step(${maxAccuracy._4}), reg(${maxAccuracy._5})")
+    //    println(s"precision(${maxPrecision._6}) => optimizer(${maxPrecision._1}), updater(${maxPrecision._2}),iter(${maxPrecision._3}), step(${maxPrecision._4}), reg(${maxPrecision._5})")
+    //    println(s"recall(${maxRecall._6}) => optimizer(${maxRecall._1}), updater(${maxRecall._2}), iter(${maxRecall._3}), step(${maxRecall._4}), reg(${maxRecall._5})")
+    //    println(s"f-measure(${maxFMeasure._6}) => optimizer(${maxFMeasure._1}), updater(${maxFMeasure._2}), iter(${maxFMeasure._3}), step(${maxFMeasure._4}), reg(${maxFMeasure._5})")
+    //    //println(s"test-size($totalSize), class-dist(${classDist.toString})")
 
   }
 

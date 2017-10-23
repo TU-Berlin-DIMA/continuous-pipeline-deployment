@@ -1,4 +1,4 @@
-package de.dfki.examples
+package de.dfki.general
 
 import de.dfki.ml.evaluation.ConfusionMatrix
 import de.dfki.ml.optimization.SquaredL2UpdaterWithMomentum
