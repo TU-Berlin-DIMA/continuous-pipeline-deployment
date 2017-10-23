@@ -45,7 +45,7 @@ class LogisticRegressionWithSGD(stepSize: Double,
            miniBatchFraction: Double) = this(stepSize, numIterations, regParam, miniBatchFraction, true, true, new SquaredL2Updater)
 
 
-  override def gradientFunction = new LogisticGradient(fitIntercept, standardization, regParam)
+  override def gradientFunction = new LogisticGradient(fitIntercept, regParam)
 
 
   override def createModel(weights: Vector, intercept: Double) = {

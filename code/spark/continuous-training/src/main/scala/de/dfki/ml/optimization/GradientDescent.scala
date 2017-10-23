@@ -61,7 +61,7 @@ class GradientDescent(var numIterations: Int,
     this
   }
 
-  def this() = this(100, 1.0, 0.0, 1.0, 1E-6, true, true, new LogisticGradient(true, true, 1.0), new SquaredL2Updater)
+  def this() = this(100, 1.0, 0.0, 1.0, 1E-6, true, true, new LogisticGradient(true, 1.0), new SquaredL2Updater)
 
 
   /**

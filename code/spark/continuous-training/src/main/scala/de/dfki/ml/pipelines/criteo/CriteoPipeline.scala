@@ -1,31 +1,34 @@
 package de.dfki.ml.pipelines.criteo
 
 import de.dfki.ml.evaluation.LogisticLoss
-import de.dfki.ml.optimization.SquaredL2UpdaterWithRMSProp
+import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
 import de.dfki.ml.pipelines.Pipeline
 import de.dfki.utils.CommandLineParser
+import org.apache.spark.mllib.optimization.Updater
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
+import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * @author behrouz
   */
 class CriteoPipeline(spark: SparkContext,
-                     withMaterialization: Boolean = false)
-  extends Pipeline[String] {
+                     val stepSize: Double = 1.0,
+                     val numIterations: Int = 200,
+                     val regParam: Double = 0.0,
+                     val miniBatchFraction: Double = 0.1,
+                     val updater: Updater = new SquaredL2UpdaterWithAdam()) extends Pipeline[String] {
 
   val fileReader = new InputParser()
   val missingValueImputer = new MissingValueImputer()
   val standardScaler = new StandardScaler()
   val oneHotEncoder = new OneHotEncoder()
-  val model = new ModelTrainer(stepSize = 1.0,
-    numIterations = 500,
-    regParam = 0,
-    miniBatchFraction = 1.0,
-    updater = new SquaredL2UpdaterWithRMSProp())
+  val model = new ModelTrainer(stepSize, numIterations, regParam, miniBatchFraction, updater)
 
   var materializedTrainingData: RDD[LabeledPoint] = _
+
+  override def withMaterialization = false
 
   override def update(data: RDD[String]): Unit = {
     val parsedData = fileReader.transform(spark, data)
@@ -58,10 +61,27 @@ class CriteoPipeline(spark: SparkContext,
     trainingData.unpersist()
   }
 
+  /**
+    *
+    * @param data
+    * @return
+    */
   override def predict(data: RDD[String]): RDD[(Double, Double)] = {
     val testData = dataProcessing(data)
     model.predict(testData.map(v => (v.label, v.features)))
   }
+
+  /**
+    *
+    * @param data
+    * @return
+    */
+  override def predict(data: DStream[String]): DStream[(Double, Double)] = {
+    data.transform(rdd => predict(rdd))
+    //    val testData = dataProcessing(data)
+    //    model.predict(testData.map(v => (v.label, v.features)))
+  }
+
 
   private def dataProcessing(data: RDD[String]): RDD[LabeledPoint] = {
     val parsedData = fileReader.transform(spark, data)
@@ -80,6 +100,7 @@ class CriteoPipeline(spark: SparkContext,
   }
 }
 
+// example use case of criteo pipeline
 object CriteoPipeline {
   val INPUT_PATH = "data/criteo-full/raw"
   val TEST_PATH = "data/criteo-full/raw/6"
@@ -111,38 +132,5 @@ object CriteoPipeline {
   }
 }
 
-object Test {
-  val INPUT_PATH = "data/criteo-full/raw/test"
-  val TEST_PATH = "data/criteo-full/raw/6"
 
-  def main(args: Array[String]): Unit = {
-
-
-    val parser = new CommandLineParser(args).parse()
-    val inputPath = parser.get("input-path", INPUT_PATH)
-
-    val conf = new SparkConf().setAppName("Criteo Pipeline Processing")
-    val masterURL = conf.get("spark.master", "local[*]")
-    conf.setMaster(masterURL)
-
-    val spark = new SparkContext(conf)
-
-    val inputParser = new InputParser()
-    val standardScaler = new StandardScaler()
-    val missingValueImputer = new MissingValueImputer()
-    val oneHotEncoder = new OneHotEncoder()
-
-
-    val data = spark.textFile(s"$inputPath")
-
-    val parsedData = inputParser.transform(spark, data)
-    val filledData = missingValueImputer.transform(spark, parsedData)
-    val scaledData = standardScaler.updateAndTransform(spark, filledData)
-    val trainingData = oneHotEncoder.updateAndTransform(spark, scaledData)
-
-    trainingData.repartition(1).map(r => s"${r.label.toString} | ${r.features.toString}").saveAsTextFile(s"data/criteo-full/processed/new")
-
-
-  }
-}
 

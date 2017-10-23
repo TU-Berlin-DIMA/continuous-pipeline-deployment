@@ -29,7 +29,6 @@ abstract class BatchGradient extends Serializable {
   * It's used in Breeze's convex optimization routines.
   */
 class LogisticGradient(fitIntercept: Boolean,
-                       standardization: Boolean,
                        regParamL2: Double) extends BatchGradient {
 
   var numFeatures = 0

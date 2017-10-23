@@ -1,9 +1,7 @@
 package de.dfki.ml.optimization
 
-import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
-import org.apache.spark.mllib.linalg.{DenseVector, Vector, Vectors}
 
 /**
   * @author behrouz
@@ -14,7 +12,7 @@ class GradientDescentTest extends FunSuite with BeforeAndAfterEach {
 
   override def beforeEach() {
     optimizer = new GradientDescent(100, 1.0, 0.0, 1.0, 1E-6, true, true,
-      new LogisticGradient(true, true, 1.0),
+      new LogisticGradient(true, 1.0),
       new SquaredL2Updater())
     val conf = new SparkConf()
       .setAppName("Test SGD Optimizer")
