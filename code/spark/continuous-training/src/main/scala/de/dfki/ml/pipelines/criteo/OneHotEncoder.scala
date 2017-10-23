@@ -30,11 +30,11 @@ class OneHotEncoder extends Component[RawType, LabeledPoint] {
             } else {
               Seq(index.get.toInt)
             }
-        }
+        }.distinct
         val categoricalVector = new SparseVector(
           size + NUM_INTEGER_FEATURES,
-          (0 to 12).toArray ++ encodedIndices,
-          item.numerical ++ Array.fill[Double](encodedIndices.size)(1.0)
+          (0 to 12).toArray ++ encodedIndices.sorted,
+          item.numerical ++ Array.fill[Double](encodedIndices.length)(1.0)
         )
         new LabeledPoint(item.label, categoricalVector)
     }

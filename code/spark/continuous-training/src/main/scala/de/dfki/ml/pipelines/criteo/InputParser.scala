@@ -18,6 +18,14 @@ class InputParser(delim: String = ",") extends Component[String, RawType] {
       val categoricalFeatures = features
         .slice(NUM_LABELS + NUM_INTEGER_FEATURES, NUM_FEATURES)
 
+      // TODO: Check if this affects the performance (taken from Christoph Boden's code)
+      // add dimension so that similar values in diff. dimensions get a different hash
+      // however this may not be benifical for criteo as suggested by
+      // http://fastml.com/vowpal-wabbit-eats-big-data-from-the-criteo-competition-for-breakfast/
+      for (i <- categoricalFeatures.indices) {
+        categoricalFeatures(i) = i + ":" + categoricalFeatures(i)
+      }
+
       RawType(label, numericalFeature, categoricalFeatures)
     }
   }

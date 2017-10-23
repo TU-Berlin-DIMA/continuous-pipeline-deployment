@@ -33,8 +33,6 @@ class LogisticGradient(fitIntercept: Boolean,
                        regParamL2: Double) extends BatchGradient {
 
   var numFeatures = 0
-
-
   override def setNumFeatures(size: Int) = {
     this.numFeatures = size
   }

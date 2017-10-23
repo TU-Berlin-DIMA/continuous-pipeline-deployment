@@ -104,8 +104,8 @@ abstract class HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientD
       throw new IllegalArgumentException("Model must be initialized before starting prediction")
     }
     // the weights have to be un standardized before making a prediction
-    val scaledWeights = algorithm.optimizer.unStandardize(model.get.weights)
-    data.mapValues { x => predictPoint(x, scaledWeights, model.get.intercept) }
+    //val scaledWeights = algorithm.optimizer.unStandardize(model.get.weights)
+    data.mapValues { x => predictPoint(x, model.get.weights, model.get.intercept) }
   }
 
   override def predictOnValues[K: ClassTag](data: DStream[(K, Vector)]): DStream[(K, Double)] = {
@@ -114,7 +114,8 @@ abstract class HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientD
     }
     // the weights have to be un standardized before making a prediction
     data.mapValues { x => predictPoint(x,
-      algorithm.optimizer.unStandardize(model.get.weights),
+     // algorithm.optimizer.unStandardize(model.get.weights),
+      model.get.weights,
       model.get.intercept) }
   }
 
@@ -131,7 +132,7 @@ abstract class HybridModel[M <: GeneralizedLinearModel, A <: StochasticGradientD
     if (model.isEmpty) {
       throw new IllegalArgumentException("Model must be initialized before starting training.")
     }
-    algorithm.optimizer.updateStatistics(observations.map(l => (l.label, l.features)))
+    //algorithm.optimizer.updateStatistics(observations.map(l => (l.label, l.features)))
     observations
   }
 

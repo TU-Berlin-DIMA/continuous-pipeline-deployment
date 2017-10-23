@@ -102,9 +102,9 @@ object LogisticRegressionOnCriteoData {
               val algorithm = new LogisticRegressionWithSGD(ss, it, reg, miniBatchFraction, updater)
               algorithm.optimizer.setConvergenceTol(0.0)
               val model = algorithm.run(training)
-              val weights = algorithm.optimizer.unStandardize(model.weights)
+             // val weights = algorithm.optimizer.unStandardize(model.weights)
               val results = test.map { case LabeledPoint(label, features) =>
-                val prediction = predictPoint(features, weights, model.intercept)
+                val prediction = predictPoint(features, model.weights, model.intercept)
                 (label, prediction)
               }
               val loss = LogisticLoss.logisticLoss(results)

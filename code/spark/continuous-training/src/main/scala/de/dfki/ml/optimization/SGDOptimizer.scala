@@ -27,29 +27,4 @@ abstract class SGDOptimizer extends Optimizer {
     * @return weight vector and intercept
     */
   def optimize(data: RDD[(Double, Vector)], initialWeights: Vector, intercept: Double): Vector
-
-  /**
-    * update the internal statistics of the optimizer
-    * This is made explicit so the caller can choose when to call this method
-    *
-    * @param data the dataset the statistics should be updated based on
-    */
-  def updateStatistics(data: RDD[(Double, Vector)])
-
-  /**
-    * return the requested statistics
-    * @param statisticsType requested statistics type
-    * @return requested statistics value
-    */
-  def getStatistics(statisticsType: String): Array[Double]
-
-  /**
-    * explicitly called by the test unit to transform the model into the non standardized
-    * space
-    *
-    * @param weights model weights
-    * @return weights in non standardized feature space
-    */
-  def unStandardize(weights: Vector): Vector
-
 }

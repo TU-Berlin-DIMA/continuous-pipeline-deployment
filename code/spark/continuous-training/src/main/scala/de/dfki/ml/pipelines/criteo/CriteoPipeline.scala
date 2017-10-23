@@ -20,7 +20,7 @@ class CriteoPipeline(spark: SparkContext,
   val standardScaler = new StandardScaler()
   val oneHotEncoder = new OneHotEncoder()
   val model = new ModelTrainer(stepSize = 1.0,
-    numIterations = 100,
+    numIterations = 500,
     regParam = 0,
     miniBatchFraction = 1.0,
     updater = new SquaredL2UpdaterWithRMSProp())
@@ -112,7 +112,7 @@ object CriteoPipeline {
 }
 
 object Test {
-  val INPUT_PATH = "data/criteo-full/raw"
+  val INPUT_PATH = "data/criteo-full/raw/test"
   val TEST_PATH = "data/criteo-full/raw/6"
 
   def main(args: Array[String]): Unit = {
@@ -132,30 +132,16 @@ object Test {
     val missingValueImputer = new MissingValueImputer()
     val oneHotEncoder = new OneHotEncoder()
 
-    for (i <- 0 to 6) {
-      val data = spark.textFile(s"$inputPath/$i")
 
-      val parsedData = inputParser.transform(spark, data)
-      val filledData = missingValueImputer.transform(spark, parsedData)
-      val scaledData = standardScaler.updateAndTransform(spark, filledData)
-      val trainingData = oneHotEncoder.updateAndTransform(spark, scaledData)
-      trainingData.top(10)(Ordering.by(_.label)).foreach(println)
-    }
+    val data = spark.textFile(s"$inputPath")
 
+    val parsedData = inputParser.transform(spark, data)
+    val filledData = missingValueImputer.transform(spark, parsedData)
+    val scaledData = standardScaler.updateAndTransform(spark, filledData)
+    val trainingData = oneHotEncoder.updateAndTransform(spark, scaledData)
 
-    //    val model = new ModelTrainer(stepSize = 0.001,
-    //      numIterations = 10,
-    //      regParam = 0,
-    //      miniBatchFraction = 1.0,
-    //      updater = new SquaredL2UpdaterWithRMSProp())
-    //
-    //    model.train(trainingData)
-    //
-    //    val results = model.predict(trainingData.map(a => (a.label, a.features)))
-    //
-    //    val loss = LogisticLoss.logisticLoss(results)
-    //
-    //    println(s"Loss = $loss")
+    trainingData.repartition(1).map(r => s"${r.label.toString} | ${r.features.toString}").saveAsTextFile(s"data/criteo-full/processed/new")
+
 
   }
 }

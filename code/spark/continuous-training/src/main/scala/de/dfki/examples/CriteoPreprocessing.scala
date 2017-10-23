@@ -21,10 +21,10 @@ import org.apache.spark.{SparkConf, sql}
   */
 object CriteoPreprocessing {
   val INPUT_PATH = "data/criteo-full"
-  val OUTPUT_PATH = "data/criteo-full/processed"
-  val FILES_PER_DAY = 100
+  val OUTPUT_PATH = "data/criteo-full/processed/old"
+  val FILES_PER_DAY = 1
   // There are a total of 23 days
-  val DAYS = "0,1,2,3,4,5,6"
+  val DAYS = "0"
 
   def main(args: Array[String]): Unit = {
 
@@ -49,7 +49,7 @@ object CriteoPreprocessing {
     }
     catch {
       case iie: IOException =>
-        indexerModel = createIndexerModel(spark, root)
+        indexerModel = createIndexerModel(spark, s"$root/raw/test")
     }
 
     // use the indexer model to transform the data
@@ -60,7 +60,7 @@ object CriteoPreprocessing {
         .option("delimiter", ",")
         .option("header", "false")
         .option("inferSchema", "true")
-        .load(s"$root/raw/$d")
+        .load(s"$root/raw/test")
 
       // add missing values NULL for string and 0.0 for double
       var columnMapping = collection.mutable.Map[String, Any]()
@@ -79,7 +79,7 @@ object CriteoPreprocessing {
       val indexColumns = indexedDf.columns.filter(x => x contains "index")
 
       val oneHotEncoder: Array[org.apache.spark.ml.PipelineStage] = indexColumns.map(
-        cname => new OneHotEncoder()
+        cname => new OneHotEncoder().setDropLast(false)
           .setInputCol(cname)
           .setOutputCol(s"${cname}_vec")
       )
@@ -101,7 +101,7 @@ object CriteoPreprocessing {
 
       finalDf.unpersist(true)
       dataFrame.unpersist(true)
-      output.rdd.map(r => s"${r.get(0).toString} | ${r.get(1).toString}").saveAsTextFile(s"$resultPath/$d/")
+      output.rdd.map(r => s"${r.get(0).toString} | ${r.get(1).toString}").saveAsTextFile(s"$resultPath")
       output.unpersist(true)
     }
 
@@ -113,7 +113,7 @@ object CriteoPreprocessing {
       .option("delimiter", ",")
       .option("header", "false")
       .option("inferSchema", "true")
-      .load(s"$root/raw/backup")
+      .load(s"$root")
 
 
     // add missing values NULL for string and 0.0 for double
@@ -144,7 +144,7 @@ object CriteoPreprocessing {
     val indexerModel = indexerPipeline.fit(filledDf)
     filledDf.unpersist(true)
     df.unpersist(true)
-    indexerModel.save(s"$root/model/")
+   //indexerModel.save(s"$root/model/")
     indexerModel
   }
 
