@@ -1,4 +1,4 @@
-package de.dfki.deployment
+package de.dfki.deployment.classifiers
 
 import java.io.{File, FileWriter}
 import java.nio.file.{Files, Paths}
@@ -8,17 +8,15 @@ import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
 import de.dfki.core.streaming.BatchFileInputDStream
 import de.dfki.ml.evaluation.{ConfusionMatrix, LogisticLoss}
-import de.dfki.ml.optimization.AdvancedUpdaters
 import de.dfki.ml.pipelines.Pipeline
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
-import de.dfki.ml.streaming.models.{HybridLR, HybridModel, HybridSVM}
+import de.dfki.ml.streaming.models.HybridModel
 import de.dfki.preprocessing.parsers.{CSVParser, CustomVectorParser, DataParser, SVMParser}
 import de.dfki.utils.CommandLineParser
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
-import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming._
 import org.apache.spark.streaming.dstream.{ConstantInputDStream, DStream}

@@ -1,4 +1,4 @@
-package de.dfki.deployment
+package de.dfki.deployment.classifiers
 
 import org.apache.spark.mllib.classification.SVMWithSGD
 import org.apache.spark.{SparkConf, SparkContext}

@@ -14,13 +14,14 @@ import org.apache.spark.{SparkConf, SparkContext}
   * @author behrouz
   */
 class CriteoPipeline(spark: SparkContext,
+                     val delim: String = "\t",
                      val stepSize: Double = 1.0,
                      val numIterations: Int = 100,
                      val regParam: Double = 0.0,
                      val miniBatchFraction: Double = 1.0,
                      val updater: Updater = new SquaredL2UpdaterWithAdam()) extends Pipeline {
 
-  val fileReader = new InputParser()
+  val fileReader = new InputParser(delim)
   val missingValueImputer = new MissingValueImputer()
   val standardScaler = new StandardScaler()
   val oneHotEncoder = new OneHotEncoder()

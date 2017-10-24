@@ -1,8 +1,7 @@
-package de.dfki.deployment
+package de.dfki.deployment.classifiers
 
+import de.dfki.deployment.ContinuousDeployment
 import de.dfki.utils.CommandLineParser
-import org.apache.spark.rdd.RDD
-import org.apache.spark.streaming.Seconds
 
 /**
   * @author behrouz
@@ -46,57 +45,20 @@ object ContinuousClassifier extends Classifier {
 
     val ssc = initializeSpark()
 
-    // train initial model
-    val startTime = System.currentTimeMillis()
-
     val data = ssc.sparkContext
       .textFile(initialDataPath)
       .repartition(ssc.sparkContext.defaultParallelism)
 
     val pipeline = trainInitialPipeline(ssc, data)
-    val endTime = System.currentTimeMillis()
-    storeTrainingTimes(endTime - startTime, resultPath)
 
-    val streamingSource = streamSource(ssc, streamingDataPath)
-    val testData = ssc.sparkContext.textFile(evaluationDataPath)
+    val deployment = new ContinuousDeployment(history = initialDataPath,
+      stream = streamingDataPath,
+      eval = evaluationDataPath,
+      resultPath = s"$resultPath/loss",
+      slack = 1,
+      samplingRate = 0.1)
 
-    def historicalDataRDD(recentItems: RDD[String]) = {
-      logger.info(s"scheduling a batch iteration on ${streamingSource.getProcessedFiles.length} files ")
-      ssc.sparkContext.textFile(streamingSource.getProcessedFiles.mkString(","))
-        .union(data)
-        .union(recentItems)
-        .sample(withReplacement = false, samplingRate)
-        .repartition(ssc.sparkContext.defaultParallelism)
-        .cache()
-    }
-
-    pipeline.model.setMiniBatchFraction(1.0)
-    pipeline.model.setNumIterations(1)
-
-    evaluateStream(pipeline, testData, testData, resultPath)
-    streamingSource
-      .map(_._2.toString)
-      // updating the statistics
-      .transform(rdd => {
-      pipeline.update(rdd)
-      rdd
-    })
-      // create a window
-      .window(Seconds(slack), Seconds(slack))
-      // hybrid proactive training
-      .transform(rdd => {
-      pipeline.train(historicalDataRDD(rdd))
-      rdd
-    })
-      // evaluate the model
-      .transform(_ => evaluateStream(pipeline, testData, testData, resultPath))
-      // dummy action
-      .foreachRDD(_ => dummyAction())
-
-
-    ssc.start()
-    ssc.awaitTermination()
-
+    deployment.deploy(ssc, pipeline)
   }
 
   override def getApplicationName = "Optimized Continuous Classifier"

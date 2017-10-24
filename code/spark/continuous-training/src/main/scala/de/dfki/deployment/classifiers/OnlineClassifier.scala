@@ -1,6 +1,4 @@
-package de.dfki.deployment
-
-import de.dfki.deployment.ContinuousClassifier.initialDataPath
+package de.dfki.deployment.classifiers
 
 /**
   * Baseline+ classifier

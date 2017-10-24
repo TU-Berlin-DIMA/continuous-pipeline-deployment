@@ -1,4 +1,4 @@
-package de.dfki.deployment
+package de.dfki.deployment.classifiers
 
 /**
   * Baseline classifier

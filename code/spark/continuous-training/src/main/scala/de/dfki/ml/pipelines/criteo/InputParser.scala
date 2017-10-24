@@ -8,7 +8,7 @@ import GLOBAL_VARIABLES._
 /**
   * @author behrouz
   */
-class InputParser(delim: String = ",") extends Component[String, RawType] {
+class InputParser(delim: String = "\t") extends Component[String, RawType] {
   override def transform(spark: SparkContext, input: RDD[String]): RDD[RawType] = {
     input map { line =>
       val features = line.split(delim, -1)
