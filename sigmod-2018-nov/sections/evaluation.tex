@@ -13,32 +13,20 @@ It uses the SGD implementation available in the machine learning library of Apac
 To demonstrate the deployment platform designed two machine learning pipelines.
 
 \textbf{Criteo pipeline.} 
-The Criteo pipeline consists of 5 operations: missing value imputer, column indexer, one hot encoder, vectorizer, standard scaler, and logistic regression model trainer. 
+The Criteo pipeline consists of 5 operations: input parser, missing value imputer, standard scaler, one hot encoder, and logistic regression model trainer. 
 The Terabyte Criteo click log dataset is used for benchmarking algorithms for clickthrough rate (CTR) prediction \cite{criteo-log}.
 It contains \hl{24} days of user click logs. 
 The dataset  contains 13 numerical and 26 categorical features. 
-After applying the indexer and one hot encoding number of features increased to \hl{1,000,000}.
-
-\textbf{XXX pipeline.}
-For all of the classification datasets, we report the prequential error when receiving a new training instances \cite{gama2009issues} .
-
-\textit{Deployment scenario.} 
-Pipelines are trained on an initial part of the data and then continuously trained using the remaining of the data.
-We define 3 different deployment scenarios.
-\begin{itemize}
-\item A: Periodical retraining with no statistics collection
-\item B: Periodical retraining with statistics collection
-\item C: Proactive training with statistics collection
-\end{itemize}
-
-For Criteo pipeline, the pipeline is retrained on a daily basis.
-
-\subsection{Dynamic Evaluation Set}\label{dynamic-evaluation-set}
+In all of our experiments we are using the data from the first 6 days (Day 0 to Day 5) of the criteo dataset.
+Day 0 is used for the initial offline training of the pipeline.
+Day 1 to Day 5 are used as a streaming dataset and Day 6 is used for evaluating the model.
 
 
 \subsection{Learning Rate Adaptation Method}
-However, all of the above methods are defined methods are tested for batch training of the models.
-To assess how effective these methods are on hybrid training (scenario C), we experimented the methods on Criteo Dataset.
+In Section \ref{sgd}, we discussed the importance of learning rate tuning for training a model using the Stochastic Gradient Descent optimization method.
+Proactive training is an extension of SGD, therefore the process of tuning the learning rate adaptation method is no different from tuning the it for offline training.
+Figure \ref{fig:criteo-learning-rate} shows the effect of choosing different learning rate adaptation technique on the Criteo pipeline.
+
 
 \begin{figure}[H]
 \begin{subfigure}{0.5\columnwidth}

@@ -1,6 +1,27 @@
-Process CRITEO Files:
+***JAR***
+scp target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar behrouz@cloud-11.dima.tu-berlin.de:/home/behrouz/jar
+cp /home/behrouz/jar/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar /share/hadoop/behrouz/jars/
+****Process CRITEO Files****
+val data = sc.textFile("hdfs://cloud-11:44000/criteo/day_0")
+data.repartition(1000).saveAsTextFile("hdfs://cloud-11:44000/user/behrouz/criteo/experiments/initial-training/day_0/")
+
+val data = sc.textFile("hdfs://cloud-11:44000/criteo/day_1")
+data.repartition(1000).saveAsTextFile("hdfs://cloud-11:44000/user/behrouz/criteo/experiments/stream/day_1/")
+
 val data = sc.textFile("hdfs://cloud-11:44000/criteo/day_2")
-data.repartition(1000).saveAsTextFile("hdfs://cloud-11:44000/user/behrouz/criteo/experiments/day_2/")
+data.repartition(1000).saveAsTextFile("hdfs://cloud-11:44000/user/behrouz/criteo/experiments/stream/day_2/")
+
+val data = sc.textFile("hdfs://cloud-11:44000/criteo/day_3")
+data.repartition(1000).saveAsTextFile("hdfs://cloud-11:44000/user/behrouz/criteo/experiments/stream/day_3/")
+
+val data = sc.textFile("hdfs://cloud-11:44000/criteo/day_4")
+data.repartition(1000).saveAsTextFile("hdfs://cloud-11:44000/user/behrouz/criteo/experiments/stream/day_4/")
+
+val data = sc.textFile("hdfs://cloud-11:44000/criteo/day_5")
+data.repartition(1000).saveAsTextFile("hdfs://cloud-11:44000/user/behrouz/criteo/experiments/stream/day_5/")
+
+val data = sc.textFile("hdfs://cloud-11:44000/criteo/day_6")
+data.repartition(1000).saveAsTextFile("hdfs://cloud-11:44000/user/behrouz/criteo/experiments/evaluation/day_6/")
 ****Parameter Selection***
 Local: 
 ~/Documents/frameworks/spark/2.2.0/bin/spark-submit --class de.dfki.experiments.ParameterSelection --master "spark://berlin-177.b.dfki.de:7077" --driver-memory 3g --executor-memory 5G /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "updater=rmsprop" "input=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-full/experiments/initial-training/0" "stream=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-full/experiments/stream/1" "evaluation=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-full/experiments/evaluation/6" "result=/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/criteo-full/quality/loss"
@@ -12,3 +33,4 @@ Local:
 ~/Documents/frameworks/spark/2.2.0/bin/spark-submit --class de.dfki.experiments.ParameterSelection --master "spark://berlin-177.b.dfki.de:7077" --driver-memory 3g --executor-memory 5G /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "updater=momentum" "input=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-full/experiments/initial-training/0" "stream=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-full/experiments/stream/1" "evaluation=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-full/experiments/evaluation/6" "result=/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/criteo-full/quality/loss"
 
 Cluster:
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.experiments.ParameterSelection --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "updater=adam" "input=hdfs://cloud-11:44000/user/behrouz/criteo/experiments/day_0/" "stream=hdfs://cloud-11:44000/user/behrouz/criteo/experiments/stream/day_1/" "evaluation=hdfs://cloud-11:44000/user/behrouz/criteo/experiments/evaluation/day_6/" "result=/share/hadoop/behrouz/experiments/criteo-full/quality/loss"
