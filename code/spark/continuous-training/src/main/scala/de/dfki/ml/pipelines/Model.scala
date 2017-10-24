@@ -14,5 +14,20 @@ trait Model extends Serializable {
 
   def predict(data: DStream[(Double, Vector)]): DStream[(Double, Double)]
 
-  def train(data: RDD[LabeledPoint])
+  /**
+    *
+    * @param data      training data rdd
+    * @param dimension optional parameter, if the model size changes during the deployment
+    *                  this value should indicate the new dimension isze
+    */
+  def train(data: RDD[LabeledPoint], dimension: Int)
+
+  /**
+    * Expose this method because in offline and deployment mode the mini batch fraction is handled differently
+    *
+    * @param miniBatchFraction sampling rate of the dataset
+    */
+  def setMiniBatchFraction(miniBatchFraction: Double)
+
+  def setNumIterations(numIterations: Int)
 }

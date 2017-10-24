@@ -15,22 +15,22 @@ import org.apache.spark.{SparkConf, SparkContext}
   */
 class CriteoPipeline(spark: SparkContext,
                      val stepSize: Double = 1.0,
-                     val numIterations: Int = 200,
+                     val numIterations: Int = 100,
                      val regParam: Double = 0.0,
-                     val miniBatchFraction: Double = 0.1,
-                     val updater: Updater = new SquaredL2UpdaterWithAdam()) extends Pipeline[String] {
+                     val miniBatchFraction: Double = 1.0,
+                     val updater: Updater = new SquaredL2UpdaterWithAdam()) extends Pipeline {
 
   val fileReader = new InputParser()
   val missingValueImputer = new MissingValueImputer()
   val standardScaler = new StandardScaler()
   val oneHotEncoder = new OneHotEncoder()
-  val model = new ModelTrainer(stepSize, numIterations, regParam, miniBatchFraction, updater)
+  val model = new LRModel(stepSize, numIterations, regParam, miniBatchFraction, updater)
 
   var materializedTrainingData: RDD[LabeledPoint] = _
 
   override def withMaterialization = false
 
-  override def update(data: RDD[String]): Unit = {
+  override def update(data: RDD[String]) = {
     val parsedData = fileReader.transform(spark, data)
     val filledData = missingValueImputer.transform(spark, parsedData)
     val scaledData = standardScaler.updateAndTransform(spark, filledData)
@@ -48,16 +48,17 @@ class CriteoPipeline(spark: SparkContext,
     *
     * @param data next batch of training data
     */
-  override def train(data: RDD[String]): Unit = {
+  override def train(data: RDD[String]) = {
     // use the materialized data if the option is set
     val trainingData = if (withMaterialization) {
       materializedTrainingData
     } else {
       dataProcessing(data)
     }
+    val newDimension = oneHotEncoder.getCurrentDimension
     trainingData.cache()
     trainingData.count()
-    model.train(trainingData)
+    model.train(trainingData, newDimension)
     trainingData.unpersist()
   }
 

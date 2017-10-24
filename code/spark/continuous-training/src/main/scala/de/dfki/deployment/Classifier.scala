@@ -9,6 +9,8 @@ import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 import de.dfki.core.streaming.BatchFileInputDStream
 import de.dfki.ml.evaluation.{ConfusionMatrix, LogisticLoss}
 import de.dfki.ml.optimization.AdvancedUpdaters
+import de.dfki.ml.pipelines.Pipeline
+import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.ml.streaming.models.{HybridLR, HybridModel, HybridSVM}
 import de.dfki.preprocessing.parsers.{CSVParser, CustomVectorParser, DataParser, SVMParser}
 import de.dfki.utils.CommandLineParser
@@ -35,7 +37,7 @@ import org.apache.spark.streaming.dstream.{ConstantInputDStream, DStream}
   * test-path: data used for evaluation (if not specified, prequential evaluation is used)
   * updater: [[de.dfki.ml.optimization.AdvancedUpdaters]] used for learning rate tuning
   *
-  * [[ContinuousClassifier]] and [[VeloxClassifier]] require extra arguments
+  * [[ContinuousClassifier]] and [[PeriodicalClassifier]] require extra arguments
   *
   * @author Behrouz Derakhshan
   */
@@ -58,7 +60,7 @@ abstract class Classifier extends Serializable {
   val DEFAULT_NUMBER_OF_ITERATIONS = 500
   val STEP_SIZE = 0.001
   val DEFAULT_MODEL_PATH = "generated"
-  val DEFAULT_UPDATER = "rmsprop"
+  val DEFAULT_UPDATER = "adam"
 
   var streamingModel: HybridModel[_, _] = _
   var dataParser: DataParser = _
@@ -74,7 +76,7 @@ abstract class Classifier extends Serializable {
   var batchDuration: Long = _
   var stepSize: Double = _
   var defaultParallelism: Int = _
-  var modelPath: String = _
+  var pipelinePath: String = _
   var resultRoot: String = _
   var initialDataPath: String = _
   var streamingDataPath: String = _
@@ -104,7 +106,7 @@ abstract class Classifier extends Serializable {
     // offline learner step size
     stepSize = parser.getDouble("step-size", STEP_SIZE)
     // optional model path parameter, if not provided the model is searched in the experiment
-    modelPath = parser.get("model-path", DEFAULT_MODEL_PATH)
+    pipelinePath = parser.get("model-path", DEFAULT_MODEL_PATH)
     // updater type
     updater = parser.get("updater", DEFAULT_UPDATER)
 
@@ -135,8 +137,9 @@ abstract class Classifier extends Serializable {
     ssc
   }
 
-  def evaluateStream(stream: RDD[LabeledPoint],
-                     evaluationData: RDD[LabeledPoint],
+  def evaluateStream(pipeline: Pipeline,
+                     stream: RDD[String],
+                     evaluationData: RDD[String],
                      resultPath: String) = {
     val testData = evaluationDataPath match {
       case "prequential" => stream
@@ -144,16 +147,16 @@ abstract class Classifier extends Serializable {
     }
     evaluationMetric match {
       case "logloss" =>
-        val totalLogLoss = streamingModel
-          .predictOnValues(testData.map(lp => (lp.label, lp.features)))
+        val totalLogLoss = pipeline
+          .predict(testData)
           .map(pre => (LogisticLoss.logisticLoss(pre._1, pre._2), 1))
           // sum over logistic loss
           .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
         // store the average logistic loss into file
         storeLogisticLoss(totalLogLoss._1 / totalLogLoss._2, resultPath)
       case "confusion-matrix" =>
-        val cm = streamingModel
-          .predictOnValues(testData.map(lp => (lp.label, lp.features)))
+        val cm = pipeline
+          .predict(testData)
           .map {
             v =>
               var tp, fp, tn, fn = 0
@@ -203,95 +206,26 @@ abstract class Classifier extends Serializable {
     fw.close()
   }
 
-
   /**
-    * Initialize an Online SVM model by first using the data in the given directory to train a static model
+    * Create and train an initial Pipeline model by first using the data in the given directory to train a static model
     * and then load the model into the Online SVM model
     *
     * @param ssc  Spark Streaming Context
-    * @param data Data set for initial training
+    * @param data Dataset for initial training
     * @return Online SVM Model
     */
-  def createInitialStreamingModel(ssc: StreamingContext, data: RDD[LabeledPoint], modelType: String): HybridModel[_, _] = {
-    if (Files.exists(Paths.get(modelPath))) {
-      logger.info("Model exists, loading the model from disk ...")
-      val model = HybridModel.loadFromDisk(modelPath)
-      model
-        // sampling is done manually
-        .setMiniBatchFraction(1.0)
-        .setRegParam(0.001)
-        .setConvergenceTol(0.0)
-        .setNumIterations(5)
-    } else {
-      val hybridModel = if (modelType.equals("svm")) {
-        logger.info("Instantiating a SVM Model")
-        new HybridSVM(stepSize, numIterations, 0.0, 0.1, AdvancedUpdaters.getUpdater(updater))
-          .setConvergenceTol(0.0)
-      } else {
-        logger.info("Instantiating a Linear Regression Model")
-        // regularization parameter is chosen from GridSearch
-        new HybridLR(stepSize, numIterations, 0.0, 0.1, AdvancedUpdaters.getUpdater(updater))
-          .setConvergenceTol(0.0)
-      }
+  def trainInitialPipeline(ssc: StreamingContext, data: RDD[String]): Pipeline = {
+    if (Files.exists(Paths.get(pipelinePath))) {
+      // TODO: Implement this
 
-      hybridModel.trainInitialModel(data)
-      data.unpersist()
-
-      // save the model to disk, consecutive runs will check this directory first
-      HybridModel.saveToDisk(modelPath, hybridModel)
-      hybridModel
-        .setMiniBatchFraction(1.0)
-        .setConvergenceTol(0.0)
-        .setNumIterations(5)
     }
-  }
 
-  /**
-    * Initialize an Online SVM model by first using the data in the given directory to train a static model
-    * and then load the model into the Online SVM model
-    *
-    * @param ssc                    Spark Streaming Context
-    * @param initialDataDirectories directory for initial dataset
-    * @return Online SVM Model
-    */
-  def createInitialStreamingModel(ssc: StreamingContext, initialDataDirectories: String, modelType: String): HybridModel[_, _] = {
-    if (Files.exists(Paths.get(modelPath))) {
-      logger.info("Model exists, loading the model from disk ...")
-      val model = HybridModel.loadFromDisk(modelPath)
-      model
-        // sampling is done manually
-        .setMiniBatchFraction(1.0)
-        .setRegParam(0.001)
-        .setConvergenceTol(0.0)
-        .setNumIterations(5)
-    } else {
-      val hybridModel = if (modelType.equals("svm")) {
-        logger.info("Instantiating a SVM Model")
-        new HybridSVM(stepSize, numIterations, 0.0, 0.1, AdvancedUpdaters.getUpdater(updater))
-          .setConvergenceTol(0.0)
-      } else {
-        logger.info("Instantiating a Linear Regression Model")
-        // regularization parameter is chosen from GridSearch
-        new HybridLR(stepSize, numIterations, 0.0, 0.1, AdvancedUpdaters.getUpdater(updater))
-          .setConvergenceTol(0.0)
-      }
-
-
-      val data = ssc.sparkContext.textFile(initialDataDirectories)
-        .map(dataParser.parsePoint)
-        .repartition(ssc.sparkContext.defaultParallelism)
-        .cache()
-
-      hybridModel.trainInitialModel(data)
-      data.unpersist()
-
-      // save the model to disk, consecutive runs will check this directory first
-      HybridModel.saveToDisk(modelPath, hybridModel)
-      hybridModel
-        .setMiniBatchFraction(1.0)
-        .setConvergenceTol(0.0)
-        .setNumIterations(5)
-    }
+    val pipeline = new CriteoPipeline(ssc.sparkContext)
+    pipeline.update(data)
+    pipeline.train(data)
+    pipeline
+    // TODO: Implement this
+    // HybridModel.saveToDisk(pipelinePath, hybridModel)
   }
 
 

@@ -6,14 +6,17 @@ import org.apache.spark.streaming.dstream.DStream
 /**
   * @author behrouz
   */
-trait Pipeline[I] {
-  def train(data: RDD[I])
+trait Pipeline {
 
-  def predict(data: RDD[I]): RDD[(Double, Double)]
+  val model: Model
 
-  def predict(data: DStream[I]): DStream[(Double, Double)]
+  def train(data: RDD[String])
 
-  def update(data: RDD[I])
+  def predict(data: RDD[String]): RDD[(Double, Double)]
+
+  def predict(data: DStream[String]): DStream[(Double, Double)]
+
+  def update(data: RDD[String])
 
   def withMaterialization: Boolean
 }

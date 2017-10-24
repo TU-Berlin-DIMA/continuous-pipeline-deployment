@@ -1,10 +1,8 @@
 package de.dfki.deployment
 
-import de.dfki.deployment.ContinuousClassifier._
-
 /**
   * Baseline classifier
-  * Train an initial model and deploy it without further incremental learning
+  * Train an initial model and deploy it without further continuous learning
   *
   * @author Behrouz Derakhshan
   */
@@ -27,20 +25,23 @@ object InitialClassifier extends Classifier {
       s"slack-0/updater-$updater/step-size-$stepSize/"
 
     val resultPath = experimentResultPath(resultRoot, child)
-    if (modelPath == DEFAULT_MODEL_PATH) {
-      modelPath = s"$resultRoot/$child/model"
+    if (pipelinePath == DEFAULT_MODEL_PATH) {
+      pipelinePath = s"$resultRoot/$child/model"
     }
     // train initial model
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath, modelType)
+    val data = ssc.sparkContext
+      .textFile(initialDataPath)
+      .repartition(ssc.sparkContext.defaultParallelism)
+
+    val pipeline = trainInitialPipeline(ssc, data)
+
     val streamingSource = streamSource(ssc, streamingDataPath)
-    val testData = ssc.sparkContext.textFile(evaluationDataPath).map(dataParser.parsePoint)
+    val testData = ssc.sparkContext.textFile(evaluationDataPath)
 
     streamingSource
       .map(_._2.toString)
-      // parse input
-      .map(dataParser.parsePoint)
       // evaluate the model
-      .transform(rdd => evaluateStream(rdd, testData, resultPath))
+      .transform(rdd => evaluateStream(pipeline, rdd, testData, resultPath))
       // dummy action
       .foreachRDD(_ => dummyAction())
 

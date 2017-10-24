@@ -19,6 +19,15 @@ abstract class AdvancedUpdaters extends Updater {
   var iterCounter: Int
 
   @transient lazy val logger = Logger.getLogger(getClass.getName)
+
+  def adjustSize(gradient: BV[Double], newSize: Int): BV[Double] = {
+    val curSize = gradient.size
+    if (newSize > curSize) {
+      BDV.vertcat(gradient.toDenseVector, BDV.zeros[Double](newSize - curSize))
+    } else {
+      gradient
+    }
+  }
 }
 
 class NullUpdater extends AdvancedUpdaters {
@@ -166,19 +175,22 @@ class SquaredL2UpdaterWithMomentum(var gamma: Double = 0.9) extends AdvancedUpda
                        iter: Int,
                        regParam: Double) = {
 
-    if (updateVector == null) {
+
+
+    var brzWeights = asBreeze(weightsOld)
+    val brzGradient = asBreeze(gradient)
+    val thisIterStepSize = stepSize / math.sqrt(iterCounter)
+    val size  = brzGradient.size
+      if (updateVector == null) {
       updateVector = BDV.zeros[Double](weightsOld.size)
     }
-    var brzWeights: BV[Double] = asBreeze(weightsOld).toDenseVector
-    val thisIterStepSize = stepSize / math.sqrt(iterCounter)
-    if (regParam != 0) {
-      brzWeights :*= (1.0 - thisIterStepSize * regParam)
-    }
-
+    // adjust the size of the accumulators
+    // used when the size of the model is dynamically changing
+    updateVector = adjustSize(updateVector, size)
     // break momentum update vector formula: v = v * gamma + learningRate * gradient
     // into to parts
     // part1 : v = v * gamma
-    updateVector = updateVector * gamma + thisIterStepSize * asBreeze(gradient)
+    updateVector = updateVector * gamma + thisIterStepSize * brzGradient
     // part 2: v = v + learningRate * gradient
     //brzAxpy(thisIterStepSize, asBreeze(gradient), updateVector)
 
@@ -226,11 +238,16 @@ class SquaredL2UpdaterWithAdaDelta(var gamma: Double = 0.9) extends AdvancedUpda
                        regParam: Double) = {
     val brzGradient = asBreeze(gradient)
     val thisIterStepSize = stepSize / sqrt(iterCounter)
+    val size = brzGradient.size
     // initialize the update vectors
     if (gradientsSquared == null) {
-      gradientsSquared = BDV.zeros[Double](weightsOld.size)
-      deltasSquared = BDV.zeros[Double](weightsOld.size)
+      gradientsSquared = BDV.zeros[Double](size)
+      deltasSquared = BDV.zeros[Double](size)
     }
+    // adjust the size of the accumulators
+    // used when the size of the model is dynamically changing
+    gradientsSquared = adjustSize(gradientsSquared, size)
+    deltasSquared = adjustSize(deltasSquared, size)
     /**
       * break E[g^2] = gamma * E[g^2] + (1 - gamma)g^^2
       * into 2 parts for efficiency
@@ -287,10 +304,14 @@ class SquaredL2UpdaterWithRMSProp(gamma: Double = 0.9) extends AdvancedUpdaters 
     val brzGradient = asBreeze(gradient)
     // seems using any value greater than 0.001 diverges the solution
     val thisIterStepSize = stepSize / sqrt(iterCounter)
+    val size = brzGradient.size
     // initialize the update vectors
     if (gradientsSquared == null) {
-      gradientsSquared = BDV.zeros[Double](weightsOld.size)
+      gradientsSquared = BDV.zeros[Double](size)
     }
+    // adjust the size of the accumulators
+    // used when the size of the model is dynamically changing
+    gradientsSquared = adjustSize(gradientsSquared, size)
     /**
       * break gradientsSquared = (gradientsSquared * gamma) + (brzGradient :* brzGradient) * (1 - gamma)
       * into 2 parts for efficiency
@@ -340,11 +361,16 @@ class SquaredL2UpdaterWithAdam(beta1: Double = 0.9,
                        regParam: Double) = {
     val brzGradient = asBreeze(gradient)
     val thisIterStepSize = stepSize / sqrt(iterCounter)
-
+    val size = brzGradient.size
     if (gradientsSquared == null) {
-      gradientsSquared = BDV.zeros[Double](weightsOld.size)
-      gradients = BDV.zeros[Double](weightsOld.size)
+      gradientsSquared = BDV.zeros[Double](size)
+      gradients = BDV.zeros[Double](size)
     }
+
+    // adjust the size of the accumulators
+    // used when the size of the model is dynamically changing
+    gradients = adjustSize(gradients, size)
+    gradientsSquared = adjustSize(gradientsSquared, size)
 
     // m = beta1 * m + (1 - beta1) * g
     gradients = gradients * beta1

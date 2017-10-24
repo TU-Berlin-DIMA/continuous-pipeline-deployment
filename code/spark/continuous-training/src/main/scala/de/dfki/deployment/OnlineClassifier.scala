@@ -1,5 +1,7 @@
 package de.dfki.deployment
 
+import de.dfki.deployment.ContinuousClassifier.initialDataPath
+
 /**
   * Baseline+ classifier
   * Train an initial model and apply incremental learning after deployment
@@ -25,21 +27,33 @@ object OnlineClassifier extends Classifier {
       s"slack-0/updater-$updater/step-size-$stepSize/"
 
     val resultPath = experimentResultPath(resultRoot, child)
-    if (modelPath == DEFAULT_MODEL_PATH) {
-      modelPath = s"$resultRoot/$child/model"
+    if (pipelinePath == DEFAULT_MODEL_PATH) {
+      pipelinePath = s"$resultRoot/$child/model"
     }
-    streamingModel = createInitialStreamingModel(ssc, initialDataPath, modelType)
+
+    val data = ssc.sparkContext
+      .textFile(initialDataPath)
+      .repartition(ssc.sparkContext.defaultParallelism)
+
+    val pipeline = trainInitialPipeline(ssc, data)
+
     val streamingSource = streamSource(ssc, streamingDataPath)
-    val testData = ssc.sparkContext.textFile(evaluationDataPath).map(dataParser.parsePoint)
+    val testData = ssc.sparkContext.textFile(evaluationDataPath)
 
     streamingSource
       .map(_._2.toString)
-      // parse input
-      .map(dataParser.parsePoint)
       // evaluate the model
-      .transform(rdd => evaluateStream(rdd, testData, resultPath))
-      // online training and updating the statistics
-      .transform(rdd => streamingModel.trainOn(rdd))
+      .transform(rdd => evaluateStream(pipeline, rdd, testData, resultPath))
+      // updating the statistics
+      .transform(rdd => {
+      pipeline.update(rdd)
+      rdd
+    })
+      // train new model
+      .transform(rdd => {
+      pipeline.train(rdd)
+      rdd
+    })
       // dummy action
       .foreachRDD(_ => dummyAction())
 

@@ -1,6 +1,7 @@
 package de.dfki.deployment
 
 import de.dfki.utils.CommandLineParser
+import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.Seconds
 
 /**
@@ -8,7 +9,6 @@ import org.apache.spark.streaming.Seconds
   */
 object ContinuousClassifier extends Classifier {
   var slack: Long = _
-  var incremental: Boolean = _
   var samplingRate: Double = _
 
   val DEFAULT_SAMPLING_RATE = 0.1
@@ -29,7 +29,6 @@ object ContinuousClassifier extends Classifier {
     super.parseArgs(args)
     val parser = new CommandLineParser(args).parse()
     slack = parser.getLong("slack", defaultTrainingSlack)
-    incremental = parser.getBoolean("incremental", default = true)
     samplingRate = parser.getDouble("sampling-rate", DEFAULT_SAMPLING_RATE)
   }
 
@@ -41,8 +40,7 @@ object ContinuousClassifier extends Classifier {
     } else {
       testType = "dataset"
     }
-    val child = s"$getExperimentName/model-type-$modelType/num-iterations-$numIterations/" +
-      s"slack-$slack/updater-$updater/step-size-$stepSize/"
+    val child = s"$getExperimentName/num-iterations-$numIterations/slack-$slack/updater-$updater/step-size-$stepSize/"
 
     val resultPath = experimentResultPath(resultRoot, child)
 
@@ -53,43 +51,45 @@ object ContinuousClassifier extends Classifier {
 
     val data = ssc.sparkContext
       .textFile(initialDataPath)
-      .map(dataParser.parsePoint)
       .repartition(ssc.sparkContext.defaultParallelism)
-      .cache()
 
-    streamingModel = createInitialStreamingModel(ssc, data, modelType)
+    val pipeline = trainInitialPipeline(ssc, data)
     val endTime = System.currentTimeMillis()
     storeTrainingTimes(endTime - startTime, resultPath)
 
     val streamingSource = streamSource(ssc, streamingDataPath)
-    val testData = ssc.sparkContext.textFile(evaluationDataPath).map(dataParser.parsePoint)
+    val testData = ssc.sparkContext.textFile(evaluationDataPath)
 
-    def historicalDataRDD = {
+    def historicalDataRDD(recentItems: RDD[String]) = {
       logger.info(s"scheduling a batch iteration on ${streamingSource.getProcessedFiles.length} files ")
       ssc.sparkContext.textFile(streamingSource.getProcessedFiles.mkString(","))
-        .map(dataParser.parsePoint)
         .union(data)
+        .union(recentItems)
         .sample(withReplacement = false, samplingRate)
         .repartition(ssc.sparkContext.defaultParallelism)
         .cache()
     }
 
+    pipeline.model.setMiniBatchFraction(1.0)
+    pipeline.model.setNumIterations(1)
 
-    evaluateStream(testData, testData, resultPath)
+    evaluateStream(pipeline, testData, testData, resultPath)
     streamingSource
       .map(_._2.toString)
-      // parse input
-      .map(dataParser.parsePoint)
       // updating the statistics
-      .transform(rdd => streamingModel.updateStatistics(rdd))
-      // online training
-      //.transform(rdd => streamingModel.trainOn(rdd))
+      .transform(rdd => {
+      pipeline.update(rdd)
+      rdd
+    })
       // create a window
       .window(Seconds(slack), Seconds(slack))
       // hybrid proactive training
-      .transform(rdd => streamingModel.trainOnHybrid(rdd, historicalDataRDD))
+      .transform(rdd => {
+      pipeline.train(historicalDataRDD(rdd))
+      rdd
+    })
       // evaluate the model
-      .transform(rdd => evaluateStream(rdd, testData, resultPath))
+      .transform(_ => evaluateStream(pipeline, testData, testData, resultPath))
       // dummy action
       .foreachRDD(_ => dummyAction())
 

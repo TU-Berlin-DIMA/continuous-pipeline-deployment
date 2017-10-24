@@ -14,6 +14,7 @@ import scala.collection.mutable
   */
 class OneHotEncoder extends Component[RawType, LabeledPoint] {
   var encoding: mutable.HashMap[String, Long] = mutable.HashMap.empty[String, Long]
+  var dimension: Int = 0
 
   override def transform(spark: SparkContext, input: RDD[RawType]): RDD[LabeledPoint] = {
     val broadCastEncoding = spark.broadcast(encoding)
@@ -66,10 +67,15 @@ class OneHotEncoder extends Component[RawType, LabeledPoint] {
         }
       }
     }
+    // new feature dimension size
+    dimension = encoding.size + NUM_INTEGER_FEATURES
   }
 
   override def updateAndTransform(spark: SparkContext, input: RDD[RawType]): RDD[LabeledPoint] = {
     update(input)
     transform(spark, input)
   }
+
+  def getCurrentDimension = dimension
+
 }
