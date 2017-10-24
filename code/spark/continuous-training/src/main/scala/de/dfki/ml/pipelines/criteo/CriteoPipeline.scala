@@ -19,12 +19,13 @@ class CriteoPipeline(spark: SparkContext,
                      val numIterations: Int = 100,
                      val regParam: Double = 0.0,
                      val miniBatchFraction: Double = 1.0,
-                     val updater: Updater = new SquaredL2UpdaterWithAdam()) extends Pipeline {
+                     val updater: Updater = new SquaredL2UpdaterWithAdam(),
+                     val numCategories: Int = 300000) extends Pipeline {
 
   val fileReader = new InputParser(delim)
   val missingValueImputer = new MissingValueImputer()
   val standardScaler = new StandardScaler()
-  val oneHotEncoder = new OneHotEncoder()
+  val oneHotEncoder = new OneHotEncoder(numCategories)
   val model = new LRModel(stepSize, numIterations, regParam, miniBatchFraction, updater)
 
   var materializedTrainingData: RDD[LabeledPoint] = _
@@ -56,10 +57,10 @@ class CriteoPipeline(spark: SparkContext,
     } else {
       dataProcessing(data)
     }
-    val newDimension = oneHotEncoder.getCurrentDimension
+    //val newDimension = oneHotEncoder.getCurrentDimension
     trainingData.cache()
     trainingData.count()
-    model.train(trainingData, newDimension)
+    model.train(trainingData)
     trainingData.unpersist()
   }
 

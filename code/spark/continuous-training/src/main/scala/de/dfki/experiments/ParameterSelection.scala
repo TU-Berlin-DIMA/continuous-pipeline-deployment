@@ -21,6 +21,7 @@ object ParameterSelection {
   val UPDATER = "rmsprop"
   val DEFAULT_INCREMENT = "20,40,80,160,320,500"
   val DELIMITER = "\t"
+  val NUM_FEATURES = 3000000
 
   def main(args: Array[String]): Unit = {
     val parser = new CommandLineParser(args).parse()
@@ -31,6 +32,7 @@ object ParameterSelection {
     val increments = parser.get("increments", DEFAULT_INCREMENT).split(",").map(_.toInt)
     val updater = AdvancedUpdaters.getUpdater(parser.get("updater", UPDATER))
     val delimiter = parser.get("delimiter", DELIMITER)
+    val numFeatures = parser.getInteger("features", NUM_FEATURES)
 
     val conf = new SparkConf().setAppName("Learning Rate Selection Criteo")
     val masterURL = conf.get("spark.master", "local[*]")
@@ -40,7 +42,11 @@ object ParameterSelection {
     val data = ssc.sparkContext.textFile(inputPath)
     val eval = ssc.sparkContext.textFile(evaluationPath)
 
-    val criteoPipeline = new CriteoPipeline(ssc.sparkContext, delim = delimiter, updater = updater, miniBatchFraction = 0.1)
+    val criteoPipeline = new CriteoPipeline(ssc.sparkContext,
+      delim = delimiter,
+      updater = updater,
+      miniBatchFraction = 0.1,
+      numCategories = numFeatures)
     criteoPipeline.update(data)
     var cur = 0
     increments.foreach { iter =>
