@@ -1,6 +1,5 @@
 \section{Evaluation} \label{evaluation} 
 \todo[inline]{structure is finalized}
-\todo[inline]{should we have another pipeline as well?}
 In this section we evaluate the performance of our system using various datasets. 
 We report both the quality (error rate) and performance of our proposed method. 
 
@@ -8,9 +7,7 @@ We report both the quality (error rate) and performance of our proposed method.
 We evaluate our deployment method in distributed environment consists of 11 nodes (1 master, 10 slaves).
 Each node is running on an Intel Xeon 2.40 GHz 16 core processor and has 28 GB of dedicated memory for running our prototype.
 
-We implement a prototype of our deployment method on top of Apache Spark \cite{zaharia2010spark}.
-It uses the SGD implementation available in the machine learning library of Apache Spark.
-To demonstrate the deployment platform designed two machine learning pipelines.
+To demonstrate the deployment platform designed the following machine learning pipeline.
 
 \textbf{Criteo pipeline.} 
 The Criteo pipeline consists of 5 operations: input parser, missing value imputer, standard scaler, one hot encoder, and logistic regression model trainer. 
@@ -19,32 +16,34 @@ It contains \hl{24} days of user click logs.
 The dataset  contains 13 numerical and 26 categorical features. 
 In all of our experiments we are using the data from the first 6 days (Day 0 to Day 5) of the criteo dataset.
 Day 0 is used for the initial offline training of the pipeline.
-Day 1 to Day 5 are used as a streaming dataset and Day 6 is used for evaluating the model.
-
+Day 1 to Day 5 are used as a streaming dataset.
+To evaluate the quality of the pipeline, we use a sample of the Day 6 to compute the logistic loss.
 
 \subsection{Learning Rate Adaptation Method}
 In Section \ref{sgd}, we discussed the importance of learning rate tuning for training a model using the Stochastic Gradient Descent optimization method.
-Proactive training is an extension of SGD, therefore the process of tuning the learning rate adaptation method is no different from tuning the it for offline training.
-Figure \ref{fig:criteo-learning-rate} shows the effect of choosing different learning rate adaptation technique on the Criteo pipeline.
-
+Proactive training is an extension of SGD, therefore the process of tuning the learning rate adaptation method is no different from tuning the it for training.
+Figure \ref{fig:criteo-learning-rate} shows the log loss for different learning adaptation methods. 
+During the training phase, we evaluated the logistic loss on evaluation dataset after 20, 40, 80, 160, 320, and 500 iterations.
+We did not include the results of 
+Both Adadelta and Momentum performs very poorly on the criteo data.
+Criteo dataset is a complex and high dimensional dataset, where features are a mix of numerical and categorical.
+Since categorical features are not standardized, Adadelta and Momentum are not able to effectively tune the learning rate for a mix standardized and non-standardized features.
+Both RMSPROP and ADAM manage to effectively reduce the logistic loss during the training phase.
+Both methods resulted in the model to converge after 500 iterations.
+However, ADAM achieves a lower error rate on the evaluation data when compared to RMSPROP.
+After 500 iterations of training, we deploy the pipelines.
+We streamed Day 1 of the Criteo dataset to the deployment system and monitored the changes in the loss using the same evaluation dataset.
+After deployment, both RMSPROP and Adam further decreased the loss from 0.190 and 0.155 to 0.185 and 0.151 respectively.
+Adadelta also reduces the loss by around 0.004, however, the deployed pipeline trained using Adadelta learning rate adaptation technique was not fully converged and as a result the final error rate after the first day is still quite high.
+For the rest of our experiments, we chose ADAM as the learning rate adaptation technique.
+When using ADAM, the model converges using fewer number of iterations as compared to other learning rate adaptation methods.
+Moreover, ADAM is the most effective learning rate for continuous training of the pipeline as well.
 
 \begin{figure}[H]
-\begin{subfigure}{0.5\columnwidth}
-\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-learning-rate-comparison-1.eps}
-\caption{}
-\label{fig:criteo-learning-rate-1}
-\end{subfigure}%
-\begin{subfigure}{0.5\columnwidth}
-\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-learning-rate-comparison.eps}
-\caption{}
+\includegraphics[width=\columnwidth]{../images/experiment-results/learning-rate-experiment.eps}
+\caption{Learning rate adaptation technique for Criteo pipeline}
 \label{fig:criteo-learning-rate}
-\end{subfigure}
-\vspace{2mm}
-\caption{Different Learning rate adaptation methods for Continuous training of Criteo Pipeline}
 \end{figure}
-
-Figure \ref{fig:criteo-learning-rate-1} shows the log loss for different learning adaptation methods. 
-\todo[inline]{All the methods except for rmsprop and adam seems not work properly without extensive grid search (or not working well at all). I should make sure there's no problem with the code and it is the algorithm that function poorly.}
 
 \subsection{Sampling Methods}
 \todo[inline]{redo this part, compare weighted time-based sampling vs random sampling different sizes}
