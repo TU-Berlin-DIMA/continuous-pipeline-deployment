@@ -1,5 +1,7 @@
 package de.dfki.ml.pipelines.criteo
 
+import java.io._
+
 import de.dfki.ml.evaluation.LogisticLoss
 import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
 import de.dfki.ml.pipelines.Pipeline
@@ -13,7 +15,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 /**
   * @author behrouz
   */
-class CriteoPipeline(spark: SparkContext,
+class CriteoPipeline(@transient var spark: SparkContext,
                      val delim: String = "\t",
                      val stepSize: Double = 1.0,
                      val numIterations: Int = 100,
@@ -31,6 +33,14 @@ class CriteoPipeline(spark: SparkContext,
   var materializedTrainingData: RDD[LabeledPoint] = _
 
   override def withMaterialization = false
+
+  /**
+    * This method have to be called if the pipeline is loaded from the disk
+    * @param sc
+    */
+  def setSparkContext(sc: SparkContext): Unit = {
+    this.spark = sc
+  }
 
   override def update(data: RDD[String]) = {
     val parsedData = fileReader.transform(spark, data)
@@ -105,7 +115,7 @@ class CriteoPipeline(spark: SparkContext,
 
 // example use case of criteo pipeline
 object CriteoPipeline {
-  val INPUT_PATH = "data/criteo-full/raw"
+  val INPUT_PATH = "data/criteo-full/experiments/initial-training/day_0"
   val TEST_PATH = "data/criteo-full/raw/6"
 
   def main(args: Array[String]): Unit = {
@@ -118,20 +128,49 @@ object CriteoPipeline {
     conf.setMaster(masterURL)
 
     val spark = new SparkContext(conf)
-
-    val criteoPipeline = new CriteoPipeline(spark)
-    val directories = (0 to 0).map(i => s"$inputPath/$i")
-    val rawTraining = spark.textFile(directories.toList.mkString(","))
-    val rawTest = spark.textFile(testPath)
-
+    val criteoPipeline = new CriteoPipeline(spark, delim = ",", numIterations = 1)
+    val rawTraining = spark.textFile("data/criteo-full/experiments/initial-training/0")
     criteoPipeline.update(rawTraining)
     criteoPipeline.train(rawTraining)
 
-    val result = criteoPipeline.predict(rawTest)
+    CriteoPipeline.saveToDisk(criteoPipeline, "data/criteo-full/pipelines/test")
 
-    val loss = LogisticLoss.logisticLoss(result)
+    val loadedPipeline = CriteoPipeline.loadFromDisk("data/criteo-full/pipelines/test", spark)
 
-    println(s"Loss = $loss")
+    val day1 = spark.textFile("data/criteo-full/experiments/stream/1")
+    loadedPipeline.update(day1)
+    loadedPipeline.train(day1)
+
+    criteoPipeline.update(day1)
+    criteoPipeline.train(day1)
+
+    val rawTest = spark.textFile(testPath)
+
+    val baseResult = criteoPipeline.predict(rawTest)
+    val baseLoss = LogisticLoss.logisticLoss(baseResult)
+
+    val loadedResult = criteoPipeline.predict(rawTest)
+    val loadedLoss = LogisticLoss.logisticLoss(loadedResult)
+
+    println(s"Base Loss = $baseLoss")
+    println(s"Loaded Loss = $loadedLoss")
+  }
+
+  def saveToDisk(pipeline: CriteoPipeline, path: String): Unit = {
+    val file = new File(path)
+    file.getParentFile.mkdirs()
+    file.createNewFile()
+    val oos = new ObjectOutputStream(new FileOutputStream(file, false))
+    oos.writeObject(pipeline)
+    oos.close()
+  }
+
+  def loadFromDisk(path: String, spark: SparkContext): CriteoPipeline = {
+    val ois = new ObjectInputStream(new FileInputStream(path))
+    val pip = ois.readObject.asInstanceOf[CriteoPipeline]
+    pip.setSparkContext(spark)
+    ois.close()
+    pip
   }
 }
 

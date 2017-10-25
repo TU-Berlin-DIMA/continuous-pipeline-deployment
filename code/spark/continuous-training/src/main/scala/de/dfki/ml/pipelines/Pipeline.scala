@@ -6,7 +6,7 @@ import org.apache.spark.streaming.dstream.DStream
 /**
   * @author behrouz
   */
-trait Pipeline {
+trait Pipeline extends Serializable{
 
   val model: Model
 
