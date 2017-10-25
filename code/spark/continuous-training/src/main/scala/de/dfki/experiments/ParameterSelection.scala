@@ -1,12 +1,14 @@
 package de.dfki.experiments
 
 import java.io.{File, FileWriter}
+import java.nio.file.{Files, Path, Paths}
 
 import de.dfki.deployment.ContinuousDeployment
 import de.dfki.ml.evaluation.LogisticLoss
 import de.dfki.ml.optimization.AdvancedUpdaters
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.utils.CommandLineParser
+import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 
@@ -18,10 +20,13 @@ object ParameterSelection {
   val STREAM_PATH = "data/criteo-full/experiments/stream/1"
   val EVALUATION_PATH = "data/criteo-full/experiments/evaluation/6"
   val RESULT_PATH = "../../../experiment-results/criteo-full/quality/loss"
+  val PIPELINE_DIRECTORY = "data/criteo-full/pipelines/parameter-selection/"
   val UPDATER = "rmsprop"
   val DEFAULT_INCREMENT = "20,40,80,160,320,500"
   val DELIMITER = "\t"
   val NUM_FEATURES = 3000000
+
+  @transient lazy val logger = Logger.getLogger(getClass.getName)
 
   def main(args: Array[String]): Unit = {
     val parser = new CommandLineParser(args).parse()
@@ -33,6 +38,7 @@ object ParameterSelection {
     val updater = AdvancedUpdaters.getUpdater(parser.get("updater", UPDATER))
     val delimiter = parser.get("delimiter", DELIMITER)
     val numFeatures = parser.getInteger("features", NUM_FEATURES)
+    val pipelineDirectory = parser.get("pipeline", PIPELINE_DIRECTORY)
 
     val conf = new SparkConf().setAppName("Learning Rate Selection Criteo")
     val masterURL = conf.get("spark.master", "local[*]")
@@ -42,7 +48,7 @@ object ParameterSelection {
     val data = ssc.sparkContext.textFile(inputPath)
     val eval = ssc.sparkContext.textFile(evaluationPath)
 
-    val criteoPipeline = new CriteoPipeline(ssc.sparkContext,
+    var criteoPipeline = new CriteoPipeline(ssc.sparkContext,
       delim = delimiter,
       updater = updater,
       miniBatchFraction = 0.1,
@@ -50,8 +56,15 @@ object ParameterSelection {
     criteoPipeline.update(data)
     var cur = 0
     increments.foreach { iter =>
-      criteoPipeline.model.setNumIterations(iter - cur)
-      criteoPipeline.train(data)
+      val pipelineName = s"$pipelineDirectory/${updater.name}-$iter"
+      if (Files.exists(Paths.get(pipelineName))) {
+        logger.info(s"Pipeline for updater ${updater.name} and Iter $iter exists !!!")
+        criteoPipeline = CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)
+      } else {
+        criteoPipeline.model.setNumIterations(iter - cur)
+        criteoPipeline.train(data)
+        CriteoPipeline.saveToDisk(criteoPipeline, pipelineName)
+      }
       val loss = LogisticLoss.logisticLoss(criteoPipeline.predict(eval))
       cur = iter
       val file = new File(s"$resultPath/${updater.name}")
