@@ -8,6 +8,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.mllib.linalg.SparseVector
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
+import org.apache.spark.util.sketch.BloomFilter
 
 import scala.util.hashing.MurmurHash3
 
@@ -16,10 +17,10 @@ import scala.util.hashing.MurmurHash3
   */
 class OneHotEncoder(val numCategories: Int) extends Component[RawType, LabeledPoint] {
   var encoding: RDD[(String, Int)] = _
-  var dimension: Int = 0
+  var approximateFeatureSize = 0L
+  var bloomFilter = BloomFilter.create(numCategories, 0.1)
 
   override def transform(spark: SparkContext, input: RDD[RawType]): RDD[LabeledPoint] = {
-
     input.map {
       item =>
         val encodedIndices = item.categorical.map {
@@ -36,27 +37,30 @@ class OneHotEncoder(val numCategories: Int) extends Component[RawType, LabeledPo
     }
   }
 
-  override def update(input: RDD[RawType]) = {
-//    val distinct = input
-//      .flatMap(_.categorical)
-//      .distinct()
-//      .cache()
-//
-//
-//    if (encoding.isEmpty) {
-//      encoding = distinct.zipWithIndex.mapValues(_.toInt + NUM_INTEGER_FEATURES)
-//      distinct.unpersist(false)
-//    } else {
-//      encoding.cache()
-//      val size = encoding.count()
-//      val diff = distinct.map((_, 0)).subtractByKey(encoding)
-//      diff.zipWithIndex.mapValues(_ + size + NUM_INTEGER_FEATURES)
-//      val combined = encoding.union(diff)
-//      encoding.unpersist(true)
-//      encoding = combined
-//    }
-//    // new feature dimension size
-//    dimension = encoding.count.toInt + NUM_INTEGER_FEATURES
+  override def update(spark: SparkContext, input: RDD[RawType]) = {
+    val filter = spark.broadcast(bloomFilter)
+    val uniques = input
+      .flatMap(_.categorical)
+      .distinct()
+    if (approximateFeatureSize == 0) {
+      // bloom filter is empty, update the count from the exact value
+      approximateFeatureSize = uniques.count()
+    }
+    else {
+      approximateFeatureSize += uniques.filter(!filter.value.mightContainString(_)).count()
+    }
+    // update the bloomfilter
+    bloomFilter = input.mapPartitions {
+      partition =>
+        val curFilter = filter.value
+        for (data <- partition)
+          for (s <- data.categorical)
+            curFilter.putString(s)
+        Seq(curFilter).iterator
+    }.reduce((b1, b2) => b1.mergeInPlace(b2))
+    filter.unpersist()
+
+
   }
 
   private def murmurHash(feature: String, numFeatures: Int): Int = {
@@ -65,10 +69,7 @@ class OneHotEncoder(val numCategories: Int) extends Component[RawType, LabeledPo
   }
 
   override def updateAndTransform(spark: SparkContext, input: RDD[RawType]): RDD[LabeledPoint] = {
-    update(input)
+    update(spark, input)
     transform(spark, input)
   }
-
-  def getCurrentDimension = dimension
-
 }

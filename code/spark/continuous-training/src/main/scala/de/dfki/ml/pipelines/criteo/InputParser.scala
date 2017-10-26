@@ -30,7 +30,7 @@ class InputParser(delim: String = "\t") extends Component[String, RawType] {
     }
   }
 
-  override def update(input: RDD[String]) = ???
+  override def update(spark: SparkContext, input: RDD[String]) = ???
 
   override def updateAndTransform(spark: SparkContext, input: RDD[String]) = ???
 }

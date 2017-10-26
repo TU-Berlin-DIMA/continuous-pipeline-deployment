@@ -49,7 +49,7 @@ class CriteoPipeline(@transient var spark: SparkContext,
     if (withMaterialization) {
       materializeNextBatch(oneHotEncoder.updateAndTransform(spark, scaledData))
     } else {
-      oneHotEncoder.update(scaledData)
+      oneHotEncoder.update(spark, scaledData)
     }
   }
 

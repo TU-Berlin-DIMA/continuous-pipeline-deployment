@@ -27,7 +27,7 @@ class StandardScaler extends Component[RawType, RawType] {
     }
   }
 
-  override def update(input: RDD[RawType]) = {
+  override def update(spark: SparkContext, input: RDD[RawType]) = {
     val newBatchSummarizer = {
       val seqOp = (c: (MultivariateOnlineSummarizer), instance: (Vector)) =>
         c.add(instance)
@@ -47,7 +47,7 @@ class StandardScaler extends Component[RawType, RawType] {
   }
 
   override def updateAndTransform(spark: SparkContext, input: RDD[RawType]) = {
-    update(input)
+    update(spark, input)
     transform(spark,input)
   }
 }

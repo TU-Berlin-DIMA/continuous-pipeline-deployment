@@ -21,7 +21,7 @@ class MissingValueImputer extends Component[RawType, RawType] {
     }
   }
 
-  override def update(input: RDD[RawType]) = {
+  override def update(spark: SparkContext, input: RDD[RawType]) = {
     // do nothing
   }
 
