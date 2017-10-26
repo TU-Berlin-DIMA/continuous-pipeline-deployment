@@ -46,18 +46,24 @@ class LRModel(private var stepSize: Double,
     if (model.isEmpty) {
       throw new IllegalArgumentException("Model must be initialized before starting prediction")
     }
-    data.mapValues { x => predictPoint(x) }
+    val intercept = model.get.intercept
+    // broadcast the weight to all the nodes to reduce the communication
+    val weights = data.context.broadcast(model.get.weights)
+    data.mapValues { x => predictPoint(x, weights.value, intercept) }
   }
 
   def predict(data: DStream[(Double, Vector)]): DStream[(Double, Double)] = {
     if (model.isEmpty) {
       throw new IllegalArgumentException("Model must be initialized before starting prediction")
     }
-    data.mapValues { x => predictPoint(x) }
+    val intercept = model.get.intercept
+    // broadcast the weight to all the nodes to reduce the communication
+    val weights = data.context.sparkContext.broadcast(model.get.weights)
+    data.mapValues { x => predictPoint(x, weights.value, intercept) }
   }
 
-  private def predictPoint(vector: Vector) = {
-    val margin = LinearAlgebra.dot(model.get.weights, vector) + model.get.intercept
+  private def predictPoint(vector: Vector, weights: Vector, intercept: Double) = {
+    val margin = LinearAlgebra.dot(weights, vector) + intercept
     val score = 1.0 / (1.0 + math.exp(-margin))
     model.get.getThreshold match {
       case Some(t) => if (score > t) 1.0 else 0.0

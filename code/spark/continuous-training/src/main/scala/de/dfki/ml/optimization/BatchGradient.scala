@@ -15,9 +15,9 @@ abstract class BatchGradient extends Serializable {
 
   def setNumFeatures(size: Int)
 
- // def setFeaturesMean(means: Array[Double])
+  // def setFeaturesMean(means: Array[Double])
 
- // def setFeaturesStd(std: Array[Double])
+  // def setFeaturesStd(std: Array[Double])
 }
 
 
@@ -32,15 +32,18 @@ class LogisticGradient(fitIntercept: Boolean,
                        regParamL2: Double) extends BatchGradient {
 
   var numFeatures = 0
+
   override def setNumFeatures(size: Int) = {
     this.numFeatures = size
   }
 
 
   override def compute(instances: RDD[(Double, Vector)], weights: Vector): (Double, BV[Double]) = {
+    val context = instances.context
+    val broadCastWeights = context.broadcast(weights)
     val logisticAggregator = {
       val seqOp = (c: LogisticAggregator, instance: (Double, Vector)) =>
-        c.add(instance, weights)
+        c.add(instance, broadCastWeights.value)
       val combOp = (c1: LogisticAggregator, c2: LogisticAggregator) => c1.merge(c2)
 
       instances.treeAggregate(
@@ -48,7 +51,6 @@ class LogisticGradient(fitIntercept: Boolean,
         new LogisticAggregator(numFeatures, 2, fitIntercept)
       )(seqOp, combOp)
     }
-
     val totalGradientArray = logisticAggregator.gradient.toArray
 
     // regVal is the sum of coefficients squares excluding intercept for L2 regularization.
@@ -179,7 +181,6 @@ class LogisticAggregator(private val numFeatures: Int,
     }
     weightSum += 1
     this
-
   }
 
   /**

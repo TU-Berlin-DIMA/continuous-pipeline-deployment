@@ -23,7 +23,7 @@ object ParameterSelection {
   val PIPELINE_DIRECTORY = "data/criteo-full/pipelines/parameter-selection/"
   val UPDATER = "rmsprop"
   val DEFAULT_INCREMENT = "20,40,80,160,320,500"
-  val DELIMITER = "\t"
+  val DELIMITER = ","
   val NUM_FEATURES = 3000000
 
   @transient lazy val logger = Logger.getLogger(getClass.getName)
