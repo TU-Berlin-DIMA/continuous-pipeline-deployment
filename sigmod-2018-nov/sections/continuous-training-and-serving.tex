@@ -104,10 +104,16 @@ We provide an optional feature that allows materialization and storage of the tr
 As a result, during the next SGD iterations, the system skips the preprocessing steps of the pipelines and directly accesses the transformed data to train the model.
 Storing the transformed data significantly reduces the model training time.
 
+\textit{Dynamic model size.}
+Depending on the type of the pipeline components, the size of the final model may need to be adjusted during the serving of the model.
+For example, one-hot encoding and data bucketization both may generate new features after processing new training data.
+After every statistics update, we analyze the changes made in the pipeline.
+If any of the changes result in an increase the model size, we dynamically adjust the model size in the next proactive training. 
+
 \subsection{Model Stability}
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.7\columnwidth]{../images/model-evaluation.pdf}
+\includegraphics[width=\columnwidth]{../images/model-evaluation.pdf}
 \caption{Model Evaluation}
 \label{fig:model-evaluation}
 \end{figure}

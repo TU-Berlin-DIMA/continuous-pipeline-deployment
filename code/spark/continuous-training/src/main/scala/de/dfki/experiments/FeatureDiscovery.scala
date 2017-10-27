@@ -8,8 +8,8 @@ import de.dfki.utils.CommandLineParser
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.log4j.Logger
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.streaming.{Seconds, StreamingContext}
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * @author behrouz
@@ -74,6 +74,55 @@ object FeatureDiscovery {
 
     ssc.start()
     ssc.awaitTermination()
+
+  }
+}
+
+object FeatureDiscoveryDayByDay {
+  val INPUT_PATH = "data/criteo-full/experiments/initial-training/0," +
+    "data/criteo-full/experiments/stream/1," +
+    "data/criteo-full/experiments/stream/2," +
+    "data/criteo-full/experiments/stream/3," +
+    "data/criteo-full/experiments/stream/4," +
+    "data/criteo-full/experiments/stream/5"
+  val RESULT_PATH = "../../../experiment-results/criteo-full/feature-discovery-local/counts.txt"
+  val NUM_FEATURES = 300000000
+  val DELIMITER = ","
+
+  @transient lazy val logger = Logger.getLogger(getClass.getName)
+
+  def main(args: Array[String]): Unit = {
+    val parser = new CommandLineParser(args).parse()
+    val inputPath = parser.get("input", INPUT_PATH)
+    val resultPath = parser.get("result", RESULT_PATH)
+    val delimiter = parser.get("delimiter", DELIMITER)
+    val numFeatures = parser.getInteger("features", NUM_FEATURES)
+
+    val conf = new SparkConf().setAppName("FeatureDiscovery Day By Day")
+    val masterURL = conf.get("spark.master", "local[*]")
+    conf.setMaster(masterURL)
+
+    val spark = new SparkContext(conf)
+
+
+    val inputParser = new InputParser(delim = delimiter)
+    val oneHotEncoder = new OneHotEncoder(numFeatures)
+
+    inputPath.split(",").foreach {
+      in =>
+        val data = spark.textFile(in)
+        val processed = inputParser.transform(spark, data)
+        oneHotEncoder.update(spark, processed)
+        val file = new File(s"$resultPath")
+        file.getParentFile.mkdirs()
+        val fw = new FileWriter(file, true)
+        try {
+          fw.write(s"${oneHotEncoder.approximateFeatureSize}\n")
+        }
+        finally {
+          fw.close()
+        }
+    }
 
   }
 }
