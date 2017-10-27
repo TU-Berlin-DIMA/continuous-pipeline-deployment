@@ -7,10 +7,10 @@ library(grid)
 
 iterations = c(20,40,80,160,320, 500)
 
-adam = read.csv('quality/loss/adam', header = FALSE, col.names = c('type','adam'))
-rmsprop = read.csv('quality/loss/rmsprop', header = FALSE, col.names = c('type','rmsprop'))
-momentum = read.csv('quality/loss/momentum', header = FALSE, col.names = c('type','momentum'))
-adadelta = read.csv('quality/loss/adadelta', header = FALSE, col.names = c('type','adadelta'))
+adam = read.csv('learning-rate/local/adam', header = FALSE, col.names = c('type','adam'))
+rmsprop = read.csv('learning-rate/local/rmsprop', header = FALSE, col.names = c('type','rmsprop'))
+momentum = read.csv('learning-rate/local/momentum', header = FALSE, col.names = c('type','momentum'))
+adadelta = read.csv('learning-rate/local/adadelta', header = FALSE, col.names = c('type','adadelta'))
 
 groupColors <- c(adam = "#d11141", rmsprop = "#00b159", momentum ="#00aedb", adadelta = "#f37735")
 
@@ -36,7 +36,8 @@ plot_training =
         legend.key.width = unit(3, "cm"), 
         legend.key.height = unit(0.8, "cm"),
         legend.position = "bottom",
-        legend.title = element_blank()) 
+        legend.title = element_blank(),
+        panel.border = element_rect(colour = "black", fill=NA, size=3)) 
 
 plot <- function(data, c, customize){
   ml = melt(data, id.vars = c('index') )
@@ -52,7 +53,8 @@ plot <- function(data, c, customize){
     theme(axis.text.x=element_blank(),
           axis.text.y=element_text(size=20, color = "black"),
           axis.title=element_text(size=20, color= "black"),  
-          legend.position="none") 
+          legend.position="none",
+          panel.border = element_rect(colour = "black", fill=NA, size=3)) 
   
   if (customize == TRUE){
     plot = plot + 
@@ -93,7 +95,7 @@ finalPlot = grid.arrange(arrangeGrob(
 )
 
 
-ggsave(finalPlot , filename = 'quality/loss/learning-rate-experiment.eps', 
+ggsave(finalPlot , filename = 'learning-rate/local/learning-rate-experiment.eps', 
        device = 'eps', 
        width = 10, height = 8, 
        units = "in")
