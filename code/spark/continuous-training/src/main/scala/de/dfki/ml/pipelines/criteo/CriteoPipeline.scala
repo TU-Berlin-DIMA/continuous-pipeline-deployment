@@ -26,7 +26,7 @@ class CriteoPipeline(@transient var spark: SparkContext,
 
   val fileReader = new InputParser(delim)
   val missingValueImputer = new MissingValueImputer()
-  val standardScaler = new StandardScaler()
+  var standardScaler = new StandardScaler()
   val oneHotEncoder = new OneHotEncoder(numCategories)
   val model = new LRModel(stepSize, numIterations, regParam, miniBatchFraction, updater)
 
@@ -128,6 +128,7 @@ class CriteoPipeline(@transient var spark: SparkContext,
       updater = newUpdater,
       numCategories = numCategories)
   }
+
 }
 
 // example use case of criteo pipeline

@@ -30,7 +30,6 @@ class PeriodicalDeploymentNoOptimization(val history: String,
       trainingDays += day
       val data = streamingContext.sparkContext
         .textFile(trainingDays.mkString(","))
-        .repartition(streamingContext.sparkContext.defaultParallelism)
       val startTime = System.currentTimeMillis()
       copyPipeline.update(data)
       copyPipeline.train(data)

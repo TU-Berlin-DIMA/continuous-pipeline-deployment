@@ -9,11 +9,12 @@ import scala.collection.mutable.ListBuffer
   * @author behrouz
   */
 class PeriodicalDeploymentWithStatisticsUpdate (val history: String,
-                                                val days: Array[String],
+                                                val stream: String,
                                                 val eval: String,
                                                 val resultPath: String) extends Deployment {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
+    val days = (1 to 5).map(i => s"$stream/day_$i")
     var copyPipeline = pipeline
     val testData = streamingContext.sparkContext.textFile(eval)
 
@@ -27,7 +28,6 @@ class PeriodicalDeploymentWithStatisticsUpdate (val history: String,
       trainingDays += day
       val data = streamingContext.sparkContext
         .textFile(trainingDays.mkString(","))
-        .repartition(streamingContext.sparkContext.defaultParallelism)
       copyPipeline.update(data)
       val startTime = System.currentTimeMillis()
       copyPipeline.train(data)

@@ -22,7 +22,6 @@ class ContinuousDeploymentNoOptimization(val history: String,
     // create rdd of the initial data that the pipeline was trained with
     val data = streamingContext.sparkContext
       .textFile(history)
-      .repartition(streamingContext.sparkContext.defaultParallelism)
 
     val testData = streamingContext.sparkContext.textFile(eval)
 
@@ -33,7 +32,6 @@ class ContinuousDeploymentNoOptimization(val history: String,
         .union(data)
         .union(recentItems)
         .sample(withReplacement = false, samplingRate)
-        .repartition(streamingContext.sparkContext.defaultParallelism)
         .cache()
     }
 

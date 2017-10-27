@@ -1,8 +1,12 @@
 package de.dfki.experiments
 
-import de.dfki.ml.optimization.AdvancedUpdaters
+import de.dfki.deployment.{ContinuousDeploymentNoOptimization, ContinuousDeploymentWithStatisticsUpdate, PeriodicalDeploymentNoOptimization, PeriodicalDeploymentWithStatisticsUpdate}
+import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
+import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.utils.CommandLineParser
-import org.apache.spark.SparkConf
+import org.apache.spark.rdd.RDD
+import org.apache.spark.streaming.{Seconds, StreamingContext}
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * experiments for computing the training time using continuous and daily
@@ -12,10 +16,9 @@ import org.apache.spark.SparkConf
   */
 object TrainingTimes {
   val INPUT_PATH = "data/criteo-full/experiments/initial-training/0"
-  val STREAM_PATH = "data/criteo-full/experiments/stream/1"
+  val STREAM_PATH = "data/criteo-full/experiments/stream"
   val EVALUATION_PATH = "data/criteo-full/experiments/evaluation/6"
   val RESULT_PATH = "../../../experiment-results/criteo-full/quality/loss-new"
-  val UPDATER = "adam"
   val DELIMITER = ","
   val NUM_FEATURES = 3000000
   val SLACK = 10
@@ -27,7 +30,6 @@ object TrainingTimes {
     val streamPath = parser.get("stream", STREAM_PATH)
     val evaluationPath = parser.get("evaluation", EVALUATION_PATH)
     val resultPath = parser.get("result", RESULT_PATH)
-    val updater = AdvancedUpdaters.getUpdater(parser.get("updater", UPDATER))
     val delimiter = parser.get("delimiter", DELIMITER)
     val numFeatures = parser.getInteger("features", NUM_FEATURES)
     val slack = parser.getInteger("slack", SLACK)
@@ -35,5 +37,55 @@ object TrainingTimes {
     val conf = new SparkConf().setAppName("Learning Rate Selection Criteo")
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
+
+    val ssc = new StreamingContext(conf, Seconds(1))
+    val data = ssc.sparkContext.textFile(inputPath)
+
+    val continuousNoOptimization = getPipeline(ssc.sparkContext, delimiter, numFeatures, data)
+
+    new ContinuousDeploymentNoOptimization(history = inputPath,
+      stream = s"$streamPath/*",
+      eval = evaluationPath,
+      resultPath = s"$resultPath/continuous-no-opt",
+      samplingRate = 0.1,
+      slack = slack).deploy(ssc, continuousNoOptimization)
+
+    val continuousWithStatisticsUpdate = getPipeline(ssc.sparkContext, delimiter, numFeatures, data)
+
+    new ContinuousDeploymentWithStatisticsUpdate(history = inputPath,
+      stream = s"$streamPath/*",
+      eval = evaluationPath,
+      resultPath = s"$resultPath/continuous-stat-update",
+      samplingRate = 0.1,
+      slack = slack).deploy(ssc, continuousWithStatisticsUpdate)
+
+    val periodicalNoOptimization = getPipeline(ssc.sparkContext, delimiter, numFeatures, data)
+
+    new PeriodicalDeploymentNoOptimization(history = inputPath,
+      stream = s"$streamPath",
+      eval = evaluationPath,
+      resultPath = s"$resultPath/periodical-no-opt").deploy(ssc, periodicalNoOptimization)
+
+    val periodicalWithStatisticsUpdate = getPipeline(ssc.sparkContext, delimiter, numFeatures, data)
+
+    new PeriodicalDeploymentWithStatisticsUpdate(history = inputPath,
+      stream = s"$streamPath",
+      eval = evaluationPath,
+      resultPath = s"$resultPath/continuous-stat-update").deploy(ssc, periodicalWithStatisticsUpdate)
+
+
+  }
+
+  def getPipeline(spark: SparkContext, delimiter: String, numFeatures: Int, data: RDD[String]) = {
+    val pipeline = new CriteoPipeline(spark,
+      delim = delimiter,
+      updater = new SquaredL2UpdaterWithAdam(),
+      miniBatchFraction = 0.1,
+      numCategories = numFeatures)
+    pipeline.update(data)
+    pipeline.train(data)
+
+    pipeline
+
   }
 }
