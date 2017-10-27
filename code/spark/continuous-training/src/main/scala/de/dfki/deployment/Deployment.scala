@@ -11,7 +11,7 @@ import org.apache.spark.streaming.StreamingContext
   * @author behrouz
   */
 abstract class Deployment {
-  def deploy(sparkStreaming: StreamingContext, pipeline: Pipeline)
+  def deploy(spark: StreamingContext, pipeline: Pipeline)
 
   def evaluateStream(pipeline: Pipeline,
                      evaluationData: RDD[String],
@@ -27,11 +27,21 @@ abstract class Deployment {
   }
 
   val storeLogisticLoss = (logLoss: Double, resultPath: String) => {
-    val file = new File(s"$resultPath")
+    val file = new File(s"$resultPath/loss")
     file.getParentFile.mkdirs()
     val fw = new FileWriter(file, true)
     try {
       fw.write(s"$logLoss\n")
+    }
+    finally fw.close()
+  }
+
+  def storeTrainingTimes(time: Long, resultPath: String) = {
+    val file = new File(s"$resultPath/time")
+    file.getParentFile.mkdirs()
+    val fw = new FileWriter(file, true)
+    try {
+      fw.write(s"$time\n")
     }
     finally fw.close()
   }

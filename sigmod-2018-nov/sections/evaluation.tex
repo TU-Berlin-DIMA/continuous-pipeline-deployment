@@ -46,7 +46,6 @@ Moreover, ADAM is the most effective learning rate for continuous training of th
 \end{figure}
 
 \subsection{Rate of New Features}
-\todo[inline]{Fix the numbers after day 4 data is fixed}
 We measure model freshness by two metrics: training recency and rate of new features.
 Training recency is determined by the scheduling rate.
 Performing more frequent training results in models that can adapt to changes in the data more rapidly.
@@ -54,7 +53,7 @@ In Criteo pipeline, we use a feature encoder to transform the categorical featur
 The initial training data (Day 0) only contains a small portion of all the unique categorical features of the Criteo dataset.
 The incoming training data may contain features that have not existed in the dataset before.
 Figure \ref{fig:criteo-feature-discovery} shows the feature size overtime for the first 5 days after deployment of Criteo pipeline.
-The rate of incoming new features is roughly X per minute and every day around Y new features are generated.
+The rate of incoming new features is roughly 30,000 per minute and every day around 45 million new features are generated.
 Using our continuous training approach, we update the pipeline as soon as new features become available.
 During the next scheduled proactive training, the model is updated using these new features.
 As a result, the deployed pipeline is able to answer prediction queries that may contain the same set of features more accurately.

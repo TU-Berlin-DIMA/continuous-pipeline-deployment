@@ -3,10 +3,9 @@ package de.dfki.ml.pipelines.criteo
 import java.io._
 
 import de.dfki.ml.evaluation.LogisticLoss
-import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
+import de.dfki.ml.optimization.{AdvancedUpdaters, SquaredL2UpdaterWithAdam}
 import de.dfki.ml.pipelines.Pipeline
 import de.dfki.utils.CommandLineParser
-import org.apache.spark.mllib.optimization.Updater
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
@@ -21,8 +20,9 @@ class CriteoPipeline(@transient var spark: SparkContext,
                      val numIterations: Int = 100,
                      val regParam: Double = 0.0,
                      val miniBatchFraction: Double = 1.0,
-                     val updater: Updater = new SquaredL2UpdaterWithAdam(),
-                     val numCategories: Int = 300000) extends Pipeline {
+                     val updater: AdvancedUpdaters = new SquaredL2UpdaterWithAdam(),
+                     val numCategories: Int = 300000,
+                     var materialization: Boolean = false) extends Pipeline {
 
   val fileReader = new InputParser(delim)
   val missingValueImputer = new MissingValueImputer()
@@ -30,26 +30,30 @@ class CriteoPipeline(@transient var spark: SparkContext,
   val oneHotEncoder = new OneHotEncoder(numCategories)
   val model = new LRModel(stepSize, numIterations, regParam, miniBatchFraction, updater)
 
-  var materializedTrainingData: RDD[LabeledPoint] = _
 
-  override def withMaterialization = false
+  override def setMaterialization(materialization: Boolean) = {
+    this.materialization = materialization
+  }
 
   /**
     * This method have to be called if the pipeline is loaded from the disk
+    *
     * @param sc
     */
   def setSparkContext(sc: SparkContext): Unit = {
     this.spark = sc
   }
 
-  override def update(data: RDD[String]) = {
+  override def update(data: RDD[String]): RDD[LabeledPoint] = {
     val parsedData = fileReader.transform(spark, data)
     val filledData = missingValueImputer.transform(spark, parsedData)
     val scaledData = standardScaler.updateAndTransform(spark, filledData)
-    if (withMaterialization) {
-      materializeNextBatch(oneHotEncoder.updateAndTransform(spark, scaledData))
+    if (materialization) {
+      // perform one hot encoding and return the materialized data
+      oneHotEncoder.transform(spark, scaledData)
     } else {
-      oneHotEncoder.update(spark, scaledData)
+      // do nothing
+      null
     }
   }
 
@@ -61,17 +65,22 @@ class CriteoPipeline(@transient var spark: SparkContext,
     * @param data next batch of training data
     */
   override def train(data: RDD[String]) = {
-    // use the materialized data if the option is set
-    val trainingData = if (withMaterialization) {
-      materializedTrainingData
-    } else {
-      dataProcessing(data)
-    }
-    //val newDimension = oneHotEncoder.getCurrentDimension
-    trainingData.cache()
+    val trainingData = dataProcessing(data).cache()
     trainingData.count()
     model.train(trainingData)
   }
+
+  /**
+    * Train on already materialized data
+    *
+    * @param data materialized training data
+    */
+  override def trainOnMaterialized(data: RDD[LabeledPoint]) = {
+    data.cache()
+    data.count()
+    model.train(data)
+  }
+
 
   /**
     *
@@ -103,12 +112,21 @@ class CriteoPipeline(@transient var spark: SparkContext,
   }
 
 
-  private def materializeNextBatch(nextBatch: RDD[LabeledPoint]) = {
-    if (materializedTrainingData == null) {
-      materializedTrainingData = nextBatch
-    } else {
-      materializedTrainingData = materializedTrainingData.union(nextBatch)
-    }
+  /**
+    * Create a fresh new pipeline using the same parameters
+    *
+    * @return
+    */
+  override def newPipeline() = {
+    val newUpdater = AdvancedUpdaters.getUpdater(updater.name)
+    new CriteoPipeline(spark = spark,
+      delim = delim,
+      stepSize = stepSize,
+      numIterations = numIterations,
+      regParam = regParam,
+      miniBatchFraction = miniBatchFraction,
+      updater = newUpdater,
+      numCategories = numCategories)
   }
 }
 

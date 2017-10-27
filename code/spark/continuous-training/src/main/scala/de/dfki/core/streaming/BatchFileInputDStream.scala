@@ -159,11 +159,21 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
     * @return RDD created from the a file in the given directory
     */
   override def compute(validTime: Time): Option[RDD[(K, V)]] = {
+    generateNextRDD()
+  }
+
+  /**
+    * same as compute
+    * Used for manual simulation
+    *
+    * @return RDD created from the a file in the given directory
+    */
+  def generateNextRDD(): Option[RDD[(K, V)]] = {
     if (isPaused) {
       logger.warn("This streaming source is paused!!!")
       None
     }
-    else if (lastProcessedFileIndex < files.length) {
+    else if (!allFileProcessed()) {
       val rdd = rddFromFile(files(lastProcessedFileIndex))
       if (getCurrentFolder != getNextFolder &
         getNextFolder != BatchFileInputDStream.NO_MORE_FOLDERS &
@@ -172,7 +182,7 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
         // batch learning can and should happen simultaneously
         logger.info(s"Finished Processing Folder: $getCurrentFolder")
         logger.warn(s"Streaming source is paused until new training is scheduled")
-        pause()
+        //pause()
       }
       processedFiles = processedFiles :+ files(lastProcessedFileIndex)
       lastProcessedFileIndex += 1
@@ -181,6 +191,10 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
       logger.warn("All Files in the directory are processed!!!")
       None
     }
+  }
+
+  def allFileProcessed(): Boolean = {
+    lastProcessedFileIndex >= files.length
   }
 
   private def listFiles(): Array[String] = {

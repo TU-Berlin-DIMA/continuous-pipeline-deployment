@@ -42,6 +42,7 @@ class OneHotEncoder(val numCategories: Int) extends Component[RawType, LabeledPo
     val uniques = input
       .flatMap(_.categorical)
       .distinct()
+      .repartition(20)
       .cache()
     val size = uniques.count()
     if (approximateFeatureSize == 0) {
@@ -58,10 +59,8 @@ class OneHotEncoder(val numCategories: Int) extends Component[RawType, LabeledPo
         for (s <- partition)
           curFilter.putString(s)
         Seq(curFilter).iterator
-    }
-    bloomFilter = updatedFilters.treeReduce((b1, b2) => b1.mergeInPlace(b2))
-    uniques.unpersist(false)
-    filter.unpersist(false)
+    }.collect()
+    bloomFilter = updatedFilters.reduce((b1, b2) => b1.mergeInPlace(b2))
   }
 
   private def murmurHash(feature: String, numFeatures: Int): Int = {
