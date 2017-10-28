@@ -95,8 +95,8 @@ Before training the machine learning model, the training dataset has to be proce
 Different components of the pipeline require statistics over the dataset to be calculated before they process the data.
 Computing these statistics require scans of the data.
 In our deployment platform, we provide a mechanism for online computation and update of the statistics required for different components of the pipeline.
-In our prototype, we implemented standard scaler, missing value computer, and one-hot encoder.
-The above components require the mean, standard deviation, and for the one-hot encoder, a hash table of the unique categorical parameters in every feature column.
+In our prototype, we implemented a standard scaler, a missing value computer, and a one-hot encoder.
+The above components require the mean, the standard deviation, and for the one-hot encoder, a hash table of the unique categorical parameters in every feature column.
 Our deployment platform also accommodates custom pipeline components.
 When new training data arrives at the system, the platform directs the data to the given component so they update their underlying statistics and data structures.
 Computing the required statistics online reduces the model training time as computing these statistics offline is time-consuming.
@@ -127,7 +127,6 @@ Every iteration of the SGD, uses the latest deployed model as an initial startin
 The evaluator component assesses the quality of the model using an evaluation dataset.
 If the quality of the model has degraded, the update is discard and the model is logged.
 The engineers or administrators of the system can study the log in order to investigate any potential issues with machine learning pipeline or the incoming training data.
-\todo[inline]{But then there are other concerns: 1. Can we offer automatic or even manual way of fixing whatever the problem is with the model training? 2. The overhead it has on the system? This should be very small only depends on the size of the evaluation set.}
 
 \subsection{Improved Example Application}
 \begin{figure}[t]
