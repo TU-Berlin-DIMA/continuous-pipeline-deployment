@@ -1,15 +1,17 @@
 \section{Evaluation} \label{evaluation} 
-\todo[inline]{structure is finalized}
-In this section we evaluate the performance of our system using various datasets. 
-We report both the quality (error rate) and performance of our proposed method. 
+To evaluate our continuous training approach, we perform several experiments.
+We first describe the setup of our experiments including the computing cluster, the deployed pipeline, and how we simulated a real production environment by streaming a real-world large dataset through our deployment platform.
+First, we discuss the effect of different parameters (learning rate adaptation, sampling strategy, and scheduling rate) on the quality and training time of the model.
+Then, we discuss the effects of proactive training on the quality of the model and compare it to the quality of a model that is trained on a daily basis.
+Finally, we evaluate the effects of online statistics computation and data materialization optimizations on the training time.
 
 \subsection{Setup}\label{subsec:setup}
-We evaluate our deployment method in distributed environment consists of 11 nodes (1 master, 10 slaves).
+We evaluate our deployment method in distributed environment consists of 21 nodes (1 master, 20 slaves).
 Each node is running on an Intel Xeon 2.40 GHz 16 core processor and has 28 GB of dedicated memory for running our prototype.
 
 To demonstrate the deployment platform designed the following machine learning pipeline.
 
-\textbf{Criteo pipeline.} 
+\textbf{Criteo Pipeline.} 
 The Criteo pipeline consists of 5 operations: input parser, missing value imputer, standard scaler, one hot encoder, and logistic regression model trainer. 
 The Terabyte Criteo click log dataset is used for benchmarking algorithms for clickthrough rate (CTR) prediction \cite{criteo-log}.
 It contains 24 days of user click logs. 
@@ -18,6 +20,12 @@ In all of our experiments we are using the data from the first 6 days (Day 0 to 
 Day 0 is used for the initial offline training of the pipeline.
 Day 1 to Day 5 are used as a streaming dataset.
 To evaluate the quality of the pipeline, we use a sample of the Day 6 to compute the logistic loss.
+
+\textbf{Criteo Data Simulation.}
+We simulate a production environment by streaming 5 days of criteo dataset.
+The data from each day is divided into 1440 smaller batches and stored on disk.
+Each batch represent one minute of data.
+We use spark streaming to read the data files one by one and stream them through the deployment platform. 
 
 \subsection{Learning Rate Adaptation Method}
 In Section \ref{sgd}, we discussed the importance of learning rate tuning for training a model using the Stochastic Gradient Descent optimization method.
@@ -43,26 +51,6 @@ Moreover, ADAM is the most effective learning rate for continuous training of th
 \includegraphics[width=\columnwidth]{../images/experiment-results/learning-rate-experiment.eps}
 \caption{Learning rate adaptation technique for Criteo pipeline}
 \label{fig:criteo-learning-rate}
-\end{figure}
-
-\subsection{Rate of New Features}
-We measure model freshness by two metrics: training recency and rate of new features.
-Training recency is determined by the scheduling rate.
-Performing more frequent training results in models that can adapt to changes in the data more rapidly.
-In Criteo pipeline, we use a feature encoder to transform the categorical features into binary indicator variables.
-The initial training data (Day 0) only contains a small portion of all the unique categorical features of the Criteo dataset.
-The incoming training data may contain features that have not existed in the dataset before.
-Figure \ref{fig:criteo-feature-discovery} shows the feature size overtime for the first 5 days after deployment of Criteo pipeline.
-The rate of incoming new features is roughly 30,000 per minute and every day around 45 million new features are generated.
-Using our continuous training approach, we update the pipeline as soon as new features become available.
-During the next scheduled proactive training, the model is updated using these new features.
-As a result, the deployed pipeline is able to answer prediction queries that may contain the same set of features more accurately.
-Using a daily training approach, any unseen features that arrive at the system are dropped before a prediction is made.
-
-\begin{figure}[H]
-\includegraphics[width=\columnwidth]{../images/experiment-results/feature-discovery-experiment.eps}
-\caption{Criteo categorical feature size over time}
-\label{fig:criteo-feature-discovery}
 \end{figure}
 
 \subsection{Sampling Methods}
@@ -175,6 +163,28 @@ Therefore, depending on the application, we can set the buffer size to bigger va
 Therefore, a dynamic scheduling maximizes the performance of the system, by performing more frequent updates while there are more resources available for training. 
 \todo[inline]{R1: "Moreover, since training and serving ... only update the weights when the training iteration is over". Why? Why not apply the updates to the model in-place? This allows you to serve every request with the absolute freshest model. At least for the single-machine case. BD: the updated model is the result of the training iterations, therefore, we have to wait until the iteration is over. The sentence seems clear to me. I should it run it by TR}
 Moreover, since training and serving can be done in parallel, we can perform training in a background process and only update the weights when the training iteration is over. 
+
+
+
+\subsection{Rate of New Features}
+We measure model freshness by two metrics: training recency and rate of new features.
+Training recency is determined by the scheduling rate.
+Performing more frequent training results in models that can adapt to changes in the data more rapidly.
+In Criteo pipeline, we use a feature encoder to transform the categorical features into binary indicator variables.
+The initial training data (Day 0) only contains a small portion of all the unique categorical features of the Criteo dataset.
+The incoming training data may contain features that have not existed in the dataset before.
+Figure \ref{fig:criteo-feature-discovery} shows the feature size overtime for the first 5 days after deployment of Criteo pipeline.
+The rate of incoming new features is roughly 30,000 per minute and every day around 45 million new features are generated.
+Using our continuous training approach, we update the pipeline as soon as new features become available.
+During the next scheduled proactive training, the model is updated using these new features.
+As a result, the deployed pipeline is able to answer prediction queries that may contain the same set of features more accurately.
+Using a daily training approach, any unseen features that arrive at the system are dropped before a prediction is made.
+
+\begin{figure}[H]
+\includegraphics[width=\columnwidth]{../images/experiment-results/feature-discovery-experiment.eps}
+\caption{Criteo categorical feature size over time}
+\label{fig:criteo-feature-discovery}
+\end{figure}
 
 
 \subsection{Prediction Quality}

@@ -15,10 +15,10 @@ import org.apache.spark.{SparkConf, SparkContext}
   * @author behrouz
   */
 object TrainingTimes {
-  val INPUT_PATH = "data/criteo-full/experiments/initial-training/0"
+  val INPUT_PATH = "data/criteo-full/experiments/initial-training/day_0"
   val STREAM_PATH = "data/criteo-full/experiments/stream"
   val EVALUATION_PATH = "data/criteo-full/experiments/evaluation/6"
-  val RESULT_PATH = "../../../experiment-results/criteo-full/training-time"
+  val RESULT_PATH = "../../../experiment-results/criteo-full/training-time/local"
   val DELIMITER = ","
   val NUM_FEATURES = 30000
   val NUM_ITERATIONS = 500
@@ -44,31 +44,32 @@ object TrainingTimes {
     val ssc = new StreamingContext(conf, Seconds(1))
     val data = ssc.sparkContext.textFile(inputPath)
 
-    val continuousNoOptimization = getPipeline(ssc.sparkContext, delimiter, numFeatures, numIterations, data)
-
-    new ContinuousDeploymentNoOptimization(history = inputPath,
-      stream = s"$streamPath/*",
-      eval = evaluationPath,
-      resultPath = s"$resultPath/continuous-no-opt",
-      samplingRate = 0.1,
-      slack = slack).deploy(ssc, continuousNoOptimization)
-
-    val continuousWithStatisticsUpdate = getPipeline(ssc.sparkContext, delimiter, numFeatures, numIterations, data)
-
-    new ContinuousDeploymentWithStatisticsUpdate(history = inputPath,
-      stream = s"$streamPath/*",
-      eval = evaluationPath,
-      resultPath = s"$resultPath/continuous-stat-update",
-      samplingRate = 0.1,
-      slack = slack)
-      .deploy(ssc, continuousWithStatisticsUpdate)
+//    val continuousNoOptimization = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)
+//
+//    new ContinuousDeploymentNoOptimization(history = inputPath,
+//      stream = s"$streamPath/*",
+//      eval = evaluationPath,
+//      resultPath = s"$resultPath/continuous-no-opt",
+//      samplingRate = 0.1,
+//      slack = slack).deploy(ssc, continuousNoOptimization)
+//
+//    val continuousWithStatisticsUpdate = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)
+//
+//    new ContinuousDeploymentWithStatisticsUpdate(history = inputPath,
+//      stream = s"$streamPath/*",
+//      eval = evaluationPath,
+//      resultPath = s"$resultPath/continuous-stat-update",
+//      samplingRate = 0.1,
+//      slack = slack)
+//      .deploy(ssc, continuousWithStatisticsUpdate)
 
     val periodicalNoOptimization = getPipeline(ssc.sparkContext, delimiter, numFeatures, numIterations, data)
 
     new PeriodicalDeploymentNoOptimization(history = inputPath,
       stream = s"$streamPath",
       eval = evaluationPath,
-      resultPath = s"$resultPath/periodical-no-opt").deploy(ssc, periodicalNoOptimization)
+      resultPath = s"$resultPath/periodical-no-opt"
+      ).deploy(ssc, periodicalNoOptimization)
 
     val periodicalWithStatisticsUpdate = getPipeline(ssc.sparkContext, delimiter, numFeatures, numIterations, data)
 
