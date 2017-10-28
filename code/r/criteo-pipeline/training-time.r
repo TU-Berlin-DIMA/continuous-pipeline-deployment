@@ -31,5 +31,5 @@ finalPlot = ggplot(data = deploymentTypes) +
 
 ggsave(finalPlot , filename = 'training-time/local/training-time-experiment.eps', 
        device = 'eps', 
-       width = 10, height = 10, 
+       width = 14, height = 8, 
        units = "in")
