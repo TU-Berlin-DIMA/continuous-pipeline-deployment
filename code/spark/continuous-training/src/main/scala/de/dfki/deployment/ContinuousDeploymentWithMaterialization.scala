@@ -18,9 +18,7 @@ import org.apache.spark.streaming.StreamingContext
   */
 class ContinuousDeploymentWithMaterialization(val history: String,
                                               val stream: String,
-                                              val eval: String,
                                               val resultPath: String,
-                                              val materializedLocation: String,
                                               val samplingRate: Double = 0.1,
                                               val slack: Long = 10) extends Deployment {
 
@@ -35,15 +33,13 @@ class ContinuousDeploymentWithMaterialization(val history: String,
 
     val dataParser = new CustomVectorParser()
     val historicalMaterializedData = pipeline.update(data)
-    writeStreamToDisk(historicalMaterializedData.map(dataParser.unparsePoint), materializedLocation, 0)
+    writeStreamToDisk(historicalMaterializedData.map(dataParser.unparsePoint), history, 0)
 
-
-    val testData = streamingContext.sparkContext.textFile(eval)
 
     val streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](streamingContext, stream)
 
     def historicalDataRDD(recentItems: RDD[LabeledPoint]) = {
-      streamingContext.sparkContext.textFile(materializedLocation)
+      streamingContext.sparkContext.textFile(history)
         .map(dataParser.parsePoint)
         .union(recentItems)
         .sample(withReplacement = false, samplingRate)
@@ -54,7 +50,6 @@ class ContinuousDeploymentWithMaterialization(val history: String,
     pipeline.model.setNumIterations(1)
     var proactiveRDD: RDD[LabeledPoint] = null
     var time = 0
-    evaluateStream(pipeline, testData, resultPath)
     while (!streamingSource.allFileProcessed()) {
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
       // live statistics update
@@ -75,8 +70,6 @@ class ContinuousDeploymentWithMaterialization(val history: String,
         // compute and store the training time
         val trainingTime = endTime - startTime
         storeTrainingTimes(trainingTime, resultPath)
-        // evaluate the pipeline
-        evaluateStream(pipeline, testData, resultPath)
         proactiveRDD = null
       }
       time += 1

@@ -13,6 +13,7 @@ import org.apache.spark.SparkConf
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 
 /**
+  * TODO: FIX THIS
   * @author behrouz
   */
 object ParameterSelection {
@@ -81,7 +82,6 @@ object ParameterSelection {
     }
     val deployment = new ContinuousDeploymentNoOptimization(history = inputPath,
       stream = streamPath,
-      eval = evaluationPath,
       resultPath = s"$resultPath/${updater.name}",
       slack = slack,
       samplingRate = 0.1)

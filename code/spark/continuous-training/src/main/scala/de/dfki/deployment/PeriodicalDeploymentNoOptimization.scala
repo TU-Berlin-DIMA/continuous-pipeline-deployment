@@ -12,17 +12,13 @@ import scala.collection.mutable.ListBuffer
   */
 class PeriodicalDeploymentNoOptimization(val history: String,
                                          val stream: String,
-                                         val eval: String,
                                          val resultPath: String,
                                          val numIterations: Int = 500) extends Deployment {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     val days = (1 to 5).map(i => s"$stream/day_$i")
     var copyPipeline = pipeline
-    val testData = streamingContext.sparkContext.textFile(eval)
 
-    // initial evaluation
-    evaluateStream(copyPipeline, testData, resultPath)
     var trainingDays: ListBuffer[String] = new ListBuffer[String]()
     trainingDays += history
 
@@ -39,7 +35,6 @@ class PeriodicalDeploymentNoOptimization(val history: String,
 
       storeTrainingTimes(endTime - startTime, resultPath)
 
-      evaluateStream(copyPipeline, testData, resultPath)
     }
   }
 

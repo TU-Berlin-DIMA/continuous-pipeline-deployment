@@ -15,7 +15,6 @@ import scala.collection.mutable.ListBuffer
   */
 class PeriodicalDeploymentWithMaterialization(val history: String,
                                               val stream: String,
-                                              val eval: String,
                                               val materializedLocation: String,
                                               val resultPath: String,
                                               val numIterations: Int = 500) extends Deployment {
@@ -25,8 +24,6 @@ class PeriodicalDeploymentWithMaterialization(val history: String,
     var copyPipeline = pipeline
     copyPipeline.setMaterialization(true)
 
-
-    val testData = streamingContext.sparkContext.textFile(eval)
 
     val spark = streamingContext.sparkContext
 
@@ -48,8 +45,6 @@ class PeriodicalDeploymentWithMaterialization(val history: String,
       trainingDays += s"$materializedLocation/$i"
     }
 
-    // initial evaluation
-    evaluateStream(copyPipeline, testData, resultPath)
     for (day <- trainingDays) {
       copyPipeline = copyPipeline.newPipeline()
       copyPipeline.model.setNumIterations(numIterations)
@@ -63,8 +58,6 @@ class PeriodicalDeploymentWithMaterialization(val history: String,
       val endTime = System.currentTimeMillis()
 
       storeTrainingTimes(endTime - startTime, resultPath)
-
-      evaluateStream(copyPipeline, testData, resultPath)
     }
   }
 

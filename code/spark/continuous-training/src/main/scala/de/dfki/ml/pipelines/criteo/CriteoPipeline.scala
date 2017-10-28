@@ -53,6 +53,7 @@ class CriteoPipeline(@transient var spark: SparkContext,
       oneHotEncoder.transform(spark, scaledData)
     } else {
       // do nothing
+      //oneHotEncoder.update(spark, scaledData)
       null
     }
   }

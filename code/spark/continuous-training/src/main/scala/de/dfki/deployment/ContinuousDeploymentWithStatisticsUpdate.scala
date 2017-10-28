@@ -14,7 +14,6 @@ import org.apache.spark.streaming.StreamingContext
   */
 class ContinuousDeploymentWithStatisticsUpdate(val history: String,
                                                val stream: String,
-                                               val eval: String,
                                                val resultPath: String,
                                                val samplingRate: Double = 0.1,
                                                val slack: Long = 10) extends Deployment {
@@ -24,8 +23,6 @@ class ContinuousDeploymentWithStatisticsUpdate(val history: String,
     val data = streamingContext.sparkContext
       .textFile(history)
 
-
-    val testData = streamingContext.sparkContext.textFile(eval)
 
     val streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](streamingContext, stream)
 
@@ -41,7 +38,6 @@ class ContinuousDeploymentWithStatisticsUpdate(val history: String,
     pipeline.model.setNumIterations(1)
     var proactiveRDD: RDD[String] = null
     var time = 0
-    evaluateStream(pipeline, testData, resultPath)
     while (!streamingSource.allFileProcessed()) {
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
       // live statistics update
@@ -63,8 +59,6 @@ class ContinuousDeploymentWithStatisticsUpdate(val history: String,
         val trainingTime = endTime - startTime
         storeTrainingTimes(trainingTime, resultPath)
 
-        // evaluate the pipeline
-        evaluateStream(pipeline, testData, resultPath)
 
         proactiveRDD = null
       }
