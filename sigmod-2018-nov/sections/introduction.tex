@@ -1,5 +1,7 @@
 \section{Introduction} \label{introduction}
-A machine learning pipeline consists of a set of data processing steps, chained together, that results in a machine learning model.
+Machine learning techniques are increasingly being used in industrial and scientific applications to gain insight from the data.
+Typically, a machine learning pipeline consists of a set of complex data processing steps, chained together, is designed that processes a labeled training dataset and results in a machine learning model.
+The machine learning model is then used to make predictions on new unlabeled data.
 To fully utilize the model,  the model and the pipeline have to be deployed into an environment where they are used to answer prediction queries in real-time.
 Typically, feedback in the form of new training data will become available after the model is deployed.
 In order to adapt to the new training data and guarantee a high prediction accuracy, new models are constantly trained and re-deployed.
@@ -9,8 +11,11 @@ In many real-world use cases, training datasets are very large which may require
 Therefore, it is not feasible to train new models frequently.
 This means that the model being used for answering prediction requests is not always up-to-date.
 Online learning methods can be utilized to provide fresh and up-to-date models.
-However, unless the online learning method is highly tuned to the specific use case \cite{ma2009identifying}, a high-quality model cannot be guaranteed.
+However, unless the online learning method is highly tuned to the specific use case, a high-quality model cannot be guaranteed \cite{ma2009identifying}. 
 This results in a trade-off between model quality and model freshness.
+Addressing the trade-off between quality and freshness is crucial for internet scale applications where both training data and prediction requests are generated with very high speed and large throughput.
+One example of internet scale applications is online advertising.
+In online advertising, machine learning models are frequently used to provide personalized ads to the users based on their browsing behavior.
 \begin{figure}[h!]
 \centering
 \includegraphics[width=\columnwidth]{../images/motivational-example-vertical-small-cropped.pdf}
@@ -18,13 +23,13 @@ This results in a trade-off between model quality and model freshness.
 \label{fig:motivational-example}
 \end{figure}
 
-\textbf{Example Application.} 
+\textbf{Online advertising use case.} 
 Online advertising is a multi-billion dollar industry.
-An advertising network receives ads from different businesses (ads providers) and shows them on different websites (publishers).
+An advertising network receives ads from different businesses (ad providers) and shows them on different websites (publishers).
 The advertising network charges businesses based on the number of clicks users make on their published ads.
 Advertising networks utilize machine learning pipelines to estimate the click rate of different ads.
 Figure \ref{fig:motivational-example} shows the workflow of an advertising firm.
-The input data (Click Log) consists of several numerical and categorical variables related to the user, publisher's website, the ads, and whether or not the users clicked on those ads.
+The input data (Click Log) consists of several numerical and categorical variables related to the user, the publisher's website, the ads, and whether or not the users clicked on the ads.
 A basic click rate prediction pipeline is designed the following way \textcircled{1}. 
 A \textbf{missing value imputer} replaces missing values with appropriate values.
 A \textbf{label indexer} finds the different unique values in a categorical feature. 
@@ -51,20 +56,20 @@ Our goal is to design a deployment platform that can handle such traffic, provid
 To ensure accurate predictions, new models should be trained frequently.
 However, existing solutions recognize training new models as a resource-intensive and time-consuming process \cite{crankshaw2014missing, agarwal2014laser, baylor2017tfx}.
 To address the trade-off between model quality and model freshness, existing solutions propose periodical training of new models.
-However, the periods between each instance of the training are typically long (daily).
-While daily training is appropriate for some use cases, it is not suitable for other use cases \cite{baylor2017tfx}.
-This leads to high quality but out-dated models.
-Therefore, the models do not consider the recent training data when answering predictions.
+However, the periods between each instance of the training are typically long (e.g., daily).
+While daily training is appropriate for some use cases, it is not suitable for use cases that are required to react quickly to changes in the data (e.g., credit card fraud detection).
+This leads to high quality but out-dated models that do not consider the recent training data when answering predictions.
 Moreover, existing solutions treat the model training and model serving as two separate processes. 
 New models are fully trained in isolation then they are pushed to the deployment environment.
 
-We realized by merging these two processes (training and serving) we can optimize the process of training new models.
-We propose a method for a deployment platform that continuously updates the models (thus providing fresh models) without sacrificing the quality.
+By merging these two processes (training and serving), the training process of new models can be optimized.
+In this paper, we propose a method for a deployment platform that continuously updates the models (thus providing fresh models) without sacrificing the quality.
 Our solution offers two key optimizations.
 
 \textit{Proactive training.}
-The underlying optimization technique, Stochastic Gradient Descent (SGD), for the training approach is an iterative algorithm.
-Individual iterations are independent and are typically lightweight.
+Stochastic Gradient Descent (SGD) is an iterative optimization algorithm that is commonly used for training machine learning models on large datasets.
+We use SGD for continuously training the deployed model.
+Individual iterations of SGD are independent and typically lightweight.
 By exploiting these two features of SGD, we replace the time-consuming and resource-intensive training of the new model by a series of single iterations of SGD that are executed proactively.
 Our strategy in continuously updating the model is similar to how parameter servers train large models \cite{li2014scaling}.
 Parameter servers use the Stochastic Gradient Descent optimization method to iteratively compute partial updates and push these updates to the model.
@@ -90,8 +95,8 @@ As a result, we can directly use the materialized data to train a new model and 
 
 In summary our contributions are:
 \begin{itemize}
-\item Management and continuous deployment of machine learning pipelines
-\item Proactive training of the model being served using a parameter server style approach
+\item A platform for continuously training deployed machine learning pipelines and models
+\item Proactive training of the deployed model using a parameter server style approach that frequently updates the model in-place and increases the quality of the model when compared with periodical training
 \item Efficient training of the model by online statistics computation and data materialization, thus guaranteeing the model freshness without sacrificing the model quality
 \end{itemize}
 

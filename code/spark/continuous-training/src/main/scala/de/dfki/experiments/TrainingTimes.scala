@@ -20,8 +20,10 @@ object TrainingTimes {
   val EVALUATION_PATH = "data/criteo-full/experiments/evaluation/6"
   val RESULT_PATH = "../../../experiment-results/criteo-full/quality/loss-new"
   val DELIMITER = ","
-  val NUM_FEATURES = 3000000
+  val NUM_FEATURES = 30000
+  val NUM_ITERATIONS = 500
   val SLACK = 10
+
 
   def main(args: Array[String]): Unit = {
 
@@ -32,16 +34,17 @@ object TrainingTimes {
     val resultPath = parser.get("result", RESULT_PATH)
     val delimiter = parser.get("delimiter", DELIMITER)
     val numFeatures = parser.getInteger("features", NUM_FEATURES)
+    val numIterations = parser.getInteger("iterations", NUM_ITERATIONS)
     val slack = parser.getInteger("slack", SLACK)
 
-    val conf = new SparkConf().setAppName("Learning Rate Selection Criteo")
+    val conf = new SparkConf().setAppName("Training Time Experiment")
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
 
     val ssc = new StreamingContext(conf, Seconds(1))
     val data = ssc.sparkContext.textFile(inputPath)
 
-    val continuousNoOptimization = getPipeline(ssc.sparkContext, delimiter, numFeatures, data)
+    val continuousNoOptimization = getPipeline(ssc.sparkContext, delimiter, numFeatures, numIterations, data)
 
     new ContinuousDeploymentNoOptimization(history = inputPath,
       stream = s"$streamPath/*",
@@ -50,7 +53,7 @@ object TrainingTimes {
       samplingRate = 0.1,
       slack = slack).deploy(ssc, continuousNoOptimization)
 
-    val continuousWithStatisticsUpdate = getPipeline(ssc.sparkContext, delimiter, numFeatures, data)
+    val continuousWithStatisticsUpdate = getPipeline(ssc.sparkContext, delimiter, numFeatures, numIterations, data)
 
     new ContinuousDeploymentWithStatisticsUpdate(history = inputPath,
       stream = s"$streamPath/*",
@@ -59,14 +62,14 @@ object TrainingTimes {
       samplingRate = 0.1,
       slack = slack).deploy(ssc, continuousWithStatisticsUpdate)
 
-    val periodicalNoOptimization = getPipeline(ssc.sparkContext, delimiter, numFeatures, data)
+    val periodicalNoOptimization = getPipeline(ssc.sparkContext, delimiter, numFeatures, numIterations, data)
 
     new PeriodicalDeploymentNoOptimization(history = inputPath,
       stream = s"$streamPath",
       eval = evaluationPath,
       resultPath = s"$resultPath/periodical-no-opt").deploy(ssc, periodicalNoOptimization)
 
-    val periodicalWithStatisticsUpdate = getPipeline(ssc.sparkContext, delimiter, numFeatures, data)
+    val periodicalWithStatisticsUpdate = getPipeline(ssc.sparkContext, delimiter, numFeatures, numIterations, data)
 
     new PeriodicalDeploymentWithStatisticsUpdate(history = inputPath,
       stream = s"$streamPath",
@@ -76,11 +79,12 @@ object TrainingTimes {
 
   }
 
-  def getPipeline(spark: SparkContext, delimiter: String, numFeatures: Int, data: RDD[String]) = {
+  def getPipeline(spark: SparkContext, delimiter: String, numFeatures: Int, numIterations: Int, data: RDD[String]) = {
     val pipeline = new CriteoPipeline(spark,
       delim = delimiter,
       updater = new SquaredL2UpdaterWithAdam(),
       miniBatchFraction = 0.1,
+      numIterations = numIterations,
       numCategories = numFeatures)
     pipeline.update(data)
     pipeline.train(data)

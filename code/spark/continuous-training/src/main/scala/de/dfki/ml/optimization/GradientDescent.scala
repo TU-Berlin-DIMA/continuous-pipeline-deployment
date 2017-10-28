@@ -150,7 +150,6 @@ object GradientDescent {
 
     var previousWeights: Option[Vector] = None
     var currentWeights: Option[Vector] = None
-
     val numExamples = data.count()
 
     // if no data, return initial weights to avoid NaNs
@@ -186,9 +185,9 @@ object GradientDescent {
       */
     //var regVal = updater.compute(weights, Vectors.zeros(weights.size), 0, 1, regParam)._2
 
-    if (!data.getStorageLevel.useMemory) {
-      logger.warn(s"Dataset is not persisted (${data.getStorageLevel.toString()})!!")
-    }
+
+    logger.info(s"Dataset storage level: ${data.getStorageLevel.toString()}")
+
     var converged = false
     var prevLoss = Double.MaxValue
     var currLoss = Double.MaxValue

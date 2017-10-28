@@ -17,7 +17,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 class CriteoPipeline(@transient var spark: SparkContext,
                      val delim: String = "\t",
                      val stepSize: Double = 1.0,
-                     val numIterations: Int = 100,
+                     val numIterations: Int = 500,
                      val regParam: Double = 0.0,
                      val miniBatchFraction: Double = 1.0,
                      val updater: AdvancedUpdaters = new SquaredL2UpdaterWithAdam(),
