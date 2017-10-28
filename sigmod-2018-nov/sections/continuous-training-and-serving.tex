@@ -1,7 +1,12 @@
 \section{Continuous Training and Serving} \label{continuous-training-serving}
-In this section, we describe our continuous training approach.
-We describe the optimization technique for training the deployed model.
-We also provide a detailed description of how we implement each of the proposed optimizations (proactive training and online statistics computation and data materialization).
+The underlying optimization algorithm we utilize for continuously training the deployed model is Stochastic Gradient Descent (SGD).
+Using SGD enables us to make frequent updates to the model, thus slowing increasing the quality and the freshness of the deployed model.
+SGD algorithm has several parameters and in order to work effectively, they have to be tuned.
+In this section, we first describe the details of SGD and its parameters and our approach in tuning these parameters for our platform.
+Then we describe how we take advantage of the properties of SGD to implement our proactive training, online statistics computation, and data materialization.
+Another important aspect of any deployment platform is the ability to monitor the quality of the deployed model.
+We present our method for evaluating the quality of the deployed model and how we guarantee high-quality models.
+In the last part of this section, we describe how utilizing our continuous training approach improves the efficiency of online advertising example described in section \ref{introduction}.
 
 \subsection{Stochastic Gradient Descent} \label{sgd}
 \textit{Stochastic Gradient Descent (SGD)} is an optimization strategy utilized by many machine learning algorithms for training a model.
@@ -9,17 +14,17 @@ SGD is an iterative optimization technique where in each iteration, a sample of 
 SGD is suitable for large datasets as it does not require scanning the entire data in every iteration \cite{bottou2010large}.
 SGD is used in different machine learning tasks such as classification \cite{zhang2004solving, macmahan2013}, clustering \cite{bottou1995convergence}, and matrix factorization \cite{koren2009matrix,  funk2006netflix}.
 It is also widely used in neural networks for training the networks on large datasets \cite{dean2012large}.
-Prominent applications of SGD in neural networks are the work of Google Deepmind team that managed to train neural networks that defeat humans in the game of Go \cite{silver2016mastering} and mastering Atari games \cite{mnih2013playing} .
+Prominent applications of SGD in neural networks are the work of Google Deepmind team that managed to train neural networks that defeat humans in the game of Go \cite{silver2016mastering} and mastering Atari games \cite{mnih2013playing}.
 
 In our example application, a logistic regression model is trained using the SGD optimization method \cite{macmahan2013}.
-In logistic regression, the goal is to find the weight vector ($w$) that maximizes the conditional likelihood of labels ($y$) based on the given data ($x$) in the training dataset,
+In logistic regression, the goal is to find the weight vector ($w$) that maximizes the conditional likelihood of labels ($y$) based on the given data ($x$) in the training dataset:
 
 \begin{center}
 $w^* = \argmin_w ln(\prod_{i=1}^{N} P(y^i | x^i, w))$
 \end{center}
 
 where $N$ is the size of the training dataset.
-To use SGD to find the optimal $w$, we start from initial random weights and in each step make small updates based on the gradient of the loss function, 
+To use SGD to find the optimal $w$, we start from initial random weights and in each step make small updates based on the gradient of the loss function:
 
 \begin{center}
 ${w}^{t+1} = {w}^t + \eta \sum_{i \in S} x^i (y^i - \hat{P}(Y^i = 1 | x^i w))$
@@ -30,7 +35,7 @@ The algorithm continues until convergence (when the weight vector does not chang
 
 \textbf{Learning Rate.}
 A very important parameter of stochastic gradient descent is the learning rate.
-Learning rate controls the degree of change in the weights in each iteration of SGD.
+The learning rate controls the degree of change in the weights in each iteration of SGD.
 The most basic approach of tuning the learning rate is setting it to an initial small value and after each iteration decrease the value by a small factor.
 In complex and high-dimensional problems, this simple tuning approach for the learning rate is not effective \cite{schaul2013no}. 
 Adaptive learning rate methods such as, Momentum \cite{qian1999momentum}, Adam \cite{kingma2014adam}, RMSPROP \cite{tieleman2012lecture}, and AdaDelta \cite{zeiler2012adaptive} have been proposed.
@@ -41,7 +46,7 @@ This is important because not all the parameters of the weight vector contribute
 \textbf{Sample Size.}
 Another parameter of stochastic gradient descent is the sample size.
 SGD is guaranteed to converge to a solution regardless of the value of the sample size.
-However, sample size can greatly affect the time that is required to converge.
+However, the sample size can greatly affect the time that is required to converge.
 Two extremes of the sample size are 1 (every iteration only considers 1 data item) and $N$ (every iteration consider the entire data set, similar to normal batch gradient descent).
 Setting the sample size to 1 increases the model update frequency, however, it also results in noisy updates.
 Therefore, more iterations are required for the model to converge.
@@ -54,9 +59,7 @@ To efficiently train machine learning models on large datasets, scalable techniq
 SGD inherently works well with large amounts of data because it does not need to scan every data point during every iteration.
 However, for very large datasets, SGD has to perform many iterations in order to converge.
 To decrease the running time, large datasets can be distributed among multiple nodes, where each node will compute the gradients on a subset of the data in parallel.
-One drawback of this approach is that a synchronization step is required before applying the updates to the model, which slows down the optimization process.
-To alleviate this, several asynchronous SGD methods are proposed \cite{recht2011hogwild, dean2012large}. 
-Experiments show that in certain cases, asynchronous SGD performs well and the final quality of the model is comparable to the synchronous approach.
+After the initial computation of the gradients, they are all sent to one node where the final gradients are computed.
 
 \subsection{Proactive Training}
 We use the iterative nature of SGD in the design of our continuous training process.
@@ -64,7 +67,7 @@ After the initial model is deployed, new iterations of SGD can be performed on a
 Once the gradients are computed, we update the deployed model.
 However, the two parameters of SGD (learning rate and sample size) play an important role.
 They have to be tuned to increase the efficiency of the training.
-Choosing very small sample size may result in inaccurate updates and as a result, degrade the quality of the deployed model.
+Choosing  a very small sample size may result in inaccurate updates and as a result, degrade the quality of the deployed model.
 On the other hand, a very large sample size leads to a lengthy training process and less frequent model updates.
 Similarly, learning rate should be adapted accordingly.
 We view proactive training as an extension of the offline batch training.
@@ -77,10 +80,10 @@ Once the initial model is trained and deployed, the same set of parameters are u
 \textit{Scheduling rate.}
 An extra parameter of proactive training is the scheduling rate.
 In offline training, iterations of SGD are executed one after the other until convergence.
-In proactive training, scheduling rate defines the frequency of SGD iteration execution.
-Scheduling rate plays an important role as it directly affects the freshness of the deployed model.
+In proactive training, the scheduling rate defines the frequency of SGD iteration execution.
+The scheduling rate plays an important role as it directly affects the freshness of the deployed model.
 However, a high scheduling rate results in many frequent SGD iterations which incur an overhead on the deployment system as it is using a lot of resources.
-Small scheduling rate also affects the model freshness.
+A small scheduling rate also affects the model freshness.
 To increase the efficiency of the system a scheduler component is designed that is tasked with scheduling new iterations of SGD.
 Similar to learning rate tuning, we use an adaptive approach to adjust the scheduling rate.
 A simple method is used for tuning the scheduling rate based on the rate of the incoming training data.

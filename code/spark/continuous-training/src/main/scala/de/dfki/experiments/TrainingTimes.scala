@@ -18,7 +18,7 @@ object TrainingTimes {
   val INPUT_PATH = "data/criteo-full/experiments/initial-training/0"
   val STREAM_PATH = "data/criteo-full/experiments/stream"
   val EVALUATION_PATH = "data/criteo-full/experiments/evaluation/6"
-  val RESULT_PATH = "../../../experiment-results/criteo-full/quality/loss-new"
+  val RESULT_PATH = "../../../experiment-results/criteo-full/training-time"
   val DELIMITER = ","
   val NUM_FEATURES = 30000
   val NUM_ITERATIONS = 500
@@ -60,7 +60,8 @@ object TrainingTimes {
       eval = evaluationPath,
       resultPath = s"$resultPath/continuous-stat-update",
       samplingRate = 0.1,
-      slack = slack).deploy(ssc, continuousWithStatisticsUpdate)
+      slack = slack)
+      .deploy(ssc, continuousWithStatisticsUpdate)
 
     val periodicalNoOptimization = getPipeline(ssc.sparkContext, delimiter, numFeatures, numIterations, data)
 
