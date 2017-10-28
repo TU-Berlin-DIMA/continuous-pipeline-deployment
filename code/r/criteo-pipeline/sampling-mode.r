@@ -13,3 +13,4 @@ df = data.frame(time = 1:nrow(appendThenSample),
 ml = melt(df, id.vars = 'time')
 ggplot(data = ml, aes(x = time, y = value, group = variable)) + 
   geom_line(aes( colour = variable)) 
+

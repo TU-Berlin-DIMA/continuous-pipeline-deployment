@@ -28,3 +28,8 @@ finalPlot = ggplot(data = deploymentTypes) +
   theme(axis.text=element_text(size=22, color = "black"),
         axis.title=element_text(size=22, color= "black"),
         panel.border = element_rect(colour = "black", fill=NA, size=3)) 
+
+ggsave(finalPlot , filename = 'training-time/local/training-time-experiment.eps', 
+       device = 'eps', 
+       width = 10, height = 10, 
+       units = "in")
