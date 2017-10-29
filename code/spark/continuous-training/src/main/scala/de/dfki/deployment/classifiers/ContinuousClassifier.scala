@@ -1,6 +1,6 @@
 package de.dfki.deployment.classifiers
 
-import de.dfki.deployment.ContinuousDeploymentNoOptimization
+import de.dfki.deployment.ContinuousDeploymentTimeAnalysis
 import de.dfki.utils.CommandLineParser
 
 /**
@@ -51,7 +51,7 @@ object ContinuousClassifier extends Classifier {
 
     val pipeline = trainInitialPipeline(ssc, data)
 
-    val deployment = new ContinuousDeploymentNoOptimization(history = initialDataPath,
+    val deployment = new ContinuousDeploymentTimeAnalysis(history = initialDataPath,
       stream = streamingDataPath,
       evaluationPath = evaluationDataPath,
       resultPath = s"$resultPath/loss",

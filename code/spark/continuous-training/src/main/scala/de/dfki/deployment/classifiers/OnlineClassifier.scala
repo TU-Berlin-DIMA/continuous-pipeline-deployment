@@ -49,7 +49,8 @@ object OnlineClassifier extends Classifier {
     })
       // train new model
       .transform(rdd => {
-      pipeline.train(rdd)
+      val transformed = pipeline.transform(rdd)
+      pipeline.train(transformed)
       rdd
     })
       // dummy action

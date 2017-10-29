@@ -36,8 +36,8 @@ abstract class Deployment {
     finally fw.close()
   }
 
-  def storeTrainingTimes(time: Long, resultPath: String) = {
-    val file = new File(s"$resultPath/time")
+  def storeTrainingTimes(time: Long, root: String, name: String = "time") = {
+    val file = new File(s"$root/$name")
     file.getParentFile.mkdirs()
     val fw = new FileWriter(file, true)
     try {

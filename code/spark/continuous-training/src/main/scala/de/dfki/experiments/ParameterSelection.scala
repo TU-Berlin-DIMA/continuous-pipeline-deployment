@@ -3,7 +3,7 @@ package de.dfki.experiments
 import java.io.{File, FileWriter}
 import java.nio.file.{Files, Path, Paths}
 
-import de.dfki.deployment.ContinuousDeploymentNoOptimization
+import de.dfki.deployment.ContinuousDeploymentTimeAnalysis
 import de.dfki.ml.evaluation.LogisticLoss
 import de.dfki.ml.optimization.AdvancedUpdaters
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
@@ -65,7 +65,7 @@ object ParameterSelection {
         criteoPipeline = CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)
       } else {
         criteoPipeline.model.setNumIterations(iter - cur)
-        criteoPipeline.train(data)
+        criteoPipeline.updateTransformTrain(data)
         CriteoPipeline.saveToDisk(criteoPipeline, pipelineName)
       }
       val loss = LogisticLoss.logisticLoss(criteoPipeline.predict(eval))
@@ -80,7 +80,7 @@ object ParameterSelection {
         fw.close()
       }
     }
-    val deployment = new ContinuousDeploymentNoOptimization(history = inputPath,
+    val deployment = new ContinuousDeploymentTimeAnalysis(history = inputPath,
       stream = streamPath,
       evaluationPath = evaluationPath,
       resultPath = s"$resultPath/${updater.name}",

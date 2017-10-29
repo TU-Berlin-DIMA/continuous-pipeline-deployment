@@ -219,8 +219,7 @@ abstract class Classifier extends Serializable {
     }
 
     val pipeline = new CriteoPipeline(ssc.sparkContext)
-    pipeline.update(data)
-    pipeline.train(data)
+    pipeline.updateTransformTrain(data)
     pipeline
     // TODO: Implement this
     // HybridModel.saveToDisk(pipelinePath, hybridModel)

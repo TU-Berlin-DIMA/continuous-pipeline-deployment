@@ -67,8 +67,7 @@ object SamplingModes {
       miniBatchFraction = 0.1,
       numIterations = numIterations,
       numCategories = numFeatures)
-    pipeline.update(data)
-    pipeline.train(data)
+    pipeline.updateTransformTrain(data)
 
     pipeline
 

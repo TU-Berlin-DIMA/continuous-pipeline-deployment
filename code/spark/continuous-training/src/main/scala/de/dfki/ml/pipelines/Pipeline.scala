@@ -11,17 +11,17 @@ trait Pipeline extends Serializable {
 
   val model: Model
 
-  def train(data: RDD[String])
-
-  def trainOnMaterialized(data: RDD[LabeledPoint])
-
   def predict(data: RDD[String]): RDD[(Double, Double)]
 
   def predict(data: DStream[String]): DStream[(Double, Double)]
 
-  def update(data: RDD[String]): RDD[LabeledPoint]
+  def update(data: RDD[String])
 
-  def setMaterialization(mat: Boolean)
+  def transform(data: RDD[String]): RDD[LabeledPoint]
+
+  def train(data: RDD[LabeledPoint])
+
+  def updateTransformTrain(data: RDD[String])
 
   def newPipeline(): Pipeline
 }

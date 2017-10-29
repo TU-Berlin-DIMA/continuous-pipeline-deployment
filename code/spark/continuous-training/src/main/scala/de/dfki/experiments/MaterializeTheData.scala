@@ -28,9 +28,9 @@ object MaterializeTheData {
     val spark = new SparkContext(conf)
     val data = spark.textFile(inputPath)
 
-    val pipeline = new CriteoPipeline(spark = spark, numCategories = numFeatures, delim = delimiter, materialization = true)
-    val materialized = pipeline.update(data)
-
+    val pipeline = new CriteoPipeline(spark = spark, numCategories = numFeatures, delim = delimiter)
+    pipeline.update(data)
+    val materialized = pipeline.transform(data)
     val dataParser = new CustomVectorParser()
     materialized.map(dataParser.unparsePoint).saveAsTextFile(materializedPath)
   }

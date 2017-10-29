@@ -3,7 +3,6 @@ package de.dfki.experiments
 import de.dfki.deployment._
 import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
-import de.dfki.preprocessing.parsers.CustomVectorParser
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
@@ -18,7 +17,6 @@ import org.apache.spark.{SparkConf, SparkContext}
   */
 object TrainingTimes {
   val INPUT_PATH = "data/criteo-full/experiments/initial-training/day_0"
-  val MATERIALIZED_PATH = "data/criteo-full/experiments/materialized"
   val STREAM_PATH = "data/criteo-full/experiments/stream"
   val EVALUATION_PATH = "data/criteo-full/experiments/evaluation/6"
   val RESULT_PATH = "../../../experiment-results/criteo-full/training-time/local"
@@ -35,7 +33,6 @@ object TrainingTimes {
     val streamPath = parser.get("stream", STREAM_PATH)
     val evaluationPath = parser.get("evaluation", EVALUATION_PATH)
     val resultPath = parser.get("result", RESULT_PATH)
-    val materializedPath = parser.get("materialize", MATERIALIZED_PATH)
     val delimiter = parser.get("delimiter", DELIMITER)
     val numFeatures = parser.getInteger("features", NUM_FEATURES)
     val numIterations = parser.getInteger("iterations", NUM_ITERATIONS)
@@ -48,65 +45,25 @@ object TrainingTimes {
     val ssc = new StreamingContext(conf, Seconds(1))
     val data = ssc.sparkContext.textFile(inputPath)
 
-    val continuousNoOptimization = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)
+    val continuous = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)
 
-    new ContinuousDeploymentNoOptimization(history = inputPath,
+    new ContinuousDeploymentTimeAnalysis(history = inputPath,
       stream = s"$streamPath/*",
       evaluationPath = s"$evaluationPath",
-      resultPath = s"$resultPath/continuous-no-opt",
+      resultPath = s"$resultPath/continuous",
       samplingRate = 0.1,
-      slack = slack).deploy(ssc, continuousNoOptimization)
-
-    val continuousWithStatisticsUpdate = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)
-
-    new ContinuousDeploymentWithStatisticsUpdate(history = inputPath,
-      stream = s"$streamPath/*",
-      resultPath = s"$resultPath/continuous-stat-update",
-      samplingRate = 0.1,
-      slack = slack)
-      .deploy(ssc, continuousWithStatisticsUpdate)
-
-    val dataParser = new CustomVectorParser()
-    val matData = ssc.sparkContext.textFile(s"$materializedPath/initial-training/day_0")
-      .map(dataParser.parsePoint)
-
-    val continuousWithMat = getPipelineMat(ssc.sparkContext, delimiter, numFeatures, 1, matData)
-
-    new ContinuousDeploymentWithMaterialization(history = s"$materializedPath/initial-training/day_0",
-      stream = s"$materializedPath/stream/*",
-      resultPath = s"$resultPath/continuous-materialized",
-      samplingRate = 0.1,
-      slack = slack)
-      .deploy(ssc, continuousWithMat)
+      slack = slack).deploy(ssc, continuous)
 
 
+    val periodical = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)
 
-
-
-    val periodicalNoOptimization = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)
-
-    new PeriodicalDeploymentNoOptimization(history = inputPath,
+    new PeriodicalDeploymentTimeAnalysis(history = inputPath,
       stream = s"$streamPath",
       evaluationPath = s"$evaluationPath",
-      resultPath = s"$resultPath/periodical-no-opt",
+      resultPath = s"$resultPath/periodical",
       numIterations = numIterations
-    ).deploy(ssc, periodicalNoOptimization)
+    ).deploy(ssc, periodical)
 
-    val periodicalWithStatisticsUpdate = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)
-
-    new PeriodicalDeploymentWithStatisticsUpdate(history = inputPath,
-      stream = s"$streamPath",
-      resultPath = s"$resultPath/periodical-stat-update",
-      numIterations = numIterations)
-      .deploy(ssc, periodicalWithStatisticsUpdate)
-
-    val periodicalWithMat = getPipelineMat(ssc.sparkContext, delimiter, numFeatures, 1, matData)
-
-    new PeriodicalDeploymentWithMaterialization(history = s"$materializedPath/initial-training/day_0",
-      stream = s"$materializedPath/stream",
-      resultPath = s"$resultPath/periodical-materialized",
-      numIterations = numIterations)
-      .deploy(ssc, periodicalWithMat)
 
   }
 
@@ -117,11 +74,8 @@ object TrainingTimes {
       miniBatchFraction = 0.1,
       numIterations = numIterations,
       numCategories = numFeatures)
-    pipeline.update(data)
-    pipeline.train(data)
-
+    pipeline.updateTransformTrain(data)
     pipeline
-
   }
 
   def getPipelineMat(spark: SparkContext, delimiter: String, numFeatures: Int, numIterations: Int, data: RDD[LabeledPoint]) = {
@@ -132,7 +86,7 @@ object TrainingTimes {
       numIterations = numIterations,
       numCategories = numFeatures)
 
-    pipeline.trainOnMaterialized(data)
+    pipeline.train(data)
 
     pipeline
 

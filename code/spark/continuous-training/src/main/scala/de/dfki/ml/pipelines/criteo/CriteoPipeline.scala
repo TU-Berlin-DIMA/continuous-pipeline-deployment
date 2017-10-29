@@ -21,19 +21,13 @@ class CriteoPipeline(@transient var spark: SparkContext,
                      val regParam: Double = 0.0,
                      val miniBatchFraction: Double = 1.0,
                      val updater: AdvancedUpdaters = new SquaredL2UpdaterWithAdam(),
-                     val numCategories: Int = 300000,
-                     var materialization: Boolean = false) extends Pipeline {
+                     val numCategories: Int = 300000) extends Pipeline {
 
   val fileReader = new InputParser(delim)
   val missingValueImputer = new MissingValueImputer()
   var standardScaler = new StandardScaler()
   val oneHotEncoder = new OneHotEncoder(numCategories)
   val model = new LRModel(stepSize, numIterations, regParam, miniBatchFraction, updater)
-
-
-  override def setMaterialization(materialization: Boolean) = {
-    this.materialization = materialization
-  }
 
   /**
     * This method have to be called if the pipeline is loaded from the disk
@@ -44,31 +38,18 @@ class CriteoPipeline(@transient var spark: SparkContext,
     this.spark = sc
   }
 
-  override def update(data: RDD[String]): RDD[LabeledPoint] = {
+  override def update(data: RDD[String]) = {
     val parsedData = fileReader.transform(spark, data)
     val filledData = missingValueImputer.transform(spark, parsedData)
     val scaledData = standardScaler.updateAndTransform(spark, filledData)
-    if (materialization) {
-      // perform one hot encoding and return the materialized data
-      oneHotEncoder.updateAndTransform(spark, scaledData)
-    } else {
-      // do nothing
-      oneHotEncoder.update(spark, scaledData)
-      null
-    }
+    oneHotEncoder.update(spark, scaledData)
   }
 
-  /**
-    * train a new underlying model using the previous one as the starting point
-    * user has to be make sure that the [[update]] method is called before the training
-    * is done for every new batch of data
-    *
-    * @param data next batch of training data
-    */
-  override def train(data: RDD[String]) = {
-    val trainingData = dataProcessing(data).cache()
-    trainingData.count()
-    model.train(trainingData)
+  override def transform(data: RDD[String]): RDD[LabeledPoint] = {
+    val parsedData = fileReader.transform(spark, data)
+    val filledData = missingValueImputer.transform(spark, parsedData)
+    val scaledData = standardScaler.transform(spark, filledData)
+    oneHotEncoder.transform(spark, scaledData)
   }
 
   /**
@@ -76,12 +57,21 @@ class CriteoPipeline(@transient var spark: SparkContext,
     *
     * @param data materialized training data
     */
-  override def trainOnMaterialized(data: RDD[LabeledPoint]) = {
-    data.cache()
-    data.count()
+  override def train(data: RDD[LabeledPoint]) = {
     model.train(data)
   }
 
+  /**
+    * short cut function for experiments for quality
+    * @param data
+    */
+  override def updateTransformTrain(data: RDD[String]) = {
+    val parsedData = fileReader.transform(spark, data)
+    val filledData = missingValueImputer.transform(spark, parsedData)
+    val scaledData = standardScaler.updateAndTransform(spark, filledData)
+    val training = oneHotEncoder.transform(spark, scaledData)
+    model.train(training)
+  }
 
   /**
     *
@@ -89,7 +79,7 @@ class CriteoPipeline(@transient var spark: SparkContext,
     * @return
     */
   override def predict(data: RDD[String]): RDD[(Double, Double)] = {
-    val testData = dataProcessing(data)
+    val testData = transform(data)
     model.predict(testData.map(v => (v.label, v.features)))
   }
 
@@ -102,14 +92,6 @@ class CriteoPipeline(@transient var spark: SparkContext,
     data.transform(rdd => predict(rdd))
     //    val testData = dataProcessing(data)
     //    model.predict(testData.map(v => (v.label, v.features)))
-  }
-
-
-  private def dataProcessing(data: RDD[String]): RDD[LabeledPoint] = {
-    val parsedData = fileReader.transform(spark, data)
-    val filledData = missingValueImputer.transform(spark, parsedData)
-    val scaledData = standardScaler.transform(spark, filledData)
-    oneHotEncoder.transform(spark, scaledData)
   }
 
 
@@ -149,19 +131,16 @@ object CriteoPipeline {
     val spark = new SparkContext(conf)
     val criteoPipeline = new CriteoPipeline(spark, delim = ",", numIterations = 1)
     val rawTraining = spark.textFile("data/criteo-full/experiments/initial-training/0")
-    criteoPipeline.update(rawTraining)
-    criteoPipeline.train(rawTraining)
+    criteoPipeline.updateTransformTrain(rawTraining)
 
     CriteoPipeline.saveToDisk(criteoPipeline, "data/criteo-full/pipelines/test")
 
     val loadedPipeline = CriteoPipeline.loadFromDisk("data/criteo-full/pipelines/test", spark)
 
     val day1 = spark.textFile("data/criteo-full/experiments/stream/1")
-    loadedPipeline.update(day1)
-    loadedPipeline.train(day1)
+    loadedPipeline.updateTransformTrain(day1)
 
-    criteoPipeline.update(day1)
-    criteoPipeline.train(day1)
+    criteoPipeline.updateTransformTrain(day1)
 
     val rawTest = spark.textFile(testPath)
 

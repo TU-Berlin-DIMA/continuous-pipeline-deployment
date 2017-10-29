@@ -52,7 +52,8 @@ class ContinuousDeploymentAppendThenSample(val history: String,
       }
       if (time % slack == 0) {
         val nextBatch = historicalDataRDD(proactiveRDD)
-        pipeline.train(nextBatch)
+        val data = pipeline.transform(nextBatch)
+        pipeline.train(data)
 
         // evaluate the pipeline
         evaluateStream(pipeline, testData, resultPath)
