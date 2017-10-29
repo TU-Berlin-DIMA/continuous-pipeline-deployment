@@ -1,6 +1,6 @@
 package de.dfki.experiments
 
-import de.dfki.deployment.{ContinuousDeploymentSampleThenAppend, ContinuousDeploymentAppendThenSample}
+import de.dfki.deployment.{ContinuousDeploymentSampleThenAppend, EntireHistorySampling}
 import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.utils.CommandLineParser
@@ -42,9 +42,9 @@ object SamplingModes {
 
     val pipelineAppendThenSample = getPipeline(ssc.sparkContext, delimiter, numFeatures, numIterations, data)
 
-    new ContinuousDeploymentAppendThenSample(history = inputPath,
+    new EntireHistorySampling(history = inputPath,
           stream = s"$streamPath/*",
-          eval = evaluationPath,
+          evaluationPath = evaluationPath,
           resultPath = s"$resultPath/append-then-sample",
           samplingRate = 0.1,
           slack = slack).deploy(ssc, pipelineAppendThenSample)

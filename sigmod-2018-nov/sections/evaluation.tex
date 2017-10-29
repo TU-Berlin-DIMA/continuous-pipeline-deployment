@@ -136,16 +136,40 @@ Using a daily training approach, any unseen features that arrive at the system a
 
 
 \subsection{Total Training Time}
-In this section the total training time for continuous and daily are measured.
-I will also switch on and off the two optimizations (stat updates and materialization) for both daily and continuous training.
-\begin{figure}[h!]
+In this section, the total training time for continuous and periodical deployment approaches are measured.
+The total training time includes the time spent in pre-processing the training and model training.
+Figure \ref{fig:training-time-deployment} shows the total time the deployment platform spends in training the Criteo pipeline for different deployment approaches.
+Using continuous training, the time spent in training is almost a third of periodical training.
+This is due to the large of amount of redundant data processing and model training that exists in periodical deployment approach.
+In periodical deployment, the underlying pipeline is trained from scratch every day, which includes ingesting the data stored on disk, performing the data transformation steps of the pipeline and finally training the model using the transformed data.
+However, in continuous training, the pipeline is incrementally updated when new data arrives at the system.
+Moreover, the total training time can be further reduced in the continuous training approach by switching on the online statistics update and materialization optimizations.
+Figure \ref{fig:training-time-optimization} shows the effect each optimizations on the continuous training approach.
+Using materialized data, the total training time is furthered reduced by a factor of 3.
+Using statistics update and materialization enables us to process and materialize the data and update the pipeline components in real-time.
+As a result, proactive training accesses the materialized data and can directly train the model and skip the data transformation steps of the pipeline.
+
+\begin{figure}[h]
+\begin{subfigure}{\columnwidth}
 \centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/training-time-experiment.eps}
-\caption{Total training time for Continuous and Daily (with and without the two optimizations}
-\label{fig:deployment-training-time}
+\includegraphics[width=\columnwidth]{../images/experiment-results/training-time-deployment-types-experiment.eps}
+\caption{Deployment Approaches}
+\label{fig:training-time-deployment}
+\end{subfigure}
+\begin{subfigure}{\columnwidth}
+\centering
+\includegraphics[width=\columnwidth]{../images/experiment-results/training-time-optimizations-experiment.eps}
+\caption{Optimizations}
+\label{fig:training-time-optimization}
+\end{subfigure}
 \vspace{2mm}
+\caption{Total training time for different deployment approaches (with optimizations enabled)}
 \end{figure}
 
+One possible problem with the materialization optimization is the amount of space required to store the materialized dataset.
+Depending on the type of the data processing the size of the materialized data may increase.
+In our experiments, after processing the data using the Criteo pipeline the size of the materialized data increased by a factor of 2.
+Therefore, the users of the system have to ensure that the space requirement of the system is met before turning on the materialization optimization.
 
 \subsection{Discussion} \label{subsec:discussion}
 discussion of the results

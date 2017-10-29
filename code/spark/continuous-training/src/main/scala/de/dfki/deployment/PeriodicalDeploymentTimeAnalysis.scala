@@ -36,29 +36,11 @@ class PeriodicalDeploymentTimeAnalysis(val history: String,
       val data = rdds.slice(0, i + 1).reduce((a, b) => a.union(b))
 
       // update and store update time
-      var start = System.currentTimeMillis()
-      copyPipeline.update(data)
-      var end = System.currentTimeMillis()
+      val start = System.currentTimeMillis()
+      copyPipeline.updateTransformTrain(data)
+      val end = System.currentTimeMillis()
       val updateTime = end - start
-      storeTrainingTimes(updateTime, resultPath, "update")
-
-      // transform and store transform time
-      start = System.currentTimeMillis()
-      val transformed = copyPipeline.transform(data)
-      end = System.currentTimeMillis()
-      val transformTime = end - start
-      storeTrainingTimes(transformTime, resultPath, "transform")
-
-      transformed.cache()
-      transformed.count()
-
-      // train and store train time
-      start = System.currentTimeMillis()
-      copyPipeline.train(transformed)
-      end = System.currentTimeMillis()
-      val trainTime = end - start
-      storeTrainingTimes(trainTime, resultPath, "train")
-      transformed.unpersist(true)
+      storeTrainingTimes(updateTime, resultPath, "total")
 
       evaluateStream(copyPipeline, testData, resultPath)
     }

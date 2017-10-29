@@ -70,6 +70,8 @@ class CriteoPipeline(@transient var spark: SparkContext,
     val filledData = missingValueImputer.transform(spark, parsedData)
     val scaledData = standardScaler.updateAndTransform(spark, filledData)
     val training = oneHotEncoder.transform(spark, scaledData)
+    training.cache()
+    training.count()
     model.train(training)
   }
 

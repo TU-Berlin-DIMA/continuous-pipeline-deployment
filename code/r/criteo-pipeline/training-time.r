@@ -5,32 +5,54 @@ library(reshape)
 library(gridExtra)
 library(grid)
 
-contNoOpt = sum(read.csv('training-time/local/continuous-no-opt/time', header = FALSE, col.names = c('contNoOpt')))/1000
-contStatUpdate = sum(read.csv('training-time/local/continuous-stat-update/time', header = FALSE, col.names = c('contStatUpdate')))/1000
-periodNoUpt = sum(read.csv('training-time/local/periodical-no-opt/time', header = FALSE, col.names = c('periodNoUpt')))/1000
-periodStatUpdate = sum(read.csv('training-time/local/periodical-stat-update/time', header = FALSE, col.names = c('periodStatUpdate')))/1000
+cUpdate = sum(read.csv('training-time/local/continuous/update', header = FALSE, col.names = c('c_update')))/1000
+cTransform = sum(read.csv('training-time/local/continuous/transform', header = FALSE, col.names = c('c_transform')))/1000
+cTrain = sum(read.csv('training-time/local/continuous/train', header = FALSE, col.names = c('c_train')))/1000
 
+pUpdate = sum(read.csv('training-time/local/periodical/update', header = FALSE, col.names = c('p_update')))/1000
+pTransform = sum(read.csv('training-time/local/periodical/transform', header = FALSE, col.names = c('p_transform')))/1000
+pTrain = sum(read.csv('training-time/local/periodical/train', header = FALSE, col.names = c('p_train')))/1000
 
+deploymentTypes = data.frame(types = c('Continuous', 'Periodical'),time =  c(cTrain+cTransform+cUpdate,  pTrain+pTransform+pUpdate))
 
-
-deploymentTypes = data.frame(types = c('Continuous No Opt','Continuous Stat Update', 'Periodical No Opt', 'Periodical Stat Update'), time = c(contNoOpt,contStatUpdate,periodNoUpt, periodStatUpdate))
-
-
-
-finalPlot = ggplot(data = deploymentTypes) + 
-  geom_bar(aes(x = types, weight = time),
-           fill = "#00aedb", 
-           width = 0.5, 
-           color = "#00aedb") + 
+deploymentTypesPlot = 
+  ggplot(data = deploymentTypes) + 
+  geom_bar(aes(x = types, weight = time), fill = c("#00aedb","#d11141"),
+           width = 1) + 
   theme_bw() + 
- 
-  xlab("Deployment Approach") + 
+  xlab("") + 
   ylab("Total Training Time (s)") + 
-  theme(axis.text=element_text(size=22, color = "black"),
-        axis.title=element_text(size=22, color= "black"),
+  theme(axis.text=element_text(size=25, color = "black"),
+        axis.title=element_text(size=25, color= "black"),
+        legend.position = "none",
         panel.border = element_rect(colour = "black", fill=NA, size=3)) 
 
-ggsave(finalPlot , filename = 'training-time/local/training-time-experiment.eps', 
+ggsave(deploymentTypesPlot , filename = 'training-time/local/training-time-deployment-types-experiment.eps', 
        device = 'eps', 
-       width = 14, height = 8, 
+       width = 12, height = 6, 
+       units = "in")
+
+optimizations = data.frame(types = factor(c('No Optimzation','Statistics Update', 'Materialization'), 
+                                            levels = c('No Optimzation','Statistics Update', 'Materialization')), 
+                             time = c(cTrain+cTransform+cUpdate,
+                                      cTrain+cTransform, 
+                                      cTrain))
+
+
+optimizationsPlot = 
+  ggplot(data = optimizations) + 
+  geom_bar(aes(x = types, weight = time),
+           colour = '#000000', 
+           fill = '#00aedb',
+           width = 1) + 
+  theme_bw() + 
+  xlab("") + 
+  ylab("Total Training Time (s)") + 
+  theme(axis.text=element_text(size=25, color = "black"),
+        axis.title=element_text(size=25, color= "black"),
+        panel.border = element_rect(colour = "black", fill=NA, size=3)) 
+
+ggsave(optimizationsPlot , filename = 'training-time/local/training-time-optimizations-experiment.eps', 
+       device = 'eps', 
+       width = 12, height = 6, 
        units = "in")
