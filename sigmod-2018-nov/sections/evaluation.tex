@@ -29,10 +29,10 @@ We use spark streaming to read the data files one by one and stream them through
 
 \subsection{Learning Rate Adaptation Method}
 In Section \ref{sgd}, we discussed the importance of learning rate tuning for training a model using the Stochastic Gradient Descent optimization method.
-Proactive training is an extension of SGD, therefore the process of tuning the learning rate adaptation method is no different from tuning the it for training.
+Proactive training is an extension of SGD, therefore the process of tuning the learning rate adaptation method is no different from tuning the it for a normal offline SGD training.
+
 Figure \ref{fig:criteo-learning-rate} shows the log loss for different learning adaptation methods. 
 During the training phase, we evaluated the logistic loss on evaluation dataset after 20, 40, 80, 160, 320, and 500 iterations.
-We did not include the results of 
 Both Adadelta and Momentum performs very poorly on the criteo data.
 Criteo dataset is a complex and high dimensional dataset, where features are a mix of numerical and categorical.
 Since categorical features are not standardized, Adadelta and Momentum are not able to effectively tune the learning rate for a mix standardized and non-standardized features.
@@ -46,6 +46,11 @@ Adadelta also reduces the loss by around 0.004, however, the deployed pipeline t
 For the rest of our experiments, we chose ADAM as the learning rate adaptation technique.
 When using ADAM, the model converges using fewer number of iterations as compared to other learning rate adaptation methods.
 Moreover, ADAM is the most effective learning rate for continuous training of the pipeline as well.
+
+This experiment shows that choosing learning rate adaption technique for proactive training is similar to choosing the learning rate adaptation technique for offline SGD.
+This indicates that while ADAM is the best learning rate adaptation technique for Criteo pipeline, it is not necessarily the best for other pipelines and datasets.
+For every pipeline and dataset, the users have to evaluate the performance of the different learning rate adaptation techniques during the offline training of the model and chose the best method for both offline and proactive training of the model.
+
 
 \begin{figure}[h!]
 \includegraphics[width=\columnwidth]{../images/experiment-results/learning-rate-experiment.eps}
@@ -114,8 +119,9 @@ Performing more frequent training results in models that can adapt to changes in
 In Criteo pipeline, we use a feature encoder to transform the categorical features into binary indicator variables.
 The initial training data (Day 0) only contains a small portion of all the unique categorical features of the Criteo dataset.
 The incoming training data may contain features that have not existed in the dataset before.
-Figure \ref{fig:criteo-feature-discovery} shows the feature size overtime for the first 5 days after deployment of Criteo pipeline.
+Figure \ref{fig:criteo-feature-discovery} shows the feature size over time for the first 5 days after deployment of Criteo pipeline.
 The rate of incoming new features is roughly 30,000 per minute and every day around 45 million new features are generated.
+
 Using our continuous training approach, we update the pipeline as soon as new features become available.
 During the next scheduled proactive training, the model is updated using these new features.
 As a result, the deployed pipeline is able to answer prediction queries that may contain the same set of features more accurately.

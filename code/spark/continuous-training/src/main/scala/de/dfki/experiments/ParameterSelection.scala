@@ -82,6 +82,7 @@ object ParameterSelection {
     }
     val deployment = new ContinuousDeploymentNoOptimization(history = inputPath,
       stream = streamPath,
+      evaluationPath = evaluationPath,
       resultPath = s"$resultPath/${updater.name}",
       slack = slack,
       samplingRate = 0.1)

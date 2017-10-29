@@ -1,12 +1,11 @@
 \section{Deployment Platform} \label{sec:system-architecture}
 Our proposed deployment platform comprises four components; pipeline manager, data manager, scheduler, and SGD runner.
+Figure \ref{fig:system-architecture} gives an overview of the architecture of our system and the interactions among its components.
 At the center of the deployment platform is the pipeline manager, which monitors the deployed pipeline, processes training data and prediction requests, and continuously trains the model.
 The data manager and the scheduler enable the pipeline manager to perform proactive training.
 The SGD runner is a simple component that executes iterations of SGD on the deployed model.
 The proposed design decouples the components of the platform from the execution engine, which is responsible for make the model available for receiving and answering prediction requests.
 This design enables us to switch the execution engine without requiring major changes to the deployment platform.
-
-Figure \ref{fig:system-architecture} gives an overview of the architecture of our system and the interactions among its components.
 
 \begin{figure}[t]
 \centering

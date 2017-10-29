@@ -26,21 +26,19 @@ class ContinuousDeploymentWithMaterialization(val history: String,
     // set materialization option to true
     pipeline.setMaterialization(true)
 
+    val dataParser = new CustomVectorParser()
     // create rdd of the initial data that the pipeline was trained with
     val data = streamingContext.sparkContext
       .textFile(history)
-
-
-    val dataParser = new CustomVectorParser()
-    val historicalMaterializedData = pipeline.update(data)
-    writeStreamToDisk(historicalMaterializedData.map(dataParser.unparsePoint), history, 0)
+      .map(dataParser.parsePoint)
 
 
     val streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](streamingContext, stream)
 
     def historicalDataRDD(recentItems: RDD[LabeledPoint]) = {
-      streamingContext.sparkContext.textFile(history)
+      streamingContext.sparkContext.textFile(streamingSource.getProcessedFiles.mkString(","))
         .map(dataParser.parsePoint)
+        .union(data)
         .union(recentItems)
         .sample(withReplacement = false, samplingRate)
         .cache()
@@ -51,14 +49,12 @@ class ContinuousDeploymentWithMaterialization(val history: String,
     var proactiveRDD: RDD[LabeledPoint] = null
     var time = 0
     while (!streamingSource.allFileProcessed()) {
-      val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
-      // live statistics update
-      val materializedRDD = pipeline.update(rdd)
+      val rdd = streamingSource.generateNextRDD().get.map(_._2.toString).map(dataParser.parsePoint)
 
       if (proactiveRDD == null) {
-        proactiveRDD = materializedRDD
+        proactiveRDD = rdd
       } else {
-        proactiveRDD = proactiveRDD.union(materializedRDD)
+        proactiveRDD = proactiveRDD.union(rdd)
       }
       if (time % slack == 0) {
         // train the pipeline

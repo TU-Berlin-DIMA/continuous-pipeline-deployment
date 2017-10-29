@@ -13,6 +13,7 @@ import org.apache.spark.streaming.StreamingContext
   */
 class ContinuousDeploymentNoOptimization(val history: String,
                                          val stream: String,
+                                         val evaluationPath: String,
                                          val resultPath: String,
                                          val samplingRate: Double = 0.1,
                                          val slack: Long = 10) extends Deployment {
@@ -22,7 +23,7 @@ class ContinuousDeploymentNoOptimization(val history: String,
     val data = streamingContext.sparkContext
       .textFile(history)
 
-
+    val testData = streamingContext.sparkContext.textFile(evaluationPath)
     val streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](streamingContext, stream)
 
     def historicalDataRDD(recentItems: RDD[String]) = {
@@ -37,6 +38,7 @@ class ContinuousDeploymentNoOptimization(val history: String,
     pipeline.model.setNumIterations(1)
     var proactiveRDD: RDD[String] = null
     var time = 0
+    evaluateStream(pipeline,testData, resultPath)
     while (!streamingSource.allFileProcessed()) {
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
       //pipeline.update(rdd)
@@ -57,6 +59,7 @@ class ContinuousDeploymentNoOptimization(val history: String,
 
         // compute and store the training time
         val trainingTime = endTime - startTime
+        evaluateStream(pipeline,testData, resultPath)
         storeTrainingTimes(trainingTime, resultPath)
 
         proactiveRDD = null

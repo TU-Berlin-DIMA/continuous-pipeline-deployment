@@ -53,6 +53,7 @@ object ContinuousClassifier extends Classifier {
 
     val deployment = new ContinuousDeploymentNoOptimization(history = initialDataPath,
       stream = streamingDataPath,
+      evaluationPath = evaluationDataPath,
       resultPath = s"$resultPath/loss",
       slack = 1,
       samplingRate = 0.1)
