@@ -38,7 +38,7 @@ class ContinuousDeploymentSampleThenAppend(val history: String,
     pipeline.model.setMiniBatchFraction(1.0)
     pipeline.model.setNumIterations(1)
     var proactiveRDD: RDD[String] = null
-    var time = 0
+    var time = 1
     evaluateStream(pipeline, testData, resultPath)
     while (!streamingSource.allFileProcessed()) {
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)

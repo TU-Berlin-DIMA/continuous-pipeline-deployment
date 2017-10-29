@@ -10,16 +10,14 @@ import org.apache.spark.streaming.StreamingContext
 import scala.collection.mutable.ListBuffer
 
 /**
-  * no optimization
-  *
   * @author behrouz
   */
-class ContinuousDeploymentTimeAnalysis(val history: String,
-                                       val stream: String,
-                                       val evaluationPath: String,
-                                       val resultPath: String,
-                                       val samplingRate: Double = 0.1,
-                                       val slack: Int = 10) extends Deployment {
+class ContinuousDeploymentQualityAnalysis(val history: String,
+                                          val stream: String,
+                                          val evaluationPath: String,
+                                          val resultPath: String,
+                                          val samplingRate: Double = 0.1,
+                                          val slack: Int = 10) extends Deployment {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     // create rdd of the initial data that the pipeline was trained with
@@ -43,39 +41,14 @@ class ContinuousDeploymentTimeAnalysis(val history: String,
     while (!streamingSource.allFileProcessed()) {
 
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
-      //pipeline.update(rdd)
       rdd.cache()
       rdd.count()
 
       processedRDD += rdd
 
-      // update and store update time
-      var start = System.currentTimeMillis()
-      pipeline.update(rdd)
-      var end = System.currentTimeMillis()
-      val updateTime = end - start
-
-      storeTrainingTimes(updateTime, resultPath, "update")
-
       if (time % slack == 0) {
-
-        // transform and store transform time
-        start = System.currentTimeMillis()
-        val nextBatch = historicalDataRDD(processedRDD, slack)
-        val transformed = pipeline.transform(nextBatch)
-        transformed.cache()
-        transformed.count()
-        end = System.currentTimeMillis()
-        val transformTime = end - start
-        storeTrainingTimes(transformTime, resultPath, "transform")
-
-        // train and store train time
-        start = System.currentTimeMillis()
-        pipeline.train(transformed)
-        end = System.currentTimeMillis()
-        storeTrainingTimes(transformTime, resultPath, "train")
-
-        transformed.unpersist(true)
+        val data = historicalDataRDD(processedRDD, slack)
+        pipeline.updateTransformTrain(data)
         evaluateStream(pipeline, testData, resultPath)
       }
       time += 1

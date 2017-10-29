@@ -1,6 +1,6 @@
 package de.dfki.experiments
 
-import de.dfki.deployment._
+import de.dfki.deployment.{ContinuousDeploymentQualityAnalysis, PeriodicalDeploymentQualityAnalysis}
 import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.utils.CommandLineParser
@@ -9,12 +9,9 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
-  * experiments for computing the training time using continuous and daily
-  * with or without optimization
-  *
   * @author behrouz
   */
-object TrainingTimes {
+object Quality {
   val INPUT_PATH = "data/criteo-full/experiments/initial-training/day_0"
   val STREAM_PATH = "data/criteo-full/experiments/stream"
   val EVALUATION_PATH = "data/criteo-full/experiments/evaluation/6"
@@ -23,6 +20,7 @@ object TrainingTimes {
   val NUM_FEATURES = 30000
   val NUM_ITERATIONS = 500
   val SLACK = 10
+  val DAYS_TO_PROCESS = "1,2,3,4,5"
 
 
   def main(args: Array[String]): Unit = {
@@ -36,6 +34,7 @@ object TrainingTimes {
     val numFeatures = parser.getInteger("features", NUM_FEATURES)
     val numIterations = parser.getInteger("iterations", NUM_ITERATIONS)
     val slack = parser.getInteger("slack", SLACK)
+    val days = parser.get("days",DAYS_TO_PROCESS).split(",").map(_.toInt)
 
     val conf = new SparkConf().setAppName("Training Time Experiment")
     val masterURL = conf.get("spark.master", "local[*]")
@@ -44,9 +43,9 @@ object TrainingTimes {
     val ssc = new StreamingContext(conf, Seconds(1))
     val data = ssc.sparkContext.textFile(inputPath)
 
-    val continuous = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)
+    val continuous = getPipeline(ssc.sparkContext, delimiter, numFeatures, numIterations, data)
 
-    new ContinuousDeploymentTimeAnalysis(history = inputPath,
+    new ContinuousDeploymentQualityAnalysis(history = inputPath,
       stream = s"$streamPath/*",
       evaluationPath = s"$evaluationPath",
       resultPath = s"$resultPath/continuous",
@@ -54,15 +53,15 @@ object TrainingTimes {
       slack = slack).deploy(ssc, continuous)
 
 
-    val periodical = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)
+    val periodical = getPipeline(ssc.sparkContext, delimiter, numFeatures, numIterations, data)
 
-    new PeriodicalDeploymentTimeAnalysis(history = inputPath,
+    new PeriodicalDeploymentQualityAnalysis(history = inputPath,
       stream = s"$streamPath",
       evaluationPath = s"$evaluationPath",
       resultPath = s"$resultPath/periodical",
-      numIterations = numIterations
+      numIterations = numIterations,
+      daysToProcess = days.toList
     ).deploy(ssc, periodical)
-
 
   }
 
@@ -76,4 +75,6 @@ object TrainingTimes {
     pipeline.updateTransformTrain(data)
     pipeline
   }
+
+
 }

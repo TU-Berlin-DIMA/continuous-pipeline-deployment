@@ -1,7 +1,7 @@
 package de.dfki.experiments
 
 import java.io.{File, FileWriter}
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Files, Paths}
 
 import de.dfki.deployment.ContinuousDeploymentTimeAnalysis
 import de.dfki.ml.evaluation.LogisticLoss
