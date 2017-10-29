@@ -33,7 +33,7 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
     processedRDD += data
 
     pipeline.model.setMiniBatchFraction(1.0)
-    pipeline.model.setNumIterations(1)
+    pipeline.model.setNumIterations(5)
     var time = 1
 
     evaluateStream(pipeline, testData, resultPath)
@@ -45,10 +45,11 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
       rdd.count()
 
       processedRDD += rdd
-
+      pipeline.update(rdd)
       if (time % slack == 0) {
         val data = historicalDataRDD(processedRDD, slack)
-        pipeline.updateTransformTrain(data)
+        val trainingData = pipeline.transform(data)
+        pipeline.train(trainingData)
         evaluateStream(pipeline, testData, resultPath)
       }
       time += 1
@@ -61,9 +62,10 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
   def historicalDataRDD(processedRDD: ListBuffer[RDD[String]], slack: Int) = {
     val now = processedRDD.size
     val history = now - slack
-    processedRDD.slice(0, history)
+    processedRDD
+      //.slice(0, history)
       .reduce(_ union _)
       .sample(withReplacement = false, samplingRate)
-      .union(processedRDD.slice(history, now).reduce(_ union _))
+    // .union(processedRDD.slice(history, now).reduce(_ union _))
   }
 }

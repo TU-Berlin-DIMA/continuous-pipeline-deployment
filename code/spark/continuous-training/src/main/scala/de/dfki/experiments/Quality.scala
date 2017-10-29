@@ -17,7 +17,7 @@ object Quality {
   val EVALUATION_PATH = "data/criteo-full/experiments/evaluation/6"
   val RESULT_PATH = "../../../experiment-results/criteo-full/training-time/local"
   val DELIMITER = ","
-  val NUM_FEATURES = 30000
+  val NUM_FEATURES = 3000
   val NUM_ITERATIONS = 500
   val SLACK = 10
   val DAYS_TO_PROCESS = "1,2,3,4,5"
@@ -36,21 +36,21 @@ object Quality {
     val slack = parser.getInteger("slack", SLACK)
     val days = parser.get("days",DAYS_TO_PROCESS).split(",").map(_.toInt)
 
-    val conf = new SparkConf().setAppName("Training Time Experiment")
+    val conf = new SparkConf().setAppName("Quality Experiment")
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
 
     val ssc = new StreamingContext(conf, Seconds(1))
     val data = ssc.sparkContext.textFile(inputPath)
 
-    val continuous = getPipeline(ssc.sparkContext, delimiter, numFeatures, numIterations, data)
-
-    new ContinuousDeploymentQualityAnalysis(history = inputPath,
-      stream = s"$streamPath/*",
-      evaluationPath = s"$evaluationPath",
-      resultPath = s"$resultPath/continuous",
-      samplingRate = 0.1,
-      slack = slack).deploy(ssc, continuous)
+//    val continuous = getPipeline(ssc.sparkContext, delimiter, numFeatures, numIterations, data)
+//
+//    new ContinuousDeploymentQualityAnalysis(history = inputPath,
+//      stream = s"$streamPath/*",
+//      evaluationPath = s"$evaluationPath",
+//      resultPath = s"$resultPath/continuous",
+//      samplingRate = 0.1,
+//      slack = slack).deploy(ssc, continuous)
 
 
     val periodical = getPipeline(ssc.sparkContext, delimiter, numFeatures, numIterations, data)
