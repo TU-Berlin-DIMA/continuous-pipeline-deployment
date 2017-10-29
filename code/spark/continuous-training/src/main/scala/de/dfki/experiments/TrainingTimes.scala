@@ -33,7 +33,7 @@ object TrainingTimes {
     val streamPath = parser.get("stream", STREAM_PATH)
     val evaluationPath = parser.get("evaluation", EVALUATION_PATH)
     val resultPath = parser.get("result", RESULT_PATH)
-    val materialziedPath = parser.get("materialize", MATERIALIZED_PATH)
+    val materializedPath = parser.get("materialize", MATERIALIZED_PATH)
     val delimiter = parser.get("delimiter", DELIMITER)
     val numFeatures = parser.getInteger("features", NUM_FEATURES)
     val numIterations = parser.getInteger("iterations", NUM_ITERATIONS)
@@ -63,6 +63,20 @@ object TrainingTimes {
       slack = slack)
       .deploy(ssc, continuousWithStatisticsUpdate)
 
+    val matData = ssc.sparkContext.textFile(s"$materializedPath/initial-training/day_0")
+
+    val continuousWithMat = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, matData)
+
+    new ContinuousDeploymentWithMaterialization(history = s"$materializedPath/initial-training/day_0",
+      stream = s"$materializedPath/stream/*",
+      resultPath = s"$resultPath/continuous-materialized",
+      samplingRate = 0.1,
+      slack = slack)
+      .deploy(ssc, continuousWithMat)
+
+
+
+
 
     val periodicalNoOptimization = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)
 
@@ -79,6 +93,15 @@ object TrainingTimes {
       resultPath = s"$resultPath/periodical-stat-update",
       numIterations = numIterations)
       .deploy(ssc, periodicalWithStatisticsUpdate)
+
+    val periodicalWithMat = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, matData)
+
+    new PeriodicalDeploymentWithMaterialization(history = s"$materializedPath/initial-training/day_0",
+      stream = s"$materializedPath/stream",
+      resultPath = s"$resultPath/periodical-materialized",
+      numIterations = numIterations)
+      .deploy(ssc, periodicalWithMat)
+
   }
 
   def getPipeline(spark: SparkContext, delimiter: String, numFeatures: Int, numIterations: Int, data: RDD[String]) = {

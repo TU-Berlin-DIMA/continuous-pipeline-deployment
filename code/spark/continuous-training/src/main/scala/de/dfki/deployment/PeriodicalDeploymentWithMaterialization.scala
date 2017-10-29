@@ -15,46 +15,28 @@ import scala.collection.mutable.ListBuffer
   */
 class PeriodicalDeploymentWithMaterialization(val history: String,
                                               val stream: String,
-                                              val materializedLocation: String,
                                               val resultPath: String,
                                               val numIterations: Int = 500) extends Deployment {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     val days = (1 to 5).map(i => s"$stream/day_$i")
     var copyPipeline = pipeline
-    copyPipeline.setMaterialization(true)
 
-
-    val spark = streamingContext.sparkContext
-
-    val dataParser = new CustomVectorParser()
-    val historyData = spark.textFile(history)
-    val materializedHistory = copyPipeline.update(historyData)
-    materializedHistory.map(dataParser.unparsePoint).saveAsTextFile(s"$materializedLocation/0")
+    val parser = new CustomVectorParser()
     var trainingDays: ListBuffer[String] = new ListBuffer[String]()
-    trainingDays += s"$materializedLocation/0"
-    var i = 1
+    trainingDays += history
+
     for (day <- days) {
-      copyPipeline.setMaterialization(true)
-      val data = streamingContext.sparkContext
-        .textFile(day)
-
-      val materialized = copyPipeline.update(data)
-      materialized.map(dataParser.unparsePoint).saveAsTextFile(s"$materializedLocation/$i")
-      i += 1
-      trainingDays += s"$materializedLocation/$i"
-    }
-
-    for (day <- trainingDays) {
       copyPipeline = copyPipeline.newPipeline()
       copyPipeline.model.setNumIterations(numIterations)
-      copyPipeline.setMaterialization(true)
       trainingDays += day
+
       val data = streamingContext.sparkContext
         .textFile(trainingDays.mkString(","))
+        .map(parser.parsePoint)
+
       val startTime = System.currentTimeMillis()
-      copyPipeline.update(data)
-      copyPipeline.train(data)
+      copyPipeline.trainOnMaterialized(data)
       val endTime = System.currentTimeMillis()
 
       storeTrainingTimes(endTime - startTime, resultPath)

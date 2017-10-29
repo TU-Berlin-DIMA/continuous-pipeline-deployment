@@ -50,10 +50,10 @@ class CriteoPipeline(@transient var spark: SparkContext,
     val scaledData = standardScaler.updateAndTransform(spark, filledData)
     if (materialization) {
       // perform one hot encoding and return the materialized data
-      oneHotEncoder.transform(spark, scaledData)
+      oneHotEncoder.updateAndTransform(spark, scaledData)
     } else {
       // do nothing
-      //oneHotEncoder.update(spark, scaledData)
+      oneHotEncoder.update(spark, scaledData)
       null
     }
   }

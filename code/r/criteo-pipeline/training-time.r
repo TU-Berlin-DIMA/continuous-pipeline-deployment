@@ -8,11 +8,12 @@ library(grid)
 contNoOpt = sum(read.csv('training-time/local/continuous-no-opt/time', header = FALSE, col.names = c('contNoOpt')))/1000
 contStatUpdate = sum(read.csv('training-time/local/continuous-stat-update/time', header = FALSE, col.names = c('contStatUpdate')))/1000
 periodNoUpt = sum(read.csv('training-time/local/periodical-no-opt/time', header = FALSE, col.names = c('periodNoUpt')))/1000
+periodStatUpdate = sum(read.csv('training-time/local/periodical-stat-update/time', header = FALSE, col.names = c('periodStatUpdate')))/1000
 
 
 
 
-deploymentTypes = data.frame(types = c('Continuous No Opt','Continuous Stat Update', 'Periodical No Opt'), time = c(contNoOpt,contStatUpdate,periodNoUpt))
+deploymentTypes = data.frame(types = c('Continuous No Opt','Continuous Stat Update', 'Periodical No Opt', 'Periodical Stat Update'), time = c(contNoOpt,contStatUpdate,periodNoUpt, periodStatUpdate))
 
 
 
