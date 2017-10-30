@@ -118,17 +118,6 @@ Then I will use the formula in chapter 3 to do the scheduling and compare the qu
 \end{figure}
 
 
-\subsection{Proactive Training}
-I this section the quality of the model trained using proactive and daily are compared.
-\begin{figure}[h!]
-\centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-log-loss-continuous-vs-daily.eps}
-\caption{Total training time of the pipeline for each scenario}
-\label{fig:loss-proactive-vs-daily}
-\vspace{2mm}
-\end{figure}
-
-
 \subsection{Model Freshness}
 We measure model freshness by two metrics: training recency and rate of new features.
 Training recency is determined by the scheduling rate.
@@ -187,6 +176,20 @@ One possible problem with the materialization optimization is the amount of spac
 Depending on the type of the data processing the size of the materialized data may increase.
 In our experiments, after processing the data using the Criteo pipeline the size of the materialized data increased by a factor of 2.
 Therefore, the users of the system have to ensure that the space requirement of the system is met before turning on the materialization optimization.
+
+
+\subsection{Proactive Training}
+I this section, we analyze the logistic loss error of the model attains using continuous training approach (proactive training) and compare to a model that is trained periodically.
+Figure \ref{fig:loss-proactive-vs-daily} shows the result of our proactive training approach on the Criteo pipeline.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-proactive-training-experiment.eps}
+\caption{Total training time of the pipeline for each scenario}
+\label{fig:loss-proactive-vs-daily}
+\vspace{2mm}
+\end{figure}
+
 
 \subsection{Discussion} \label{subsec:discussion}
 discussion of the results

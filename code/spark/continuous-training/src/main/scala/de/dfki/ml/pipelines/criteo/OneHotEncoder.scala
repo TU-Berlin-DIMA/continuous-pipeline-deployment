@@ -38,29 +38,29 @@ class OneHotEncoder(val numCategories: Int) extends Component[RawType, LabeledPo
   }
 
   override def update(spark: SparkContext, input: RDD[RawType]) = {
-//    val filter = spark.broadcast(bloomFilter)
-//    val uniques = input
-//      .flatMap(_.categorical)
-//      .distinct()
-//      .repartition(20)
-//      .cache()
-//    val size = uniques.count()
-//    if (approximateFeatureSize == 0) {
-//      // bloom filter is empty, update the count from the exact value
-//      approximateFeatureSize = size
-//    }
-//    else {
-//      approximateFeatureSize += uniques.filter(!filter.value.mightContainString(_)).count()
-//    }
-//    // update the bloomfilter
-//    val updatedFilters = uniques.mapPartitions {
-//      partition =>
-//        val curFilter = filter.value
-//        for (s <- partition)
-//          curFilter.putString(s)
-//        Seq(curFilter).iterator
-//    }.collect()
-//    bloomFilter = updatedFilters.reduce((b1, b2) => b1.mergeInPlace(b2))
+    val filter = spark.broadcast(bloomFilter)
+    val uniques = input
+      .flatMap(_.categorical)
+      .distinct()
+      .repartition(20)
+      .cache()
+    val size = uniques.count()
+    if (approximateFeatureSize == 0) {
+      // bloom filter is empty, update the count from the exact value
+      approximateFeatureSize = size
+    }
+    else {
+      approximateFeatureSize += uniques.filter(!filter.value.mightContainString(_)).count()
+    }
+    // update the bloomfilter
+    val updatedFilters = uniques.mapPartitions {
+      partition =>
+        val curFilter = filter.value
+        for (s <- partition)
+          curFilter.putString(s)
+        Seq(curFilter).iterator
+    }.collect()
+    bloomFilter = updatedFilters.reduce((b1, b2) => b1.mergeInPlace(b2))
   }
 
   private def murmurHash(feature: String, numFeatures: Int): Int = {

@@ -42,27 +42,15 @@ When new training data becomes available, the data manager appends the incoming 
 Moreover, the incoming training data is forwarded to the pipeline manager to update the statistics required by the pipeline components.
 
 When a new iteration of SGD is scheduled to run, the data manager is responsible for providing the batch of training data.
-The data manager can provide the next batch of training data in two different modes, namely \textit{sample-then-append} and \textit{append-then-sample}.
-In the sample-then-append mode, the new training data that has arrived at the system is stored in an intermediate buffer in the memory.
-The historical data is sampled and the resulting data is then combined with the data in the buffer.
-The data manager makes the combined data available for the SGD runner to execute the next iteration of SGD.
-In the append-then-sample mode, the new training data is appended to the historical data upon arrival.
-The data manager then samples the historical data (that consists of the new training data) and provides the resulting dataset for the SGD runner.
+A window size parameter specifies the amount of historical data that are to be sampled in the next proactive training.
+Extreme values of the window size parameter are infinity, which means the data manager will sample the entire historical data and zero, which indicates that no historical data is used for proactive training.
+After the sample is assembled, the recent training data is appended to the sample and the combination is provided to pipeline manager for next proactive training process.
 
-The two operation modes of data manager affect the way the deployed model is evolving over time.
-In the sample-then-append mode, every iteration of SGD uses the new training data in its entirety.
-Therefore, there is more emphasis on the recent data than the historical data.
-While this is the more desirable method, it may lead to unstable updates, as the distribution of the data may change due to concept drift or anomalies.
-Append-then-sample mode assigns the same weight to every data point (new training and the historical data).
-As a result, the update to the deployed model is more stable, however, the increase in model quality is smaller than the sample-then-append mode.
-In our experiments, we investigate the effect of the different operation modes on the quality of the model.
-
-%Different sampling strategies can be used to provide the sample.
-%In our current prototype, the data manager uses a simple unified random sampling method to generate this sample.
-%More advanced methods, such as Reservoir \cite{vitter1985random} or weighted random sampling can also be used to generate the sample.
-%Reservoir sampling is typically used to generate samples from large datasets that do not fit in memory, whereas weighted random sampling is used when data elements have different weights.
-%In an online machine learning scenario, recent items are more important for training the model and are assigned a bigger weight than older items.
-%Therefore, weighted random sampling can generate samples that can contribute to the training of a better model.
+Using zero or a small sampling window size uses more recent training data for training the model as compared to larger or infinity window size.
+Different use cases may require different window size.
+If older data are irrelevant to the training of the pipeline, setting window size to smaller values adapts the model to the newer data faster.
+However, the incoming training data is not time-dependent, setting the sampling window size to larger or even infinity results in more stable models.
+In our experiments, we investigate the effect of the different sampling window sizes on the quality of the model.
 
 The data manager also allows for new training datasets to be registered while the model is being served.
 The new dataset is merged with the existing historical data and immediately becomes available for next iterations of SGD.

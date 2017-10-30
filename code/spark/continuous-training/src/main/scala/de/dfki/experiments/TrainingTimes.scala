@@ -24,6 +24,7 @@ object TrainingTimes {
   val NUM_ITERATIONS = 500
   val SLACK = 10
   val DAYS = "1"
+  val DAY_DURATION = 100
 
 
   def main(args: Array[String]): Unit = {
@@ -38,6 +39,7 @@ object TrainingTimes {
     val numIterations = parser.getInteger("iterations", NUM_ITERATIONS)
     val slack = parser.getInteger("slack", SLACK)
     val days = parser.get("days", DAYS).split(",").map(_.toInt)
+    val dayDuration = parser.getInteger("day_duration",DAY_DURATION)
 
     val conf = new SparkConf().setAppName("Training Time Experiment")
     val masterURL = conf.get("spark.master", "local[*]")
@@ -54,7 +56,8 @@ object TrainingTimes {
       resultPath = s"$resultPath/continuous",
       samplingRate = 0.1,
       slack = slack,
-      daysToProcess = days).deploy(ssc, continuous)
+      daysToProcess = days,
+      windowSize = dayDuration).deploy(ssc, continuous)
 
 
     val periodical = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)

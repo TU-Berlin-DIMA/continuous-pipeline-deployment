@@ -68,16 +68,15 @@ object Quality {
       daysToProcess = days,
       windowSize = dayDuration).deploy(ssc, continuous)
 
+    val periodical = CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)
 
-//    val periodical = CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)
-//
-//    new PeriodicalDeploymentQualityAnalysis(history = inputPath,
-//      streamBase = streamBase,
-//      evaluationPath = s"$evaluationPath",
-//      resultPath = s"$resultPath/periodical",
-//      numIterations = numIterations,
-//      daysToProcess = days
-//    ).deploy(ssc, periodical)
+    new PeriodicalDeploymentQualityAnalysis(history = inputPath,
+      streamBase = streamBase,
+      evaluationPath = s"$evaluationPath",
+      resultPath = s"$resultPath/periodical",
+      numIterations = numIterations,
+      daysToProcess = days
+    ).deploy(ssc, periodical)
 
   }
 

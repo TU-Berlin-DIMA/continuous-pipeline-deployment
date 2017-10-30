@@ -19,10 +19,6 @@ class PeriodicalDeploymentTimeAnalysis(val history: String,
     val days = Array(history) ++ daysToProcess.map(i => s"$streamBase/day_$i")
     var copyPipeline = pipeline
 
-    val testData = streamingContext.sparkContext.textFile(evaluationPath)
-
-    evaluateStream(copyPipeline, testData, resultPath)
-
     val rdds = days.map {
       input =>
         val rdd = streamingContext.sparkContext.textFile(input).cache()
@@ -34,7 +30,7 @@ class PeriodicalDeploymentTimeAnalysis(val history: String,
       copyPipeline = copyPipeline.newPipeline()
       copyPipeline.model.setNumIterations(numIterations)
       // construct the data from day 0 to day i
-      val data = rdds.slice(0, i + 1).reduce((a, b) => a.union(b))
+      val data = streamingContext.sparkContext.union(rdds.slice(0, i + 1))
 
       // update and store update time
       val start = System.currentTimeMillis()
@@ -42,8 +38,6 @@ class PeriodicalDeploymentTimeAnalysis(val history: String,
       val end = System.currentTimeMillis()
       val updateTime = end - start
       storeTrainingTimes(updateTime, resultPath, "total")
-
-      evaluateStream(copyPipeline, testData, resultPath)
     }
 
     rdds.foreach {

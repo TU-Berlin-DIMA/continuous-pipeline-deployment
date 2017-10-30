@@ -15,11 +15,12 @@ features = read.csv('feature-discovery/cluster/counts', header = FALSE, col.name
 
 dailySize = data.frame(days = 1:6, DayCounts = features)
 
-finalPlot = ggplot(data = dailySize) + 
+finalPlot =
+  ggplot(data = dailySize) + 
   geom_bar(aes(x = days, weight = DayCounts),
            fill = "#00aedb", 
-           width = 0.5, 
-           color = "#00aedb") + 
+           colour = '#000000',
+           width = 1) + 
   geom_text(
     aes(x = days, y = DayCounts, label = getLabel(DayCounts)),
     position = position_dodge(width = 1),
@@ -34,11 +35,11 @@ finalPlot = ggplot(data = dailySize) +
                      labels = getLabel) + 
   xlab("Time") + 
   ylab("Feature Size") + 
-  theme(axis.text=element_text(size=22, color = "black"),
-        axis.title=element_text(size=22, color= "black"),
+  theme(axis.text=element_text(size=25, color = "black"),
+        axis.title=element_text(size=25, color= "black"),
         panel.border = element_rect(colour = "black", fill=NA, size=3)) 
 
-ggsave(finalPlot , filename = 'feature-discovery/cluster/feature-discovery-experiment.eps', 
+ggsave(finalPlot , filename = 'feature-discovery/cluster/criteo-feature-discovery-experiment.eps', 
        device = 'eps', 
-       width = 10, height = 4, 
+       width = 12, height = 6, 
        units = "in")

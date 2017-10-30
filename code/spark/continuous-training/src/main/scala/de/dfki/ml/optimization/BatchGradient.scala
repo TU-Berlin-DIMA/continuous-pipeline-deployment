@@ -46,10 +46,7 @@ class LogisticGradient(fitIntercept: Boolean,
         c.add(instance, broadCastWeights.value)
       val combOp = (c1: LogisticAggregator, c2: LogisticAggregator) => c1.merge(c2)
 
-      instances.treeAggregate(
-        // fixed number of classes to 2
-        new LogisticAggregator(numFeatures, 2, fitIntercept)
-      )(seqOp, combOp)
+      instances.treeAggregate(new LogisticAggregator(numFeatures, 2, fitIntercept))(seqOp, combOp)
     }
     val totalGradientArray = logisticAggregator.gradient.toArray
 
@@ -127,8 +124,7 @@ class LogisticAggregator(private val numFeatures: Int,
     * @param coefficients The coefficients corresponding to the features.
     * @return This LogisticAggregator object.
     */
-  def add(instance: (Double, Vector),
-          coefficients: Vector): this.type = {
+  def add(instance: (Double, Vector), coefficients: Vector): this.type = {
     val label = instance._1
     val features = instance._2
     require(numFeatures == features.size, s"Dimensions mismatch when adding new instance." +
@@ -217,11 +213,12 @@ class LogisticAggregator(private val numFeatures: Int,
     lossSum / weightSum
   }
 
+  //TODO : investigate this , why the average was too big for SGD to work properly
   def gradient: Vector = {
     require(weightSum > 0.0, s"The effective number of instances should be " +
       s"greater than 0.0, but $weightSum.")
     val result = Vectors.dense(gradientSumArray.clone())
-    LinearAlgebra.scal(1.0 / weightSum, result)
+    LinearAlgebra.scal(1.0 / (weightSum * weightSum), result)
     result
   }
 

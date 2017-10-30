@@ -20,31 +20,31 @@ class ContinuousDeploymentTimeAnalysis(val history: String,
                                        val resultPath: String,
                                        val samplingRate: Double = 0.1,
                                        val daysToProcess: Array[Int] = Array(1, 2, 3, 4, 5),
-                                       val slack: Int = 10) extends Deployment {
+                                       val slack: Int = 10,
+                                       val windowSize: Int = -1) extends Deployment {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     // create rdd of the initial data that the pipeline was trained with
     val data = streamingContext.sparkContext
       .textFile(history)
+      .setName("Historical data")
       .cache()
     data.count()
 
-    val testData = streamingContext.sparkContext.textFile(evaluationPath)
+
     val streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](streamingContext, streamBase, days = daysToProcess)
 
     var processedRDD: ListBuffer[RDD[String]] = new ListBuffer[RDD[String]]()
     processedRDD += data
 
     pipeline.model.setMiniBatchFraction(1.0)
-    pipeline.model.setNumIterations(5)
+    pipeline.model.setNumIterations(1)
+
     var time = 1
-
-    evaluateStream(pipeline, testData, resultPath)
-
     while (!streamingSource.allFileProcessed()) {
 
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
-      //pipeline.update(rdd)
+      rdd.setName(s"Stream $time")
       rdd.cache()
       rdd.count()
 
@@ -62,7 +62,7 @@ class ContinuousDeploymentTimeAnalysis(val history: String,
 
         // transform and store transform time
         start = System.currentTimeMillis()
-        val nextBatch = historicalDataRDD(processedRDD, samplingRate, slack, streamingContext.sparkContext)
+        val nextBatch = historicalDataRDD(processedRDD, samplingRate, slack, streamingContext.sparkContext, windowSize)
         val transformed = pipeline.transform(nextBatch)
         transformed.cache()
         transformed.count()
@@ -77,9 +77,11 @@ class ContinuousDeploymentTimeAnalysis(val history: String,
         storeTrainingTimes(transformTime, resultPath, "train")
 
         transformed.unpersist(true)
-        evaluateStream(pipeline, testData, resultPath)
       }
       time += 1
+      if (time > windowSize && windowSize != -1) {
+        processedRDD(time - windowSize).unpersist(blocking = true)
+      }
     }
     processedRDD.foreach {
       r => r.unpersist(true)

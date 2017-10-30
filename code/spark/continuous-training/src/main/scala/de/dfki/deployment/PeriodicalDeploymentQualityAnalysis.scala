@@ -24,15 +24,14 @@ class PeriodicalDeploymentQualityAnalysis(val history: String,
     val rdds = days.map {
       input =>
         val rdd = streamingContext.sparkContext.textFile(input).cache()
-        rdd.count()
         rdd
     }
 
-    for (i <- days.indices) {
+    for (i <- daysToProcess.indices) {
       copyPipeline = copyPipeline.newPipeline()
       copyPipeline.model.setNumIterations(numIterations)
       // construct the data from day 0 to day i
-      val data = rdds.slice(0, i + 1).reduce((a, b) => a.union(b))
+      val data = streamingContext.sparkContext.union(rdds.slice(0, i + 1))
       copyPipeline.updateTransformTrain(data)
       evaluateStream(copyPipeline, testData, resultPath)
     }

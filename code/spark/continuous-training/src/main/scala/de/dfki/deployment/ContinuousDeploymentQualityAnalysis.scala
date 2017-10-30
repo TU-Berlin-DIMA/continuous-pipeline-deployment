@@ -29,14 +29,14 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
       .cache()
     data.count()
 
-    val testData = streamingContext.sparkContext.textFile(evaluationPath)
+    val testData = streamingContext.sparkContext.textFile(evaluationPath).setName("Evaluation Data set").cache()
     val streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](streamingContext, streamBase, days = daysToProcess)
 
     var processedRDD: ListBuffer[RDD[String]] = new ListBuffer[RDD[String]]()
     processedRDD += data
 
     pipeline.model.setMiniBatchFraction(1.0)
-    pipeline.model.setNumIterations(2)
+    pipeline.model.setNumIterations(1)
     var time = 1
 
     evaluateStream(pipeline, testData, resultPath, windowSize.toString)
@@ -46,7 +46,6 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
       rdd.setName(s"Stream $time")
       rdd.cache()
-      rdd.count()
 
       processedRDD += rdd
       if (time % slack == 0) {

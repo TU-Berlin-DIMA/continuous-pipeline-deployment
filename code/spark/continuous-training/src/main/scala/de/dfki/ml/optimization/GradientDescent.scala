@@ -189,7 +189,7 @@ object GradientDescent {
       else
         data.sample(withReplacement = false, miniBatchFraction)
 
-      val miniBatchSize = sampledData.count()
+     // val miniBatchSize = sampledData.count()
       prevLoss = currLoss
       val (lossSum, newGradients) = gradient.compute(sampledData, weights)
 
@@ -199,11 +199,11 @@ object GradientDescent {
       // it seems illogical and actually the opposite have to be done
       // investigate this and either add a bug report in spark or fix the implementation here
       val newParams = updater.compute(weights,
-        LinearAlgebra.fromBreeze(newGradients / miniBatchSize.toDouble),
+        LinearAlgebra.fromBreeze(newGradients /*/ miniBatchSize.toDouble*/),
         stepSize, i, regParam)
       weights = newParams._1
       // divide loss by the mini batch size
-      currLoss = lossSum / miniBatchSize.toDouble + newParams._2
+      currLoss = lossSum /*/ miniBatchSize.toDouble */+ newParams._2
 
       currentWeights = Some(weights)
       //      if (previousWeights.isDefined && currentWeights.isDefined) {

@@ -27,8 +27,7 @@ plot_training =
   geom_point(aes(color = variable), size = 3.0) + 
   ylab("Logistic Loss") + 
   theme_bw() + 
-  scale_color_manual(values = groupColors,  guide = guide_legend(override.aes = list(
-    shape = c(NA,NA, NA, NA)))) + 
+  scale_color_manual(values = groupColors,  guide = guide_legend(override.aes = list(shape = c(NA,NA, NA, NA)))) + 
   scale_x_discrete(name ="Iterations", limits=c("20","40","80","160","320","500")) + 
   theme(legend.text = element_text(size = 20, color = "black"), 
         axis.text=element_text(size=20, color = "black"),
