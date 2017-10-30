@@ -25,7 +25,7 @@ object SamplingModes {
   val SLACK = 5
   val DAYS = "1,2"
   val SAMPLING_RATE = 0.1
-  val SAMPLING_MODE = "combineThenSample"
+  val DAY_DURATION = 100
 
 
   def main(args: Array[String]): Unit = {
@@ -42,8 +42,9 @@ object SamplingModes {
     val samplingRate = parser.getDouble("sample", SAMPLING_RATE)
     val pipelineName = parser.get("pipeline", INITIAL_PIPELINE)
     val days = parser.get("days",DAYS).split(",").map(_.toInt)
+    val dayDuration = parser.getInteger("day_duration",DAY_DURATION)
 
-    val conf = new SparkConf().setAppName("Quality Experiment")
+    val conf = new SparkConf().setAppName("Sampling Mode Experiment")
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
 
@@ -76,7 +77,7 @@ object SamplingModes {
       resultPath = s"$resultPath/continuous",
       samplingRate = samplingRate,
       slack = slack,
-      windowSize = 50,
+      windowSize = dayDuration/2,
       daysToProcess = days).deploy(ssc, halfDayWindow)
 
 
@@ -87,7 +88,7 @@ object SamplingModes {
       resultPath = s"$resultPath/continuous",
       samplingRate = samplingRate,
       slack = slack,
-      windowSize = 100,
+      windowSize = dayDuration,
       daysToProcess = days).deploy(ssc, fullDayWindow)
 
     val noSampling = CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)

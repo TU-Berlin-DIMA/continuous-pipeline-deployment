@@ -51,11 +51,6 @@ abstract class StochasticGradientDescent[M <: GeneralizedLinearModel](val stepSi
         + " parent RDDs are also uncached.")
     }
 
-    // Check the data properties before running the optimizer
-    if (validateData && !validators.forall(func => func(input))) {
-      throw new SparkException("Input validation failed.")
-    }
-
 
     val weightsWithIntercept = optimizer.optimize(input.map(l => (l.label, l.features)), initialWeights, initialIntercept)
 

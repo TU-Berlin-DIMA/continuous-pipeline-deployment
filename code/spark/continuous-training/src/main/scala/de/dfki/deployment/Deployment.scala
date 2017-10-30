@@ -65,9 +65,21 @@ abstract class Deployment {
     } else {
       logger.info(s"Sampling window: ($start --> $history), returning a sample of historical data + all the recent items")
       val rand = new Random(System.currentTimeMillis())
-      val historical = spark.union(processedRDD.slice(start, history).filter(a => rand.nextDouble() < samplingRate))
+      val s = if (start == 0) {
+        val b = processedRDD.slice(1, history).filter(a => rand.nextDouble() < samplingRate).toList
+        if (rand.nextDouble() < samplingRate) {
+          processedRDD.head.sample(withReplacement = false, samplingRate) :: b
+        } else {
+          b
+        }
+      }
+      else {
+        processedRDD.slice(start, history).filter(a => rand.nextDouble() < samplingRate).toList
+      }
+      val historical = spark.union(s)
       val recent = spark.union(processedRDD.slice(history, now))
       spark.union(historical, recent)
     }
   }
+
 }

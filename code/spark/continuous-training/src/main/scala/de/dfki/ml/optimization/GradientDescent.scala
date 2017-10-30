@@ -150,19 +150,9 @@ object GradientDescent {
 
     var previousWeights: Option[Vector] = None
     var currentWeights: Option[Vector] = None
-    val numExamples = data.count()
-
-    // if no data, return initial weights to avoid NaNs
-    if (numExamples == 0) {
-      logger.warn("GradientDescent.runMiniBatchSGD returning initial weights, no data found")
-      return initialWeights
-    }
-
-    if (numExamples * miniBatchFraction < 1) {
-      logger.warn("The miniBatchFraction is too small")
-    }
 
     val numFeatures = initialWeights.size
+    logger.info(s"Readjusting the weight size to $numFeatures")
     gradient.setNumFeatures(numFeatures)
     // Initialize weights as a column vector
     var weights = if (!fitIntercept) {

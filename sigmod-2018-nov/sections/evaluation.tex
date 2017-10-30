@@ -53,18 +53,35 @@ For every pipeline and dataset, the users have to evaluate the performance of th
 
 
 \begin{figure}[h!]
-\includegraphics[width=\columnwidth]{../images/experiment-results/learning-rate-experiment.eps}
+\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-learning-rate-experiment.eps}
 \caption{Learning rate adaptation technique for Criteo pipeline}
 \label{fig:criteo-learning-rate}
 \end{figure}
 
 \subsection{Sampling Methods}
-In this section I will discuss different sampling modes (window based) vs entire history and analyze their effect on quality and training time. 
+In this section, we discuss the effects of different sampling modes on the quality of the deployed model.
+Figure \ref{fig:sampling-mode-quality} shows how different sampling approaches during the continuous training of the Criteo pipeline affects the logistic loss error rate.
+Different windows sizes affect the stability of the model quality.
+For experiments using a sampling window size (entire history, one day, and half a day), first the data is sampled and then the new training data that arrived at the system recently is appended to the sample and used in proactive training.
+Using the entire historical data to make the samples for proactive training results in a logistic error rate that decreases in a steady manner over time.
+However, the error rate of the model after 5 days of continuous training is larger than other sampling approaches.
+Using a limited sampling window size reduces the error rate when compared to sampling the entire historical data, however, the error rate is slightly unstable.
+A larger window size (1 day) results in a more stable error rate and after 5 days of continuous training achieves the lowest error rate when compared with all the other methods.
+When sampling is switched off (window size equals to zero), the error rate is unstable and it sometimes fluctuates by a margin of 0.1.
+When no sample of the historical data is used, the model is only trained using new data, therefore, the changes in the model weight are much larger.
+During the first 3 days of continuous training, the model trained with sampling switched off, results in the lower error rate.
+However, after the 4th of training, the error rate goes up.
+
+This experiment shows that the sampling window size affects both the stability and the error rate of the model.
+Larger sampling window sizes, increase the stability of the window at the expense of slower convergence. 
+Smaller sampling window sizes, decrease the error rate, however, the error rate is not stable and with every proactive training, the error rate may slightly go up.
+We use a window size of one day for the rest of our experiments as it leads to a low and stable error rate throughout the deployment process.
+
 
 \begin{figure}[h!]
 \centering
-\includegraphics[width=\columnwidth]{../images/placeholder.jpeg}
-\caption{Effect of Sampling mode on quality}
+\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-sampling-mode-experiments.eps}
+\caption{Effect of different sampling modes on quality}
 \label{fig:sampling-mode-quality}
 \vspace{2mm}
 \end{figure}
@@ -128,7 +145,7 @@ As a result, the deployed pipeline is able to answer prediction queries that may
 Using a daily training approach, any unseen features that arrive at the system are dropped before a prediction is made.
 
 \begin{figure}[H]
-\includegraphics[width=\columnwidth]{../images/experiment-results/feature-discovery-experiment.eps}
+\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-feature-discovery-experiment.eps}
 \caption{Criteo categorical feature size over time}
 \label{fig:criteo-feature-discovery}
 \end{figure}
@@ -152,13 +169,13 @@ As a result, proactive training accesses the materialized data and can directly 
 \begin{figure}[h]
 \begin{subfigure}{\columnwidth}
 \centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/training-time-deployment-types-experiment.eps}
+\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-training-time-deployment-types-experiment.eps}
 \caption{Deployment Approaches}
 \label{fig:training-time-deployment}
 \end{subfigure}
 \begin{subfigure}{\columnwidth}
 \centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/training-time-optimizations-experiment.eps}
+\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-training-time-optimizations-experiment.eps}
 \caption{Optimizations}
 \label{fig:training-time-optimization}
 \end{subfigure}

@@ -36,7 +36,7 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
     processedRDD += data
 
     pipeline.model.setMiniBatchFraction(1.0)
-    pipeline.model.setNumIterations(1)
+    pipeline.model.setNumIterations(2)
     var time = 1
 
     evaluateStream(pipeline, testData, resultPath, windowSize.toString)
@@ -49,14 +49,19 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
       rdd.count()
 
       processedRDD += rdd
-      pipeline.update(rdd)
       if (time % slack == 0) {
+        pipeline.update(streamingContext.sparkContext.union(processedRDD.slice(processedRDD.size - slack, processedRDD.size)))
         val data = historicalDataRDD(processedRDD, samplingRate, slack, streamingContext.sparkContext, windowSize)
         val trainingData = pipeline.transform(data)
+        trainingData.cache()
         pipeline.train(trainingData)
+        trainingData.unpersist()
         evaluateStream(pipeline, testData, resultPath, windowSize.toString)
       }
       time += 1
+      if (time > windowSize && windowSize != -1) {
+        processedRDD(time - windowSize).unpersist(blocking = true)
+      }
     }
     processedRDD.foreach {
       r => r.unpersist(true)
