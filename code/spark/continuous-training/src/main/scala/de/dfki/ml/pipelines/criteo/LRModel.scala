@@ -5,7 +5,7 @@ import de.dfki.ml.classification.LogisticRegressionWithSGD
 import de.dfki.ml.pipelines.Model
 import org.apache.log4j.Logger
 import org.apache.spark.mllib.classification.LogisticRegressionModel
-import org.apache.spark.mllib.linalg.{DenseVector, Vector}
+import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.optimization.Updater
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
@@ -24,21 +24,15 @@ class LRModel(private var stepSize: Double,
   @transient lazy val logger = Logger.getLogger(getClass.getName)
   protected val algorithm = new LogisticRegressionWithSGD(stepSize, numIterations, regParam, miniBatchFraction, updater)
 
-  protected var model: Option[LogisticRegressionModel] = None
+  var model: Option[LogisticRegressionModel] = None
 
   algorithm.optimizer.convergenceTol = 0.0
 
-  override def train(data: RDD[LabeledPoint], dimension: Int = -1) = {
+  override def train(data: RDD[LabeledPoint]) = {
     model = if (model.isEmpty) {
       Some(algorithm.run(data))
     } else {
-      val newWeights = dimension match {
-        case -1 => model.get.weights
-        case _ => val currentWeights = model.get.weights.toArray
-          val diff = dimension - currentWeights.length
-          new DenseVector(currentWeights ++ Array.fill[Double](diff)(0.0))
-      }
-      Some(algorithm.run(data, newWeights, model.get.intercept))
+      Some(algorithm.run(data, model.get.weights, model.get.intercept))
     }
   }
 

@@ -163,7 +163,6 @@ object GradientDescent {
     }
 
     val numFeatures = initialWeights.size
-    logger.info(s"Readjusting the weight size to $numFeatures")
     gradient.setNumFeatures(numFeatures)
     // Initialize weights as a column vector
     var weights = if (!fitIntercept) {

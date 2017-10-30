@@ -52,7 +52,7 @@ object ContinuousClassifier extends Classifier {
     val pipeline = trainInitialPipeline(ssc, data)
 
     val deployment = new ContinuousDeploymentTimeAnalysis(history = initialDataPath,
-      stream = streamingDataPath,
+      streamBase = streamingDataPath,
       evaluationPath = evaluationDataPath,
       resultPath = s"$resultPath/loss",
       slack = 1,

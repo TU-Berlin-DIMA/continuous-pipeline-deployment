@@ -15,10 +15,11 @@ import scala.collection.mutable.ListBuffer
   * @author behrouz
   */
 class ContinuousDeploymentTimeAnalysis(val history: String,
-                                       val stream: String,
+                                       val streamBase: String,
                                        val evaluationPath: String,
                                        val resultPath: String,
                                        val samplingRate: Double = 0.1,
+                                       val daysToProcess: Array[Int] = Array(1, 2, 3, 4, 5),
                                        val slack: Int = 10) extends Deployment {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
@@ -29,13 +30,13 @@ class ContinuousDeploymentTimeAnalysis(val history: String,
     data.count()
 
     val testData = streamingContext.sparkContext.textFile(evaluationPath)
-    val streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](streamingContext, stream)
+    val streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](streamingContext, streamBase, days = daysToProcess)
 
     var processedRDD: ListBuffer[RDD[String]] = new ListBuffer[RDD[String]]()
     processedRDD += data
 
     pipeline.model.setMiniBatchFraction(1.0)
-    pipeline.model.setNumIterations(1)
+    pipeline.model.setNumIterations(5)
     var time = 1
 
     evaluateStream(pipeline, testData, resultPath)
@@ -61,7 +62,7 @@ class ContinuousDeploymentTimeAnalysis(val history: String,
 
         // transform and store transform time
         start = System.currentTimeMillis()
-        val nextBatch = historicalDataRDD(processedRDD, slack)
+        val nextBatch = historicalDataRDD(processedRDD, samplingRate, slack, streamingContext.sparkContext)
         val transformed = pipeline.transform(nextBatch)
         transformed.cache()
         transformed.count()
@@ -85,12 +86,4 @@ class ContinuousDeploymentTimeAnalysis(val history: String,
     }
   }
 
-  def historicalDataRDD(processedRDD: ListBuffer[RDD[String]], slack: Int) = {
-    val now = processedRDD.size
-    val history = now - slack
-    processedRDD.slice(0, history)
-      .reduce(_ union _)
-      .sample(withReplacement = false, samplingRate)
-      .union(processedRDD.slice(history, now).reduce(_ union _))
-  }
 }

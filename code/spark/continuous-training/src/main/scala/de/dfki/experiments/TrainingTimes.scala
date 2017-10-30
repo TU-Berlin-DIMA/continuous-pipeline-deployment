@@ -23,6 +23,7 @@ object TrainingTimes {
   val NUM_FEATURES = 30000
   val NUM_ITERATIONS = 500
   val SLACK = 10
+  val DAYS = "1"
 
 
   def main(args: Array[String]): Unit = {
@@ -36,6 +37,7 @@ object TrainingTimes {
     val numFeatures = parser.getInteger("features", NUM_FEATURES)
     val numIterations = parser.getInteger("iterations", NUM_ITERATIONS)
     val slack = parser.getInteger("slack", SLACK)
+    val days = parser.get("days", DAYS).split(",").map(_.toInt)
 
     val conf = new SparkConf().setAppName("Training Time Experiment")
     val masterURL = conf.get("spark.master", "local[*]")
@@ -47,20 +49,22 @@ object TrainingTimes {
     val continuous = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)
 
     new ContinuousDeploymentTimeAnalysis(history = inputPath,
-      stream = s"$streamPath/*",
+      streamBase = streamPath,
       evaluationPath = s"$evaluationPath",
       resultPath = s"$resultPath/continuous",
       samplingRate = 0.1,
-      slack = slack).deploy(ssc, continuous)
+      slack = slack,
+      daysToProcess = days).deploy(ssc, continuous)
 
 
     val periodical = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)
 
     new PeriodicalDeploymentTimeAnalysis(history = inputPath,
-      stream = s"$streamPath",
+      streamBase = streamPath,
       evaluationPath = s"$evaluationPath",
       resultPath = s"$resultPath/periodical",
-      numIterations = numIterations
+      numIterations = numIterations,
+      daysToProcess = days
     ).deploy(ssc, periodical)
 
 

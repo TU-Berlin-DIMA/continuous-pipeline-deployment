@@ -17,10 +17,8 @@ trait Model extends Serializable {
   /**
     *
     * @param data      training data rdd
-    * @param dimension optional parameter, if the model size changes during the deployment
-    *                  this value should indicate the new dimension isze
     */
-  def train(data: RDD[LabeledPoint], dimension: Int)
+  def train(data: RDD[LabeledPoint])
 
   /**
     * Expose this method because in offline and deployment mode the mini batch fraction is handled differently

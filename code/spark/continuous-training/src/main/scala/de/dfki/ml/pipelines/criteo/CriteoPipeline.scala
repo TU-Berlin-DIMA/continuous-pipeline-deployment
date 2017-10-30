@@ -73,6 +73,7 @@ class CriteoPipeline(@transient var spark: SparkContext,
     training.cache()
     training.count()
     model.train(training)
+    training.unpersist()
   }
 
   /**

@@ -3,7 +3,7 @@ package de.dfki.experiments
 import java.io.{File, FileWriter}
 import java.nio.file.{Files, Paths}
 
-import de.dfki.deployment.ContinuousDeploymentTimeAnalysis
+import de.dfki.deployment.{ContinuousDeploymentQualityAnalysis, ContinuousDeploymentTimeAnalysis}
 import de.dfki.ml.evaluation.LogisticLoss
 import de.dfki.ml.optimization.AdvancedUpdaters
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
@@ -18,7 +18,7 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
   */
 object ParameterSelection {
   val INPUT_PATH = "data/criteo-full/experiments/initial-training/0"
-  val STREAM_PATH = "data/criteo-full/experiments/stream/1"
+  val STREAM_PATH = "data/criteo-full/experiments/stream"
   val EVALUATION_PATH = "data/criteo-full/experiments/evaluation/6"
   val RESULT_PATH = "../../../experiment-results/criteo-full/quality/loss-new"
   val PIPELINE_DIRECTORY = "data/criteo-full/pipelines/parameter-selection/"
@@ -27,6 +27,7 @@ object ParameterSelection {
   val DELIMITER = ","
   val NUM_FEATURES = 3000000
   val SLACK = 10
+  val DAYS = "1"
 
   @transient lazy val logger = Logger.getLogger(getClass.getName)
 
@@ -42,6 +43,7 @@ object ParameterSelection {
     val numFeatures = parser.getInteger("features", NUM_FEATURES)
     val pipelineDirectory = parser.get("pipeline", PIPELINE_DIRECTORY)
     val slack = parser.getInteger("slack", SLACK)
+    val days = parser.get("days", DAYS).split(",").map(_.toInt)
 
     val conf = new SparkConf().setAppName("Learning Rate Selection Criteo")
     val masterURL = conf.get("spark.master", "local[*]")
@@ -80,12 +82,13 @@ object ParameterSelection {
         fw.close()
       }
     }
-    val deployment = new ContinuousDeploymentTimeAnalysis(history = inputPath,
-      stream = streamPath,
+    val deployment = new ContinuousDeploymentQualityAnalysis(history = inputPath,
+      streamBase = streamPath,
       evaluationPath = evaluationPath,
       resultPath = s"$resultPath/${updater.name}",
       slack = slack,
-      samplingRate = 0.1)
+      samplingRate = 0.1,
+      daysToProcess = days)
 
     deployment.deploy(ssc, criteoPipeline)
   }

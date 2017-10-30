@@ -14,11 +14,11 @@ import scala.reflect.ClassTag
 /**
   * @author Behrouz
   */
-class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
-                                                              _ssc: StreamingContext,
-                                                              directory: String,
-                                                              filter: Path => Boolean = BatchFileInputDStream.defaultFilter,
-                                                              conf: Option[Configuration] = None)
+class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](_ssc: StreamingContext,
+                                                             directory: String,
+                                                             filter: Path => Boolean = BatchFileInputDStream.defaultFilter,
+                                                             conf: Option[Configuration] = None,
+                                                             days: Array[Int] = Array(1, 2, 3, 4, 5))
                                                             (implicit km: ClassTag[K], vm: ClassTag[V], fm: ClassTag[F])
   extends InputDStream[(K, V)](_ssc) with Serializable {
 
@@ -34,15 +34,6 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
   @transient private var isPaused = false
   @transient private var schedulingPolicy = FixedIntervalScheduler.SCHEDULING_TYPE
 
-  private def directoryPath: Path = {
-    if (_path == null) _path = new Path(directory)
-    _path
-  }
-
-  private def fs: FileSystem = {
-    if (_fs == null) _fs = directoryPath.getFileSystem(context.sparkContext.hadoopConfiguration)
-    _fs
-  }
 
   private def files: Array[String] = {
     if (_files == null) _files = listFiles()
@@ -159,16 +150,6 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
     * @return RDD created from the a file in the given directory
     */
   override def compute(validTime: Time): Option[RDD[(K, V)]] = {
-    generateNextRDD()
-  }
-
-  /**
-    * same as compute
-    * Used for manual simulation
-    *
-    * @return RDD created from the a file in the given directory
-    */
-  def generateNextRDD(): Option[RDD[(K, V)]] = {
     if (isPaused) {
       logger.warn("This streaming source is paused!!!")
       None
@@ -193,11 +174,31 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
     }
   }
 
+  /**
+    * same as compute
+    * Used for manual simulation
+    *
+    * @return RDD created from the a file in the given directory
+    */
+  def generateNextRDD(): Option[RDD[(K, V)]] = {
+    if (!allFileProcessed()) {
+      val rdd = rddFromFile(files(lastProcessedFileIndex))
+      processedFiles = processedFiles :+ files(lastProcessedFileIndex)
+      lastProcessedFileIndex += 1
+      Option(rdd)
+    } else {
+      logger.warn("All Files in the directory are processed!!!")
+      None
+    }
+  }
+
   def allFileProcessed(): Boolean = {
     lastProcessedFileIndex >= files.length
   }
 
   private def listFiles(): Array[String] = {
+    val directoryPath = new Path(directory)
+    val fs = directoryPath.getFileSystem(context.sparkContext.hadoopConfiguration)
     val directoryFilter = new PathFilter {
       override def accept(path: Path): Boolean = fs.getFileStatus(path).isDirectory
     }
@@ -205,24 +206,15 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](
     val pathFilter = new PathFilter {
       override def accept(path: Path): Boolean = filter(path)
     }
-    val directories = fs.globStatus(directoryPath, directoryFilter).map(_.getPath)
+    val directories = days.flatMap { d =>
+      fs.globStatus(new Path(s"$directory/day_$d"), directoryFilter).map(_.getPath)
+    }
+
     val allFiles = directories
       .flatMap(dir => fs.listStatus(dir, pathFilter).map(_.getPath.toString))
       .sortWith(sortByName)
+
     allFiles
-  }
-
-
-  private def deleteFile(s: String): Unit = {
-    fs.delete(new Path(s), true)
-  }
-
-  private def reset() {
-    _fs = null
-  }
-
-  private def sortByFolderName(p1: Path, p2: Path) = {
-    p1.getName < p2.getName
   }
 
   private def sortByName(s1: String, s2: String) = {
