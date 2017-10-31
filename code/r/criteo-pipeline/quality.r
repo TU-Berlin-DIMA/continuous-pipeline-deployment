@@ -21,14 +21,14 @@ plot =
   theme_bw() + 
   xlab("") + 
   scale_x_continuous(name ="\nTime",
-                     breaks = c(0,20,40,60, 80,100),
+                     breaks = c(1,26,51,76, 101,126),
                      labels=c("Deployment","Day 1","Day 2","Day 3", "Day 4","Day 5")) +
   scale_color_manual(values = groupColors, 
                      labels = groupNames, 
                      guide = guide_legend(override.aes = list(shape = c(NA,16), linetype = c("solid","blank")))) +
-  theme(legend.text = element_text(size = 25, color = "black"), 
-        axis.text=element_text(size=25, color = "black"),
-        axis.title=element_text(size=25, color= "black"),
+  theme(legend.text = element_text(size = 30, color = "black"), 
+        axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=30, color= "black"),
         legend.key.width = unit(2, "cm"), 
         legend.key.height = unit(0.8, "cm"),
         legend.position = "bottom",

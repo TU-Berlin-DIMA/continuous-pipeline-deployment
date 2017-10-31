@@ -40,9 +40,9 @@ pl =
   scale_color_manual(values = groupColors, 
                      labels = groupNames,
                      guide = guide_legend(override.aes = list(shape = c(NA,NA, NA, NA)))) +
-  theme(legend.text = element_text(size = 25, color = "black"), 
-        axis.text=element_text(size=25, color = "black"),
-        axis.title=element_text(size=25, color= "black"),
+  theme(legend.text = element_text(size = 30, color = "black"), 
+        axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=30, color= "black"),
         legend.key.width = unit(2, "cm"), 
         legend.key.height = unit(0.8, "cm"),
         legend.position = "bottom",

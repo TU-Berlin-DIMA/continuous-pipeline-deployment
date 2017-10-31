@@ -7,7 +7,7 @@ library(grid)
 
 getLabel <- function(l) {
   v = l/1000
-  f = ifelse(v < 1000 , (sprintf("%.0f k", v)),  (sprintf("%.f M", v/1000)) )
+  f = ifelse(v < 1000 , (sprintf("%.0f", v)),  (sprintf("%.f M", v/1000)) )
   return (f)
 }
 
@@ -25,7 +25,7 @@ finalPlot =
     aes(x = days, y = DayCounts, label = getLabel(DayCounts)),
     position = position_dodge(width = 1),
     vjust = -1, 
-    size = 6) +
+    size = 9) +
   #geom_point(data = dailySize, aes(x = dayIndex, y = DayCounts)) + 
   theme_bw() + 
   scale_x_continuous(name ="\nTime",
@@ -35,8 +35,8 @@ finalPlot =
                      labels = getLabel) + 
   xlab("Time") + 
   ylab("Feature Size") + 
-  theme(axis.text=element_text(size=25, color = "black"),
-        axis.title=element_text(size=25, color= "black"),
+  theme(axis.text=element_text(size=28, color = "black"),
+        axis.title=element_text(size=28, color= "black"),
         panel.border = element_rect(colour = "black", fill=NA, size=3)) 
 
 ggsave(finalPlot , filename = 'feature-discovery/cluster/criteo-feature-discovery-experiment.eps', 

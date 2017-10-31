@@ -51,22 +51,22 @@ object Quality {
     val ssc = new StreamingContext(conf, Seconds(1))
     val data = ssc.sparkContext.textFile(inputPath)
 
-    val continuous = if (Files.exists(Paths.get(pipelineName))) {
-      CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)
-    } else {
-      val t = getPipeline(ssc.sparkContext, delimiter, numFeatures, numIterations, data)
-      CriteoPipeline.saveToDisk(t, pipelineName)
-      t
-    }
-
-    new ContinuousDeploymentQualityAnalysis(history = inputPath,
-      streamBase = streamBase,
-      evaluationPath = s"$evaluationPath",
-      resultPath = s"$resultPath/continuous",
-      samplingRate = samplingRate,
-      slack = slack,
-      daysToProcess = days,
-      windowSize = dayDuration).deploy(ssc, continuous)
+//    val continuous = if (Files.exists(Paths.get(pipelineName))) {
+//      CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)
+//    } else {
+//      val t = getPipeline(ssc.sparkContext, delimiter, numFeatures, numIterations, data)
+//      CriteoPipeline.saveToDisk(t, pipelineName)
+//      t
+//    }
+//
+//    new ContinuousDeploymentQualityAnalysis(history = inputPath,
+//      streamBase = streamBase,
+//      evaluationPath = s"$evaluationPath",
+//      resultPath = s"$resultPath/continuous",
+//      samplingRate = samplingRate,
+//      slack = slack,
+//      daysToProcess = days,
+//      windowSize = dayDuration).deploy(ssc, continuous)
 
     val periodical = CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)
 

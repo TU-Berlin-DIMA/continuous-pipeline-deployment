@@ -20,8 +20,8 @@ deploymentTypesPlot =
   theme_bw() + 
   xlab("") + 
   ylab("Total Training Time (s)") + 
-  theme(axis.text=element_text(size=25, color = "black"),
-        axis.title=element_text(size=25, color= "black"),
+  theme(axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=30, color= "black"),
         legend.position = "none",
         panel.border = element_rect(colour = "black", fill=NA, size=3)) 
 
@@ -46,8 +46,8 @@ optimizationsPlot =
   theme_bw() + 
   xlab("") + 
   ylab("Total Training Time (s)") + 
-  theme(axis.text=element_text(size=25, color = "black"),
-        axis.title=element_text(size=25, color= "black"),
+  theme(axis.text=element_text(size=30, color = "black"),
+        axis.title=element_text(size=30, color= "black"),
         panel.border = element_rect(colour = "black", fill=NA, size=3)) 
 
 ggsave(optimizationsPlot , filename = 'training-time/local/criteo-training-time-optimizations-experiment.eps', 
