@@ -66,7 +66,8 @@ object Quality {
       samplingRate = samplingRate,
       slack = slack,
       daysToProcess = days,
-      windowSize = dayDuration).deploy(ssc, continuous)
+      windowSize = dayDuration
+    ).deploy(ssc, continuous)
 
     val periodical = CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)
 

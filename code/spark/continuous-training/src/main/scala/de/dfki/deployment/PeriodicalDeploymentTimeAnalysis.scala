@@ -36,7 +36,7 @@ class PeriodicalDeploymentTimeAnalysis(val history: String,
       copyPipeline.model.setNumIterations(numIterations)
       // construct the data from day 0 to day i
       val data = streamingContext.sparkContext.union(rdds.slice(0, i + 1))
-      logger.info(s"scheduling a training for days [${(0 to i +1).mkString(",")}]")
+      logger.info(s"scheduling a training for days [${rdds.slice(0, i + 1).length}]")
       // update and store update time
       val start = System.currentTimeMillis()
       copyPipeline.updateTransformTrain(data)

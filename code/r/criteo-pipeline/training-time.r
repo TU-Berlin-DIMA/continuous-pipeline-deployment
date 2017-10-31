@@ -6,16 +6,16 @@ library(gridExtra)
 library(grid)
 
 #local
-cUpdate = sum(read.csv('training-time/local/continuous/100/update', header = FALSE, col.names = c('c_update')))/1000
-cTransform = sum(read.csv('training-time/local/continuous/100/transform', header = FALSE, col.names = c('c_transform')))/1000
-cTrain = sum(read.csv('training-time/local/continuous/100/train', header = FALSE, col.names = c('c_train')))/1000
-pTotal = sum(read.csv('training-time/local/periodical/total', header = FALSE, col.names = c('p_total')))/1000
+#cUpdate = sum(read.csv('training-time/local/continuous/100/update', header = FALSE, col.names = c('c_update')))/1000
+#cTransform = sum(read.csv('training-time/local/continuous/100/transform', header = FALSE, col.names = c('c_transform')))/1000
+#cTrain = sum(read.csv('training-time/local/continuous/100/train', header = FALSE, col.names = c('c_train')))/1000
+#pTotal = sum(read.csv('training-time/local/periodical/total', header = FALSE, col.names = c('p_total')))/1000
 
 #cluster
-#cUpdate = sum(read.csv('training-time/cluster/continuous/1440/update', header = FALSE, col.names = c('c_update')))/1000
-#cTransform = sum(read.csv('training-time/cluster/continuous/1440/transform', header = FALSE, col.names = c('c_transform')))/1000
-#cTrain = sum(read.csv('training-time/cluster/continuous/1440/train', header = FALSE, col.names = c('c_train')))/1000
-#pTotal = sum(read.csv('training-time/cluster/periodical/total', header = FALSE, col.names = c('p_total')))/1000
+cUpdate = sum(read.csv('training-time/cluster/continuous/1440/update', header = FALSE, col.names = c('c_update')))/1000
+cTransform = sum(read.csv('training-time/cluster/continuous/1440/transform', header = FALSE, col.names = c('c_transform')))/1000
+cTrain = sum(read.csv('training-time/cluster/continuous/1440/train', header = FALSE, col.names = c('c_train')))/1000
+pTotal = sum(read.csv('training-time/cluster/periodical/total', header = FALSE, col.names = c('p_total')))/1000
 
 deploymentTypes = data.frame(types = c('Continuous', 'Periodical'),time =  c(cTrain+cTransform+cUpdate,  pTotal))
 
@@ -52,9 +52,9 @@ optimizationsPlot =
         panel.border = element_rect(colour = "black", fill=NA, size=3)) 
 
 #local
-ggsave(deploymentTypesPlot , filename = 'training-time/local/criteo-training-time-deployment-types-experiment.eps', device = 'eps', width = 12, height = 6,    units = "in")
-ggsave(optimizationsPlot , filename = 'training-time/local/criteo-training-time-optimizations-experiment.eps', device = 'eps', width = 12, height = 6, units = "in")
+#ggsave(deploymentTypesPlot , filename = 'training-time/local/criteo-training-time-deployment-types-experiment.eps', device = 'eps', width = 12, height = 6,    units = "in")
+#ggsave(optimizationsPlot , filename = 'training-time/local/criteo-training-time-optimizations-experiment.eps', device = 'eps', width = 12, height = 6, units = "in")
 
 #cluster
-#ggsave(deploymentTypesPlot , filename = 'training-time/cluster/criteo-training-time-deployment-types-experiment.eps', device = 'eps', width = 12, height = 6, units = "in")
-#ggsave(optimizationsPlot , filename = 'training-time/cluster/criteo-training-time-optimizations-experiment.eps', device = 'eps', width = 12, height = 6, units = "in")
+ggsave(deploymentTypesPlot , filename = 'training-time/cluster/criteo-training-time-deployment-types-experiment.eps', device = 'eps', width = 12, height = 6, units = "in")
+ggsave(optimizationsPlot , filename = 'training-time/cluster/criteo-training-time-optimizations-experiment.eps', device = 'eps', width = 12, height = 6, units = "in")

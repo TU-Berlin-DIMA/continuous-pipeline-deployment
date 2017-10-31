@@ -145,11 +145,10 @@ Using a daily training approach, any unseen features that arrive at the system a
 
 
 \subsection{Total Training Time}
-\todo[inline]{fix the numbers of cluster experiments}
 In this section, the total training time for continuous and periodical deployment approaches are measured.
 The total training time includes the time spent in pre-processing the training and model training.
 Figure \ref{fig:training-time-deployment} shows the total time the deployment platform spends in training the Criteo pipeline for different deployment approaches.
-Using continuous training, the time spent in training is almost a fifth of the time for periodical training.
+Using continuous training, the time spent in training is smaller than that periodical training by a factor of $4.5$.
 This is due to the large of amount of redundant data processing and model training that exists in periodical deployment approach.
 In periodical deployment, the underlying pipeline is trained from scratch every day, which includes ingesting the data stored on disk, performing the data transformation steps of the pipeline and finally training the model using the transformed data.
 However, in continuous training, the pipeline is incrementally updated when new data arrives at the system.
