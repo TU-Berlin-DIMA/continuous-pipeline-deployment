@@ -56,7 +56,7 @@ class ContinuousDeploymentTimeAnalysis(val history: String,
       var end = System.currentTimeMillis()
       val updateTime = end - start
 
-      storeTrainingTimes(updateTime, resultPath, "update")
+      storeTrainingTimes(updateTime, s"$resultPath/$windowSize", "update")
 
       if (time % slack == 0) {
 
@@ -68,20 +68,20 @@ class ContinuousDeploymentTimeAnalysis(val history: String,
         transformed.count()
         end = System.currentTimeMillis()
         val transformTime = end - start
-        storeTrainingTimes(transformTime, resultPath, "transform")
+        storeTrainingTimes(transformTime, s"$resultPath/$windowSize", "transform")
 
         // train and store train time
         start = System.currentTimeMillis()
         pipeline.train(transformed)
         end = System.currentTimeMillis()
-        storeTrainingTimes(transformTime, resultPath, "train")
+        storeTrainingTimes(transformTime, s"$resultPath/$windowSize", "train")
 
         transformed.unpersist(true)
       }
-      time += 1
-      if (time > windowSize && windowSize != -1) {
-        processedRDD(time - windowSize).unpersist(blocking = true)
+      if (time > (windowSize + slack) && windowSize != -1) {
+        processedRDD(time - (windowSize + slack)).unpersist(blocking = true)
       }
+      time += 1
     }
     processedRDD.foreach {
       r => r.unpersist(true)

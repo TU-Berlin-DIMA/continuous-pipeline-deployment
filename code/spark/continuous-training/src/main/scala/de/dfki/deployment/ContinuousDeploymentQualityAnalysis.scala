@@ -57,10 +57,10 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
         trainingData.unpersist()
         evaluateStream(pipeline, testData, resultPath, windowSize.toString)
       }
-      time += 1
       if (time > windowSize && windowSize != -1) {
-        processedRDD(time - windowSize).unpersist(blocking = true)
+        //processedRDD(time - windowSize).unpersist(blocking = true)
       }
+      time += 1
     }
     processedRDD.foreach {
       r => r.unpersist(true)

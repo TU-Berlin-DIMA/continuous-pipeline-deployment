@@ -60,7 +60,11 @@ abstract class Deployment {
     val start = if (day == -1) 0 else {
       math.max(0, history - day)
     }
-    if (samplingRate == 0.0) {
+    if(day == 0){
+      logger.info(s"Sampling window size is $day, returning only the recent items")
+      spark.union(processedRDD.slice(history, now))
+    }
+    else if (samplingRate == 0.0) {
       spark.union(processedRDD.slice(history, now))
     } else {
       logger.info(s"Sampling window: ($start --> $history), returning a sample of historical data + all the recent items")

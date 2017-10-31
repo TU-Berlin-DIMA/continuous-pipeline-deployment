@@ -59,6 +59,7 @@ For every pipeline and dataset, the users have to evaluate the performance of th
 \end{figure}
 
 \subsection{Sampling Methods}
+\todo[inline]{fix the numbers of cluster experiments}
 In this section, we discuss the effects of different sampling modes on the quality of the deployed model.
 Figure \ref{fig:sampling-mode-quality} shows how different sampling approaches during the continuous training of the Criteo pipeline affects the logistic loss error rate.
 Different windows sizes affect the stability of the model quality.
@@ -142,16 +143,17 @@ Using a daily training approach, any unseen features that arrive at the system a
 
 
 \subsection{Total Training Time}
+\todo[inline]{fix the numbers of cluster experiments}
 In this section, the total training time for continuous and periodical deployment approaches are measured.
 The total training time includes the time spent in pre-processing the training and model training.
 Figure \ref{fig:training-time-deployment} shows the total time the deployment platform spends in training the Criteo pipeline for different deployment approaches.
-Using continuous training, the time spent in training is almost a third of periodical training.
+Using continuous training, the time spent in training is almost a fifth of the time for periodical training.
 This is due to the large of amount of redundant data processing and model training that exists in periodical deployment approach.
 In periodical deployment, the underlying pipeline is trained from scratch every day, which includes ingesting the data stored on disk, performing the data transformation steps of the pipeline and finally training the model using the transformed data.
 However, in continuous training, the pipeline is incrementally updated when new data arrives at the system.
 Moreover, the total training time can be further reduced in the continuous training approach by switching on the online statistics update and materialization optimizations.
 Figure \ref{fig:training-time-optimization} shows the effect each optimizations on the continuous training approach.
-Using materialized data, the total training time is furthered reduced by a factor of 3.
+Using materialized data, the total training time is furthered reduced by a factor of 4.
 Using statistics update and materialization enables us to process and materialize the data and update the pipeline components in real-time.
 As a result, proactive training accesses the materialized data and can directly train the model and skip the data transformation steps of the pipeline.
 
@@ -179,6 +181,7 @@ Therefore, the users of the system have to ensure that the space requirement of 
 
 
 \subsection{Proactive Training}
+\todo[inline]{fix the numbers of cluster experiments}
 I this section, we analyze the logistic loss error of the model attains using continuous training approach (proactive training) and compare to a model that is trained periodically.
 Figure \ref{fig:loss-proactive-vs-daily} shows the result of our proactive training approach on the Criteo pipeline.
 

@@ -41,8 +41,8 @@ class CriteoPipeline(@transient var spark: SparkContext,
   override def update(data: RDD[String]) = {
     val parsedData = fileReader.transform(spark, data)
     val filledData = missingValueImputer.transform(spark, parsedData)
-    val scaledData = standardScaler.updateAndTransform(spark, filledData)
-    oneHotEncoder.update(spark, scaledData)
+    val scaledData = standardScaler.update(spark, filledData)
+   //oneHotEncoder.update(spark, scaledData)
   }
 
   override def transform(data: RDD[String]): RDD[LabeledPoint] = {
