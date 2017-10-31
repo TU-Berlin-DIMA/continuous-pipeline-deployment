@@ -28,7 +28,7 @@ class PeriodicalDeploymentQualityAnalysis(val history: String,
     }
 
     // train from day 1 onward
-    for (i <- 1 to days.length) {
+    for (i <- 1 until days.length) {
       copyPipeline = copyPipeline.newPipeline()
       copyPipeline.model.setNumIterations(numIterations)
       // construct the data from day 0 to day i
