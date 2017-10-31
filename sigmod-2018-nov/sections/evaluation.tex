@@ -28,6 +28,8 @@ Each batch represent one minute of data.
 We use spark streaming to read the data files one by one and stream them through the deployment platform. 
 
 \subsection{Learning Rate Adaptation Method}
+\todo[inline]{fix the numbers after cluster experiments}
+\todo[inline]{another pipeline that has different behavior (maybe a small dataset)}
 In Section \ref{sgd}, we discussed the importance of learning rate tuning for training a model using the Stochastic Gradient Descent optimization method.
 Proactive training is an extension of SGD, therefore the process of tuning the learning rate adaptation method is no different from tuning the it for a normal offline SGD training.
 
@@ -59,24 +61,24 @@ For every pipeline and dataset, the users have to evaluate the performance of th
 \end{figure}
 
 \subsection{Sampling Methods}
-\todo[inline]{fix the numbers of cluster experiments}
+\todo[inline]{another pipeline that has different behavior (maybe a small dataset)}
 In this section, we discuss the effects of different sampling modes on the quality of the deployed model.
 Figure \ref{fig:sampling-mode-quality} shows how different sampling approaches during the continuous training of the Criteo pipeline affects the logistic loss error rate.
 Different windows sizes affect the stability of the model quality.
 For experiments using a sampling window size (entire history, one day, and half a day), first the data is sampled and then the new training data that arrived at the system recently is appended to the sample and used in proactive training.
-Using the entire historical data to make the samples for proactive training results in a logistic error rate that decreases in a steady manner over time.
-However, the error rate of the model after 5 days of continuous training is larger than other sampling approaches.
-Using a limited sampling window size reduces the error rate when compared to sampling the entire historical data, however, the error rate is slightly unstable.
-A larger window size (1 day) results in a more stable error rate and after 5 days of continuous training achieves the lowest error rate when compared with all the other methods.
-When sampling is switched off (window size equals to zero), the error rate is unstable and it sometimes fluctuates by a margin of 0.1.
-When no sample of the historical data is used, the model is only trained using new data, therefore, the changes in the model weight are much larger.
-During the first 3 days of continuous training, the model trained with sampling switched off, results in the lower error rate.
-However, after the 4th of training, the error rate goes up.
+Using the entire historical data to make the samples for proactive training results in a logistic error rate that decreases in a slow manner over time.
+The deployed model is already fully trained on the historical data.
+Therefore, using the historical data in the continuous training of the model has a small impact on the model.
+After two days of continuous training of the model, sampling using the entire history results in the smallest decrease in the error rate as the rate of model adaption to unseen data is very small.
+Using a window size of one day decreases the error rate by around 0.03\% more than when using the entire historical data for sampling.
+Decreasing the window size results in a model with lower logistic error rate.
+In our experiment, using a sampling window size of half a day decreases the error rate by 0.14\% over when using the entire history.
+Disabling sampling completely has the biggest impact on the error rate as it decreases it by 1.3\%.
 
-This experiment shows that the sampling window size affects both the stability and the error rate of the model.
-Larger sampling window sizes, increase the stability of the window at the expense of slower convergence. 
-Smaller sampling window sizes, decrease the error rate, however, the error rate is not stable and with every proactive training, the error rate may slightly go up.
-We use a window size of one day for the rest of our experiments as it leads to a low and stable error rate throughout the deployment process.
+This experiment shows that the sampling window size has a big impact on the quality of the deployed model.
+For Criteo pipeline, the dataset has a stable distribution, which stays the same throughout the course of the experiment.
+As a result, limiting the training to the more recent data exposes the model to newer and unseen data which results in bigger changes (toward convergence) in the weights of the model (e.g., no sampling).
+When the distribution of the incoming training data is stable, using more historical data to continuously train the model has little effect as the combination of historical and new data dampen the effects of the new data on the model and as a result the improvement in the model convergence is very small (e.g., sampling from the entire history).
 
 
 \begin{figure}[h!]
@@ -98,6 +100,7 @@ We use a window size of one day for the rest of our experiments as it leads to a
 
 
 \subsection{Scheduling Policy}
+\todo[inline]{incomplete}
 In this section I will investigate the effect of different scheduling rate.
 From the simulation I will check the quality for 10 minute and one hour interval and compare the quality to the daily training.
 Then I will use the formula in chapter 3 to do the scheduling and compare the quality of the model using that approach.
@@ -139,7 +142,6 @@ Using a daily training approach, any unseen features that arrive at the system a
 \caption{Criteo categorical feature size over time}
 \label{fig:criteo-feature-discovery}
 \end{figure}
-
 
 
 \subsection{Total Training Time}

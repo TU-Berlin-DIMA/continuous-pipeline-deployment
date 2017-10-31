@@ -20,7 +20,7 @@ plot =
   geom_point(data = mlp, aes(x = time, y = value, colour = variable), shape = 16, size = 5) +
   theme_bw() + 
   xlab("") + 
-  scale_x_continuous(name ="Time",
+  scale_x_continuous(name ="\nTime",
                      breaks = c(0,20,40,60, 80,100),
                      labels=c("Deployment","Day 1","Day 2","Day 3", "Day 4","Day 5")) +
   scale_color_manual(values = groupColors, 
