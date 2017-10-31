@@ -148,13 +148,13 @@ Using a daily training approach, any unseen features that arrive at the system a
 In this section, the total training time for continuous and periodical deployment approaches are measured.
 The total training time includes the time spent in pre-processing the training and model training.
 Figure \ref{fig:training-time-deployment} shows the total time the deployment platform spends in training the Criteo pipeline for different deployment approaches.
-Using continuous training, the time spent in training is smaller than that periodical training by a factor of $4.5$.
+Using continuous training, the time spent in training is smaller than that OF periodical training by a factor of $5$.
 This is due to the large of amount of redundant data processing and model training that exists in periodical deployment approach.
 In periodical deployment, the underlying pipeline is trained from scratch every day, which includes ingesting the data stored on disk, performing the data transformation steps of the pipeline and finally training the model using the transformed data.
 However, in continuous training, the pipeline is incrementally updated when new data arrives at the system.
 Moreover, the total training time can be further reduced in the continuous training approach by switching on the online statistics update and materialization optimizations.
 Figure \ref{fig:training-time-optimization} shows the effect each optimizations on the continuous training approach.
-Using materialized data, the total training time is furthered reduced by a factor of 4.
+Using materialized data, the total training time is further reduced by a factor of 18.
 Using statistics update and materialization enables us to process and materialize the data and update the pipeline components in real-time.
 As a result, proactive training accesses the materialized data and can directly train the model and skip the data transformation steps of the pipeline.
 
