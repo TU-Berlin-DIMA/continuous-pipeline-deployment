@@ -74,7 +74,8 @@ class ContinuousDeploymentTimeAnalysis(val history: String,
         start = System.currentTimeMillis()
         pipeline.train(transformed)
         end = System.currentTimeMillis()
-        storeTrainingTimes(transformTime, s"$resultPath/$windowSize", "train")
+        val trainTime = end - start
+        storeTrainingTimes(trainTime, s"$resultPath/$windowSize", "train")
 
         transformed.unpersist(true)
       }

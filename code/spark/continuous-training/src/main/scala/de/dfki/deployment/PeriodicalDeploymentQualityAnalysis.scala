@@ -27,7 +27,8 @@ class PeriodicalDeploymentQualityAnalysis(val history: String,
         rdd
     }
 
-    for (i <- daysToProcess.indices) {
+    // train from day 1 onward
+    for (i <- 1 to days.length) {
       copyPipeline = copyPipeline.newPipeline()
       copyPipeline.model.setNumIterations(numIterations)
       // construct the data from day 0 to day i
