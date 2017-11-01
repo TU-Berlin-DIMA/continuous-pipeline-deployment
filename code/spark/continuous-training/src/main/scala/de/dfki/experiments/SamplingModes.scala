@@ -22,8 +22,8 @@ object SamplingModes {
   val DELIMITER = ","
   val NUM_FEATURES = 3000
   val NUM_ITERATIONS = 1
-  val SLACK = 5
-  val DAYS = "1,2"
+  val SLACK = 10
+  val DAYS = "1"
   val SAMPLING_RATE = 0.1
   val DAY_DURATION = 100
 

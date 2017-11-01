@@ -41,14 +41,16 @@ When new training data becomes available, the data manager appends the incoming 
 Moreover, the incoming training data is forwarded to the pipeline manager to update the statistics required by the pipeline components.
 
 When a new proactive training is scheduled to run, the data manager is responsible for providing the batch of training data.
-A window size parameter specifies the amount of historical data that are to be sampled in the next proactive training.
-Extreme values of the window size parameter are infinity, which means the data manager will sample the entire historical data and zero, which indicates that no historical data is used for proactive training.
+The data manager provides two different sampling approaches.
+A simple random sampling technique that creates a random sample from the entire historical data and a time-based sampling technique that creates a random sample from a given time interval.
+The data manager also allows for the interval to be of length zero, which indicates no sampling will be performed.
 After the sample is assembled, the recent training data is appended to the sample and the combination is provided to pipeline manager for next proactive training process.
 
-Using zero or a small sampling window size uses more recent training data for training the model as compared to larger or infinity window size.
-Different use cases may require different window size.
-If older data are irrelevant to the training of the pipeline, setting window size to smaller values adapts the model to the newer data faster.
-However, the incoming training data is not time-dependent, setting the sampling window size to larger or even infinity results in more stable models.
+The time-based sampling approach enables the proactive trainer to train the pipeline using more recent training data.
+In many of the real world use cases (e.g., e-commerce and online advertising), this is an important feature, as historical data may lose their importance and should not be used in training the pipeline.
+If older data are irrelevant to the training of the pipeline, setting the time interval to a small value adapts the model to the newer data faster.
+However, sometimes the incoming training data is not time-dependent (e.g., image classification of objects).
+In these scenarios, setting the interval length in time-based sampling to a larger or even using the simple random sampling of the entire historical data may be more beneficial.
 In our experiments, we investigate the effect of the different sampling window sizes on the quality of the model.
 
 The data manager also allows for new training datasets to be registered while the model is being served.

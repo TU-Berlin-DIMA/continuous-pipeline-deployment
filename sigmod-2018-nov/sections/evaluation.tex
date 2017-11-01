@@ -62,17 +62,20 @@ For every pipeline and dataset, the users have to evaluate the performance of th
 
 \subsection{Sampling Methods}
 \todo[inline]{another pipeline that has different behavior (maybe a small dataset)}
-In this section, we discuss the effects of different sampling modes on the quality of the deployed model.
-Figure \ref{fig:sampling-mode-quality} shows how different sampling approaches during the continuous training of the Criteo pipeline affects the logistic loss error rate.
-Different windows sizes affect the stability of the model quality.
-For experiments using a sampling window size (entire history, one day, and half a day), first the data is sampled and then the new training data that arrived at the system recently is appended to the sample and used in proactive training.
-Using the entire historical data to make the samples for proactive training results in a logistic error rate that decreases in a slow manner over time.
-The deployed model is already fully trained on the historical data.
-Therefore, using the historical data in the continuous training of the model has a small impact on the model.
-After two days of continuous training of the model, sampling using the entire history results in the smallest decrease in the error rate as the rate of model adaption to unseen data is very small.
-Using a window size of one day decreases the error rate by around 0.03\% more than when using the entire historical data for sampling.
-Decreasing the window size results in a model with lower logistic error rate.
-In our experiment, using a sampling window size of half a day decreases the error rate by 0.14\% over when using the entire history.
+In this section, we evaluate the effect different sampling modes on the quality of the model.
+Figure \ref{fig:sampling-mode-quality} shows how different sampling modes, namely random sampling, time based random sampling, and no sampling, affects quality of the model in Criteo pipeline.
+
+In both random sampling and time based random sampling modes, first the data is sampled and then the new training data that has arrived at the system recently is appended to this sample and used in the proactive training.
+In no sampling mode, only the recently arrived data is used in the proactive training.
+In random sampling approach, the entire historical data is used for creating the sample.
+In this scenario, the logistic error rate decreases in a very slow manner over time.
+Since the deployed model is already fully trained on the historical data, using the historical data in the continuous training of the model does not have a big impact on the model quality.
+
+The time based sampling has a larger impact on the quality of the model.
+We evaluated the quality of the model for one day and half a day time intervals.
+Using an interval of one day decreases the error rate by around 0.03\% more than when using the simple random sampling (entire historical data).
+Moreover, decreasing the interval length results in a model with lower logistic error rate.
+In our experiment, using a time interval of half a day for the time based sampling, results in an error rate that is 0.14\% smaller than when using the simple random sampling. 
 Disabling sampling completely has the biggest impact on the error rate as it decreases it by 1.3\%.
 
 This experiment shows that the sampling window size has a big impact on the quality of the deployed model.
@@ -146,26 +149,28 @@ Using a daily training approach, any unseen features that arrive at the system a
 
 \subsection{Total Training Time}
 In this section, the total training time for continuous and periodical deployment approaches are measured.
-The total training time includes the time spent in pre-processing the training and model training.
-Figure \ref{fig:training-time-deployment} shows the total time the deployment platform spends in training the Criteo pipeline for different deployment approaches.
-Using continuous training, the time spent in training is smaller than that OF periodical training by a factor of $5$.
-This is due to the large of amount of redundant data processing and model training that exists in periodical deployment approach.
-In periodical deployment, the underlying pipeline is trained from scratch every day, which includes ingesting the data stored on disk, performing the data transformation steps of the pipeline and finally training the model using the transformed data.
+The total training time includes the time spent in pre-processing the training data using the pipeline components and training the model.
+Figure \ref{fig:training-time-deployment} shows the total training time of the Criteo pipeline for different deployment approaches.
+Using continuous training, the time spent in training is smaller than that of periodical training by a factor of $5$.
+This is due to the large of amount of redundant data processing and model training that exists in periodical training approach.
+In the periodical training, the underlying pipeline is trained from scratch every day, which includes ingesting the data, performing the data transformation steps of the pipeline and finally training the model using the transformed data.
 However, in continuous training, the pipeline is incrementally updated when new data arrives at the system.
 Moreover, the total training time can be further reduced in the continuous training approach by switching on the online statistics update and materialization optimizations.
 Figure \ref{fig:training-time-optimization} shows the effect each optimizations on the continuous training approach.
-Using materialized data, the total training time is further reduced by a factor of 18.
-Using statistics update and materialization enables us to process and materialize the data and update the pipeline components in real-time.
-As a result, proactive training accesses the materialized data and can directly train the model and skip the data transformation steps of the pipeline.
+By enabling online statistics update, the pipeline components are updated when new training data becomes available.
+Therefore, the proactive trainer does not need to update pipeline components and proceeds to transform the data directly.
+Enabling the online statistics update optimization reduces the total training time by a factor of 3.
+Moreover, enabling both online statistics and materialization allows the proactive trainer to skip the data processing part of the pipeline completely and directly proceeds to the model training, which only accounts for a small fraction of the pipeline.
+Our experiment shows that enabling both online statistics update and materialization reduces the total training time by a factor of $18$, from $8530$ to $470$.
 
 \begin{figure}[h]
-\begin{subfigure}{\columnwidth}
+\begin{subfigure}{\columnwidth/2}
 \centering
 \includegraphics[width=\columnwidth]{../images/experiment-results/criteo-training-time-deployment-types-experiment.eps}
 \caption{Deployment Approaches}
 \label{fig:training-time-deployment}
-\end{subfigure}
-\begin{subfigure}{\columnwidth}
+\end{subfigure}%
+\begin{subfigure}{\columnwidth/2}
 \centering
 \includegraphics[width=\columnwidth]{../images/experiment-results/criteo-training-time-optimizations-experiment.eps}
 \caption{Optimizations}
@@ -177,8 +182,8 @@ As a result, proactive training accesses the materialized data and can directly 
 
 One possible problem with the materialization optimization is the amount of space required to store the materialized dataset.
 Depending on the type of the data processing the size of the materialized data may increase.
-In our experiments, after processing the data using the Criteo pipeline the size of the materialized data increased by a factor of 2.
-Therefore, the users of the system have to ensure that the space requirement of the system is met before turning on the materialization optimization.
+In our experiments, the input data is a combination of Integer and String values, however, after the pre-processing steps of the Criteo pipeline, the data is transformed to large vectors of Double.
+As a result, the size of the materialized data increased by a nearly a factor of 2.
 
 
 \subsection{Proactive Training}

@@ -2,17 +2,17 @@
 \todo[inline]{fix the numbers after the experiments are finished}
 We propose a deployment platform for continuously training machine learning pipelines and models.
 After a machine learning pipeline is designed and initially trained on a dataset, our platform deploys the pipeline and makes it available for answering prediction queries.
-New training data that arrives at the system are stored and used to further update the pipeline component and train the model in a process called proactive training.
 
+We propose a training approach, called proactive training, that uses the combination of historical data and newly arrived data to train the deployed pipeline.
 Proactive training eliminates the need for training new models from scratch.
 To guarantee a model with an acceptable error rate, current deployment approaches require the model and the pipeline to be trained completely from scratch which is a time-consuming and resource-intensive process.
 As a result of the lengthy training process, fresh models cannot be available to the users.
 Proactive training addressing the trade-off between model quality and model freshness and manages to provide fresh models without sacrificing the quality. 
-Moreover, our online statistics optimization and materialization optimizations reduce the training time by a factor 6.
+Moreover, our online statistics optimization and materialization optimizations reduce the training time by a factor $18$.
 We propose a modular design that enables our deployment platform to be integrated with different scalable data processing platforms.
 We implemented a prototype using Apache Spark to evaluate the performance of our deployment platform on large datasets.
 In our experiments, we develop a machine learning pipeline to process and train a logistic regression model over the Criteo click log datasets.
-Our experiments show that our continuous training approach reduces the total training time by a factor 4 when compared to the periodical training of the pipeline.
+Our experiments show that our continuous training approach reduces the total training time by a factor $5$ (without optimization) when compared to the periodical training of the pipeline.
 We demonstrate, how our approach addresses the model freshness requirement, by showing that new features in the Criteo dataset are discovered and used to train the model immediately after they are sent to the deployment system.
 Moreover, we discuss the process of tuning the deployment approach, showing that the same set of parameters that are selected for training the initial pipeline can be used after deployment, during the continuous training.
 

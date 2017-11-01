@@ -3,10 +3,12 @@ package de.dfki.experiments
 import java.io.{File, FileWriter}
 import java.nio.file.{Files, Paths}
 
+import de.dfki.experiments.ParameterSelection.getClass
 import de.dfki.ml.evaluation.LogisticLoss
 import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.utils.CommandLineParser
+import org.apache.log4j.Logger
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -21,6 +23,7 @@ object TrainPipeline {
   val NUM_FEATURES = 30000
   val NUM_ITERATIONS = 1000
   val INCREMENTS = 200
+  @transient lazy val logger = Logger.getLogger(getClass.getName)
 
   def main(args: Array[String]): Unit = {
     val parser = new CommandLineParser(args).parse()
@@ -39,7 +42,7 @@ object TrainPipeline {
 
     val data = spark.textFile(inputPath)
 
-    val pipeline = new CriteoPipeline(spark,
+    var pipeline = new CriteoPipeline(spark,
       delim = delimiter,
       updater = new SquaredL2UpdaterWithAdam(),
       miniBatchFraction = 0.1,
@@ -52,23 +55,29 @@ object TrainPipeline {
     val evaluationData = spark.textFile(evaluationPath).setName("Evaluation Data Set").cache()
 
 
-    var i = 200
+    var i = increment
     while (i <= numIterations) {
-      transformed.cache()
-      pipeline.train(transformed)
-      val results = pipeline.predict(evaluationData)
-
-      val loss = LogisticLoss.logisticLoss(results)
-      println(s"loss_$i = $loss")
-      val file = new File(s"$resultPath/quality")
-      file.getParentFile.mkdirs()
-      val fw = new FileWriter(file, true)
-      try {
-        fw.write(s"$i\t$loss\n")
+      if (Files.exists(Paths.get(s"$resultPath/pipeline_$i"))) {
+        logger.info(s"Pipeline '$resultPath/pipeline_$i'  exists !!!")
+        pipeline = CriteoPipeline.loadFromDisk(s"$resultPath/pipeline_$i", spark)
+        i += increment
+      } else {
+        logger.info(s"Pipeline '$resultPath/pipeline_$i'  Does not exists!!!")
+        transformed.cache()
+        pipeline.train(transformed)
+        val results = pipeline.predict(evaluationData)
+        val loss = LogisticLoss.logisticLoss(results)
+        println(s"loss_$i = $loss")
+        val file = new File(s"$resultPath/quality")
+        file.getParentFile.mkdirs()
+        val fw = new FileWriter(file, true)
+        try {
+          fw.write(s"$i\t$loss\n")
+        }
+        finally fw.close()
+        CriteoPipeline.saveToDisk(pipeline, s"$resultPath/pipeline_$i")
+        i += increment
       }
-      finally fw.close()
-      CriteoPipeline.saveToDisk(pipeline, s"$resultPath/pipeline_$i")
-      i += increment
     }
 
   }

@@ -26,13 +26,13 @@ deploymentTypesPlot =
   theme_bw() + 
   xlab("") + 
   ylab("Total Training Time (s)") + 
-  theme(axis.text=element_text(size=30, color = "black"),
-        axis.title=element_text(size=30, color= "black"),
+  theme(axis.text=element_text(size=40, color = "black"),
+        axis.title=element_text(size=40, color= "black"),
         legend.position = "none",
         panel.border = element_rect(colour = "black", fill=NA, size=3)) 
 
-optimizations = data.frame(types = factor(c('No Optimzation','Statistics Update', 'Materialization'), 
-                                            levels = c('No Optimzation','Statistics Update', 'Materialization')), 
+optimizations = data.frame(types = factor(c('Continuous','Stat Update', 'Materialized'), 
+                                            levels = c('Continuous','Stat Update', 'Materialized')), 
                              time = c(cTrain+cTransform+cUpdate,
                                       cTrain+cTransform, 
                                       cTrain))
@@ -46,9 +46,10 @@ optimizationsPlot =
            width = 1) + 
   theme_bw() + 
   xlab("") + 
-  ylab("Total Training Time (s)") + 
-  theme(axis.text=element_text(size=30, color = "black"),
-        axis.title=element_text(size=30, color= "black"),
+  ylab("") + 
+  theme(axis.text=element_text(size=40, color = "black"),
+        axis.title=element_text(size=40, color= "black"),
+
         panel.border = element_rect(colour = "black", fill=NA, size=3)) 
 
 #local
@@ -56,5 +57,5 @@ optimizationsPlot =
 #ggsave(optimizationsPlot , filename = 'training-time/local/criteo-training-time-optimizations-experiment.eps', device = 'eps', width = 12, height = 6, units = "in")
 
 #cluster
-ggsave(deploymentTypesPlot , filename = 'training-time/cluster/criteo-training-time-deployment-types-experiment.eps', device = 'eps', width = 12, height = 6, units = "in")
-ggsave(optimizationsPlot , filename = 'training-time/cluster/criteo-training-time-optimizations-experiment.eps', device = 'eps', width = 12, height = 6, units = "in")
+ggsave(deploymentTypesPlot , filename = 'training-time/cluster/criteo-training-time-deployment-types-experiment.eps', device = 'eps', width = 12, height = 14, units = "in")
+ggsave(optimizationsPlot , filename = 'training-time/cluster/criteo-training-time-optimizations-experiment.eps', device = 'eps', width = 12, height = 14, units = "in")
