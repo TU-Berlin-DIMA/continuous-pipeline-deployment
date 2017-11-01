@@ -16,11 +16,11 @@ import org.apache.spark.{SparkConf, SparkContext}
 object TrainPipeline {
   val INPUT_PATH = "data/criteo-full/experiments/initial-training/0"
   val EVALUATION_PATH = "data/criteo-full/experiments/evaluation/6"
-  val PIPELINE_PATH = "data/criteo-full/pipelines/test-pipeline/pipeline"
-  val RESULT_PATH = "data/criteo-full/pipelines/test-pipeline/quality"
+  val RESULT_PATH = "data/criteo-full/pipelines/test-pipeline"
   val DELIMITER = ","
   val NUM_FEATURES = 30000
-  val NUM_ITERATIONS = 500
+  val NUM_ITERATIONS = 1000
+  val INCREMENTS = 200
 
   def main(args: Array[String]): Unit = {
     val parser = new CommandLineParser(args).parse()
@@ -29,48 +29,49 @@ object TrainPipeline {
     val delimiter = parser.get("delimiter", DELIMITER)
     val numFeatures = parser.getInteger("features", NUM_FEATURES)
     val numIterations = parser.getInteger("iterations", NUM_ITERATIONS)
-    val pipelinePath = parser.get("pipeline", PIPELINE_PATH)
+    val increment = parser.getInteger("increment", INCREMENTS)
     val resultPath = parser.get("result", RESULT_PATH)
 
-    val conf = new SparkConf().setAppName("Quality Experiment")
+    val conf = new SparkConf().setAppName("Train Pipeline")
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
     val spark = new SparkContext(conf)
 
     val data = spark.textFile(inputPath)
 
-    val pipeline = if (Files.exists(Paths.get(pipelinePath))) {
-      CriteoPipeline.loadFromDisk(pipelinePath, spark)
-    } else {
-      val t = getPipeline(spark, delimiter, numFeatures, numIterations, data)
-      CriteoPipeline.saveToDisk(t, pipelinePath)
-      t
-    }
-
-    val evaluationData = spark.textFile(evaluationPath)
-    val results = pipeline.predict(evaluationData)
-
-    val loss = LogisticLoss.logisticLoss(results)
-    println(s"loss = $loss")
-
-    val file = new File(s"$resultPath")
-    file.getParentFile.mkdirs()
-    val fw = new FileWriter(file, true)
-    try {
-      fw.write(s"$loss\n")
-    }
-    finally fw.close()
-  }
-
-  def getPipeline(spark: SparkContext, delimiter: String, numFeatures: Int, numIterations: Int, data: RDD[String]) = {
     val pipeline = new CriteoPipeline(spark,
       delim = delimiter,
       updater = new SquaredL2UpdaterWithAdam(),
       miniBatchFraction = 0.1,
-      numIterations = numIterations,
+      numIterations = increment,
       numCategories = numFeatures)
-    pipeline.updateTransformTrain(data)
-    pipeline
+    pipeline.update(data)
+
+    val transformed = pipeline.transform(data)
+    transformed.setName("Training Data set")
+    val evaluationData = spark.textFile(evaluationPath).setName("Evaluation Data Set").cache()
+
+
+    var i = 200
+    while (i <= numIterations) {
+      transformed.cache()
+      pipeline.train(transformed)
+      val results = pipeline.predict(evaluationData)
+
+      val loss = LogisticLoss.logisticLoss(results)
+      println(s"loss_$i = $loss")
+      val file = new File(s"$resultPath/quality")
+      file.getParentFile.mkdirs()
+      val fw = new FileWriter(file, true)
+      try {
+        fw.write(s"$i\t$loss\n")
+      }
+      finally fw.close()
+      CriteoPipeline.saveToDisk(pipeline, s"$resultPath/pipeline_$i")
+      i += increment
+    }
+
   }
+
 
 }

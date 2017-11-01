@@ -5,7 +5,7 @@ import java.nio.file.{Files, Paths}
 
 import de.dfki.deployment.{ContinuousDeploymentQualityAnalysis, ContinuousDeploymentTimeAnalysis}
 import de.dfki.ml.evaluation.LogisticLoss
-import de.dfki.ml.optimization.AdvancedUpdaters
+import de.dfki.ml.optimization.{AdvancedUpdaters, SquaredL2UpdaterWithAdam}
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.utils.CommandLineParser
 import org.apache.log4j.Logger
@@ -57,6 +57,8 @@ object ParameterSelection {
     val data = ssc.sparkContext.textFile(inputPath)
     val eval = ssc.sparkContext.textFile(evaluationPath)
 
+
+
     for (u <- updaters) {
       val updater = AdvancedUpdaters.getUpdater(u)
       var criteoPipeline = new CriteoPipeline(ssc.sparkContext,
@@ -65,6 +67,7 @@ object ParameterSelection {
         miniBatchFraction = 0.1,
         numCategories = numFeatures)
       criteoPipeline.update(data)
+      val transformed = criteoPipeline.transform(data)
       var cur = 0
       increments.foreach { iter =>
         val pipelineName = s"$pipelineDirectory/${updater.name}-$iter"
@@ -72,8 +75,9 @@ object ParameterSelection {
           logger.info(s"Pipeline for updater ${updater.name} and Iter $iter exists !!!")
           criteoPipeline = CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)
         } else {
+          transformed.cache()
           criteoPipeline.model.setNumIterations(iter - cur)
-          criteoPipeline.updateTransformTrain(data)
+          criteoPipeline.train(transformed)
           CriteoPipeline.saveToDisk(criteoPipeline, pipelineName)
         }
         val loss = LogisticLoss.logisticLoss(criteoPipeline.predict(eval))
@@ -88,6 +92,7 @@ object ParameterSelection {
           fw.close()
         }
       }
+
       val deployment = new ContinuousDeploymentQualityAnalysis(history = inputPath,
         streamBase = streamPath,
         evaluationPath = evaluationPath,
