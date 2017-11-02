@@ -233,8 +233,14 @@ As a result, the size of the materialized data increases by a factor of 2.
 
 \subsection{Discussion} \label{subsec:discussion}
 Our experiments show that continuous training approach outperforms periodical training of deployed models and pipelines.
-By using proactive training we manage to reduce the average error rate by $1.6\%$ while reducing the training run time by a factor of $5$.
+By using proactive training we manage to reduce the average error rate by $1.6\%$.
+As the amount of existing data increases after each time interval, periodical training requires more training iterations and more advanced techniques to train a model with an acceptable error rate.
+Continuous training does not face the same issue as the periodical training since the existence of more training data does not require a change in the parameters of SGD or more frequent scheduled instances of proactive training. 
+
+Our continuous training approach reduces the total training time by a factor of $5$ after two days of training.
 Moreover, our online statistics computation and data materialization optimizations reduce the total training time by 2 orders of magnitude over the state of the art deployment approaches.
+As the deployment process continuous, the training time for the continuous training approach increases linearly as the frequency of proactive training remains the same.
+However, periodical training has to process larger datasets at the end of each time interval.
 
 The frequent updates that the continuous training approach applies to the deployed model is the main reason for the reduction in error rate.
 These frequent updates enable the model to adapt to the recently unseen data faster.
