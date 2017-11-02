@@ -1,13 +1,15 @@
 \section{Evaluation} \label{evaluation} 
 To evaluate our continuous training approach, we perform several experiments.
-We first describe the setup of our experiments including the computing cluster, the deployed pipeline, and how we simulated a real production environment by streaming a real-world large dataset through our deployment platform.
-First, we discuss the effect of different parameters (learning rate adaptation, sampling strategy, and scheduling rate) on the quality and training time of the model.
-Then, we discuss the effects of proactive training on the quality of the model and compare it to the quality of a model that is trained on a daily basis.
-Finally, we evaluate the effects of online statistics computation and data materialization optimizations on the training time.
+We first describe the setup of our experiments including the computing cluster, the deployed pipeline, and how we simulate a real production environment by streaming a real-world large dataset through our deployment platform.
+First, we discuss the effect of different parameters (learning rate adaptation, sampling strategy, and scheduling policy) on the quality and training time of the model.
+Then, we discuss the effects of proactive training on the quality and freshness of the model and compare them to a model that is trained periodically.
+Finally, we evaluate the training time of the continuous training approach and the effects of online statistics computation and data materialization optimizations on the training time.
 
 \subsection{Setup}\label{subsec:setup}
 We evaluate our deployment method in distributed environment consists of 21 nodes (1 master, 20 slaves).
 Each node is running on an Intel Xeon 2.40 GHz 16 core processor and has 28 GB of dedicated memory for running our prototype.
+We use Apache Spark 2.2.0 running on Hadoop 2.7.
+We use 16 task slots per executor node (a total of 320 slots).
 
 To demonstrate the deployment platform designed the following machine learning pipeline.
 
@@ -16,20 +18,28 @@ The Criteo pipeline consists of 5 operations: input parser, missing value impute
 The Terabyte Criteo click log dataset is used for benchmarking algorithms for clickthrough rate (CTR) prediction \cite{criteo-log}.
 It contains 24 days of user click logs. 
 The dataset contains 13 numerical and 26 categorical features. 
-In all of our experiments, we are using the data from the first 6 days (Day 0 to Day 5) of the Criteo dataset.
+In all of our experiments, we are using the data from the first 3 days (Day 0 to Day 2) of the Criteo dataset.
 Day 0 is used for the initial offline training of the pipeline.
-The data from Day 1 to Day 5 is used as a streaming dataset.
+The data from Day 1 and Day 2 are used as streaming data sources.
 To evaluate the quality of the pipeline, we use a sample of the Day 6 to compute the logistic loss.
 
 \textbf{Criteo Data Simulation.}
-We simulate a production environment by streaming 5 days of the Criteo dataset.
+We simulate a production environment by streaming 2 days of the Criteo dataset.
 The data from each day is divided into 1440 smaller batches and stored on disk.
 Each batch represents one minute of data.
 We use spark streaming to read the data files one by one and stream them through the deployment platform. 
+All the experiments are using day 1 and day 2 as streaming sources unless specified otherwise.
 
 \subsection{Learning Rate Adaptation Method}
 In Section \ref{sgd}, we discussed the importance of learning rate tuning for training a model using the Stochastic Gradient Descent optimization method.
-Proactive training is an extension of SGD, therefore the process of tuning the learning rate adaptation method is no different from tuning it for a normal offline SGD training.
+Proactive training is an extension of SGD, therefore the process of tuning the learning rate adaptation method is no different from tuning it for an offline SGD training.
+
+To find the best learning rate adaptation algorithm, we first train a model using SGD optimization algorithm for 500 iterations using Adadelta, RMSprop, and Adam, three of the state of the art learning rate adaptation techniques.
+After the training, the models (and the pipelines) trained with different learning rate adaptation techniques are deployed.
+We use the first day of the Criteo data to investigate the effect of the learning rate adaptation techniques on Criteo pipeline.
+Figure \ref{fig:criteo-learning-rate} shows the logistic loss error rate of different learning adaptation techniques. 
+During the SGD training phase, we capture the logistic loss on the evaluation dataset after 20, 40, 80, 160, 320, and 500 iterations of training.
+
 
 \begin{figure}[h!]
 \includegraphics[width=\columnwidth]{../images/experiment-results/criteo-learning-rate-experiment.pdf}
@@ -37,31 +47,27 @@ Proactive training is an extension of SGD, therefore the process of tuning the l
 \label{fig:criteo-learning-rate}
 \end{figure}
 
-We first train a model using SGD optimization algorithm for 500 iterations using Adadelta, RMSprop, and Adam, three of the state of the art learning rate adaptation techniques.
-After the training, the models (and the pipelines) trained with different learning rate adaptation techniques are deployed.
-We use the first day of Criteo data to investigate the effect of the learning rate adaptation techniques on Criteo pipeline.
-Figure \ref{fig:criteo-learning-rate} shows the log loss error rate of different learning adaptation techniques. 
-During the SGD training phase, we capture the logistic loss on the evaluation dataset after 20, 40, 80, 160, 320, and 500 iterations.
-
 Adadelta performs very poorly during the offline training phase.
-The Criteo dataset is a complex and high dimensional dataset, where features are a mix of numerical and categorical data types.
-Since categorical features are not standardized, Adadelta is not able to effectively tune the learning rate for a mix standardized and non-standardized features.
-Similar to the offline SGD training, Adadelta performs poorly for proactive training during the deployment.
+The Criteo dataset is a complex and high dimensional data, where features are a mix of numerical and categorical variables.
+Since categorical features are not standardized, Adadelta is not able to effectively tune the learning rate for a mix of standardized and non-standardized features.
+Similar to the offline SGD training, Adadelta performs poorly for proactive training after the model is deployed.
 In fact, the error rate of the model, starting from the 20th iteration to end of day 1, stays almost constant throughout the experiment.
 
-RMSprop manages to reduce error rate on the evaluation data set through the training.
+Unlike Adadelta, RMSprop reduces the error rate on the evaluation dataset through the offline SGD training.
 Before the deployment, the error rate of the model is dropped to $0.48$.
 Similarly, after the deployment, proactive training of the model using RMSprop reduces the error rate by $18\%$.
 
 Adam has the best performance among the evaluated learning rate adaptation techniques.
 Using Adam, the model fully converges after 500 iterations of SGD during the offline training phase.
 After the deployment, the error rate is further reduces by $1.4\%$.
-While the reduction in error rate for Adam is smaller than RMSprop, Adam still outperforms RMSprop after a day of proactive training the model.
+While the reduction in error rate for Adam is smaller than RMSprop, Adam still outperforms RMSprop after a day of proactive training of the model.
 
-This experiment shows that choosing learning rate adaption technique for proactive training is similar to choosing the learning rate adaptation technique for offline SGD.
-A learning rate adaptation technique that performs the best during the offline training of the model also has the best performance for proactive training, when the model is deployed.
+This experiment shows that choosing the process of choosing the learning rate adaption technique for proactive training is similar to the process of choosing it for the offline SGD training.
+A learning rate adaptation technique that performs best during the offline training of the model also has the best performance for proactive training, when the model is deployed.
+
 While Adam performs the best for Criteo pipeline, this does not indicate that Adam is the best learning rate adaptation technique for proactive training for every other pipeline and model.
-For every pipeline and dataset, the users have to evaluate the performance of the different learning rate adaptation techniques during the offline training of the model and chose the best method for both offline and proactive training of the model.
+For every pipeline and dataset, the users have to evaluate the performance of the different learning rate adaptation techniques during the offline training of the model.
+The method that performs best during the offline training also has the best performance for the proactive training.
 
 \subsection{Sampling Methods}
 In this section, we evaluate the effect different sampling modes on the quality of the model.
