@@ -3,4 +3,4 @@
 
 
 # cluster
-/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.experiments.TrainPipeline --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input=hdfs://cloud-11:44000/user/behrouz/criteo/experiments/initial-training/day_0,hdfs://cloud-11:44000/user/behrouz/criteo/experiments/stream/day_1" "result=/share/hadoop/behrouz/experiments/pipelines/day01" "delimiter=\t" "features=3000" "evaluation=hdfs://cloud-11:44000/user/behrouz/criteo/experiments/evaluation/sample_6/" "iterations=2000"
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.experiments.TrainPipeline --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input=hdfs://cloud-11:44000/criteo/day_0,hdfs://cloud-11:44000/criteo/day_1" "result=/share/hadoop/behrouz/experiments/pipelines/day01-adam0.001" "delimiter=\t" "features=3000" "evaluation=hdfs://cloud-11:44000/user/behrouz/criteo/experiments/evaluation/sample_6/" "iterations=2000"

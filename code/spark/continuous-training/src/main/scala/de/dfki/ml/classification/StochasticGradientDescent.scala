@@ -61,10 +61,6 @@ abstract class StochasticGradientDescent[M <: GeneralizedLinearModel](val stepSi
       (Vectors.dense(weightsWithIntercept.toArray.dropRight(1)), weightsWithIntercept.toArray.last)
     }
 
-    // Unpersist cached data
-    if (input.getStorageLevel != StorageLevel.NONE) {
-      input.unpersist(false)
-    }
     createModel(weights, intercept)
   }
 

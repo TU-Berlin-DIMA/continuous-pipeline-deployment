@@ -23,5 +23,7 @@ trait Pipeline extends Serializable {
 
   def updateTransformTrain(data: RDD[String])
 
+  def updateAndTransform(data: RDD[String]): RDD[LabeledPoint]
+
   def newPipeline(): Pipeline
 }

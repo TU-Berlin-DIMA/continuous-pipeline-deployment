@@ -350,9 +350,8 @@ class SquaredL2UpdaterWithAdam(beta1: Double = 0.9,
   var gradientsSquared: BV[Double] = _
   var gradients: BV[Double] = _
 
-  var iterCounter = 1
-
   val eps = 1E-8
+  var iterCounter = 1
 
   override def compute(weightsOld: Vector,
                        gradient: Vector,
@@ -360,7 +359,7 @@ class SquaredL2UpdaterWithAdam(beta1: Double = 0.9,
                        iterDisabled: Int,
                        regParam: Double) = {
     val brzGradient = asBreeze(gradient)
-    val thisIterStepSize = stepSize / sqrt(iterCounter)
+    val thisIterStepSize = stepSize//stepSize / sqrt(iterCounter)
     val size = brzGradient.size
     if (gradientsSquared == null) {
       gradientsSquared = BDV.zeros[Double](size)

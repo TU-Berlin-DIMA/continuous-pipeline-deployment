@@ -2,7 +2,7 @@ package de.dfki.experiments
 
 import java.nio.file.{Files, Paths}
 
-import de.dfki.deployment.{ContinuousDeploymentQualityAnalysis, EntireHistorySampling, PeriodicalDeploymentQualityAnalysis}
+import de.dfki.deployment.ContinuousDeploymentQualityAnalysis
 import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.utils.CommandLineParser

@@ -51,7 +51,19 @@ In many of the real world use cases (e.g., e-commerce and online advertising), t
 If older data are irrelevant to the training of the pipeline, setting the time interval to a small value adapts the model to the newer data faster.
 However, sometimes the incoming training data is not time-dependent (e.g., image classification of objects).
 In these scenarios, setting the interval length in time-based sampling to a larger or even using the simple random sampling of the entire historical data may be more beneficial.
-In our experiments, we investigate the effect of the different sampling window sizes on the quality of the model.
+In our experiments, we investigate the effect of the different sampling approaches on the quality of the model.
+
+To increase the performance of the sampling operation, we utilize data partitioning and multi-stage sampling.
+Upon arrival of new training data, the data manager assembles a partition of the data and creates an index for the partition using the average of the timestamps of the data that resides in the partition.
+If the underlying execution engine allows for in-memory data processing, the data manager stores the partition in memory.
+This allows quick looks ups when performing the sampling, as data belonging to specific time intervals can be accessed directly.
+When time-based sampling technique is used to create a sample of the historical data, the data manager uses a multi-stage sampling technique to speed up the sampling process.
+Based on the specified time interval, the data manager creates a list of the data partitions that belong to the specific time interval.
+Then, in the first stage of the sampling, a sample of the data partitions are created.
+In the second stage of the sampling, the partitions are accessed directly, and from each partition, a sample of the data is created.
+The samples from each partition are combined to assemble the final sample.
+This sample is then passed to the pipeline manager and used for the next proactive training.
+In the experiment section, we analyze the performance of the data partitioning and multi-stage sampling.
 
 The data manager also allows for new training datasets to be registered while the model is being served.
 The new dataset is merged with the existing historical data and immediately becomes available for next proactive training processes.

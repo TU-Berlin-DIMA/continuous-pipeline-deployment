@@ -75,7 +75,6 @@ Our strategy in continuously updating the model is similar to how parameter serv
 Parameter servers use the Stochastic Gradient Descent optimization method to iteratively compute partial updates and push these updates to the model.
 In our solution, we continuously compute the partial updates based on a combination of the existing data and the newly arrived data.
 We then propagate the partial updates to the deployed model.
-\todo{Theoretical bound on the quality?}
 Proactive training increases model freshness without sacrificing the model quality.
 Our experiments show that proactive training of the model achieves more accurate predictions over time and requires fewer resources when compared to the full training of new models.
 

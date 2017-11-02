@@ -3,13 +3,12 @@ package de.dfki.experiments
 import java.io.{File, FileWriter}
 import java.nio.file.{Files, Paths}
 
-import de.dfki.experiments.ParameterSelection.getClass
 import de.dfki.ml.evaluation.LogisticLoss
 import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.utils.CommandLineParser
 import org.apache.log4j.Logger
-import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
 import org.apache.spark.{SparkConf, SparkContext}
 
 /**
@@ -23,6 +22,7 @@ object TrainPipeline {
   val NUM_FEATURES = 30000
   val NUM_ITERATIONS = 1000
   val INCREMENTS = 200
+  val STEP_SIZE = 0.1
   @transient lazy val logger = Logger.getLogger(getClass.getName)
 
   def main(args: Array[String]): Unit = {
@@ -34,6 +34,7 @@ object TrainPipeline {
     val numIterations = parser.getInteger("iterations", NUM_ITERATIONS)
     val increment = parser.getInteger("increment", INCREMENTS)
     val resultPath = parser.get("result", RESULT_PATH)
+    val stepSize = parser.getDouble("step", STEP_SIZE)
 
     val conf = new SparkConf().setAppName("Train Pipeline")
     val masterURL = conf.get("spark.master", "local[*]")
@@ -46,12 +47,13 @@ object TrainPipeline {
       delim = delimiter,
       updater = new SquaredL2UpdaterWithAdam(),
       miniBatchFraction = 0.1,
+      stepSize = stepSize,
       numIterations = increment,
       numCategories = numFeatures)
-    pipeline.update(data)
 
-    val transformed = pipeline.transform(data)
+    val transformed = pipeline.updateAndTransform(data)
     transformed.setName("Training Data set")
+    transformed.persist(StorageLevel.MEMORY_ONLY)
     val evaluationData = spark.textFile(evaluationPath).setName("Evaluation Data Set").cache()
 
 
@@ -63,7 +65,7 @@ object TrainPipeline {
         i += increment
       } else {
         logger.info(s"Pipeline '$resultPath/pipeline_$i'  Does not exists!!!")
-        transformed.cache()
+
         pipeline.train(transformed)
         val results = pipeline.predict(evaluationData)
         val loss = LogisticLoss.logisticLoss(results)
