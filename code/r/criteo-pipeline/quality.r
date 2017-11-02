@@ -22,8 +22,9 @@ plot =
   geom_text( data = periodical[periodical$day == 289, ], aes(x = day, y = Periodical, label = iter),position = position_dodge(width = 1),  hjust = 1.1,  size = 10) +
   theme_bw() +
   xlab("") + 
+  ylab("Logistic Loss") + 
   ylim(c(0.132,0.1375))+
-  scale_x_continuous(name ="\nTime",
+  scale_x_continuous(name ="Time",
                      breaks = c(1,145,289),
                      labels=c("Deployment","Day 1","Day 2")) +
   scale_color_manual(values = groupColors, 

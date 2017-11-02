@@ -14,7 +14,7 @@ proactives = data.frame (ind = 1:288, time = rollapply(update, width = 10, sum, 
 average = data.frame(time = mean(proactives$time))
 
 groupColors <- c(proactive = "#00aedb", average_proactive = "#d11141",scheduled_proactive= '#f37735' )
-groupNames <- c(proactive = "Proactive", average_proactive = "Proactive (AVG)", scheduled_proactive ="Scheduling intervals")
+groupNames <- c(proactive = "Proactive", average_proactive = "Proactive (AVG)", scheduled_proactive ="Scheduling Intervals")
 
 SLACK = 10
 prxpl = 15/60
@@ -29,7 +29,7 @@ plot =
   theme_bw() +
   ylab("Time (s)") +
   xlab("") + 
-  scale_x_continuous(name ="",
+  scale_x_continuous(name ="Time",
                      breaks = c(1,145,289),
                      labels=c("Deployment","Day 1","Day 2")) +
   scale_color_manual(values = groupColors, labels = groupNames) +

@@ -8,10 +8,10 @@ library(grid)
 iterations = c(20,40,80,160,320, 500)
 
 # local
-adam = read.csv('learning-rate/local/adam', header = FALSE, col.names = c('adam'))
-rmsprop = read.csv('learning-rate/local/rmsprop', header = FALSE, col.names = c('rmsprop'))
+#adam = read.csv('learning-rate/local/adam', header = FALSE, col.names = c('adam'))
+#rmsprop = read.csv('learning-rate/local/rmsprop', header = FALSE, col.names = c('rmsprop'))
 #momentum = read.csv('learning-rate/local/momentum', header = FALSE, col.names = c('momentum'))
-adadelta = read.csv('learning-rate/local/adadelta', header = FALSE, col.names = c('adadelta'))
+#adadelta = read.csv('learning-rate/local/adadelta', header = FALSE, col.names = c('adadelta'))
 
 #cluster
 adam = read.csv('learning-rate/cluster/adam/loss', header = FALSE, col.names = c('iter','adam'))
@@ -109,5 +109,5 @@ finalPlot = grid.arrange(arrangeGrob(
 
 ggsave(finalPlot , filename = 'learning-rate/cluster/criteo-learning-rate-experiment.eps', 
        device = 'eps', 
-       width = 10, height = 8, 
+       width = 12, height = 8, 
        units = "in")

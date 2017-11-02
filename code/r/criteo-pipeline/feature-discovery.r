@@ -28,7 +28,7 @@ finalPlot =
     size = 9) +
   #geom_point(data = dailySize, aes(x = dayIndex, y = DayCounts)) + 
   theme_bw() + 
-  scale_x_continuous(name ="\nTime",
+  scale_x_continuous(name ="Time",
                      breaks = c(1,2,3,4,5,6),
                      labels=c("Deployment","Day 1","Day 2","Day 3","Day 4","Day 5")) +
   scale_y_continuous(limits = c(0,dailySize[6,2] + 50000000), 

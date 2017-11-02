@@ -34,7 +34,7 @@ pl =
   geom_line(aes( colour = variable), size = 1.6) + 
   ylab("Logistic Loss") + 
   theme_bw() + 
-  scale_x_continuous(name ="\nTime",
+  scale_x_continuous(name ="Time",
                      breaks = breaks,
                      labels= labels) +
   scale_color_manual(values = groupColors, 

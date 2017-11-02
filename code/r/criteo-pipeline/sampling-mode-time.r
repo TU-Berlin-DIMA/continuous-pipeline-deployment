@@ -24,12 +24,13 @@ times$data_processing = times$data_processing / 61773
 plotTotalTime = 
   ggplot(data = times,aes(x = types, y = total_time)) +
   geom_bar(stat = 'identity',width = 1,colour = '#000000', fill = '#00aedb') +
-  geom_text(aes(label = sprintf("%0.2f", round(total_time, digits = 2))),position = position_dodge(width = 1),  vjust = 1.1,size = 15) + 
+  geom_text(aes(label = sprintf("%0.2f", round(total_time, digits = 2))),position = position_dodge(width = 1),  vjust = 1.2, size = 20) + 
   theme_bw() + 
   xlab("") + 
   ylab("Slow Down Factor") + 
-  theme(axis.text=element_text(size=38, color = "black"),
-        axis.title=element_text(size=38, color= "black"),
+  theme(axis.text=element_text(size=60, color = "black"),
+        axis.title=element_text(size=60, color= "black"),
+        axis.text.x = element_text(size = 60, color ="black", angle = 45, vjust = 0.7, hjust = 0.7),
         legend.position = "none",
         panel.border = element_rect(colour = "black", fill=NA, size=3)) 
 
@@ -37,12 +38,13 @@ plotTotalTime =
 plotProcessingTime = 
   ggplot(data = times,aes(x = types, y = data_processing)) +
   geom_bar(stat = 'identity',width = 1,colour = '#000000', fill = '#d11141') +
-  geom_text(aes(label = sprintf("%0.2f", round(data_processing, digits = 2))),position = position_dodge(width = 1),  vjust = 1.1,size = 15) + 
+  geom_text(aes(label = sprintf("%0.2f", round(data_processing, digits = 2))),position = position_dodge(width = 1),  vjust = 1.2,size = 20) + 
   theme_bw() + 
   xlab("") + 
   ylab("") + 
-  theme(axis.text=element_text(size=38, color = "black"),
-        axis.title=element_text(size=38, color= "black"),
+  theme(axis.text=element_text(size=60, color = "black"),
+        axis.title=element_text(size=60, color= "black"),
+        axis.text.x = element_text(size = 60, color ="black", angle = 45, vjust = 0.7, hjust = 0.7),
         legend.position = "none",
         panel.border = element_rect(colour = "black", fill=NA, size=3)) 
 

@@ -31,7 +31,13 @@ We use spark streaming to read the data files one by one and stream them through
 In Section \ref{sgd}, we discussed the importance of learning rate tuning for training a model using the Stochastic Gradient Descent optimization method.
 Proactive training is an extension of SGD, therefore the process of tuning the learning rate adaptation method is no different from tuning it for a normal offline SGD training.
 
-We first train a model using SGD optimization algorithm for 500 iterations using Adadelta, RMSPROP, and ADAM, three of the state of the art learning rate adaptation techniques.
+\begin{figure}[h!]
+\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-learning-rate-experiment.pdf}
+\caption{Learning rate adaptation techniques for Criteo pipeline}
+\label{fig:criteo-learning-rate}
+\end{figure}
+
+We first train a model using SGD optimization algorithm for 500 iterations using Adadelta, RMSprop, and Adam, three of the state of the art learning rate adaptation techniques.
 After the training, the models (and the pipelines) trained with different learning rate adaptation techniques are deployed.
 We use the first day of Criteo data to investigate the effect of the learning rate adaptation techniques on Criteo pipeline.
 Figure \ref{fig:criteo-learning-rate} shows the log loss error rate of different learning adaptation techniques. 
@@ -43,25 +49,19 @@ Since categorical features are not standardized, Adadelta is not able to effecti
 Similar to the offline SGD training, Adadelta performs poorly for proactive training during the deployment.
 In fact, the error rate of the model, starting from the 20th iteration to end of day 1, stays almost constant throughout the experiment.
 
-RMSPROP manages to reduce error rate on the evaluation data set through the training.
+RMSprop manages to reduce error rate on the evaluation data set through the training.
 Before the deployment, the error rate of the model is dropped to $0.48$.
-Similarly, after the deployment, proactive training of the model using RMSPROP reduces the error rate by $18\%$.
+Similarly, after the deployment, proactive training of the model using RMSprop reduces the error rate by $18\%$.
 
-ADAM has the best performance among the evaluated learning rate adaptation techniques.
-Using ADAM, the model fully converges after 500 iterations of SGD during the offline training phase.
+Adam has the best performance among the evaluated learning rate adaptation techniques.
+Using Adam, the model fully converges after 500 iterations of SGD during the offline training phase.
 After the deployment, the error rate is further reduces by $1.4\%$.
-While the reduction in error rate for ADAM is smaller than RMSPROP, ADAM still outperforms RMSPROP after a day of proactive training the model.
+While the reduction in error rate for Adam is smaller than RMSprop, Adam still outperforms RMSprop after a day of proactive training the model.
 
 This experiment shows that choosing learning rate adaption technique for proactive training is similar to choosing the learning rate adaptation technique for offline SGD.
 A learning rate adaptation technique that performs the best during the offline training of the model also has the best performance for proactive training, when the model is deployed.
-While ADAM performs the best for Criteo pipeline, this does not indicate that ADAM is the best learning rate adaptation technique for proactive training for every other pipeline and model.
+While Adam performs the best for Criteo pipeline, this does not indicate that Adam is the best learning rate adaptation technique for proactive training for every other pipeline and model.
 For every pipeline and dataset, the users have to evaluate the performance of the different learning rate adaptation techniques during the offline training of the model and chose the best method for both offline and proactive training of the model.
-
-\begin{figure}[h!]
-\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-learning-rate-experiment.pdf}
-\caption{Learning rate adaptation technique for Criteo pipeline}
-\label{fig:criteo-learning-rate}
-\end{figure}
 
 \subsection{Sampling Methods}
 In this section, we evaluate the effect different sampling modes on the quality of the model.
@@ -175,7 +175,7 @@ Using a daily training approach, any unseen features that arrive at the system a
 
 
 \subsection{Proactive Training}
-I this section, we evaluate the quality of the deployed model.
+In this section, we evaluate the quality of the deployed model.
 Figure \ref{fig:loss-proactive-vs-daily} shows the logistic loss of the continuous training and periodical approaches on the Criteo pipeline.
 
 After the deployment, the continuous training updates the pipeline and train the model using the incoming training iterations.
@@ -184,7 +184,7 @@ The continuous training approach trains the model over this data within a short 
 
 To measure the performance of periodical training approach, we train the model at the end of every day of the simulation.
 The initial training and periodical training use the same set of parameters required by SGD.
-We use ADAM learning rate adaptation technique and sampling rate of $0.1$ for training the initial and periodical training of the pipeline.
+We use Adam learning rate adaptation technique and sampling rate of $0.1$ for training the initial and periodical training of the pipeline.
 
 The initial deployed model converges after 500 iterations.
 However, after day 1, the amount of data stored data is doubled, and training the model $500$ iterations results in a model that has an error rate of $0.002$ higher than the initial model.
@@ -225,9 +225,9 @@ Moreover, the total training time can be further reduced in the continuous train
 Figure \ref{fig:training-time-optimization} shows the effect each optimizations on the continuous training approach.
 By enabling online statistics update, the pipeline components are updated when new training data becomes available.
 Therefore, the proactive trainer does not need to update pipeline components and proceeds to transform the data directly.
-Enabling the online statistics update optimization reduces the total training time by a factor of 3.
+Enabling the online statistics update optimization reduces the total training time by a factor of $3$.
 Moreover, enabling both online statistics and materialization allows the proactive trainer to skip the data processing part of the pipeline completely and directly proceeds to the model training, which only accounts for a small fraction of the pipeline.
-Our experiment shows that enabling both online statistics update and materialization reduces the total training time by a factor of $18$, from $8530$ to $470$ seconds.
+Our experiment shows that enabling both online statistics update and materialization reduces the total training time by a factor of $18$, from $142$ to $8$ minutes.
 
 \begin{figure}[h]
 \begin{subfigure}{\columnwidth/2}
