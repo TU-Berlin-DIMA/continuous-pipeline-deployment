@@ -34,7 +34,7 @@ All the experiments are using Day 1 and Day 2 as streaming sources unless specif
 In Section \ref{sgd}, we discussed the importance of learning rate tuning for training a model using the Stochastic Gradient Descent (SGD) optimization method.
 Proactive training is an extension of SGD, and therefore the process of tuning the learning rate adaptation method is not different from tuning it for an offline SGD training.
 
-To find the best learning rate adaptation algorithm, we first train a model using SGD optimization algorithm for 500 iterations using Adadelta, RMSprop, and Adam, three of the state of the art learning rate adaptation techniques.
+To find the best learning rate adaptation algorithm, we first train a model using SGD optimization algorithm for 500 iterations using Adadelta, RMSprop, and Adam, three of the state-of-the-art learning rate adaptation techniques.
 After the training, the models (and the pipelines) trained with different learning rate adaptation techniques are deployed.
 We use the first day of the Criteo data to investigate the effect of the learning rate adaptation techniques on the Criteo pipeline.
 Figure \ref{fig:criteo-learning-rate} shows the logistic loss error rate of different learning adaptation techniques. 
@@ -277,7 +277,7 @@ In contrast to the continuous training, in periodical training, new features are
 As a result, the deployment platform discards the newly available features when answering prediction requests until the next training.
 
 The continuous training approach reduces the total training time by a factor of $5$ after two days of training.
-Moreover, the online statistics computation and data materialization optimizations reduce the total training time by 2 orders of magnitude over the state of the art deployment approaches.
+Moreover, the online statistics computation and data materialization optimizations reduce the total training time by 2 orders of magnitude over the state-of-the-art deployment approaches.
 After the model is deployed, the training time for the continuous training approach stays constant as the frequency of proactive training remains the same.
 However, periodical training has to process larger datasets at the end of each time interval which leads to the large difference in total training time between continuous and periodical training.
 
