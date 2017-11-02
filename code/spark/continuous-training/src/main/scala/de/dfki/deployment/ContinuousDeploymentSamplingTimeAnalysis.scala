@@ -30,8 +30,6 @@ class ContinuousDeploymentSamplingTimeAnalysis(val history: String,
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     // create rdd of the initial data that the pipeline was trained with
-
-
     val streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](streamingContext, streamBase, days = daysToProcess)
 
     var processedRDD: ListBuffer[RDD[String]] = new ListBuffer[RDD[String]]()
@@ -50,38 +48,41 @@ class ContinuousDeploymentSamplingTimeAnalysis(val history: String,
     }
 
     val start = System.currentTimeMillis()
-    var count = 0
+    var processTime = 0L
     var time = 1
     while (time < iter) {
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
       rdd.setName(s"Stream Day 2-$time")
       val rand = new Random(System.currentTimeMillis())
-
       val nextBatch = if (samplingRate == 0.0) {
         logger.info("Sampling rate is 0.0")
-        count += 1
+        val s = System.currentTimeMillis()
         rdd.setName("Next Batch").cache().count()
+        val e = System.currentTimeMillis()
+        processTime += (e - s)
         rdd
       } else if (windowSize == -1) {
         logger.info("Entire history")
         val lists = processedRDD.filter(a => rand.nextDouble() < samplingRate).toList
         logger.info(s"returning ${lists.size} out of ${processedRDD.size}")
-        count += (lists.size + 1)
         val r = streamingContext.sparkContext.union(rdd :: lists).setName("Next Batch").cache()
+        val s = System.currentTimeMillis()
         r.count()
+        val e = System.currentTimeMillis()
+        processTime += (e - s)
         r
       } else {
         val now = processedRDD.size
         val history = processedRDD.slice(now - windowSize, now).filter(a => rand.nextDouble() < samplingRate).toList
         logger.info(s"returning ${history.size} out of ${processedRDD.size}")
-        count += (history.size + 1)
         val r = streamingContext.sparkContext.union(rdd :: history).setName("Next Batch").cache()
+        val s = System.currentTimeMillis()
         r.count()
+        val e = System.currentTimeMillis()
+        processTime += (e - s)
         r
       }
-      val transformed = pipeline.transform(nextBatch)
-      pipeline.train(transformed)
-      nextBatch.unpersist()
+      nextBatch.unpersist(true)
       processedRDD += rdd
       time += 1
     }
@@ -89,13 +90,13 @@ class ContinuousDeploymentSamplingTimeAnalysis(val history: String,
     val trainTime = end - start
     if (samplingRate == 0.0) {
       storeTrainingTimes(trainTime, s"$resultPath/no-sampling/time")
-      storeTrainingTimes(count, s"$resultPath/no-sampling/partitions")
+      storeTrainingTimes(processTime, s"$resultPath/no-sampling/data-processing")
     } else if (windowSize == -1) {
       storeTrainingTimes(trainTime, s"$resultPath/entire-history/time")
-      storeTrainingTimes(count, s"$resultPath/entire-history/partitions")
+      storeTrainingTimes(processTime, s"$resultPath/entire-history/data-processing")
     } else {
       storeTrainingTimes(trainTime, s"$resultPath/$windowSize/time")
-      storeTrainingTimes(count, s"$resultPath/$windowSize/partitions")
+      storeTrainingTimes(processTime, s"$resultPath/$windowSize/data-processing")
     }
     processedRDD.foreach(_.unpersist(true))
   }

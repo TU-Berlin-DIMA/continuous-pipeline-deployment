@@ -3,4 +3,6 @@
 
 
 # cluster
-/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.experiments.SamplingModeTime --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input=hdfs://cloud-11:44000/user/behrouz/criteo/experiments/initial-training/day_0" "stream=hdfs://cloud-11:44000/user/behrouz/criteo/experiments/stream" "result=/share/hadoop/behrouz/experiments/criteo-full/sampling-mode-time" "delimiter=\t" "features=3000" "slack=1" "days=1,2,3" "sample=0.1" "day_duration=1440" "iter=10" "mode=history"
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.experiments.SamplingModeTime --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input=hdfs://cloud-11:44000/user/behrouz/criteo/experiments/initial-training/day_0" "stream=hdfs://cloud-11:44000/user/behrouz/criteo/experiments/stream" "result=/share/hadoop/behrouz/experiments/criteo-full/sampling-mode-time-final" "delimiter=\t" "features=3000" "slack=1" "days=1,2,3" "sample=0.1" "day_duration=1440" "iter=10" "mode=history"
+
+scp -r behrouz@cloud-11.dima.tu-berlin.de:/share/hadoop/behrouz/experiments/criteo-full/sampling-mode-time-final/ /Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/criteo-full/sampling-mode-time/cluster/

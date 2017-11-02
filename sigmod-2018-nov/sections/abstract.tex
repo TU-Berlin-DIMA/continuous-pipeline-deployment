@@ -10,6 +10,5 @@ We propose a novel continuous training approach, for deployed pipelines and mode
 Our approach is similar to how parameter servers are used to train large machine learning models, where several computing nodes calculate partial updates and push them to the model.
 In our approach, we compute partial updates as new training data becomes available and propagate the partial updates to the deployed model without requiring a redeployment.
 Moreover, we further decrease the training time by computing statistics during model serving.
-In our experiments, we show that our continuous training approach updates the model more frequently while using fewer resources which results in more accurate predictions.
-\todo{quantify this}
+In our experiments, we show that our continuous training approach updates the model more frequently while using fewer resources which results in an improvement of $1.6\%$ in error rate and up to $2$ orders of magnitude faster than state of the art deployment approaches.
 \end{abstract}

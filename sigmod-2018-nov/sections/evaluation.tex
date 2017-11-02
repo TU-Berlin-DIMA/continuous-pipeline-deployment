@@ -87,7 +87,6 @@ For Criteo pipeline, the dataset has a stable distribution, which stays the same
 As a result, limiting the training to the more recent data exposes the model to newer and unseen data which results in bigger changes (toward convergence) in the weights of the model (e.g., no sampling).
 When the distribution of the incoming training data is stable, using more historical data to continuously train the model has little effect as the combination of historical and new data dampen the effects of the new data on the model and as a result the improvement in the model convergence is very small (e.g., sampling from the entire history).
 
-
 \begin{figure}[h!]
 \centering
 \includegraphics[width=\columnwidth]{../images/experiment-results/criteo-sampling-mode-experiments.eps}
@@ -96,13 +95,34 @@ When the distribution of the incoming training data is stable, using more histor
 \vspace{2mm}
 \end{figure}
 
-\begin{figure}[h!]
+\begin{figure}[h]
+\begin{subfigure}{\columnwidth/2}
 \centering
-\includegraphics[width=\columnwidth]{../images/placeholder.jpeg}
-\caption{Effect of Sampling mode on time}
-\label{fig:sampling-mode-time}
+\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-sampling-total-experiment.eps}
+\caption{Total time}
+\label{fig:sampling-mode-total-time}
+\end{subfigure}%
+\begin{subfigure}{\columnwidth/2}
+\centering
+\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-sampling-data-experiment.eps}
+\caption{Data processing time}
+\label{fig:sampling-mode-data-time}
+\end{subfigure}
 \vspace{2mm}
+\caption{Slow down factor of different sampling approaches}
+\label{fig:sampling-mode-time}
 \end{figure}
+
+Figure \ref{fig:sampling-mode-time} shows the effect of different sampling methods on the training time of the pipeline.
+Figure \ref{fig:sampling-mode-total-time} shows that using time-based sampling (intervals of one and half a day) and simple random sampling (the entire history) increases the total training time by a factor of $2.13$ to $2.73$ over when no sampling is performed.
+However, the slow down in training time is not due to the sampling operations.
+To demonstrate this, for each sampling method, we also capture the amount of time the deployment platform spends in processing the data after the sample is provided by the data manager.
+The slow down factor for both data processing and the total time is almost identical.
+This demonstrates that our data manager is able to provide the samples (either from a limited time interval or the entire history) very efficiently without inuring additional overhead.
+
+The data manager partitions the incoming data and stores the partitions using a time stamp.
+When a sample is required, the data manager directly samples the partitions instead of the actual data point.
+This technique allows us to perform time-based and simple random sampling without requiring a scan of the data.
 
 \subsection{Scheduling Policy}
 In this section, we analyze the scheduling policy of our deployment platform.
@@ -231,7 +251,6 @@ Depending on the type of the data processing the size of the materialized data m
 In our experiments, the input data is a combination of Integer and String values, however, after the pre-processing steps of the Criteo pipeline, the data is transformed to large vectors of Double.
 As a result, the size of the materialized data increases by a factor of 2.
 
-
 \subsection{Discussion} \label{subsec:discussion}
 Our experiments show that continuous training approach outperforms periodical training of deployed models and pipelines.
 By using proactive training we manage to reduce the average error rate by $1.6\%$.
@@ -253,9 +272,10 @@ Proactive training is an extension of SGD optimization algorithm, where during e
 Therefore, tuning proactive training is similar to the process of tuning SGD.
 In our experiments, we show that the learning rate adaptation technique that works best with SGD during the offline training also results in the lowest error rate when used in the proactive training.
 
-We show that how different sampling modes (simple random sampling, time-based sampling, and no sampling) affect the quality of the model.
-Moreover, we use data partitioning and multi-stage sampling techniques to increase the efficiency of sampling operations.
-Our experiments show that the multi-stage sampling technique can effectively provide samples from different time intervals while incurring a small overhead.
+We show that our scheduling policy can effectively execute the proactive training and dynamically adapt to changes in the rate of incoming data, prediction latency, proactive training time, and sudden data surges.
+We also demonstrate that how different sampling modes (simple random sampling, time-based sampling, and no sampling) affect the quality of the model.
+Moreover, we use a data partitioning techniques to increase the efficiency of sampling operations.
+Our experiments show that the using the data partitioning technique can effectively provide samples from different time intervals while incurring a small overhead.
 
 
 
