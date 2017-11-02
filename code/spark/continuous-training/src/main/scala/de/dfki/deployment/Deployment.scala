@@ -62,6 +62,7 @@ abstract class Deployment {
     }
     if(day == 0){
       logger.info(s"Sampling window size is $day, returning only the recent items")
+      logger.info(s"${processedRDD.slice(history, now).size} items")
       spark.union(processedRDD.slice(history, now))
     }
     else if (samplingRate == 0.0) {

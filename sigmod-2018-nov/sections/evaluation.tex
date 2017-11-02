@@ -67,8 +67,10 @@ For every pipeline and dataset, the users have to evaluate the performance of th
 \subsection{Sampling Methods}
 \todo[inline]{another pipeline that has different behavior (maybe a small dataset)}
 In this section, we evaluate the effect different sampling modes on the quality of the model.
-Figure \ref{fig:sampling-mode-quality} shows how different sampling modes, namely random sampling, time-based random sampling, and no sampling, affects the quality of the model in Criteo pipeline.
+We use a sampling rate of $0.1\%$ for all the experiments where sampling is performed.
+This sampling rate is chosen to be equal to the sampling rate used during the initial offline SGD training of the model.
 
+Figure \ref{fig:sampling-mode-quality} shows how different sampling modes, namely random sampling, time-based random sampling, and no sampling, affects the quality of the model in Criteo pipeline.
 In both random sampling and time based random sampling modes, first the data is sampled and then the new training data that has arrived at the system recently is appended to this sample and used in the proactive training.
 In no sampling mode, only the recently arrived data is used in the proactive training.
 In random sampling approach, the entire historical data is used for creating the sample.
@@ -151,9 +153,44 @@ Using a daily training approach, any unseen features that arrive at the system a
 \end{figure}
 
 
+\subsection{Proactive Training}
+\todo[inline]{fix the numbers of cluster experiments}
+I this section, we evaluate the quality of the deployed model.
+Figure \ref{fig:loss-proactive-vs-daily} shows the logistic loss of the continuous training and periodical approaches on the Criteo pipeline.
+
+After the deployment, the continuous training updates the pipeline and train the model using the incoming training iterations.
+The incoming data contains both unseen training observations and new features, as described in experiment \ref{subsec:model-freshness}.
+The continuous training approach trains the model over this data within a short period of time which results in a high quality and fresh model.
+
+To measure the performance of periodical training approach, we train the model at the end of every day of the simulation.
+The initial training and periodical training use the same set of parameters required by SGD.
+We use ADAM learning rate adaptation technique and sampling rate of $0.1$ for training the initial and periodical training of the pipeline.
+
+The initial deployed model converges after 500 iterations.
+However, after day 1, the amount of data stored data is doubled, and training the model $500$ iterations results in a model that has an error rate of $0.002$ higher than the initial model.
+Because of the larger number of data points, the periodical training has to train the model longer in order to achieve a lower error rate.
+To decrease the error rate of the model further, we train the model for $2000$ iterations.
+However, continuous training still outperforms periodical training.
+The error rate of the model trained using continuous training is $1.6\%$, $0.9\%$, and $0.15\% $ lower than a model trained using periodical training using $500$, $1000$, and $2000$ iterations respectively at the end of the day 1 of the simulation.
+\todo[inline]{Results of Day 2 of the simulation goes here}
+
+This experiment shows that the continuous training of a machine learning pipeline decreases the error rate while still producing fresher models when compared to the periodical training of the pipeline.
+
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-proactive-training-experiment.eps}
+\caption{Model quality for different deployment approaches}
+\label{fig:loss-proactive-vs-daily}
+\vspace{2mm}
+\end{figure}
+
+
 \subsection{Total Training Time}
 In this section, the total training time for continuous and periodical deployment approaches are measured.
 The total training time includes the time spent in pre-processing the training data using the pipeline components and training the model.
+Similar to previous experiments, for periodical training, we train the model for 500 iterations at the end of each period.
+
 Figure \ref{fig:training-time-deployment} shows the total training time of the Criteo pipeline for different deployment approaches.
 Using continuous training, the time spent in training is smaller than that of periodical training by a factor of $5$.
 This is due to the large of amount of redundant data processing and model training that exists in periodical training approach.
@@ -190,39 +227,9 @@ In our experiments, the input data is a combination of Integer and String values
 As a result, the size of the materialized data increases by a factor of 2.
 
 
-\subsection{Proactive Training}
-\todo[inline]{fix the numbers of cluster experiments}
-I this section, we evaluate the quality of the deployed model.
-Figure \ref{fig:loss-proactive-vs-daily} shows the logistic loss of the continuous training and periodical approaches on the Criteo pipeline.
-
-After the deployment, the continuous training updates the pipeline and train the model using the incoming training iterations.
-The incoming data contains both unseen training observations and new features, as described in experiment \ref{subsec:model-freshness}.
-Continuous training trains the model over this data within a short period of time which results in a high quality and fresh model.
-
-To measure the performance of periodical training approach, we train the model at the end of every day of the simulation. 
-The initial deployed model converges after 500 iterations.
-However, after day 1, the amount of data is almost doubled, and training the model 500 iterations results in a model that has an error rate of 0.001 higher than the initial model.
-Because of the larger number of data points, the periodical training has to train the model longer in order to achieve a lower error rate.
-To decrease the error rate of the model, we train the model for $2000$ iterations.
-However, continuous training still outperforms periodical training.
-The error rate of the model trained using continuous training is 1.3\%, 0.8\%, and 0.2\% lower than a model trained using periodical training using $500$, $1000$, and $2000$ iterations respectively at the end of day 1 of the simulation.
-\todo[inline]{Results of Day 2 of the simulation goes here}
-
-This experiment shows that the continuous training of a machine learning pipeline decreases the error rate while still producing fresher models when compared to the periodical training of the pipeline.
-
-
-\begin{figure}[h!]
-\centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-proactive-training-experiment.eps}
-\caption{Total training time of the pipeline for each scenario}
-\label{fig:loss-proactive-vs-daily}
-\vspace{2mm}
-\end{figure}
-
-
 \subsection{Discussion} \label{subsec:discussion}
 Our experiments show that continuous training approach outperforms periodical training of deployed models and pipelines.
-By using proactive training we manage to reduce the average error rate by $0.1\%$ while reducing the training run time by a factor of 5.
+By using proactive training we manage to reduce the average error rate by $1.6\%$ while reducing the training run time by a factor of $5$.
 Moreover, our online statistics computation and data materialization optimizations reduce the total training time by 2 orders of magnitude over the state of the art deployment approaches.
 
 The frequent updates that the continuous training approach applies to the deployed model is the main reason for the reduction in error rate.
@@ -238,9 +245,6 @@ In our experiments, we show that the learning rate adaptation technique that wor
 We show that how different sampling modes (simple random sampling, time-based sampling, and no sampling) affect the quality of the model.
 Moreover, we use data partitioning and multi-stage sampling techniques to increase the efficiency of sampling operations.
 Our experiments show that the multi-stage sampling technique can effectively provide samples from different time intervals while incurring a small overhead.
-
-
- 
 
 
 

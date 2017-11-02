@@ -22,7 +22,6 @@ plot =
   geom_text( data = mlp, aes(x = 145, y = value, label = iter), position = position_dodge(width = 1),  hjust = 0.5, vjust=-1,  size = 10) +
   theme_bw() +
   xlab("") + 
-  ylim(c(0.131,0.137))+
   scale_x_continuous(name ="\nTime",
                      breaks = c(1,145,289),
                      labels=c("Deployment","Day 1","Day 2")) +
