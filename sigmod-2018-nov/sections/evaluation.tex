@@ -154,7 +154,6 @@ Using a daily training approach, any unseen features that arrive at the system a
 
 
 \subsection{Proactive Training}
-\todo[inline]{fix the numbers of cluster experiments}
 I this section, we evaluate the quality of the deployed model.
 Figure \ref{fig:loss-proactive-vs-daily} shows the logistic loss of the continuous training and periodical approaches on the Criteo pipeline.
 
@@ -172,9 +171,15 @@ Because of the larger number of data points, the periodical training has to trai
 To decrease the error rate of the model further, we train the model for $2000$ iterations.
 However, continuous training still outperforms periodical training.
 The error rate of the model trained using continuous training is $1.6\%$, $0.9\%$, and $0.15\% $ lower than a model trained using periodical training using $500$, $1000$, and $2000$ iterations respectively at the end of the day 1 of the simulation.
-\todo[inline]{Results of Day 2 of the simulation goes here}
+
+We observe a similar behavior for the second periodical training.
+Because of the large training dataset after the second day of the simulation, the model requires a longer training period to converge.
+After two days of training, the continuous training approach results in an error rate that is smaller than the error rates of a model trained using 500, 1000, and 2000 iterations by $3.4\%$, $2.8\%$, and $2.2\%$.
 
 This experiment shows that the continuous training of a machine learning pipeline decreases the error rate while still producing fresher models when compared to the periodical training of the pipeline.
+It has to be noted that the poor performance of periodical training after each day can be alleviated by more advanced training methods or better parameter selection for the underlying SGD optimization algorithm.
+In this experiment, we demonstrate that using the same set of parameters (learning rate and sample size), we are able to achieve a lower error rate by using continuous training approach.
+In a real deployment scenario, when the quality of the model degrades after the periodical training, either the model is discarded or it is trained for a longer period of time using more sophisticated training algorithm, while the existing model continuous to answer prediction requests.
 
 
 \begin{figure}[h!]
@@ -184,7 +189,6 @@ This experiment shows that the continuous training of a machine learning pipelin
 \label{fig:loss-proactive-vs-daily}
 \vspace{2mm}
 \end{figure}
-
 
 \subsection{Total Training Time}
 In this section, the total training time for continuous and periodical deployment approaches are measured.

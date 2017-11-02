@@ -6,22 +6,23 @@ library(gridExtra)
 library(grid)
 
 cont = read.csv('quality/cluster/continuous/loss_0', header = FALSE, col.names = c('Continuous'))
-period = read.csv('quality/cluster/periodical/loss_1', header = FALSE, col.names = c('iter','Periodical'))
-periodical = data.frame(time = c(1,145,289), iter = period$iter, Periodical = period$Periodical)
+periodical = read.csv('quality/cluster/periodical/loss_1', header = FALSE, col.names = c('day','iter','Periodical'))
 continuous = data.frame(time = 1:nrow(cont), Continuous = cont$Continuous)
 
 groupColors <- c(Continuous = "#00aedb", Periodical = "#d11141")
 
 
 ml = melt(continuous, id.vars = c('time'))
-mlp = melt(periodical, id.vars = c('time','iter') )
 plot = 
   ggplot() + 
   geom_line(data = ml, aes(x = time, y = value, colour = variable), size = 1.4) +
-  geom_point(data = mlp, aes(x = 145, y = value, colour = variable), size = 5) +
-  geom_text( data = mlp, aes(x = 145, y = value, label = iter), position = position_dodge(width = 1),  hjust = 0.5, vjust=-1,  size = 10) +
+  geom_point(data = periodical[periodical$day == 145, ], aes(x = day, y = Periodical, colour = 'Periodical'), size = 5) +
+  geom_text( data = periodical[periodical$day == 145, ], aes(x = day, y = Periodical, label = iter),position = position_dodge(width = 1),  hjust = 1.1,  size = 10) +
+  geom_point(data = periodical[periodical$day == 289, ], aes(x = day, y = Periodical, colour = 'Periodical'), size = 5) +
+  geom_text( data = periodical[periodical$day == 289, ], aes(x = day, y = Periodical, label = iter),position = position_dodge(width = 1),  hjust = 1.1,  size = 10) +
   theme_bw() +
   xlab("") + 
+  ylim(c(0.132,0.1375))+
   scale_x_continuous(name ="\nTime",
                      breaks = c(1,145,289),
                      labels=c("Deployment","Day 1","Day 2")) +
