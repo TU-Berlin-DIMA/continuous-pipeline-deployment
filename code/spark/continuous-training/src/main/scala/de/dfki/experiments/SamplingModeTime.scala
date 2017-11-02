@@ -22,6 +22,7 @@ object SamplingModeTime {
   val SAMPLING_RATE = 0.1
   val DAY_DURATION = 100
   val MODE = "half"
+  val ITER = 50
 
   def main(args: Array[String]): Unit = {
     val parser = new CommandLineParser(args).parse()
@@ -35,6 +36,7 @@ object SamplingModeTime {
     val days = parser.get("days", DAYS).split(",").map(_.toInt)
     val dayDuration = parser.getInteger("day_duration", DAY_DURATION)
     val mode = parser.get("mode", MODE)
+    val iter = parser.getInteger("iter", ITER)
 
     val conf = new SparkConf().setAppName("Sampling Mode Time Experiment")
     val masterURL = conf.get("spark.master", "local[*]")
@@ -53,7 +55,8 @@ object SamplingModeTime {
         dayDuration = dayDuration,
         slack = slack,
         windowSize = dayDuration / 2,
-        daysToProcess = days).deploy(ssc, halfDayWindow)
+        daysToProcess = days,
+        iter = iter).deploy(ssc, halfDayWindow)
     }
     else if (mode == "full") {
       val fullDayWindow = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)
@@ -64,7 +67,8 @@ object SamplingModeTime {
         dayDuration = dayDuration,
         slack = slack,
         windowSize = dayDuration,
-        daysToProcess = days).deploy(ssc, fullDayWindow)
+        daysToProcess = days,
+        iter = iter).deploy(ssc, fullDayWindow)
     }
     else if (mode == "history") {
       val history = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)
@@ -75,7 +79,8 @@ object SamplingModeTime {
         dayDuration = dayDuration,
         slack = slack,
         windowSize = -1,
-        daysToProcess = days).deploy(ssc, history)
+        daysToProcess = days,
+        iter = iter).deploy(ssc, history)
     }
     else {
       val noSampling = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)
@@ -86,7 +91,8 @@ object SamplingModeTime {
         dayDuration = dayDuration,
         slack = slack,
         windowSize = 1,
-        daysToProcess = days).deploy(ssc, noSampling)
+        daysToProcess = days,
+        iter = iter).deploy(ssc, noSampling)
     }
 
   }

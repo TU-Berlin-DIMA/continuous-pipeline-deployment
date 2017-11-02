@@ -28,7 +28,6 @@ Each batch represents one minute of data.
 We use spark streaming to read the data files one by one and stream them through the deployment platform. 
 
 \subsection{Learning Rate Adaptation Method}
-\todo[inline]{another pipeline that has different behavior (maybe a small dataset)}
 In Section \ref{sgd}, we discussed the importance of learning rate tuning for training a model using the Stochastic Gradient Descent optimization method.
 Proactive training is an extension of SGD, therefore the process of tuning the learning rate adaptation method is no different from tuning it for a normal offline SGD training.
 
@@ -65,7 +64,6 @@ For every pipeline and dataset, the users have to evaluate the performance of th
 \end{figure}
 
 \subsection{Sampling Methods}
-\todo[inline]{another pipeline that has different behavior (maybe a small dataset)}
 In this section, we evaluate the effect different sampling modes on the quality of the model.
 We use a sampling rate of $0.1\%$ for all the experiments where sampling is performed.
 This sampling rate is chosen to be equal to the sampling rate used during the initial offline SGD training of the model.
@@ -106,29 +104,32 @@ When the distribution of the incoming training data is stable, using more histor
 \vspace{2mm}
 \end{figure}
 
-
-
 \subsection{Scheduling Policy}
-\todo[inline]{incomplete}
-In this section I will investigate the effect of different scheduling rate.
-From the simulation I will check the quality for 10 minute and one hour interval and compare the quality to the daily training.
-Then I will use the formula in chapter 3 to do the scheduling and compare the quality of the model using that approach.
+In this section, we analyze the scheduling policy of our deployment platform.
+In our prototype, we simulated 2 days of continuous training of Criteo data using Apache Spark.
+Since the streaming component of Apache Spark requires a fixed interval for executing mini batches, we set out to analyze the effect of our scheduling policy empirically.
+
+Figure \ref{fig:scheduling-policy-time} shows the actual execution time of every proactive training instance throughout the simulation.
+The execution time of proactive training ranges from $23$ seconds to $53$.
+In our estimation, we use a \textit{slack} parameter of $10$.
+We estimate the throughput and latency based on the time it takes for the deployment platform predict the labels of the evaluation dataset.
+The evaluation dataset contains around 2 million data points.
+The deployment platform is queried using the evaluation dataset every minute and requires $15$ seconds to return the predictions (when the evaluation dataset is stored on disk). 
+This amounts to a latency of $7 * 10 ^ {(-6)}$ seconds (7.5 micro seconds) and throughput of $34,000$ requests per second.
+Figure \ref{fig:scheduling-policy-time}  shows the scheduling intervals for every execution of the proactive training.
 
 \begin{figure}[h!]
 \centering
-\includegraphics[width=\columnwidth]{../images/placeholder.jpeg}
-\caption{Effect of Scheduling rate on quality (10 minutes, 1 hour, automatic)}
-\label{fig:scheduling-policy-quality}
-\vspace{2mm}
-\end{figure}
-
-\begin{figure}[h!]
-\centering
-\includegraphics[width=\columnwidth]{../images/placeholder.jpeg}
-\caption{Effect of Scheduling rate on training time (10 minutes, 1 hour, automatic)}
+\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-scheduling-experiment.eps}
+\caption{Analysis of scheduling policy}
 \label{fig:scheduling-policy-time}
 \vspace{2mm}
 \end{figure}
+
+Our scheduler uses a very conservative formula to compute the scheduling intervals for instances of proactive training.
+Using the slack parameter, we can guide the scheduler to increase or decrease the scheduling interval until the next proactive training.
+The slack parameter allows for the deployment platform to accommodate surges in the incoming prediction requests and new training data.
+In scenarios that sudden surges are expected (e.g., online stores), we recommend a large slack parameter (recommended value is $10$). 
 
 
 \subsection{Model Freshness}\label{subsec:model-freshness}

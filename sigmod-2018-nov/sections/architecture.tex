@@ -24,9 +24,16 @@ This is a simple yet useful mechanism for use cases that require periodical upda
 The dynamic scheduling tunes the scheduling interval based on the rate of the incoming prediction, prediction latency, and the time that it takes to execute the proactive training.
 The scheduler uses the following formula to compute the time when to execute the proactive training:
 \begin{center}
-$T' = 2 * T * pr * pl$
+$T' = S * T * pr * pl$
 \end{center}
 where $T'$ indicates the time in seconds when the next iteration is scheduled to run, $T$ is the execution time of the last proactive training, $pl$ and $pr$ are the average prediction latency and the average number of prediction requests per second.
+$S$ is the slack parameter.
+Slack is a user-controlled parameter that provides a hint to the scheduler about the possibility of surges in the incoming prediction requests and training data.
+A large slack value ($\geq10$) forces the scheduler to schedule the next proactive training in a conservative manner, allocating most of the resources of the deployment platform to the query answering component.
+A small slack value ($10\geq2\geq1$) enables the scheduler to schedule the next proactive training using a shorter time interval.
+As a result, the deployment platform allocates more computing resources for training the pipeline.
+A slack value of smaller than 2 is not recommended as it may increase the latency of prediction answering component.
+
 $T$ is measured by the scheduler component itself while $pr$ and $pl$ are measured by the deployment platform.
 Using the formula to schedule the next proactive training, the scheduler ensures that all the prediction requests that arrived during the last proactive training and all new prediction requests are answered before a new iteration is scheduled.
 Moreover, the scheduler assumes that the entire resources of the computing cluster are being used by the proactive trainer and therefore the prediction answering component is completely blocked while the proactive training is being executed.
