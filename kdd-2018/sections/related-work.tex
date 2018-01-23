@@ -1,0 +1,46 @@
+\section{Related Work} \label{related-work}
+Traditional machine learning systems focus solely on training models and leave the task of deploying and maintaining these models to the users.
+It has only been recently that some systems, for example LongView \cite{akdere2011case}, Velox \cite{crankshaw2014missing}, Clipper \cite{crankshaw2016clipper} , and TensorFlow Extended \cite{baylor2017tfx}, have proposed architectures that also consider model deployment and query answering.
+
+LongView integrates predictive machine learning models into relational databases. 
+It answers predictive queries and maintains and manages the models.
+LongView uses techniques such as query optimization and materialized view selection to increase the performance of the system.
+However, it only works with batch data and does not provide support for real-time queries. 
+As a result it does not support incremental learning.
+In contrast, our system is designed to work in a dynamic environment where it answers prediction queries in real-time and incrementally updates the model when required.
+
+Velox is an implementation of the common machine learning serving practice.
+Velox supports incremental learning and can answer prediction queries in real-time.
+It also eliminates the need for users to manually retrain the model offline and redeploy it again.
+Velox monitors the error rate of the model using a validation set.
+Once the error rate exceeds a predefined threshold, Velox initiates a complete retraining of the model using Spark. 
+This deployment method, however, has three drawbacks; retraining discards updates that have been applied to the model so far, the process of retraining on full data set is resource intensive and time consuming, and new datasets introduced to the system only influence the model after the next retraining.
+Our approach differs, as it exploits the underlying properties of SGD to fully integrate the training process into the system's lifeline.
+This eliminates the need for completely retraining the model and replaces it with consecutive SGD-iterations.
+Moreover, our system can train the model on new batch datasets as soon as they become available.
+
+Clipper is another machine learning deployment system that focuses on producing higher quality predictions by maintaining an ensemble of models.
+It constantly examines the confidence of each model.
+For each prediction request, it uses the model with the highest confidence.
+However, it does not incrementally train the models in production, which over time leads to models becoming outdated.
+Our deployment method on the other hand, focuses on maintenance and continuous updates of the models.
+
+TensorFlow Extended (TFX) is a platform that provides continuous training and deployment of machine learning models.
+TFX automatically stores new training data, performs analysis and validation of the data, retrain new and fresh models, and finally redeploy the new models. 
+However, data analysis and validation and model retraining are done periodically on batch datasets.
+As a result, TFX targets use cases that typically require daily updates to the model as the overhead of performing more frequent training and data analysis is too high.
+TFX provides warmstarting optimization to speed up the process of training new and fresh models.
+Our continuous training method can be used as a replacement of the continuous training component of TFX.
+By exploiting the properties of SGD optimization technique, our continuous training method can provide fresher models (seconds to minutes instead of several hours or days) without increasing the overhead.
+
+Weka \cite{hall2009weka}, Apache Mahout \cite{Owen:2011:MA:2132656}, and Madlib \cite{hellerstein2012madlib} are systems that provide the necessary toolkits to train machine learning models. 
+All of these systems provide a range training algorithms for machine learning methods. 
+However, they do not provide any management, before or after the models have been deployed. 
+Our proposed system focuses on models trainable using stochastic gradient descent and as a result is able to provide model management both during training and deployment time.
+
+MLBase \cite{kraska2013mlbase} and TuPaq \cite{sparks2015tupaq} are model management systems.
+They provide a range of training algorithms to create machine learning models and mechanism for model search as well as model management.
+They focus on training high quality models by performing automatic feature engineering and hyper-parameter search.
+However, they only work with batch datasets.
+Once models are trained, they have to be deployed and used for serving manually by the users.
+Our system, on the contrary, is designed for deployment and maintenance of already trained models.

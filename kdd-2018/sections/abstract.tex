@@ -1,0 +1,14 @@
+\begin{abstract}
+Machine learning is increasingly pervasive in many business and scientific applications. 
+Making machine learning models ready for serving in a production environment is a process done in form of pipelines steps including source selection, data preparation, feature engineering, and model training. 
+Once the model is trained, the model (and the pipeline) is deployed into a system where it can answer prediction queries in real-time.
+Current deployment systems perform online training, periodical batch training, or a combination of both to maintain the quality of the model.
+However, training models to meet a high-quality threshold is a time-consuming and resource-intensive process and cannot be performed frequently.
+This leads to a trade-off between model freshness (how up-to-date the model is) and model quality.
+
+We propose a novel continuous training approach, for deployed pipelines and models, that increases the model freshness without sacrificing the model quality.
+Our approach is similar to how parameter servers are used to train large machine learning models, where several computing nodes calculate partial updates and push them to the model.
+In our approach, we compute partial updates as new training data becomes available and propagate the partial updates to the deployed model without requiring a redeployment.
+Moreover, we further decrease the training time by computing statistics during model serving.
+In our experiments, we show that our continuous training approach updates the model more frequently while using fewer resources which results in an improvement of $1.6\%$ in error rate and up to $2$ orders of magnitude faster than state-of-the-art deployment approaches.
+\end{abstract}
