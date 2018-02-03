@@ -1,6 +1,6 @@
 \section{Evaluation} \label{evaluation} 
 To evaluate our continuous training approach, we perform several experiments.
-We first describe the setup of our experiments including the computing cluster, the deployed pipeline, and how we simulate a real production environment by streaming a real-world large dataset through our deployment platform.
+We first describe the setup of our experiments including the computing cluster, the deployed pipeline, and how we simulate a real production environment by streaming a large real-world  dataset through our deployment platform.
 We discuss the effect of different parameters (learning rate adaptation, sampling strategy, and scheduling policy) on the quality and training time of the model.
 Then, we discuss the effects of proactive training on the quality and freshness of the model and compare them to a model that is trained periodically.
 Finally, we evaluate the training time of the continuous training approach and the effects of online statistics computation and data materialization optimizations on the training time.
@@ -36,7 +36,7 @@ Proactive training is an extension of SGD, and therefore the process of tuning t
 
 To find the best learning rate adaptation algorithm, we first train a model using SGD optimization algorithm for 500 iterations using Adadelta, RMSprop, and Adam, three of the state-of-the-art learning rate adaptation techniques.
 After the training, the models (and the pipelines) trained with different learning rate adaptation techniques are deployed.
-We use the first day of the Criteo data to investigate the effect of the learning rate adaptation techniques on the Criteo pipeline.
+We use the Day 0 of the Criteo data to investigate the effect of the learning rate adaptation techniques on the Criteo pipeline.
 Figure \ref{fig:criteo-learning-rate} shows the logistic loss error rate of different learning adaptation techniques. 
 During the SGD training phase, we capture the logistic loss on the evaluation dataset after 20, 40, 80, 160, 320, and 500 iterations of training.
 
@@ -96,7 +96,7 @@ Moreover, decreasing the interval length further, results in a model with lower 
 In our experiment, using a time interval of half day for the time-based sampling results in an error rate that is 0.14\% smaller than when using the simple random sampling. 
 Reducing the time interval in the time-based sampling limits the data in the sample to the more recently generated data, which allows the model to fit to more unseen and more time-relevant data.
 In the Criteo pipeline, disabling sampling completely has the biggest impact on the error rate.
-By not sampling the data, the error rate of the mode is decreased by $1.9\%$ over the two day deployment period.
+By not sampling the data, the error rate of the model is decreased by $1.9\%$ over the two days deployment period.
 
 This experiment shows that the sampling time interval has a big impact on the quality of the deployed model.
 For Criteo pipeline, the dataset has a stable distribution, which stays the same throughout the course of the experiment.
@@ -139,11 +139,11 @@ When a sample is required, the data manager directly samples from the list of th
 \subsection{Scheduling Policy}
 In this section, we analyze the scheduling policy of our deployment platform.
 In our prototype, we simulated 2 days of continuous training of Criteo data using Apache Spark.
-Since the streaming component of Apache Spark requires a fixed interval for executing mini batches, we set out to analyze the effect of our scheduling policy analytically.
+Since the streaming component of Apache Spark requires a fixed interval for executing mini batches, we analyze the effect of our scheduling policy analytically.
 
 Figure \ref{fig:scheduling-policy-time} shows the actual execution time of every proactive training throughout the simulation.
 The execution time of the proactive training ranges from $23$ to $53$ seconds.
-In order for the scheduler component to effectively schedule proactive training, it requires the prediction latency, prediction throughput, and a user-defined slack parameter.
+In order for the scheduler component to effectively schedule proactive training, it requires the prediction latency, \hl{prediction throughput} \todo[inline]{Is it rate or throughput? Clipper uses the latter}, and a user-defined slack parameter.
 In our estimation, we use a slack parameter of $10$.
 We estimate the throughput and latency based on the time it takes for the deployment platform to predict the labels of the evaluation dataset.
 The evaluation dataset contains 2 million data points.
@@ -162,7 +162,7 @@ Based on above parameters, the scheduler computes the scheduling intervals for e
 
 Using the slack parameter, we can guide the scheduler to increase or decrease the scheduling intervals of the proactive training.
 The slack parameter allows for the deployment platform to accommodate surges in the incoming prediction requests and new training data.
-In scenarios where sudden surges are expected (e.g., online stores), we recommend a large slack parameter (recommended value is $10$). 
+In scenarios where sudden surges are expected (e.g., online stores), we recommend a large slack parameter (recommended value is $10$). \todo[inline]{No exp. validate this}
 
 
 \subsection{Model Freshness}\label{subsec:model-freshness}
@@ -231,8 +231,8 @@ The total training time includes the time spent in pre-processing the training d
 For periodical training, we train the model for 500 iterations even though the experiment in Section \ref{subsec:proactive-training} demonstrated that the error rate of such a model is larger than the continuous approach by $1.6\%$.
 
 Figure \ref{fig:training-time-deployment} shows the total training time of the Criteo pipeline for different deployment approaches.
-Using continuous training, the time spent in data processing and model training is smaller than that of periodical training by a factor of $5$.
-This is due to the large amount of redundant data processing and model training that exists in the periodical training approach.
+Using continuous training, the time spent in data preprocessing and model training is smaller than that of periodical training by a factor of $5$.
+This is due to the large amount of redundant data preprocessing and model training that exists in the periodical training approach.
 In the periodical training, the underlying pipeline is trained from scratch every day, which includes ingesting the data, performing the data transformation steps of the pipeline and finally training the model using the transformed data.
 However, in continuous training, the pipeline is incrementally updated when new data arrives at the system.
 

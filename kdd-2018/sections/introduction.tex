@@ -1,6 +1,6 @@
 \section{Introduction} \label{introduction}
 Machine learning techniques are increasingly being used in industrial and scientific applications to gain insight from the data.
-Typically, a machine learning pipeline consists of a set of complex data processing steps, chained together, is designed that processes a labeled training dataset and results in a machine learning model.
+Typically, a machine learning pipeline consists of a set of complex data processing steps, chained together, is designed to process a labeled training dataset and results in a machine learning model.
 The machine learning model is then used to make predictions on new unlabeled data.
 To fully utilize the model,  the model and the pipeline have to be deployed into an environment where they are used to answer prediction queries in real-time.
 Typically, feedback in the form of new training data will become available after the model is deployed.
@@ -32,7 +32,7 @@ Figure \ref{fig:motivational-example} shows the workflow of an advertising firm.
 The input data (Click Log) consists of several numerical and categorical variables related to the user, the publisher's website, the ads, and whether or not the users clicked on the ads.
 A basic click rate prediction pipeline is designed the following way \textcircled{1}. 
 A \textbf{missing value imputer} replaces missing values with appropriate values.
-A \textbf{label indexer} finds the different unique values in a categorical feature. 
+A \textbf{string indexer} finds the different unique values in a categorical feature. 
 A \textbf{one-hot encoder} creates a new binary feature for every unique value in a categorical feature.
 %A \textbf{data bucketizer} transforms continuous variables into a series of binary variables.
 A \textbf{standard scaler} scales the data columns to have unit standard deviation and zero mean.
@@ -68,7 +68,7 @@ Our solution offers two key optimizations.
 
 \textit{Proactive training.}
 Stochastic Gradient Descent (SGD) is an iterative optimization algorithm that is commonly used for training machine learning models on large datasets.
-We use SGD for continuously training the deployed model.
+We use SGD to continuously update the deployed model.
 Individual iterations of SGD are independent and typically lightweight.
 By exploiting these two features of SGD, we replace the time-consuming and resource-intensive training of the new model by a series of single iterations of SGD that are executed proactively.
 Our strategy in continuously updating the model is similar to how parameter servers train large models \cite{li2014scaling}.
@@ -104,4 +104,4 @@ Section \ref{continuous-training-serving} describes the details of our continuou
 In Section \ref{sec:system-architecture}, we introduce the architecture of our deployment system.
 In Section \ref{evaluation}, we evaluate the performance of our continuous deployment approach.
 Section \ref {related-work} discusses the related work.
-Finally, Section \ref{conclusion} presents our conclusion and future work.
+Finally, Section \ref{conclusion} presents our conclusion and the future work.

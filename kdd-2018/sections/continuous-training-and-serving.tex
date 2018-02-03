@@ -1,6 +1,6 @@
 \section{Continuous Training and Serving} \label{continuous-training-serving}
 The underlying optimization algorithm we utilize for continuously training the deployed model is Stochastic Gradient Descent (SGD).
-Using SGD enables us to make frequent updates to the model, thus slowing increasing the quality and the freshness of the deployed model.
+Using SGD enables us to make frequent updates to the model, thus increasing the quality and the freshness of the deployed model.
 SGD algorithm has several parameters and in order to work effectively, they have to be tuned.
 In this section, we first describe the details of SGD and its parameters and our approach in tuning these parameters for our platform.
 Then we describe how we take advantage of the properties of SGD to implement our proactive training, online statistics computation, and data materialization.
@@ -45,14 +45,14 @@ This is important because not all the parameters of the weight vector contribute
 
 \textbf{Sample Size.}
 Another parameter of stochastic gradient descent is the sample size.
-SGD is guaranteed to converge to a solution regardless of the value of the sample size.
+SGD is guaranteed to converge to a solution regardless of the sample size.
 However, the sample size can greatly affect the time that is required to converge.
 Two extremes of the sample size are 1 (every iteration only considers 1 data item) and $N$ (every iteration consider the entire data set, similar to normal batch gradient descent).
 Setting the sample size to 1 increases the model update frequency, however, it also results in noisy updates.
 Therefore, more iterations are required for the model to converge.
 Using the entire data in every iteration leads to more stable updates and as a result, the number of iterations required for the model to converge is fewer.
 However, each iteration takes more time as more data has to be processed.
-The most common approach is to set to the sample size to a value small enough so that each sample can be processed quickly but large enough so the updates are not noisy (called a mini-batch gradient descent).
+The most common approach is to set the sample size to a value small enough so that each sample can be processed quickly but large enough so the updates are not noisy (called a mini-batch gradient descent).
 
 \textbf{Distributed SGD.}
 To efficiently train machine learning models on large datasets, scalable techniques have to be employed.
@@ -74,7 +74,7 @@ We view proactive training as an extension of the offline batch training.
 Therefore, the process of choosing the best sample size and learning rate adaptation technique is similar to static training.
 Different hyperparameter tuning techniques are proposed for finding the best set of hyperparameters.
 Most common and simplest approaches are grid search and random search \cite{bergstra2012random}.
-We use a simple grid search over the initial training data to find the best hyperparameters (in our system, learning rate adaptation technique and sample size).
+We use a grid search over the initial training data to find the best hyperparameters (in our system, learning rate adaptation technique and sample size).
 Once the initial model is trained and deployed, the same set of parameters are used for the proactive training.
 
 \textit{Scheduling rate.}
@@ -86,7 +86,7 @@ However, a high scheduling rate results in many frequent SGD iterations which in
 A small scheduling rate also affects the model freshness.
 To increase the efficiency of the system a scheduler component is designed that is tasked with scheduling new iterations of SGD.
 Similar to learning rate tuning, we use an adaptive approach to adjust the scheduling rate.
-A simple method is used for tuning the scheduling rate based on the rate of the incoming training data.
+We describe a method for tuning the scheduling rate based on the rate of the incoming training data.
 The scheduling rate is increased as the rate of the incoming training data increases and vice versa.
 This helps in adapting the model to the new training data.
 
@@ -95,10 +95,10 @@ Before training the machine learning model, the training dataset has to be proce
 Different components of the pipeline require statistics over the dataset to be calculated before they process the data.
 Computing these statistics require scans of the data.
 In our deployment platform, we provide a mechanism for online computation and update of the statistics required for different components of the pipeline.
-In our prototype, we implemented a standard scaler, a missing value computer, and a one-hot encoder.
-The above components require the mean, the standard deviation, and for the one-hot encoder, a hash table of the unique categorical parameters in every feature column.
+In our prototype, we implemented a standard scaler, a missing value imputer, and a one-hot encoder.
+The above components require the mean, the standard deviation, and for the one-hot encoder, the hash table of the unique categorical parameters in every feature column.
 Our deployment platform also accommodates custom pipeline components.
-When new training data arrives at the system, the platform directs the data to the given component so they update their underlying statistics and data structures.
+When new training data arrives at the system, the platform directs the data to the corresponding component so they update their underlying statistics and data structures.
 Computing the required statistics online reduces the model training time as computing these statistics offline is time-consuming.
 Every pipeline component needs to transform the data when it is updating its statistics.
 The component then passes the transformed data to the next component.
@@ -109,9 +109,9 @@ Storing the transformed data significantly reduces the model training time.
 
 \textit{Dynamic model size.}
 Depending on the type of the pipeline components, the size of the final model may need to be adjusted during the serving of the model.
-For example, one-hot encoding and data bucketization both may generate new features after processing new training data.
+For example, one-hot encoding and \hl{data bucketization} both may generate new features after processing new training data.
 After every statistics update, we analyze the changes made in the pipeline.
-If any of the changes result in an increase the model size, we dynamically adjust the model size in the next proactive training. 
+If any of the changes result in an increase in the model size, we dynamically adjust the model size in the next proactive training. 
 
 \subsection{Model Stability}
 %\begin{figure}[t]
@@ -121,10 +121,10 @@ If any of the changes result in an increase the model size, we dynamically adjus
 %\label{fig:model-evaluation}
 %\end{figure}
 
-To ensure that SGD iterations do not degrade the quality of the model, a model evaluator component is used to assess the quality of the model.
+To ensure that SGD iterations do not degrade the quality of the model, a model evaluator is used to assess the quality of the model.
 %Figure \ref{fig:model-evaluation} shows the process of model evaluation.
 Every iteration of the SGD, uses the latest deployed model as an initial starting point and updates the model based on the training data.
-The evaluator component assesses the quality of the model using an evaluation dataset.
+The evaluator assesses the quality of the model using an evaluation dataset.
 If the quality of the model has degraded, the update is discard and the model is logged.
 The engineers or administrators of the system can study the log in order to investigate any potential issues with machine learning pipeline or the incoming training data.
 
