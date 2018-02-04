@@ -95,7 +95,7 @@ object ParameterSelection {
 
       val deployment = new ContinuousDeploymentQualityAnalysis(history = inputPath,
         streamBase = streamPath,
-        evaluationPath = evaluationPath,
+        evaluation = evaluationPath,
         resultPath = s"$resultPath/${updater.name}",
         slack = slack,
         samplingRate = 0.1,

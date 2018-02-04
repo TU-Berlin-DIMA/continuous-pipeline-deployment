@@ -59,7 +59,7 @@ object SamplingModes {
 
     new ContinuousDeploymentQualityAnalysis(history = inputPath,
       streamBase = streamPath,
-      evaluationPath = s"$evaluationPath",
+      evaluation = s"$evaluationPath",
       resultPath = s"$resultPath/continuous",
       samplingRate = samplingRate,
       slack = slack,
@@ -71,7 +71,7 @@ object SamplingModes {
     val halfDayWindow = CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)
     new ContinuousDeploymentQualityAnalysis(history = inputPath,
       streamBase = streamPath,
-      evaluationPath = s"$evaluationPath",
+      evaluation = s"$evaluationPath",
       resultPath = s"$resultPath/continuous",
       samplingRate = samplingRate,
       slack = slack,
@@ -82,7 +82,7 @@ object SamplingModes {
     val fullDayWindow = CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)
     new ContinuousDeploymentQualityAnalysis(history = inputPath,
       streamBase = streamPath,
-      evaluationPath = s"$evaluationPath",
+      evaluation = s"$evaluationPath",
       resultPath = s"$resultPath/continuous",
       samplingRate = samplingRate,
       slack = slack,
@@ -92,7 +92,7 @@ object SamplingModes {
     val noSampling = CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)
     new ContinuousDeploymentQualityAnalysis(history = inputPath,
       streamBase = streamPath,
-      evaluationPath = s"$evaluationPath",
+      evaluation = s"$evaluationPath",
       resultPath = s"$resultPath/continuous",
       samplingRate = 0.0,
       slack = slack,

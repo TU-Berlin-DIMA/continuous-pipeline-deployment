@@ -14,7 +14,7 @@ import scala.collection.mutable.ListBuffer
   */
 class EntireHistorySampling(val history: String,
                             val stream: String,
-                            val evaluationPath: String,
+                            val evaluation: String = "prequential",
                             val resultPath: String,
                             val samplingRate: Double = 0.1,
                             val slack: Int = 10) extends Deployment {
@@ -26,7 +26,12 @@ class EntireHistorySampling(val history: String,
       .cache()
     data.count()
 
-    val testData = streamingContext.sparkContext.textFile(evaluationPath)
+    val testData = streamingContext
+      .sparkContext
+      .textFile(evaluation)
+      .setName("Evaluation Data set")
+      .cache()
+
     val streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](streamingContext, stream)
 
     val processedRDD: ListBuffer[RDD[String]] = new ListBuffer[RDD[String]]()
@@ -34,9 +39,13 @@ class EntireHistorySampling(val history: String,
 
     pipeline.model.setMiniBatchFraction(1.0)
     pipeline.model.setNumIterations(1)
-    var time = 0
+    var time = 1
 
-    evaluateStream(pipeline, testData, resultPath)
+    if (evaluation != "prequential") {
+      // initial evaluation of the pipeline right after deployment for non prequential based method
+      evaluateStream(pipeline, testData, resultPath)
+    }
+
 
     while (!streamingSource.allFileProcessed()) {
 
@@ -54,6 +63,11 @@ class EntireHistorySampling(val history: String,
       val updateTime = end - start
 
       storeTrainingTimes(updateTime, resultPath, "entire")
+
+      if (evaluation == "prequential") {
+        // perform evaluation
+        evaluateStream(pipeline, rdd, resultPath)
+      }
 
       if (time % slack == 0) {
 
@@ -74,7 +88,10 @@ class EntireHistorySampling(val history: String,
         storeTrainingTimes(transformTime, resultPath, "train")
 
         transformed.unpersist(true)
-        evaluateStream(pipeline, testData, resultPath)
+        if (evaluation != "prequential") {
+          // if evaluation method is not prequential, only perform evaluation after a training step
+          evaluateStream(pipeline, testData, resultPath)
+        }
       }
       time += 1
     }
