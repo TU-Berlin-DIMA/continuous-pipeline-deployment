@@ -66,7 +66,7 @@ class EntireHistorySampling(val history: String,
 
       if (evaluation == "prequential") {
         // perform evaluation
-        evaluateStream(pipeline, rdd, resultPath)
+        evaluateStreamPrequential(pipeline, rdd, resultPath)
       }
 
       if (time % slack == 0) {
