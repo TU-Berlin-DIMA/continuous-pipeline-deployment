@@ -16,14 +16,15 @@ import org.apache.spark.{SparkConf, SparkContext}
 object SamplingModes {
   val INPUT_PATH = "data/criteo-full/experiments/initial-training/day_0"
   val STREAM_PATH = "data/criteo-full/experiments/stream"
-  val EVALUATION_PATH = "data/criteo-full/experiments/evaluation/6"
+  //val EVALUATION_PATH = "data/criteo-full/experiments/evaluation/6"
+  val EVALUATION_PATH = "prequential"
   val RESULT_PATH = "../../../experiment-results/criteo-full/sampling-mode/local"
   val INITIAL_PIPELINE = "data/criteo-full/pipelines/sampling-mode/init_500"
   val DELIMITER = ","
   val NUM_FEATURES = 3000
   val NUM_ITERATIONS = 1
   val SLACK = 10
-  val DAYS = "1"
+  val DAYS = "1,2,3,4,5"
   val SAMPLING_RATE = 0.1
   val DAY_DURATION = 100
 
@@ -59,7 +60,7 @@ object SamplingModes {
 
     new ContinuousDeploymentQualityAnalysis(history = inputPath,
       streamBase = streamPath,
-      evaluationPath = s"$evaluationPath",
+      evaluation = s"$evaluationPath",
       resultPath = s"$resultPath/continuous",
       samplingRate = samplingRate,
       slack = slack,
@@ -71,7 +72,7 @@ object SamplingModes {
     val halfDayWindow = CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)
     new ContinuousDeploymentQualityAnalysis(history = inputPath,
       streamBase = streamPath,
-      evaluationPath = s"$evaluationPath",
+      evaluation = s"$evaluationPath",
       resultPath = s"$resultPath/continuous",
       samplingRate = samplingRate,
       slack = slack,
@@ -82,7 +83,7 @@ object SamplingModes {
     val fullDayWindow = CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)
     new ContinuousDeploymentQualityAnalysis(history = inputPath,
       streamBase = streamPath,
-      evaluationPath = s"$evaluationPath",
+      evaluation = s"$evaluationPath",
       resultPath = s"$resultPath/continuous",
       samplingRate = samplingRate,
       slack = slack,
@@ -92,7 +93,7 @@ object SamplingModes {
     val noSampling = CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)
     new ContinuousDeploymentQualityAnalysis(history = inputPath,
       streamBase = streamPath,
-      evaluationPath = s"$evaluationPath",
+      evaluation = s"$evaluationPath",
       resultPath = s"$resultPath/continuous",
       samplingRate = 0.0,
       slack = slack,

@@ -61,7 +61,7 @@ object Quality {
 
     new ContinuousDeploymentQualityAnalysis(history = inputPath,
       streamBase = streamBase,
-      evaluationPath = s"$evaluationPath",
+      evaluation = s"$evaluationPath",
       resultPath = s"$resultPath/continuous",
       samplingRate = samplingRate,
       slack = slack,

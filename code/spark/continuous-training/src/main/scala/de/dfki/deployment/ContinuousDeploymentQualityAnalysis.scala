@@ -14,7 +14,7 @@ import scala.collection.mutable.ListBuffer
   */
 class ContinuousDeploymentQualityAnalysis(val history: String,
                                           val streamBase: String,
-                                          val evaluationPath: String,
+                                          val evaluation: String = "prequential",
                                           val resultPath: String,
                                           val samplingRate: Double = 0.1,
                                           val slack: Int = 10,
@@ -29,7 +29,12 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
       .cache()
     data.count()
 
-    val testData = streamingContext.sparkContext.textFile(evaluationPath).setName("Evaluation Data set").cache()
+    val testData = streamingContext
+      .sparkContext
+      .textFile(evaluation)
+      .setName("Evaluation Data set")
+      .cache()
+
     val streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](streamingContext, streamBase, days = daysToProcess)
 
     var processedRDD: ListBuffer[RDD[String]] = new ListBuffer[RDD[String]]()
@@ -39,7 +44,10 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
     pipeline.model.setNumIterations(1)
     var time = 1
 
-    evaluateStream(pipeline, testData, resultPath, windowSize.toString)
+    if (evaluation != "prequential") {
+      // initial evaluation of the pipeline right after deployment for non prequential based method
+      evaluateStream(pipeline, testData, resultPath, windowSize.toString)
+    }
 
     while (!streamingSource.allFileProcessed()) {
 
@@ -48,6 +56,10 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
       rdd.cache()
 
       processedRDD += rdd
+      if (evaluation == "prequential") {
+        // perform evaluation
+        evaluateStream(pipeline, rdd, resultPath, windowSize.toString)
+      }
       if (time % slack == 0) {
         pipeline.update(streamingContext.sparkContext.union(processedRDD.slice(processedRDD.size - slack, processedRDD.size)))
         val data = historicalDataRDD(processedRDD, samplingRate, slack, streamingContext.sparkContext, windowSize)
@@ -55,7 +67,10 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
         trainingData.cache()
         pipeline.train(trainingData)
         trainingData.unpersist()
-        evaluateStream(pipeline, testData, resultPath, windowSize.toString)
+        if (evaluation != "prequential") {
+          // if evaluation method is not prequential, only perform evaluation after a training step
+          evaluateStream(pipeline, testData, resultPath, windowSize.toString)
+        }
       }
       if (time > windowSize && windowSize != -1) {
         //processedRDD(time - windowSize).unpersist(blocking = true)

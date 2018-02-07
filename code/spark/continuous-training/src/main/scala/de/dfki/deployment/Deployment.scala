@@ -34,12 +34,36 @@ abstract class Deployment {
     storeLogisticLoss(totalLogLoss._1 / totalLogLoss._2, resultPath, postfix)
   }
 
+  def evaluateStreamPrequential(pipeline: Pipeline,
+                                evaluationData: RDD[String],
+                                resultPath: String,
+                                postfix: String = "") = {
+
+    val totalLogLoss = pipeline
+      .predict(evaluationData)
+      .map(pre => (LogisticLoss.logisticLoss(pre._1, pre._2), 1))
+      // sum over logistic loss
+      .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
+    // store the raw sum for computing the cumulative error
+    storeLogisticLossPrequential(totalLogLoss._1, totalLogLoss._2, resultPath, postfix)
+  }
+
   val storeLogisticLoss = (logLoss: Double, resultPath: String, postfix: String) => {
     val file = new File(s"$resultPath/loss_$postfix")
     file.getParentFile.mkdirs()
     val fw = new FileWriter(file, true)
     try {
       fw.write(s"$logLoss\n")
+    }
+    finally fw.close()
+  }
+
+  val storeLogisticLossPrequential = (num: Double, denum: Double, resultPath: String, postfix: String) => {
+    val file = new File(s"$resultPath/loss_$postfix")
+    file.getParentFile.mkdirs()
+    val fw = new FileWriter(file, true)
+    try {
+      fw.write(s"$num,$denum\n")
     }
     finally fw.close()
   }
@@ -60,7 +84,7 @@ abstract class Deployment {
     val start = if (day == -1) 0 else {
       math.max(0, history - day)
     }
-    if(day == 0){
+    if (day == 0) {
       logger.info(s"Sampling window size is $day, returning only the recent items")
       logger.info(s"${processedRDD.slice(history, now).size} items")
       spark.union(processedRDD.slice(history, now))
