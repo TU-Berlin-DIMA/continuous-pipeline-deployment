@@ -114,15 +114,15 @@ After every statistics update, we analyze the changes made in the pipeline.
 If any of the changes result in an increase in the model size, we dynamically adjust the model size in the next proactive training. 
 
 \subsection{Model Stability}
-%\begin{figure}[t]
-%\centering
-%\includegraphics[width=\columnwidth]{../images/model-evaluation.pdf}
-%\caption{Model Evaluation}
-%\label{fig:model-evaluation}
-%\end{figure}
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{../images/model-evaluation.pdf}
+\caption{Model Evaluation}
+\label{fig:model-evaluation}
+\end{figure}
 
 To ensure that SGD iterations do not degrade the quality of the model, a model evaluator is used to assess the quality of the model.
-%Figure \ref{fig:model-evaluation} shows the process of model evaluation.
+Figure \ref{fig:model-evaluation} shows the process of model evaluation.
 Every iteration of the SGD, uses the latest deployed model as an initial starting point and updates the model based on the training data.
 The evaluator assesses the quality of the model using an evaluation dataset.
 If the quality of the model has degraded, the update is discard and the model is logged.
