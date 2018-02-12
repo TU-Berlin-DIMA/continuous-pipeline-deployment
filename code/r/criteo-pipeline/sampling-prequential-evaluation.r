@@ -7,9 +7,9 @@ library(reshape)
 entireHistory = read.csv('sampling-mode/cluster-prequential/continuous/loss_-1', header = FALSE, col.names = c('entireHistory'))
 oneDay = read.csv('sampling-mode/cluster-prequential/continuous/loss_1440', header = FALSE, col.names = c('oneDay'))
 halfDay = read.csv('sampling-mode/cluster-prequential/continuous/loss_720', header = FALSE, col.names = c('halfDay'))
-#noSampling = read.csv('sampling-mode/cluster/continuous/loss_0', header = FALSE, col.names = c('noSampling'))
-breaks = c(1,1441,2881)
-labels = c("Deployment","Day 1","Day 2")
+noSampling = read.csv('sampling-mode/cluster-prequential/continuous/loss_0', header = FALSE, col.names = c('noSampling'))
+breaks = c(1,1441,2881,4321,5761,7201)
+labels = c("Deployment","Day 1","Day 2", "Day 3", "Day 4", "Day 5")
 
 plotEvalResult <- function(df, tite){
   groupColors <- c(entireHistory = "#d11141", oneDay = "#00b159", halfDay ="#00aedb", noSampling = "#f37735")
@@ -26,7 +26,7 @@ plotEvalResult <- function(df, tite){
                        labels= labels) +
     scale_color_manual(values = groupColors, 
                        labels = groupNames,
-                       guide = guide_legend(override.aes = list(shape = c(NA,NA, NA)))) +
+                       guide = guide_legend(override.aes = list(shape = c(NA)))) +
     theme(legend.text = element_text(size = 30, color = "black"), 
           axis.text=element_text(size=30, color = "black"),
           axis.title=element_text(size=30, color= "black"),
@@ -40,10 +40,15 @@ plotEvalResult <- function(df, tite){
   return (pl)
 }
 
-df = data.frame(time = 1:nrow(entireHistory),
-                entireHistory = entireHistory,
-                oneDay = oneDay,
-                halfDay = halfDay)
+append <- function(vec, maxLength){
+  return (c(vec,rep(NA, maxLength - length(vec))))
+}
+maxLength = nrow(noSampling)
+df = data.frame(time = 1:maxLength,
+                entireHistory = append(entireHistory$entireHistory, maxLength),
+                oneDay = append(oneDay$oneDay, maxLength),
+                halfDay = append(halfDay$halfDay, maxLength), 
+                noSampling = noSampling)
 
 hourly = df[df$time %% 60 == 0,]
 
@@ -54,12 +59,13 @@ cum_beginning_of_time = df
 cum_beginning_of_time$halfDay = cumsum(df$halfDay)/df$time
 cum_beginning_of_time$oneDay = cumsum(df$oneDay)/df$time
 cum_beginning_of_time$entireHistory = cumsum(df$entireHistory)/df$time
+cum_beginning_of_time$noSampling = cumsum(df$noSampling)/df$time
 cum_beginning_of_time_plot = plotEvalResult(cum_beginning_of_time, "Cumulative Average Evaluation")
 ggsave(cum_beginning_of_time_plot , filename = 'sampling-mode/cluster-prequential/continuous/figures/cum-average.eps', device = 'eps', width = 12, height = 6, units = "in")
 
 
 hourly_cum_beginning_average = cum_beginning_of_time[cum_beginning_of_time$time %% 60 == 0,]
-hourly_cum_beginning_of_time_plot = plotEvalResult(hourly_cum_beginning_average, "Cumulative Average Evaluation")
+hourly_cum_beginning_of_time_plot = plotEvalResult(hourly_cum_beginning_average, "Cumulative Average Evaluation (reported hourly")
 ggsave(hourly_cum_beginning_of_time_plot , filename = 'sampling-mode/cluster-prequential/continuous/figures/hourly-cum-average.eps', device = 'eps', width = 12, height = 6, units = "in")
 
 library(zoo)
@@ -70,9 +76,9 @@ roll_oneDay = rollmean(df$oneDay, 60)
 roll_halfDay = rollmean(df$halfDay, 60)
 roll_time = 1:length(roll_halfDay)
 rolling_average = data.frame(time = roll_time,
-                entireHistory = roll_entireHistory,
-                oneDay = roll_oneDay,
-                halfDay = roll_halfDay)
+                             entireHistory = roll_entireHistory,
+                             oneDay = roll_oneDay,
+                             halfDay = roll_halfDay)
 
 rolling_average_plot = plotEvalResult(rolling_average, "Rolling Average Evaluation")
 ggsave(rolling_average_plot , filename = 'sampling-mode/cluster-prequential/continuous/figures/rolling-average.eps', device = 'eps', width = 12, height = 6, units = "in")
