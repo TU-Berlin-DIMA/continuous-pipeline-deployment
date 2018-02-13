@@ -1,33 +1,32 @@
-package de.dfki.ml.pipelines.criteo
+package de.dfki.ml.pipelines.urlrep
 
 import java.io._
 
 import de.dfki.ml.evaluation.LogisticLoss
-import de.dfki.ml.optimization.{AdvancedUpdaters, SquaredL2UpdaterWithAdam}
+import de.dfki.ml.optimization._
 import de.dfki.ml.pipelines.{LRModel, Pipeline}
 import de.dfki.utils.CommandLineParser
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
-import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * @author behrouz
   */
-class CriteoPipeline(@transient var spark: SparkContext,
-                     val delim: String = "\t",
+class URLRepPipeline(@transient var spark: SparkContext,
                      val stepSize: Double = 1.0,
                      val numIterations: Int = 500,
                      val regParam: Double = 0.0,
                      val miniBatchFraction: Double = 1.0,
                      val updater: AdvancedUpdaters = new SquaredL2UpdaterWithAdam(),
                      val numCategories: Int = 300000) extends Pipeline {
+  val fileReader = new URLRepSVMParser()
+  val missingValueImputer = new URLRepMissingValueImputer()
+  var standardScaler = new URLRepStandardScaler()
+  val oneHotEncoder = new URLRepOneHotEncoder(numCategories)
 
-  val fileReader = new InputParser(delim)
-  val missingValueImputer = new MissingValueImputer()
-  var standardScaler = new StandardScaler()
-  val oneHotEncoder = new OneHotEncoder(numCategories)
-  val model = new LRModel(stepSize, numIterations, regParam, miniBatchFraction, updater)
+  override val model = new LRModel(stepSize, numIterations, regParam, miniBatchFraction, updater)
 
   /**
     * This method have to be called if the pipeline is loaded from the disk
@@ -42,7 +41,7 @@ class CriteoPipeline(@transient var spark: SparkContext,
     val parsedData = fileReader.transform(spark, data)
     val filledData = missingValueImputer.transform(spark, parsedData)
     val scaledData = standardScaler.update(spark, filledData)
-   //oneHotEncoder.update(spark, scaledData)
+    //oneHotEncoder.update(spark, scaledData)
   }
 
   override def transform(data: RDD[String]): RDD[LabeledPoint] = {
@@ -70,6 +69,7 @@ class CriteoPipeline(@transient var spark: SparkContext,
 
   /**
     * short cut function for experiments for quality
+    *
     * @param data
     */
   override def updateTransformTrain(data: RDD[String]) = {
@@ -112,8 +112,7 @@ class CriteoPipeline(@transient var spark: SparkContext,
     */
   override def newPipeline() = {
     val newUpdater = AdvancedUpdaters.getUpdater(updater.name)
-    new CriteoPipeline(spark = spark,
-      delim = delim,
+    new URLRepPipeline(spark = spark,
       stepSize = stepSize,
       numIterations = numIterations,
       regParam = regParam,
@@ -121,50 +120,52 @@ class CriteoPipeline(@transient var spark: SparkContext,
       updater = newUpdater,
       numCategories = numCategories)
   }
-
 }
 
-// example use case of criteo pipeline
-object CriteoPipeline {
-  val INPUT_PATH = "data/criteo-full/experiments/initial-training/day_0"
-  val TEST_PATH = "data/criteo-full/raw/6"
+object URLRepPipeline {
+  val INPUT_PATH = "data/url-reputation/processed/initial-training/day_0"
+  val TEST_PATH = "data/url-reputation/processed/stream/day_1"
 
   def main(args: Array[String]): Unit = {
     val parser = new CommandLineParser(args).parse()
     val inputPath = parser.get("input-path", INPUT_PATH)
     val testPath = parser.get("test-path", TEST_PATH)
 
-    val conf = new SparkConf().setAppName("Criteo Pipeline Processing")
+    val conf = new SparkConf().setAppName("URL Rep Pipeline Processing")
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
 
     val spark = new SparkContext(conf)
-    val criteoPipeline = new CriteoPipeline(spark, delim = ",", numIterations = 1)
-    val rawTraining = spark.textFile("data/criteo-full/experiments/initial-training/0")
-    criteoPipeline.updateTransformTrain(rawTraining)
+    val urlRepPipeline = new URLRepPipeline(spark,
+      numIterations = 500,
+      updater = new SquaredL2UpdaterWithAdam(),
+      miniBatchFraction = 0.1,
+      numCategories = 300000)
+    val rawTraining = spark.textFile(inputPath)
+    urlRepPipeline.updateTransformTrain(rawTraining)
+    //urlRepPipeline.updateAndTransform(rawTraining).saveAsTextFile("data/url-reputation/processed/stream/day_1")
+    //URLRepPipeline.saveToDisk(urlRepPipeline, "data/url-reputation/pipelines/test")
 
-    CriteoPipeline.saveToDisk(criteoPipeline, "data/criteo-full/pipelines/test")
+    //val loadedPipeline = URLRepPipeline.loadFromDisk("data/url-reputation/pipelines/test", spark)
 
-    val loadedPipeline = CriteoPipeline.loadFromDisk("data/criteo-full/pipelines/test", spark)
+    //val day1 = spark.textFile("data/url-reputation/processed/stream/day_1")
+    //loadedPipeline.updateTransformTrain(day1)
 
-    val day1 = spark.textFile("data/criteo-full/experiments/stream/1")
-    loadedPipeline.updateTransformTrain(day1)
-
-    criteoPipeline.updateTransformTrain(day1)
+    //urlRepPipeline.updateTransformTrain(day1)
 
     val rawTest = spark.textFile(testPath)
 
-    val baseResult = criteoPipeline.predict(rawTest)
+    val baseResult = urlRepPipeline.predict(rawTest)
     val baseLoss = LogisticLoss.logisticLoss(baseResult)
 
-    val loadedResult = criteoPipeline.predict(rawTest)
-    val loadedLoss = LogisticLoss.logisticLoss(loadedResult)
-
+    //    val loadedResult = loadedPipeline.predict(rawTest)
+    //    val loadedLoss = LogisticLoss.logisticLoss(loadedResult)
+    baseResult.saveAsTextFile("data/url-reputation/result/")
     println(s"Base Loss = $baseLoss")
-    println(s"Loaded Loss = $loadedLoss")
+    //println(s"Loaded Loss = $loadedLoss")
   }
 
-  def saveToDisk(pipeline: CriteoPipeline, path: String): Unit = {
+  def saveToDisk(pipeline: URLRepPipeline, path: String): Unit = {
     val file = new File(path)
     file.getParentFile.mkdirs()
     file.createNewFile()
@@ -173,14 +174,11 @@ object CriteoPipeline {
     oos.close()
   }
 
-  def loadFromDisk(path: String, spark: SparkContext): CriteoPipeline = {
+  def loadFromDisk(path: String, spark: SparkContext): URLRepPipeline = {
     val ois = new ObjectInputStream(new FileInputStream(path))
-    val pip = ois.readObject.asInstanceOf[CriteoPipeline]
+    val pip = ois.readObject.asInstanceOf[URLRepPipeline]
     pip.setSparkContext(spark)
     ois.close()
     pip
   }
 }
-
-
-

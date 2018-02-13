@@ -1,8 +1,7 @@
-package de.dfki.ml.pipelines.criteo
+package de.dfki.ml.pipelines
 
 import de.dfki.ml.LinearAlgebra
 import de.dfki.ml.classification.LogisticRegressionWithSGD
-import de.dfki.ml.pipelines.Model
 import org.apache.log4j.Logger
 import org.apache.spark.mllib.classification.LogisticRegressionModel
 import org.apache.spark.mllib.linalg.Vector
