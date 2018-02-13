@@ -32,11 +32,9 @@ class LogisticGradient(fitIntercept: Boolean,
                        regParamL2: Double) extends BatchGradient {
 
   var numFeatures = 0
-
   override def setNumFeatures(size: Int) = {
     this.numFeatures = size
   }
-
 
   override def compute(instances: RDD[(Double, Vector)], weights: Vector): (Double, BV[Double]) = {
     val context = instances.context
@@ -49,41 +47,6 @@ class LogisticGradient(fitIntercept: Boolean,
       instances.treeAggregate(new LogisticAggregator(numFeatures, 2, fitIntercept))(seqOp, combOp)
     }
     val totalGradientArray = logisticAggregator.gradient.toArray
-
-    // regVal is the sum of coefficients squares excluding intercept for L2 regularization.
-    //    val regVal = if (regParamL2 == 0.0) {
-    //      0.0
-    //    } else {
-    //      var sum = 0.0
-    //      weights.foreachActive { (index, value) =>
-    //        // If `fitIntercept` is true, the last term which is intercept doesn't
-    //        // contribute to the regularization.
-    //        if (index != numFeatures) {
-    //          // The following code will compute the loss of the regularization; also
-    //          // the gradient of the regularization, and add back to totalGradientArray.
-    //          sum += {
-    //            if (standardization) {
-    //              totalGradientArray(index) += regParamL2 * value
-    //              value * value
-    //            } else {
-    //              if (featuresStd(index) != 0.0) {
-    //                // If `standardization` is false, we still standardize the data
-    //                // to improve the rate of convergence; as a result, we have to
-    //                // perform this reverse standardization by penalizing each component
-    //                // differently to get effectively the same objective function when
-    //                // the training dataset is not standardized.
-    //                val temp = value / (featuresStd(index) * featuresStd(index))
-    //                totalGradientArray(index) += regParamL2 * temp
-    //                value * temp
-    //              } else {
-    //                0.0
-    //              }
-    //            }
-    //          }
-    //        }
-    //      }
-    //      0.5 * regParamL2 * sum
-    //    }
 
     val regVal = 0
     (logisticAggregator.loss + regVal, new BDV[Double](totalGradientArray))
