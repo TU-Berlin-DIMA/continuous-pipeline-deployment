@@ -1,25 +1,9 @@
-package de.dfki.ml.optimization
+package de.dfki.ml.optimization.gradient
 
-
+import breeze.linalg.{DenseVector => BDV, Vector => BV}
 import de.dfki.ml.LinearAlgebra
 import org.apache.spark.mllib.linalg.{DenseVector, Vector, Vectors}
-import breeze.linalg.{DenseVector => BDV, SparseVector => BSV, Vector => BV}
 import org.apache.spark.rdd.RDD
-
-/**
-  * @author behrouz
-  */
-abstract class BatchGradient extends Serializable {
-
-  def compute(data: RDD[(Double, Vector)], weights: Vector): (Double, BV[Double])
-
-  def setNumFeatures(size: Int)
-
-  // def setFeaturesMean(means: Array[Double])
-
-  // def setFeaturesStd(std: Array[Double])
-}
-
 
 /**
   * Modified version of @see org.apache.spark.ml.classification.LogisticCostFunction
@@ -28,10 +12,10 @@ abstract class BatchGradient extends Serializable {
   * It returns the loss and gradient with L2 regularization at a particular point (coefficients).
   * It's used in Breeze's convex optimization routines.
   */
-class LogisticGradient(fitIntercept: Boolean,
-                       regParamL2: Double) extends BatchGradient {
+class LogisticGradient(fitIntercept: Boolean, regParamL2: Double) extends BatchGradient {
 
   var numFeatures = 0
+
   override def setNumFeatures(size: Int) = {
     this.numFeatures = size
   }

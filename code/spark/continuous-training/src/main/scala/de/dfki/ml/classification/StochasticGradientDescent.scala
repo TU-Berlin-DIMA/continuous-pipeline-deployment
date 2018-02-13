@@ -1,7 +1,8 @@
 package de.dfki.ml.classification
 
 import de.dfki.ml.optimization.updater.Updater
-import de.dfki.ml.optimization.{BatchGradient, GradientDescent}
+import de.dfki.ml.optimization.GradientDescent
+import de.dfki.ml.optimization.gradient.BatchGradient
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.mllib.regression.{GeneralizedLinearAlgorithm, GeneralizedLinearModel, LabeledPoint}
 import org.apache.spark.mllib.util.DataValidators

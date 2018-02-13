@@ -1,5 +1,6 @@
 package de.dfki.ml.optimization
 
+import de.dfki.ml.optimization.gradient.LogisticGradient
 import de.dfki.ml.optimization.updater.SquaredL2Updater
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
