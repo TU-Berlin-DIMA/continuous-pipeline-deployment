@@ -1,9 +1,9 @@
 package de.dfki.ml.classification
 
-import de.dfki.ml.optimization.SquaredL2Updater
+import de.dfki.ml.optimization.updater.{SquaredL2Updater, Updater}
 import org.apache.spark.mllib.classification.SVMModel
 import org.apache.spark.mllib.linalg.Vector
-import org.apache.spark.mllib.optimization.Updater
+
 
 /**
   * @author behrouz

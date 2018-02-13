@@ -2,10 +2,10 @@ package de.dfki.ml.pipelines
 
 import de.dfki.ml.LinearAlgebra
 import de.dfki.ml.classification.LogisticRegressionWithSGD
+import de.dfki.ml.optimization.updater.Updater
 import org.apache.log4j.Logger
 import org.apache.spark.mllib.classification.LogisticRegressionModel
 import org.apache.spark.mllib.linalg.Vector
-import org.apache.spark.mllib.optimization.Updater
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream

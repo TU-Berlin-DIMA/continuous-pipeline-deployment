@@ -7,7 +7,7 @@ import java.util.Calendar
 
 import de.dfki.core.streaming.BatchFileInputDStream
 import de.dfki.ml.evaluation.LogisticLoss
-import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
+import de.dfki.ml.optimization.updater.SquaredL2UpdaterWithAdam
 import de.dfki.ml.streaming.models.{HybridLR, HybridModel}
 import de.dfki.preprocessing.parsers.{CustomVectorParser, DataParser}
 import de.dfki.utils.CommandLineParser

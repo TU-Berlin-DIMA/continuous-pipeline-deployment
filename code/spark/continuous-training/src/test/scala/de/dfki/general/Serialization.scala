@@ -4,7 +4,7 @@ import java.io._
 
 import breeze.linalg.DenseVector
 import de.dfki.ml.LinearAlgebra
-import de.dfki.ml.optimization.SquaredL2UpdaterWithMomentum
+import de.dfki.ml.optimization.updater.SquaredL2UpdaterWithMomentum
 import de.dfki.ml.streaming.models.{HybridLR, HybridModel}
 import org.scalatest.{BeforeAndAfterEach, FunSuite}
 

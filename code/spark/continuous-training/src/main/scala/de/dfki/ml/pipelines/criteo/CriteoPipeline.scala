@@ -3,7 +3,7 @@ package de.dfki.ml.pipelines.criteo
 import java.io._
 
 import de.dfki.ml.evaluation.LogisticLoss
-import de.dfki.ml.optimization.{AdvancedUpdaters, SquaredL2UpdaterWithAdam}
+import de.dfki.ml.optimization.updater.{SquaredL2UpdaterWithAdam, Updater}
 import de.dfki.ml.pipelines.{LRModel, Pipeline}
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.mllib.regression.LabeledPoint
@@ -20,7 +20,7 @@ class CriteoPipeline(@transient var spark: SparkContext,
                      val numIterations: Int = 500,
                      val regParam: Double = 0.0,
                      val miniBatchFraction: Double = 1.0,
-                     val updater: AdvancedUpdaters = new SquaredL2UpdaterWithAdam(),
+                     val updater: Updater = new SquaredL2UpdaterWithAdam(),
                      val numCategories: Int = 300000) extends Pipeline {
 
   val fileReader = new InputParser(delim)
@@ -111,7 +111,7 @@ class CriteoPipeline(@transient var spark: SparkContext,
     * @return
     */
   override def newPipeline() = {
-    val newUpdater = AdvancedUpdaters.getUpdater(updater.name)
+    val newUpdater = Updater.getUpdater(updater.name)
     new CriteoPipeline(spark = spark,
       delim = delim,
       stepSize = stepSize,

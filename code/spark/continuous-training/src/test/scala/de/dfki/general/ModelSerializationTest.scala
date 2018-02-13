@@ -1,7 +1,7 @@
 package de.dfki.general
 
 import de.dfki.ml.evaluation.ConfusionMatrix
-import de.dfki.ml.optimization.SquaredL2UpdaterWithMomentum
+import de.dfki.ml.optimization.updater.SquaredL2UpdaterWithMomentum
 import de.dfki.ml.streaming.models.{HybridLR, HybridModel}
 import de.dfki.preprocessing.parsers.CustomVectorParser
 import de.dfki.utils.CommandLineParser

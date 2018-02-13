@@ -5,7 +5,7 @@ import java.nio.file.{Files, Paths}
 
 import de.dfki.deployment.ContinuousDeploymentQualityAnalysis
 import de.dfki.ml.evaluation.LogisticLoss
-import de.dfki.ml.optimization.AdvancedUpdaters
+import de.dfki.ml.optimization.updater.Updater
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.utils.CommandLineParser
 import org.apache.log4j.Logger
@@ -60,7 +60,7 @@ object ParameterSelection {
     val eval = ssc.sparkContext.textFile(evaluationPath)
 
     for (u <- updaters) {
-      val updater = AdvancedUpdaters.getUpdater(u)
+      val updater = Updater.getUpdater(u)
       var criteoPipeline = new CriteoPipeline(ssc.sparkContext,
         stepSize = stepSize,
         delim = delimiter,

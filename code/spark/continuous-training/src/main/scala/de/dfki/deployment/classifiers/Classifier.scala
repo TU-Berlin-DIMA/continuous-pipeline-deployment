@@ -8,6 +8,7 @@ import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
 import de.dfki.core.streaming.BatchFileInputDStream
 import de.dfki.ml.evaluation.{ConfusionMatrix, LogisticLoss}
+import de.dfki.ml.optimization.updater.Updater
 import de.dfki.ml.pipelines.Pipeline
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.ml.streaming.models.HybridModel
@@ -33,7 +34,7 @@ import org.apache.spark.streaming.dstream.{ConstantInputDStream, DStream}
   * initial-training-path: data used for initial training
   * streaming-path: data used for online training (and prequential evaluation)
   * test-path: data used for evaluation (if not specified, prequential evaluation is used)
-  * updater: [[de.dfki.ml.optimization.AdvancedUpdaters]] used for learning rate tuning
+  * updater: [[Updater]] used for learning rate tuning
   *
   * [[ContinuousClassifier]] and [[PeriodicalClassifier]] require extra arguments
   *

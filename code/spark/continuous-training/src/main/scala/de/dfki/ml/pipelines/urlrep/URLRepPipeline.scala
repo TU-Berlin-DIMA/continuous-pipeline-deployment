@@ -3,7 +3,7 @@ package de.dfki.ml.pipelines.urlrep
 import java.io._
 
 import de.dfki.ml.evaluation.LogisticLoss
-import de.dfki.ml.optimization._
+import de.dfki.ml.optimization.updater.{Updater, SquaredL2UpdaterWithAdam}
 import de.dfki.ml.pipelines.{LRModel, Pipeline}
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.{SparkConf, SparkContext}
@@ -19,7 +19,7 @@ class URLRepPipeline(@transient var spark: SparkContext,
                      val numIterations: Int = 500,
                      val regParam: Double = 0.0,
                      val miniBatchFraction: Double = 1.0,
-                     val updater: AdvancedUpdaters = new SquaredL2UpdaterWithAdam(),
+                     val updater: Updater = new SquaredL2UpdaterWithAdam(),
                      val numCategories: Int = 300000) extends Pipeline {
   val fileReader = new URLRepSVMParser()
   val missingValueImputer = new URLRepMissingValueImputer()
@@ -111,7 +111,7 @@ class URLRepPipeline(@transient var spark: SparkContext,
     * @return
     */
   override def newPipeline() = {
-    val newUpdater = AdvancedUpdaters.getUpdater(updater.name)
+    val newUpdater = Updater.getUpdater(updater.name)
     new URLRepPipeline(spark = spark,
       stepSize = stepSize,
       numIterations = numIterations,
@@ -137,14 +137,14 @@ object URLRepPipeline {
 
     val spark = new SparkContext(conf)
     val urlRepPipeline = new URLRepPipeline(spark,
-      numIterations = 500,
+      numIterations = 100,
       updater = new SquaredL2UpdaterWithAdam(),
       miniBatchFraction = 0.1,
       numCategories = 300000)
     val rawTraining = spark.textFile(inputPath)
     urlRepPipeline.updateTransformTrain(rawTraining)
     //urlRepPipeline.updateAndTransform(rawTraining).saveAsTextFile("data/url-reputation/processed/stream/day_1")
-    //URLRepPipeline.saveToDisk(urlRepPipeline, "data/url-reputation/pipelines/test")
+    URLRepPipeline.saveToDisk(urlRepPipeline, "data/url-reputation/pipelines/test")
 
     //val loadedPipeline = URLRepPipeline.loadFromDisk("data/url-reputation/pipelines/test", spark)
 
@@ -160,7 +160,7 @@ object URLRepPipeline {
 
     //    val loadedResult = loadedPipeline.predict(rawTest)
     //    val loadedLoss = LogisticLoss.logisticLoss(loadedResult)
-    baseResult.saveAsTextFile("data/url-reputation/result/")
+    //baseResult.saveAsTextFile("data/url-reputation/result/")
     println(s"Base Loss = $baseLoss")
     //println(s"Loaded Loss = $loadedLoss")
   }

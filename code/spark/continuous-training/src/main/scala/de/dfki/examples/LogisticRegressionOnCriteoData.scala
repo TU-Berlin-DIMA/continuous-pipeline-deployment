@@ -7,6 +7,7 @@ import de.dfki.ml.LinearAlgebra
 import de.dfki.ml.classification.LogisticRegressionWithSGD
 import de.dfki.ml.evaluation.LogisticLoss
 import de.dfki.ml.optimization._
+import de.dfki.ml.optimization.updater._
 import de.dfki.preprocessing.parsers.CustomVectorParser
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.mllib.classification.{LogisticRegressionModel, LogisticRegressionWithLBFGS}

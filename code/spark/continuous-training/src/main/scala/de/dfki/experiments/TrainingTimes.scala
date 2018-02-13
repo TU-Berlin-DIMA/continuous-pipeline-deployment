@@ -1,7 +1,7 @@
 package de.dfki.experiments
 
 import de.dfki.deployment._
-import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
+import de.dfki.ml.optimization.updater.SquaredL2UpdaterWithAdam
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.rdd.RDD

@@ -1,9 +1,9 @@
 package de.dfki.ml.classification
 
-import de.dfki.ml.optimization.{LogisticGradient, SquaredL2Updater}
+import de.dfki.ml.optimization.LogisticGradient
+import de.dfki.ml.optimization.updater.{Updater, SquaredL2Updater}
 import org.apache.spark.mllib.classification.LogisticRegressionModel
 import org.apache.spark.mllib.linalg.Vector
-import org.apache.spark.mllib.optimization.Updater
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 

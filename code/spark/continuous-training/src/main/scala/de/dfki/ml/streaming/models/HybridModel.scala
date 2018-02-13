@@ -3,8 +3,8 @@ package de.dfki.ml.streaming.models
 import java.io._
 
 import de.dfki.ml.classification.StochasticGradientDescent
+import de.dfki.ml.optimization.updater.Updater
 import org.apache.spark.mllib.linalg.Vector
-import org.apache.spark.mllib.optimization.Updater
 import org.apache.spark.mllib.regression.{GeneralizedLinearModel, LabeledPoint, StreamingLinearAlgorithm}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream

@@ -4,7 +4,7 @@ import java.io.{File, FileWriter}
 import java.nio.file.{Files, Paths}
 
 import de.dfki.ml.evaluation.LogisticLoss
-import de.dfki.ml.optimization.SquaredL2UpdaterWithAdam
+import de.dfki.ml.optimization.updater.SquaredL2UpdaterWithAdam
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.utils.CommandLineParser
 import org.apache.log4j.Logger

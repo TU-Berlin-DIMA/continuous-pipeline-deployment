@@ -2,12 +2,10 @@ package de.dfki.ml.streaming.models
 
 
 import de.dfki.ml.classification.SVMWithSGD
-import de.dfki.ml.optimization.SquaredL2Updater
+import de.dfki.ml.optimization.updater.{SquaredL2Updater, Updater}
 import org.apache.spark.mllib.classification.SVMModel
 import org.apache.spark.mllib.linalg.Vector
-import org.apache.spark.mllib.optimization.Updater
-import org.apache.spark.mllib.regression.LabeledPoint
-import org.apache.spark.streaming.dstream.DStream
+
 
 /**
   * @author Behrouz Derakhshan
