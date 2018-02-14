@@ -2,14 +2,14 @@ package de.dfki.ml.pipelines.urlrep
 
 import java.io._
 
-import de.dfki.ml.evaluation.LogisticLoss
-import de.dfki.ml.optimization.updater.{Updater, SquaredL2UpdaterWithAdam}
-import de.dfki.ml.pipelines.{LRModel, Pipeline}
+import de.dfki.ml.evaluation.{ConfusionMatrix, LogisticLoss}
+import de.dfki.ml.optimization.updater.{SquaredL2UpdaterWithAdam, Updater}
+import de.dfki.ml.pipelines.{ContinuousSVMModel, Pipeline}
 import de.dfki.utils.CommandLineParser
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * @author behrouz
@@ -26,7 +26,7 @@ class URLRepPipeline(@transient var spark: SparkContext,
   var standardScaler = new URLRepStandardScaler()
   val oneHotEncoder = new URLRepOneHotEncoder(numCategories)
 
-  override val model = new LRModel(stepSize, numIterations, regParam, miniBatchFraction, updater)
+  override val model = new ContinuousSVMModel(stepSize, numIterations, regParam, miniBatchFraction, updater)
 
   /**
     * This method have to be called if the pipeline is loaded from the disk
@@ -156,12 +156,12 @@ object URLRepPipeline {
     val rawTest = spark.textFile(testPath)
 
     val baseResult = urlRepPipeline.predict(rawTest)
-    val baseLoss = LogisticLoss.logisticLoss(baseResult)
+    val cMatrix = ConfusionMatrix.fromRDD(baseResult)
 
     //    val loadedResult = loadedPipeline.predict(rawTest)
     //    val loadedLoss = LogisticLoss.logisticLoss(loadedResult)
     //baseResult.saveAsTextFile("data/url-reputation/result/")
-    println(s"Base Loss = $baseLoss")
+    println(s"Base Loss = $cMatrix")
     //println(s"Loaded Loss = $loadedLoss")
   }
 

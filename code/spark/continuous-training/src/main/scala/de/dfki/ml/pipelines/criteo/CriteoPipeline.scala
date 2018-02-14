@@ -4,7 +4,7 @@ import java.io._
 
 import de.dfki.ml.evaluation.LogisticLoss
 import de.dfki.ml.optimization.updater.{SquaredL2UpdaterWithAdam, Updater}
-import de.dfki.ml.pipelines.{LRModel, Pipeline}
+import de.dfki.ml.pipelines.{ContinuousLRModel, Pipeline}
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
@@ -27,7 +27,7 @@ class CriteoPipeline(@transient var spark: SparkContext,
   val missingValueImputer = new MissingValueImputer()
   var standardScaler = new StandardScaler()
   val oneHotEncoder = new OneHotEncoder(numCategories)
-  val model = new LRModel(stepSize, numIterations, regParam, miniBatchFraction, updater)
+  val model = new ContinuousLRModel(stepSize, numIterations, regParam, miniBatchFraction, updater)
 
   /**
     * This method have to be called if the pipeline is loaded from the disk

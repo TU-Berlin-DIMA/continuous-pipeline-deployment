@@ -24,7 +24,6 @@ class LogisticRegressionWithSGD(stepSize: Double,
     standardization,
     fitIntercept,
     updater) with Serializable {
-  //@transient lazy val logger = Logger.getLogger(getClass.getName)
 
   def this() = this(1.0, 100, 0.1, 1.0, true, true, new SquaredL2Updater)
 

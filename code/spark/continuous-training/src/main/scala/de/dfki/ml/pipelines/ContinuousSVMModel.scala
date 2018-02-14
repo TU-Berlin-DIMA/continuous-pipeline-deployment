@@ -1,29 +1,28 @@
 package de.dfki.ml.pipelines
 
 import de.dfki.ml.LinearAlgebra
-import de.dfki.ml.classification.LogisticRegressionWithSGD
+import de.dfki.ml.classification.SVMWithSGD
 import de.dfki.ml.optimization.updater.Updater
 import org.apache.log4j.Logger
-import org.apache.spark.mllib.classification.LogisticRegressionModel
+import org.apache.spark.mllib.classification.SVMModel
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.dstream.DStream
 
-
 /**
   * @author behrouz
   */
-class LRModel(private var stepSize: Double,
-              private var numIterations: Int,
-              private var regParam: Double,
-              private var miniBatchFraction: Double,
-              private var updater: Updater) extends Model {
+class ContinuousSVMModel(private var stepSize: Double,
+                         private var numIterations: Int,
+                         private var regParam: Double,
+                         private var miniBatchFraction: Double,
+                         private var updater: Updater) extends Model {
 
   @transient lazy val logger = Logger.getLogger(getClass.getName)
-  protected val algorithm = new LogisticRegressionWithSGD(stepSize, numIterations, regParam, miniBatchFraction, updater)
+  protected val algorithm = new SVMWithSGD(stepSize, numIterations, regParam, miniBatchFraction, updater)
 
-  var model: Option[LogisticRegressionModel] = None
+  var model: Option[SVMModel] = None
 
   algorithm.optimizer.convergenceTol = 0.0
 
@@ -57,10 +56,9 @@ class LRModel(private var stepSize: Double,
 
   private def predictPoint(vector: Vector, weights: Vector, intercept: Double) = {
     val margin = LinearAlgebra.dot(weights, vector) + intercept
-    val score = 1.0 / (1.0 + math.exp(-margin))
     model.get.getThreshold match {
-      case Some(t) => if (score > t) 1.0 else 0.0
-      case None => score
+      case Some(t) => if (margin > t) 1.0 else 0.0
+      case None => margin
     }
   }
 
