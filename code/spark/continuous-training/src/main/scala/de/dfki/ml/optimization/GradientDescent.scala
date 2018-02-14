@@ -189,21 +189,17 @@ object GradientDescent {
       else
         data.sample(withReplacement = false, miniBatchFraction)
 
-     // val miniBatchSize = sampledData.count()
       prevLoss = currLoss
+      // the gradient computation takes care of dividing the loss and gradient by the number of items in the sample
       val (lossSum, newGradients) = gradient.compute(sampledData, weights)
 
       previousWeights = Some(weights)
-      // TODO: investigate whether or not the gradient should be divided by miniBatchSize
-      // original code from spark divides the gradient by the mini batch size, but to me
-      // it seems illogical and actually the opposite have to be done
-      // investigate this and either add a bug report in spark or fix the implementation here
       val newParams = updater.compute(weights,
-        LinearAlgebra.fromBreeze(newGradients /*/ miniBatchSize.toDouble*/),
+        LinearAlgebra.fromBreeze(newGradients),
         stepSize, i, regParam)
       weights = newParams._1
       // divide loss by the mini batch size
-      currLoss = lossSum /*/ miniBatchSize.toDouble */+ newParams._2
+      currLoss = lossSum + newParams._2
 
       currentWeights = Some(weights)
       //      if (previousWeights.isDefined && currentWeights.isDefined) {

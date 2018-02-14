@@ -1,8 +1,8 @@
 package de.dfki.ml.optimization.gradient
 
-import breeze.linalg.{DenseVector => BDV, Vector => BV}
+import breeze.linalg.{DenseVector => BDV}
 import de.dfki.ml.LinearAlgebra
-import org.apache.spark.mllib.linalg.{DenseVector, Vector, Vectors}
+import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 
 /**
@@ -19,7 +19,7 @@ class HingeGradient(fitIntercept: Boolean, regParamL2: Double) extends BatchGrad
         c.add(instance, broadCastWeights.value)
       val combOp = (c1: HingeAggregator, c2: HingeAggregator) => c1.merge(c2)
 
-      instances.treeAggregate(new HingeAggregator(numFeatures, 2, fitIntercept))(seqOp, combOp)
+      instances.treeAggregate(new HingeAggregator(numFeatures, fitIntercept))(seqOp, combOp)
     }
     val totalGradientArray = hingeAggregator.gradient.toArray
 
@@ -32,15 +32,11 @@ class HingeGradient(fitIntercept: Boolean, regParamL2: Double) extends BatchGrad
   }
 }
 
-// TODO: Fix this
-class HingeAggregator(private val numFeatures: Int,
-                      numClasses: Int,
-                      fitIntercept: Boolean) extends Serializable {
+class HingeAggregator(private val numFeatures: Int, fitIntercept: Boolean) extends Serializable {
   private var weightSum = 0.0
   private var lossSum = 0.0
 
-  private val gradientSumArray =
-    Array.ofDim[Double](if (fitIntercept) numFeatures + 1 else numFeatures)
+  private val gradientSumArray = Array.ofDim[Double](if (fitIntercept) numFeatures + 1 else numFeatures)
 
   /**
     * Add a new training instance to this LogisticAggregator, and update the loss and gradient
@@ -56,57 +52,47 @@ class HingeAggregator(private val numFeatures: Int,
     require(numFeatures == features.size, s"Dimensions mismatch when adding new instance." +
       s" Expecting $numFeatures but got ${features.size}.")
 
-    val coefficientsArray = coefficients match {
-      case dv: DenseVector => dv.values
-      case _ =>
-        throw new IllegalArgumentException(
-          s"coefficients only supports dense vector but got type ${coefficients.getClass}.")
-    }
+    val coefficientsArray = coefficients.toArray
     val localGradientSumArray = gradientSumArray
 
-    numClasses match {
-      case 2 =>
-        // For Binary Logistic Regression.
-        val margin = - {
-          var sum = 0.0
-          features.foreachActive { (index, value) =>
-            if (value != 0.0) {
-              sum += coefficientsArray(index) * value
-            }
-          }
-          sum + {
-            if (fitIntercept) coefficientsArray(numFeatures) else 0.0
-          }
+    // For Binary Logistic Regression.
+    val dotProduct = {
+      var sum = 0.0
+      features.foreachActive { (index, value) =>
+        if (value != 0.0) {
+          sum += coefficientsArray(index) * value
         }
+      }
+      sum + {
+        if (fitIntercept) coefficientsArray(numFeatures) else 0.0
+      }
+    }
 
-        val multiplier = 1.0 / (1.0 + math.exp(margin)) - label
+    val labelScaled = 2 * label - 1.0
 
+    lossSum += {
+      if (1.0 > labelScaled * dotProduct) {
         features.foreachActive { (index, value) =>
           if (value != 0.0) {
-            localGradientSumArray(index) += multiplier * value
+            localGradientSumArray(index) += -labelScaled * value
           }
         }
 
         if (fitIntercept) {
-          localGradientSumArray(numFeatures) += multiplier
+          localGradientSumArray(numFeatures) += -labelScaled
         }
-
-        if (label > 0) {
-          // The following is equivalent to log(1 + exp(margin)) but more numerically stable.
-          lossSum += log1pExp(margin)
-        } else {
-          lossSum += log1pExp(margin) - margin
-        }
-      case _ =>
-        new NotImplementedError("LogisticRegression with ElasticNet in ML package " +
-          "only supports binary classification for now.")
+        1.0 - labelScaled * dotProduct
+      } else {
+        0.0
+      }
     }
+
     weightSum += 1
     this
   }
 
   /**
-    * Merge another LogisticAggregator, and update the loss and gradient
+    * Merge another HingeAggregator, and update the loss and gradient
     * of the objective function.
     * (Note that it's in place merging; as a result, `this` object will be modified.)
     *
@@ -139,27 +125,12 @@ class HingeAggregator(private val numFeatures: Int,
     lossSum / weightSum
   }
 
-  //TODO : investigate this , why the average was too big for SGD to work properly
   def gradient: Vector = {
     require(weightSum > 0.0, s"The effective number of instances should be " +
       s"greater than 0.0, but $weightSum.")
     val result = Vectors.dense(gradientSumArray.clone())
-    LinearAlgebra.scal(1.0 / (weightSum * weightSum), result)
+    LinearAlgebra.scal(1.0 / weightSum, result)
     result
-  }
-
-  /**
-    * Copy from spark: @see org.apache.spark.mllib.util.MLUTILS#log1pExp
-    *
-    * @param x
-    * @return
-    */
-  def log1pExp(x: Double): Double = {
-    if (x > 0) {
-      x + math.log1p(math.exp(-x))
-    } else {
-      math.log1p(math.exp(x))
-    }
   }
 
 }
