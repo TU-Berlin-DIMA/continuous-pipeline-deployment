@@ -194,12 +194,9 @@ object GradientDescent {
       val (lossSum, newGradients) = gradient.compute(sampledData, weights)
 
       previousWeights = Some(weights)
-      val newParams = updater.compute(weights,
-        LinearAlgebra.fromBreeze(newGradients),
-        stepSize, i, regParam)
-      weights = newParams._1
+      weights = updater.compute(weights,LinearAlgebra.fromBreeze(newGradients), stepSize, i)
       // divide loss by the mini batch size
-      currLoss = lossSum + newParams._2
+      currLoss = lossSum
 
       currentWeights = Some(weights)
       //      if (previousWeights.isDefined && currentWeights.isDefined) {

@@ -10,5 +10,5 @@ class NullUpdater extends Updater {
 
   override var iterCounter = 1
 
-  override def compute(weightsOld: Vector, gradient: Vector, stepSize: Double, iter: Int, regParam: Double) = ???
+  override def compute(weightsOld: Vector, gradient: Vector, stepSize: Double, iter: Int) = ???
 }

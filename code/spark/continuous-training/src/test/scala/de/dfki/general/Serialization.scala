@@ -25,7 +25,7 @@ class Serialization extends FunSuite with BeforeAndAfterEach {
     val ois = new ObjectInputStream(new FileInputStream(file))
     val readUpdater = ois.readObject.asInstanceOf[SquaredL2UpdaterWithMomentum]
     ois.close()
-    readUpdater.compute(LinearAlgebra.fromBreeze(DenseVector.zeros[Double](10)), LinearAlgebra.fromBreeze(DenseVector.zeros[Double](10)), 1.0, 1, 1.0)
+    readUpdater.compute(LinearAlgebra.fromBreeze(DenseVector.zeros[Double](10)), LinearAlgebra.fromBreeze(DenseVector.zeros[Double](10)), 1.0, 1)
     println(readUpdater.toString)
   }
 

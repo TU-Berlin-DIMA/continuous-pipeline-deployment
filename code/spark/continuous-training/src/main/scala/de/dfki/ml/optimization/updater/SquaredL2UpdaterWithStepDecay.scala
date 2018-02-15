@@ -14,8 +14,7 @@ class SquaredL2UpdaterWithStepDecay(decaySize: Int = 10) extends Updater {
   override def compute(weightsOld: Vector,
                        gradient: Vector,
                        stepSize: Double,
-                       iter: Int,
-                       regParam: Double): (Vector, Double) = {
+                       iter: Int) = {
 
     var multipleOfDecaySize = iter.toDouble - (iter % decaySize)
     if (multipleOfDecaySize == 0) multipleOfDecaySize = 0.5
@@ -23,24 +22,13 @@ class SquaredL2UpdaterWithStepDecay(decaySize: Int = 10) extends Updater {
 
     val brzWeights: BV[Double] = asBreeze(weightsOld).toDenseVector
 
-    if (regParam != 0) {
-      brzWeights :*= (1.0 - thisIterStepSize * regParam)
-    }
-
-    val regVal = if (regParam == 0) {
-      regParam
-    }
-    else {
-      val norm = brzNorm(brzWeights, 2.0)
-      0.5 * regParam * norm * norm
-    }
-    logger.info(s"current step-size ($thisIterStepSize), regParam($regParam)")
+    logger.info(s"current step-size ($thisIterStepSize)")
 
     brzAxpy(-thisIterStepSize, asBreeze(gradient), brzWeights)
 
     iterCounter = iterCounter + 1
 
-    (fromBreeze(brzWeights), regVal)
+    fromBreeze(brzWeights)
   }
 
   override def name = "step-decay"

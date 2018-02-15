@@ -14,7 +14,7 @@ abstract class Updater extends Serializable{
 
   var iterCounter: Int
 
-  def compute(weightsOld: Vector, gradient: Vector, stepSize: Double, iter: Int, regParam: Double): (Vector, Double)
+  def compute(weightsOld: Vector, gradient: Vector, stepSize: Double, iter: Int): (Vector)
 
   @transient lazy val logger = Logger.getLogger(getClass.getName)
 

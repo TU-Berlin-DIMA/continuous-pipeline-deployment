@@ -25,16 +25,13 @@ class SquaredL2UpdaterWithMomentum(var gamma: Double = 0.9) extends Updater {
   override def compute(weightsOld: Vector,
                        gradient: Vector,
                        stepSize: Double,
-                       iter: Int,
-                       regParam: Double) = {
-
-
+                       iter: Int) = {
 
     var brzWeights = asBreeze(weightsOld)
     val brzGradient = asBreeze(gradient)
     val thisIterStepSize = stepSize / math.sqrt(iterCounter)
-    val size  = brzGradient.size
-      if (updateVector == null) {
+    val size = brzGradient.size
+    if (updateVector == null) {
       updateVector = BDV.zeros[Double](weightsOld.size)
     }
     // adjust the size of the accumulators
@@ -47,25 +44,14 @@ class SquaredL2UpdaterWithMomentum(var gamma: Double = 0.9) extends Updater {
     // part 2: v = v + learningRate * gradient
     //brzAxpy(thisIterStepSize, asBreeze(gradient), updateVector)
 
-    if (regParam != 0) {
-      brzWeights :*= (1.0 - thisIterStepSize * regParam)
-    }
-
-    val regVal = if (regParam == 0) {
-      regParam
-    }
-    else {
-      val norm = brzNorm(brzWeights, 2.0)
-      0.5 * regParam * norm * norm
-    }
-    logger.info(s"current step-size ($thisIterStepSize), regParam($regParam)")
+    logger.info(s"current step-size ($thisIterStepSize)")
 
     // w' = w - v
     brzAxpy(-1.0, updateVector, brzWeights)
 
     iterCounter = iterCounter + 1
 
-    (fromBreeze(brzWeights), regVal)
+    fromBreeze(brzWeights)
   }
 
   override def name = "momentum"

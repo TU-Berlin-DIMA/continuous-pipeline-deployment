@@ -14,29 +14,17 @@ class SquaredL2UpdaterWithConstantLearningRate extends Updater {
   override def compute(weightsOld: Vector,
                        gradient: Vector,
                        stepSize: Double,
-                       iter: Int,
-                       regParam: Double): (Vector, Double) = {
+                       iter: Int) = {
 
     val brzWeights: BV[Double] = asBreeze(weightsOld).toDenseVector
 
-    if (regParam != 0) {
-      brzWeights :*= (1.0 - stepSize * regParam)
-    }
-
-    val regVal = if (regParam == 0) {
-      regParam
-    }
-    else {
-      val norm = brzNorm(brzWeights, 2.0)
-      0.5 * regParam * norm * norm
-    }
-    logger.info(s"current step-size ($stepSize), regParam($regParam)")
+    logger.info(s"current step-size ($stepSize)")
 
     brzAxpy(-stepSize, asBreeze(gradient), brzWeights)
 
     iterCounter = iterCounter + 1
 
-    (fromBreeze(brzWeights), regVal)
+    fromBreeze(brzWeights)
   }
 
   override def name = "constant"

@@ -21,10 +21,26 @@ class HingeGradient(fitIntercept: Boolean, regParamL2: Double) extends BatchGrad
 
       instances.treeAggregate(new HingeAggregator(numFeatures, fitIntercept))(seqOp, combOp)
     }
-    val totalGradientArray = hingeAggregator.gradient.toArray
+    val totalGradient= hingeAggregator.gradient.toArray
 
-    val regVal = 0
-    (hingeAggregator.loss + regVal, new BDV[Double](totalGradientArray))
+    val regVal = if (regParamL2 == 0.0) {
+      0.0
+    } else {
+      var sum = 0.0
+      weights.foreachActive { case (featureIndex, value) =>
+        val isIntercept = fitIntercept && (featureIndex == numFeatures)
+        if (!isIntercept) {
+          sum += {
+            totalGradient(featureIndex) += regParamL2 * value
+            value * value
+          }
+        }
+      }
+      0.5 * regParamL2 * sum
+    }
+    broadCastWeights.destroy()
+
+    (hingeAggregator.loss + regVal, new BDV[Double](totalGradient))
   }
 
   override def setNumFeatures(size: Int) = {

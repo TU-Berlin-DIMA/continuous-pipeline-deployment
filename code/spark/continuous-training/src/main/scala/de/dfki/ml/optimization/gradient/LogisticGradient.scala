@@ -30,10 +30,26 @@ class LogisticGradient(fitIntercept: Boolean, regParamL2: Double) extends BatchG
 
       instances.treeAggregate(new LogisticAggregator(numFeatures, 2, fitIntercept))(seqOp, combOp)
     }
-    val totalGradientArray = logisticAggregator.gradient.toArray
+    val totalGradient = logisticAggregator.gradient.toArray
 
-    val regVal = 0
-    (logisticAggregator.loss + regVal, new BDV[Double](totalGradientArray))
+    val regVal = if (regParamL2 == 0.0) {
+      0.0
+    } else {
+      var sum = 0.0
+      weights.foreachActive { case (featureIndex, value) =>
+        val isIntercept = fitIntercept && (featureIndex == numFeatures)
+        if (!isIntercept) {
+          sum += {
+            totalGradient(featureIndex) += regParamL2 * value
+            value * value
+          }
+        }
+      }
+      0.5 * regParamL2 * sum
+    }
+    broadCastWeights.destroy()
+
+    (logisticAggregator.loss + regVal, new BDV[Double](totalGradient))
   }
 }
 

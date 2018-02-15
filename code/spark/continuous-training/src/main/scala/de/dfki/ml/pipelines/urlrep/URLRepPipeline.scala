@@ -2,7 +2,7 @@ package de.dfki.ml.pipelines.urlrep
 
 import java.io._
 
-import de.dfki.ml.evaluation.{ConfusionMatrix, LogisticLoss}
+import de.dfki.ml.evaluation.ConfusionMatrix
 import de.dfki.ml.optimization.updater.{SquaredL2UpdaterWithAdam, Updater}
 import de.dfki.ml.pipelines.{ContinuousSVMModel, Pipeline}
 import de.dfki.utils.CommandLineParser
@@ -137,9 +137,11 @@ object URLRepPipeline {
 
     val spark = new SparkContext(conf)
     val urlRepPipeline = new URLRepPipeline(spark,
-      numIterations = 100,
+      numIterations = 1000,
+      stepSize = 0.001,
       updater = new SquaredL2UpdaterWithAdam(),
-      miniBatchFraction = 0.1,
+      miniBatchFraction = 1,
+      regParam = 0.01,
       numCategories = 300000)
     val rawTraining = spark.textFile(inputPath)
     urlRepPipeline.updateTransformTrain(rawTraining)
