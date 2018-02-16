@@ -2,7 +2,7 @@ package de.dfki.deployment
 
 import java.io.{File, FileWriter}
 
-import de.dfki.ml.evaluation.{LogisticLoss, Score}
+import de.dfki.ml.evaluation.Score
 import de.dfki.ml.pipelines.Pipeline
 import org.apache.log4j.Logger
 import org.apache.spark.SparkContext
@@ -36,7 +36,7 @@ abstract class Deployment {
     file.getParentFile.mkdirs()
     val fw = new FileWriter(file, true)
     try {
-      fw.write(s"${score.score()}\n")
+      fw.write(s"${score.asCSV()}\n")
     }
     finally fw.close()
   }
