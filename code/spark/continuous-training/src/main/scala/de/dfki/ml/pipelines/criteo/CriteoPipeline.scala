@@ -2,7 +2,7 @@ package de.dfki.ml.pipelines.criteo
 
 import java.io._
 
-import de.dfki.ml.evaluation.LogisticLoss
+import de.dfki.ml.evaluation.{LogisticLoss, Score}
 import de.dfki.ml.optimization.updater.{SquaredL2UpdaterWithAdam, Updater}
 import de.dfki.ml.pipelines.{ContinuousLRModel, Pipeline}
 import de.dfki.utils.CommandLineParser
@@ -16,7 +16,7 @@ import org.apache.spark.{SparkConf, SparkContext}
   */
 class CriteoPipeline(@transient var spark: SparkContext,
                      val delim: String = "\t",
-                     val stepSize: Double = 1.0,
+                     val stepSize: Double = 0.001,
                      val numIterations: Int = 500,
                      val regParam: Double = 0.0,
                      val miniBatchFraction: Double = 1.0,
@@ -42,7 +42,7 @@ class CriteoPipeline(@transient var spark: SparkContext,
     val parsedData = fileReader.transform(spark, data)
     val filledData = missingValueImputer.transform(spark, parsedData)
     val scaledData = standardScaler.update(spark, filledData)
-   //oneHotEncoder.update(spark, scaledData)
+    //oneHotEncoder.update(spark, scaledData)
   }
 
   override def transform(data: RDD[String]): RDD[LabeledPoint] = {
@@ -70,6 +70,7 @@ class CriteoPipeline(@transient var spark: SparkContext,
 
   /**
     * short cut function for experiments for quality
+    *
     * @param data
     */
   override def updateTransformTrain(data: RDD[String]) = {
@@ -100,8 +101,6 @@ class CriteoPipeline(@transient var spark: SparkContext,
     */
   override def predict(data: DStream[String]): DStream[(Double, Double)] = {
     data.transform(rdd => predict(rdd))
-    //    val testData = dataProcessing(data)
-    //    model.predict(testData.map(v => (v.label, v.features)))
   }
 
 
@@ -122,6 +121,11 @@ class CriteoPipeline(@transient var spark: SparkContext,
       numCategories = numCategories)
   }
 
+  override def name() = "criteo"
+
+  override def score(data: RDD[String]): Score = {
+    LogisticLoss.fromRDD(predict(data))
+  }
 }
 
 // example use case of criteo pipeline
@@ -155,10 +159,10 @@ object CriteoPipeline {
     val rawTest = spark.textFile(testPath)
 
     val baseResult = criteoPipeline.predict(rawTest)
-    val baseLoss = LogisticLoss.logisticLoss(baseResult)
+    val baseLoss = LogisticLoss.fromRDD(baseResult)
 
     val loadedResult = criteoPipeline.predict(rawTest)
-    val loadedLoss = LogisticLoss.logisticLoss(loadedResult)
+    val loadedLoss = LogisticLoss.fromRDD(loadedResult)
 
     println(s"Base Loss = $baseLoss")
     println(s"Loaded Loss = $loadedLoss")

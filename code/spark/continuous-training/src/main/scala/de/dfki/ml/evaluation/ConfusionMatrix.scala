@@ -10,7 +10,7 @@ import org.apache.spark.rdd.RDD
 class ConfusionMatrix(val tp: Int,
                       val fp: Int,
                       val tn: Int,
-                      val fn: Int) extends Serializable {
+                      val fn: Int) extends Score {
 
   calculate()
 
@@ -69,6 +69,8 @@ class ConfusionMatrix(val tp: Int,
     }
   }
 
+  override def score() = accuracy
+
   override def toString = {
     s"accuracy($accuracy), precision($precision), recall($recall), f-measure($fMeasure)"
   }
@@ -83,7 +85,7 @@ class ConfusionMatrix(val tp: Int,
 
 
   // tp, fp, tn, fn
-  def asCSV: String = {
+  def asCSV(): String = {
     s"$tp,$fp,$tn,$fn"
   }
 }

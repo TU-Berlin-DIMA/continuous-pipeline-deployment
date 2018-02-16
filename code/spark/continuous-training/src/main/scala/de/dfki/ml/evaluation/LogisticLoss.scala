@@ -7,33 +7,48 @@ import org.apache.spark.{SparkConf, SparkContext}
 /**
   * @author behrouz
   */
+class LogisticLoss(val err: Double,
+                   val count: Int) extends Score{
+
+  val error = err / count
+
+  override def score() = error
+
+  override def toString() = {
+    s"error($error)"
+  }
+
+  override def asCSV(): String = {
+    s"$err,$count"
+  }
+
+}
+
 object LogisticLoss {
+  val RESULT_PATH = "data/criteo-full/temp-results"
 
-  /**
-    *
-    * @param rdd input rdd (label, prediction)
-    * @return
-    */
-  def logisticLoss(rdd: RDD[(Double, Double)]): Double = {
+  def main(args: Array[String]): Unit = {
+    val conf = new SparkConf().setAppName("Logistic Regression")
+    val masterURL = conf.get("spark.master", "local[*]")
+    conf.setMaster(masterURL)
+    val sc = new SparkContext(conf)
+    val data = sc.textFile(s"$RESULT_PATH/optimizer=sgd/updater=l2-adam/iter=500/step-size=0.01-1/reg=0.0").map(parse)
+    val loss = fromRDD(data)
+    println(s"loss = $loss")
+  }
+
+  def fromRDD(rdd: RDD[(Double, Double)]): Score = {
     val res = rdd
-      .map(i => (logisticLoss(i._1, i._2), 1))
+      .map(i => (computeLogisticLoss(i._1, i._2), 1))
       .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
-    res._1 / res._2
+    new LogisticLoss(res._1, res._2)
   }
 
-  /**
-    *
-    * @param stream input dstream (label, prediction)
-    * @return
-    */
-  def logisticLoss(stream: DStream[(Double, Double)]): DStream[Double] = {
-    stream
-      .map(i => (logisticLoss(i._1, i._2), 1))
-      .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
-      .map(ll => ll._1 / ll._2)
+  def merge(l1: LogisticLoss, l2: LogisticLoss): LogisticLoss = {
+    new LogisticLoss(l1.err + l2.err, l1.count + l2.count)
   }
 
-  def logisticLoss(label: Double, prediction: Double): Double = {
+  private def computeLogisticLoss(label: Double, prediction: Double): Double = {
     if (prediction == label)
       0
     else {
@@ -43,21 +58,7 @@ object LogisticLoss {
     }
   }
 
-  val RESULT_PATH = "data/criteo-full/temp-results"
-
-  def main(args: Array[String]): Unit = {
-    val conf = new SparkConf().setAppName("Logistic Regression")
-    val masterURL = conf.get("spark.master", "local[*]")
-    conf.setMaster(masterURL)
-    val sc = new SparkContext(conf)
-
-    val data = sc.textFile(s"$RESULT_PATH/optimizer=sgd/updater=l2-adam/iter=500/step-size=0.01-1/reg=0.0").map(parse)
-    data.take(100).map(r => (r, logisticLoss(r._1, r._2))).foreach(println)
-    val loss = logisticLoss(data)
-    println(s"loss = $loss")
-  }
-
-  def parse(line: String): (Double, Double) = {
+  private def parse(line: String): (Double, Double) = {
     val predict :: label :: other = line.split(",").map(s => s.replace("(", "").replace(")", "").toDouble).toList
     (predict, label)
   }

@@ -108,7 +108,7 @@ object LogisticRegressionOnCriteoData {
                 val prediction = predictPoint(features, model.weights, model.intercept)
                 (label, prediction)
               }
-              val loss = LogisticLoss.logisticLoss(results)
+              val loss = LogisticLoss.fromRDD(results)
               println(s"loss = $loss")
               //              predictionAndLabels.repartition(8).saveAsTextFile(s"$resultPath/optimizer=$optimizer/updater=${updater.name}/iter=$it/step-size=$ss/reg=$reg")
               //              println(s"Execution with iter=$it\tstep-size=$ss\treg=$reg is completed")
@@ -186,9 +186,9 @@ object ComputeScores {
               val path = s"$resultPath/optimizer=$opt/updater=$updater/iter=$it/step-size=$ss/reg=$reg"
               if (Files.exists(Paths.get(path))) {
                 val data = sc.textFile(s"$resultPath/optimizer=$opt/updater=$updater/iter=$it/step-size=$ss/reg=$reg").map(parse)
-                val loss = LogisticLoss.logisticLoss(data)
+                val loss = LogisticLoss.fromRDD(data)
                 println(s"loss = $loss")
-                results = (opt, updater, it, ss, reg, loss) :: results
+                results = (opt, updater, it, ss, reg, loss.score()) :: results
               } else {
                 println(s"directory: $path \n does not exist")
 

@@ -7,7 +7,7 @@ import java.util.Calendar
 import java.util.concurrent.{ScheduledExecutorService, ScheduledFuture}
 
 import de.dfki.core.streaming.BatchFileInputDStream
-import de.dfki.ml.evaluation.{ConfusionMatrix, LogisticLoss}
+import de.dfki.ml.evaluation.{ConfusionMatrix, LogisticLoss, Score}
 import de.dfki.ml.optimization.updater.Updater
 import de.dfki.ml.pipelines.Pipeline
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
@@ -147,12 +147,9 @@ abstract class Classifier extends Serializable {
     evaluationMetric match {
       case "logloss" =>
         val totalLogLoss = pipeline
-          .predict(testData)
-          .map(pre => (LogisticLoss.logisticLoss(pre._1, pre._2), 1))
-          // sum over logistic loss
-          .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
+          .score(testData)
         // store the average logistic loss into file
-        storeLogisticLoss(totalLogLoss._1 / totalLogLoss._2, resultPath)
+        storeLogisticLoss(totalLogLoss, resultPath)
       case "confusion-matrix" =>
         val cm = pipeline
           .predict(testData)
@@ -171,7 +168,7 @@ abstract class Classifier extends Serializable {
     stream
   }
 
-  val storeLogisticLoss = (logLoss: Double, resultPath: String) => {
+  val storeLogisticLoss = (logLoss: Score, resultPath: String) => {
     val file = new File(s"$resultPath/loss.txt")
     file.getParentFile.mkdirs()
     val fw = new FileWriter(file, true)

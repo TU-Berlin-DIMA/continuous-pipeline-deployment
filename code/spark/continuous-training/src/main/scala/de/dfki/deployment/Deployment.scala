@@ -2,7 +2,7 @@ package de.dfki.deployment
 
 import java.io.{File, FileWriter}
 
-import de.dfki.ml.evaluation.LogisticLoss
+import de.dfki.ml.evaluation.{LogisticLoss, Score}
 import de.dfki.ml.pipelines.Pipeline
 import org.apache.log4j.Logger
 import org.apache.spark.SparkContext
@@ -25,45 +25,18 @@ abstract class Deployment {
                      resultPath: String,
                      postfix: String = "") = {
 
-    val totalLogLoss = pipeline
-      .predict(evaluationData)
-      .map(pre => (LogisticLoss.logisticLoss(pre._1, pre._2), 1))
-      // sum over logistic loss
-      .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
+    val score = pipeline
+      .score(evaluationData)
     // store the average logistic loss into file
-    storeLogisticLoss(totalLogLoss._1 / totalLogLoss._2, resultPath, postfix)
+    storeLogisticLoss(score, resultPath, postfix)
   }
 
-  def evaluateStreamPrequential(pipeline: Pipeline,
-                                evaluationData: RDD[String],
-                                resultPath: String,
-                                postfix: String = "") = {
-
-    val totalLogLoss = pipeline
-      .predict(evaluationData)
-      .map(pre => (LogisticLoss.logisticLoss(pre._1, pre._2), 1))
-      // sum over logistic loss
-      .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
-    // store the raw sum for computing the cumulative error
-    storeLogisticLossPrequential(totalLogLoss._1, totalLogLoss._2, resultPath, postfix)
-  }
-
-  val storeLogisticLoss = (logLoss: Double, resultPath: String, postfix: String) => {
+  val storeLogisticLoss = (score: Score, resultPath: String, postfix: String) => {
     val file = new File(s"$resultPath/loss_$postfix")
     file.getParentFile.mkdirs()
     val fw = new FileWriter(file, true)
     try {
-      fw.write(s"$logLoss\n")
-    }
-    finally fw.close()
-  }
-
-  val storeLogisticLossPrequential = (num: Double, denum: Double, resultPath: String, postfix: String) => {
-    val file = new File(s"$resultPath/loss_$postfix")
-    file.getParentFile.mkdirs()
-    val fw = new FileWriter(file, true)
-    try {
-      fw.write(s"$num,$denum\n")
+      fw.write(s"${score.score()}\n")
     }
     finally fw.close()
   }

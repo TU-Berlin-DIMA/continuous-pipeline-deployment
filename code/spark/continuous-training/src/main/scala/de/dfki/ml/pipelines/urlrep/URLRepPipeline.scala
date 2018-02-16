@@ -2,7 +2,7 @@ package de.dfki.ml.pipelines.urlrep
 
 import java.io._
 
-import de.dfki.ml.evaluation.ConfusionMatrix
+import de.dfki.ml.evaluation.{ConfusionMatrix, Score}
 import de.dfki.ml.optimization.updater.{SquaredL2UpdaterWithAdam, Updater}
 import de.dfki.ml.pipelines.{ContinuousSVMModel, Pipeline}
 import de.dfki.utils.CommandLineParser
@@ -15,7 +15,7 @@ import org.apache.spark.{SparkConf, SparkContext}
   * @author behrouz
   */
 class URLRepPipeline(@transient var spark: SparkContext,
-                     val stepSize: Double = 1.0,
+                     val stepSize: Double = 0.001,
                      val numIterations: Int = 500,
                      val regParam: Double = 0.0,
                      val miniBatchFraction: Double = 1.0,
@@ -119,6 +119,12 @@ class URLRepPipeline(@transient var spark: SparkContext,
       miniBatchFraction = miniBatchFraction,
       updater = newUpdater,
       numCategories = numCategories)
+  }
+
+  override def name() = "url-rep"
+
+  override def score(data: RDD[String]): Score = {
+    ConfusionMatrix.fromRDD(predict(data))
   }
 }
 

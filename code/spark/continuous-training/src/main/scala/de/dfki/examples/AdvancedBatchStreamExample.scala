@@ -133,26 +133,22 @@ object AdvancedBatchStreamExample {
     //      .foreachRDD(rdd => storeLogisticLoss(rdd, resultPath))
 
     // pipeline
-    stream
-      .map(dataParser.parsePoint)
-      // online
-      .transform(rdd => model.trainOn(rdd))
-      // combining the last data items
-      .window(Seconds(sgdSlack), Seconds(sgdSlack))
-      // train on union of streaming and batch
-      .transform(rdd => model.trainOnHybrid(rdd, batch))
-      // store for next batch
-      .transform((r, t) => storeRDD(r, t, tempPath, dataParser))
-      // calculate error
-      .transform(_ => model.predictOnValues(evaluationDataSet))
-      // calculate per logistic loss
-      .map(pre => (LogisticLoss.logisticLoss(pre._1, pre._2), 1))
-      // sum over logistic loss
-      .reduce((a, b) => (a._1 + b._1, a._2 + b._2))
-      // find total logistic loss
-      .map(v => v._1 / v._2)
-      // store the logistic loss into file
-      .foreachRDD(rdd => storeLogisticLoss(rdd, resultPath))
+//    stream
+//      .map(dataParser.parsePoint)
+//      // online
+//      .transform(rdd => model.trainOn(rdd))
+//      // combining the last data items
+//      .window(Seconds(sgdSlack), Seconds(sgdSlack))
+//      // train on union of streaming and batch
+//      .transform(rdd => model.trainOnHybrid(rdd, batch))
+//      // store for next batch
+//      .transform((r, t) => storeRDD(r, t, tempPath, dataParser))
+//      // calculate error
+//      .transform(_ => model.predictOnValues(evaluationDataSet))
+//      // calculate per logistic loss
+//      .transform(rdd => LogisticLoss.fromRDD(rdd))
+//      // store the logistic loss into file
+//      .foreachRDD(rdd => storeLogisticLoss(rdd, resultPath))
 
 
     ssc.start()

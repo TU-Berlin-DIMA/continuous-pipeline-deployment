@@ -68,7 +68,7 @@ object TrainPipeline {
 
         pipeline.train(transformed)
         val results = pipeline.predict(evaluationData)
-        val loss = LogisticLoss.logisticLoss(results)
+        val loss = LogisticLoss.fromRDD(results)
         println(s"loss_$i = $loss")
         val file = new File(s"$resultPath/quality")
         file.getParentFile.mkdirs()

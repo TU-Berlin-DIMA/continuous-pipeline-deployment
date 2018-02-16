@@ -80,7 +80,7 @@ object ParameterSelection {
           criteoPipeline.train(transformed)
           CriteoPipeline.saveToDisk(criteoPipeline, pipelineName)
         }
-        val loss = LogisticLoss.logisticLoss(criteoPipeline.predict(eval))
+        val loss = LogisticLoss.fromRDD(criteoPipeline.predict(eval))
         cur = iter
         val file = new File(s"$resultPath/${updater.name}/loss")
         file.getParentFile.mkdirs()
