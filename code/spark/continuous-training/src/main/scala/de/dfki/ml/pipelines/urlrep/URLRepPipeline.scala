@@ -19,6 +19,7 @@ class URLRepPipeline(@transient var spark: SparkContext,
                      val numIterations: Int = 500,
                      val regParam: Double = 0.0,
                      val miniBatchFraction: Double = 1.0,
+                     val convergenceTol: Double = 1E-6,
                      val updater: Updater = new SquaredL2UpdaterWithAdam(),
                      val numCategories: Int = 300000) extends Pipeline {
   val fileReader = new URLRepSVMParser()
@@ -26,7 +27,7 @@ class URLRepPipeline(@transient var spark: SparkContext,
   var standardScaler = new URLRepStandardScaler()
   val oneHotEncoder = new URLRepOneHotEncoder(numCategories)
 
-  override val model = new ContinuousSVMModel(stepSize, numIterations, regParam, miniBatchFraction, updater)
+  override val model = new ContinuousSVMModel(stepSize, numIterations, regParam, convergenceTol, miniBatchFraction, updater)
 
   /**
     * This method have to be called if the pipeline is loaded from the disk

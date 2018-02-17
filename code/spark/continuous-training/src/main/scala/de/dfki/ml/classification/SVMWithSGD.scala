@@ -14,35 +14,35 @@ import org.apache.spark.rdd.RDD
 class SVMWithSGD(stepSize: Double,
                  numIterations: Int,
                  regParam: Double,
+                 convergenceTol: Double,
                  miniBatchFraction: Double,
-                 standardization: Boolean,
                  fitIntercept: Boolean,
                  updater: Updater)
   extends StochasticGradientDescent[SVMModel](stepSize,
     numIterations,
     regParam,
+    convergenceTol,
     miniBatchFraction,
-    standardization,
     fitIntercept,
     updater) with Serializable {
 
-  def this() = this(1.0, 100, 0.1, 1.0, true, true, new SquaredL2Updater)
+  def this() = this(1.0, 100, 0.1, 1E-6, 1.0, true, new SquaredL2Updater)
 
   def this(stepSize: Double,
            numIterations: Int,
            regParam: Double,
-           updater: Updater) = this(stepSize, numIterations, regParam, 1.0, true, true, updater)
+           updater: Updater) = this(stepSize, numIterations, regParam,  1E-6, 1.0, true, updater)
 
   def this(stepSize: Double,
            numIterations: Int,
            regParam: Double,
            miniBatchFraction: Double,
-           updater: Updater) = this(stepSize, numIterations, regParam, miniBatchFraction, true, true, updater)
+           updater: Updater) = this(stepSize, numIterations, regParam, 1E-6, miniBatchFraction, true, updater)
 
   def this(stepSize: Double,
            numIterations: Int,
            regParam: Double,
-           miniBatchFraction: Double) = this(stepSize, numIterations, regParam, miniBatchFraction, true, true, new SquaredL2Updater)
+           miniBatchFraction: Double) = this(stepSize, numIterations, regParam, 1E-6, miniBatchFraction, true, new SquaredL2Updater)
 
 
   override def gradientFunction = new HingeGradient(fitIntercept, regParam)

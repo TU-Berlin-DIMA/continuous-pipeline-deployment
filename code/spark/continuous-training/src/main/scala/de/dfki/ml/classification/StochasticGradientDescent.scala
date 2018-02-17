@@ -15,8 +15,8 @@ import org.apache.spark.storage.StorageLevel
 abstract class StochasticGradientDescent[M <: GeneralizedLinearModel](val stepSize: Double,
                                                                       val numIterations: Int,
                                                                       val regParam: Double,
+                                                                      val convergenceTol: Double,
                                                                       val miniBatchFraction: Double,
-                                                                      val standardization: Boolean,
                                                                       val fitIntercept: Boolean,
                                                                       val updater: Updater)
   extends GeneralizedLinearAlgorithm[M] {
@@ -28,9 +28,8 @@ abstract class StochasticGradientDescent[M <: GeneralizedLinearModel](val stepSi
   override val optimizer = new GradientDescent(numIterations,
     stepSize,
     regParam,
+    convergenceTol,
     miniBatchFraction,
-    1E-6,
-    standardization,
     fitIntercept,
     gradientFunction,
     updater)
@@ -67,7 +66,7 @@ abstract class StochasticGradientDescent[M <: GeneralizedLinearModel](val stepSi
   override def toString = {
     s"${this.getClass.getName} with Params: " +
       s"stepSize($stepSize), numIterations($numIterations), regParam($regParam)" +
-      s", miniBatchFraction($miniBatchFraction), standardization($standardization), fitIntercept($fitIntercept)" +
+      s", miniBatchFraction($miniBatchFraction), fitIntercept($fitIntercept)" +
       s", updater(${updater.toString})"
   }
 }

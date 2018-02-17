@@ -16,15 +16,14 @@ import org.apache.spark.streaming.dstream.DStream
 class ContinuousSVMModel(private var stepSize: Double,
                          private var numIterations: Int,
                          private var regParam: Double,
+                         private var convergenceTol: Double,
                          private var miniBatchFraction: Double,
                          private var updater: Updater) extends Model {
 
   @transient lazy val logger = Logger.getLogger(getClass.getName)
-  protected val algorithm = new SVMWithSGD(stepSize, numIterations, regParam, miniBatchFraction, updater)
+  protected val algorithm = new SVMWithSGD(stepSize, numIterations, regParam, convergenceTol, miniBatchFraction, true, updater)
 
   var model: Option[SVMModel] = None
-
-  algorithm.optimizer.convergenceTol = 0.0
 
   override def train(data: RDD[LabeledPoint]) = {
     model = if (model.isEmpty) {

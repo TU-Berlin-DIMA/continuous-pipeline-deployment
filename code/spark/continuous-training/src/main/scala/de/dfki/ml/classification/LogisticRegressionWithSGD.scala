@@ -14,34 +14,34 @@ class LogisticRegressionWithSGD(stepSize: Double,
                                 numIterations: Int,
                                 regParam: Double,
                                 miniBatchFraction: Double,
-                                standardization: Boolean,
+                                convergenceTol: Double,
                                 fitIntercept: Boolean,
                                 updater: Updater)
   extends StochasticGradientDescent[LogisticRegressionModel](stepSize,
     numIterations,
     regParam,
     miniBatchFraction,
-    standardization,
+    convergenceTol,
     fitIntercept,
     updater) with Serializable {
 
-  def this() = this(1.0, 100, 0.1, 1.0, true, true, new SquaredL2Updater)
+  def this() = this(1.0, 100, 0.1, 1.0, 1E-6, true, new SquaredL2Updater)
 
   def this(stepSize: Double,
            numIterations: Int,
            regParam: Double,
-           updater: Updater) = this(stepSize, numIterations, regParam, 1.0, true, true, updater)
+           updater: Updater) = this(stepSize, numIterations, regParam, 1.0, 1E-6, true, updater)
 
   def this(stepSize: Double,
            numIterations: Int,
            regParam: Double,
            miniBatchFraction: Double,
-           updater: Updater) = this(stepSize, numIterations, regParam, miniBatchFraction, true, true, updater)
+           updater: Updater) = this(stepSize, numIterations, regParam, miniBatchFraction, 1E-6, true, updater)
 
   def this(stepSize: Double,
            numIterations: Int,
            regParam: Double,
-           miniBatchFraction: Double) = this(stepSize, numIterations, regParam, miniBatchFraction, true, true, new SquaredL2Updater)
+           miniBatchFraction: Double) = this(stepSize, numIterations, regParam, miniBatchFraction, 1E-6, true, new SquaredL2Updater)
 
 
   override def gradientFunction = new LogisticGradient(fitIntercept, regParam)

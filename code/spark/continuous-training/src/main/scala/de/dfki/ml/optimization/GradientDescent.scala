@@ -18,9 +18,8 @@ import org.apache.spark.rdd.RDD
 class GradientDescent(var numIterations: Int,
                       var stepSize: Double,
                       var regParam: Double,
-                      var miniBatchFraction: Double,
                       var convergenceTol: Double,
-                      var standardize: Boolean,
+                      var miniBatchFraction: Double,
                       var fitIntercept: Boolean,
                       gradient: BatchGradient,
                       var updater: Updater) extends SGDOptimizer {
@@ -61,7 +60,7 @@ class GradientDescent(var numIterations: Int,
     this
   }
 
-  def this() = this(100, 1.0, 0.0, 1.0, 1E-6, true, true, new LogisticGradient(true, 1.0), new SquaredL2Updater)
+  def this() = this(100, 1.0, 0.0, 1E-6, 1.0, true, new LogisticGradient(true, 1.0), new SquaredL2Updater)
 
 
   /**
@@ -84,10 +83,9 @@ class GradientDescent(var numIterations: Int,
       stepSize,
       numIterations,
       regParam,
+      convergenceTol,
       miniBatchFraction,
       initialWeights,
-      convergenceTol,
-      standardize,
       fitIntercept,
       intercept)
   }
@@ -127,10 +125,9 @@ object GradientDescent {
                       stepSize: Double,
                       numIterations: Int,
                       regParam: Double,
+                      convergenceTol: Double,
                       miniBatchFraction: Double,
                       initialWeights: Vector,
-                      convergenceTol: Double,
-                      standardization: Boolean,
                       fitIntercept: Boolean,
                       intercept: Double): Vector = {
 
@@ -199,14 +196,13 @@ object GradientDescent {
       currLoss = lossSum
 
       currentWeights = Some(weights)
-      //      if (previousWeights.isDefined && currentWeights.isDefined) {
-      //        converged = isConverged(previousWeights.get, currentWeights.get, convergenceTol)
-      //      }
+
+      //converged = isConverged(currentWeights.get, previousWeights.get, convergenceTol)
       converged = isConverged(prevLoss, currLoss, convergenceTol)
+
       logger.info(s"Iteration ($i/$numIterations) ,loss($currLoss)")
       i += 1
     }
-
     weights
   }
 

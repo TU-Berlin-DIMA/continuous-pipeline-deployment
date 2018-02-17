@@ -13,7 +13,7 @@ class GradientDescentTest extends FunSuite with BeforeAndAfterEach {
   var sc: SparkContext = _
 
   override def beforeEach() {
-    optimizer = new GradientDescent(100, 1.0, 0.0, 1.0, 1E-6, true, true,
+    optimizer = new GradientDescent(100, 1.0, 0.0, 1.0, 1E-6, true,
       new LogisticGradient(true, 1.0),
       new SquaredL2Updater())
     val conf = new SparkConf()
