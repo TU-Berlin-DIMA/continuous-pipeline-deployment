@@ -1,5 +1,6 @@
 package de.dfki.deployment
 
+import de.dfki.core.sampling.Sampler
 import de.dfki.core.streaming.BatchFileInputDStream
 import de.dfki.ml.pipelines.Pipeline
 import org.apache.hadoop.io.{LongWritable, Text}
@@ -14,14 +15,13 @@ import scala.collection.mutable.ListBuffer
   *
   * @author behrouz
   */
-class ContinuousDeploymentTimeAnalysis(val history: String,
-                                       val streamBase: String,
-                                       val evaluationPath: String,
-                                       val resultPath: String,
-                                       val samplingRate: Double = 0.1,
-                                       val daysToProcess: Array[Int] = Array(1, 2, 3, 4, 5),
-                                       val slack: Int = 10,
-                                       val windowSize: Int = -1) extends Deployment {
+class ContinuousDeploymentTimeAnalysis(history: String,
+                                       streamBase: String,
+                                       evaluationPath: String,
+                                       resultPath: String,
+                                       daysToProcess: Array[Int] = Array(1, 2, 3, 4, 5),
+                                       slack: Int = 10,
+                                       sampler: Sampler) extends Deployment(slack, sampler) {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     // create rdd of the initial data that the pipeline was trained with
@@ -56,31 +56,29 @@ class ContinuousDeploymentTimeAnalysis(val history: String,
       var end = System.currentTimeMillis()
       val updateTime = end - start
 
-      storeTrainingTimes(updateTime, s"$resultPath/$windowSize", "update")
+      storeTrainingTimes(updateTime, s"$resultPath/${sampler.name}", "update")
 
       if (time % slack == 0) {
 
         // transform and store transform time
         start = System.currentTimeMillis()
-        val nextBatch = historicalDataRDD(processedRDD, samplingRate, slack, streamingContext.sparkContext, windowSize)
+
+        val nextBatch = provideHistoricalSample(processedRDD, streamingContext.sparkContext)
         val transformed = pipeline.transform(nextBatch)
         transformed.cache()
         transformed.count()
         end = System.currentTimeMillis()
         val transformTime = end - start
-        storeTrainingTimes(transformTime, s"$resultPath/$windowSize", "transform")
+        storeTrainingTimes(transformTime, s"$resultPath/${sampler.name}", "transform")
 
         // train and store train time
         start = System.currentTimeMillis()
         pipeline.train(transformed)
         end = System.currentTimeMillis()
         val trainTime = end - start
-        storeTrainingTimes(trainTime, s"$resultPath/$windowSize", "train")
+        storeTrainingTimes(trainTime, s"$resultPath/${sampler.name}", "train")
 
         transformed.unpersist(true)
-      }
-      if (time > (windowSize + slack) && windowSize != -1) {
-        processedRDD(time - (windowSize + slack)).unpersist(blocking = true)
       }
       time += 1
     }

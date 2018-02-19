@@ -22,9 +22,8 @@ class ContinuousDeploymentSamplingTimeAnalysis(val history: String,
                                                val samplingRate: Double = 0.1,
                                                val dayDuration: Int = 100,
                                                val daysToProcess: Array[Int] = Array(1, 2),
-                                               val slack: Int = 10,
-                                               val windowSize: Int = -1,
-                                               val iter: Int = 50) extends Deployment {
+                                               val iter: Int = 50,
+                                               val windowSize: Int = -1) extends Deployment {
 
   @transient lazy val logger = Logger.getLogger(getClass.getName)
 

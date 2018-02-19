@@ -1,5 +1,6 @@
 package de.dfki.deployment
 
+import de.dfki.core.sampling.Sampler
 import de.dfki.core.streaming.BatchFileInputDStream
 import de.dfki.ml.pipelines.Pipeline
 import org.apache.hadoop.io.{LongWritable, Text}
@@ -16,10 +17,9 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
                                           val streamBase: String,
                                           val evaluation: String = "prequential",
                                           val resultPath: String,
-                                          val samplingRate: Double = 0.1,
-                                          val slack: Int = 10,
                                           val daysToProcess: Array[Int] = Array(1, 2, 3, 4, 5),
-                                          val windowSize: Int = -1) extends Deployment {
+                                          slack: Int = 10,
+                                          sampler: Sampler) extends Deployment(slack, sampler) {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     // create rdd of the initial data that the pipeline was trained with
@@ -46,7 +46,7 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
 
     if (evaluation != "prequential") {
       // initial evaluation of the pipeline right after deployment for non prequential based method
-      evaluateStream(pipeline, testData, resultPath, windowSize.toString)
+      evaluateStream(pipeline, testData, resultPath, sampler.name)
     }
 
     while (!streamingSource.allFileProcessed()) {
@@ -58,22 +58,19 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
       processedRDD += rdd
       if (evaluation == "prequential") {
         // perform evaluation
-        evaluateStream(pipeline, rdd, resultPath, windowSize.toString)
+        evaluateStream(pipeline, rdd, resultPath, sampler.name)
       }
       if (time % slack == 0) {
         pipeline.update(streamingContext.sparkContext.union(processedRDD.slice(processedRDD.size - slack, processedRDD.size)))
-        val data = historicalDataRDD(processedRDD, samplingRate, slack, streamingContext.sparkContext, windowSize)
+        val data = provideHistoricalSample(processedRDD, streamingContext.sparkContext)
         val trainingData = pipeline.transform(data)
         trainingData.cache()
         pipeline.train(trainingData)
         trainingData.unpersist()
         if (evaluation != "prequential") {
           // if evaluation method is not prequential, only perform evaluation after a training step
-          evaluateStream(pipeline, testData, resultPath, windowSize.toString)
+          evaluateStream(pipeline, testData, resultPath, sampler.name)
         }
-      }
-      if (time > windowSize && windowSize != -1) {
-        //processedRDD(time - windowSize).unpersist(blocking = true)
       }
       time += 1
     }

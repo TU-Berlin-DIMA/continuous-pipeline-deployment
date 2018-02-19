@@ -3,6 +3,7 @@ package de.dfki.experiments
 import java.io.{File, FileWriter}
 import java.nio.file.{Files, Paths}
 
+import de.dfki.core.sampling.{SimpleRandomSampler, WindowBasedSampler}
 import de.dfki.deployment.ContinuousDeploymentQualityAnalysis
 import de.dfki.ml.evaluation.LogisticLoss
 import de.dfki.ml.optimization.updater.Updater
@@ -44,7 +45,7 @@ object ParameterSelection {
     val increments = parser.get("increments", DEFAULT_INCREMENT).split(",").map(_.toInt)
     val updaters = parser.get("updater", UPDATER).split(",")
     val delimiter = parser.get("delimiter", DELIMITER)
-    val stepSize = parser.getDouble("step",STEP_SIZE)
+    val stepSize = parser.getDouble("step", STEP_SIZE)
     val numFeatures = parser.getInteger("features", NUM_FEATURES)
     val pipelineDirectory = parser.get("pipeline", PIPELINE_DIRECTORY)
     val slack = parser.getInteger("slack", SLACK)
@@ -97,10 +98,9 @@ object ParameterSelection {
         streamBase = streamPath,
         evaluation = evaluationPath,
         resultPath = s"$resultPath/${updater.name}",
+        daysToProcess = days,
         slack = slack,
-        samplingRate = 0.1,
-        windowSize = dayDuration,
-        daysToProcess = days)
+        sampler = new WindowBasedSampler(0.1, dayDuration))
 
       deployment.deploy(ssc, criteoPipeline)
     }

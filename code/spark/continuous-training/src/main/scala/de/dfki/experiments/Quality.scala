@@ -2,6 +2,7 @@ package de.dfki.experiments
 
 import java.nio.file.{Files, Paths}
 
+import de.dfki.core.sampling.WindowBasedSampler
 import de.dfki.deployment.{ContinuousDeploymentQualityAnalysis, PeriodicalDeploymentQualityAnalysis}
 import de.dfki.ml.optimization.updater.SquaredL2UpdaterWithAdam
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
@@ -42,7 +43,7 @@ object Quality {
     val days = parser.get("days", DAYS_TO_PROCESS).split(",").map(_.toInt)
     val samplingRate = parser.getDouble("sample", SAMPLING_RATE)
     val pipelineName = parser.get("pipeline", INITIAL_PIPELINE)
-    val dayDuration = parser.getInteger("day_duration",DAY_DURATION)
+    val dayDuration = parser.getInteger("day_duration", DAY_DURATION)
 
     val conf = new SparkConf().setAppName("Quality Experiment")
     val masterURL = conf.get("spark.master", "local[*]")
@@ -63,10 +64,9 @@ object Quality {
       streamBase = streamBase,
       evaluation = s"$evaluationPath",
       resultPath = s"$resultPath/continuous",
-      samplingRate = samplingRate,
-      slack = slack,
       daysToProcess = days,
-      windowSize = dayDuration
+      slack = slack,
+      sampler = new WindowBasedSampler(samplingRate, dayDuration)
     ).deploy(ssc, continuous)
 
     val periodical = CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)

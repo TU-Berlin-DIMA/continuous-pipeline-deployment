@@ -53,7 +53,6 @@ object SamplingModeTime {
         resultPath = s"$resultPath",
         samplingRate = samplingRate,
         dayDuration = dayDuration,
-        slack = slack,
         windowSize = dayDuration / 2,
         daysToProcess = days,
         iter = iter).deploy(ssc, halfDayWindow)
@@ -65,7 +64,6 @@ object SamplingModeTime {
         resultPath = s"$resultPath",
         samplingRate = samplingRate,
         dayDuration = dayDuration,
-        slack = slack,
         windowSize = dayDuration,
         daysToProcess = days,
         iter = iter).deploy(ssc, fullDayWindow)
@@ -77,7 +75,6 @@ object SamplingModeTime {
         resultPath = s"$resultPath",
         samplingRate = samplingRate,
         dayDuration = dayDuration,
-        slack = slack,
         windowSize = -1,
         daysToProcess = days,
         iter = iter).deploy(ssc, history)
@@ -89,7 +86,6 @@ object SamplingModeTime {
         resultPath = s"$resultPath",
         samplingRate = 0.0,
         dayDuration = dayDuration,
-        slack = slack,
         windowSize = 1,
         daysToProcess = days,
         iter = iter).deploy(ssc, noSampling)

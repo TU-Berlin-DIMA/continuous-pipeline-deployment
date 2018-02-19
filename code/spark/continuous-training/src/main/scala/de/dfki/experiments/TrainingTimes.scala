@@ -1,5 +1,6 @@
 package de.dfki.experiments
 
+import de.dfki.core.sampling.WindowBasedSampler
 import de.dfki.deployment._
 import de.dfki.ml.optimization.updater.SquaredL2UpdaterWithAdam
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
@@ -54,10 +55,9 @@ object TrainingTimes {
       streamBase = streamPath,
       evaluationPath = s"$evaluationPath",
       resultPath = s"$resultPath/continuous",
-      samplingRate = 0.1,
-      slack = slack,
       daysToProcess = days,
-      windowSize = dayDuration).deploy(ssc, continuous)
+      slack = slack,
+      sampler = new WindowBasedSampler(window = dayDuration)).deploy(ssc, continuous)
 
 
     val periodical = getPipeline(ssc.sparkContext, delimiter, numFeatures, 1, data)
