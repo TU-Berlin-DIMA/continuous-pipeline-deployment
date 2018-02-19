@@ -21,7 +21,7 @@ object SamplingModes {
   val STREAM_PATH = "data/url-reputation/processed/stream"
   val EVALUATION_PATH = "prequential"
   val RESULT_PATH = "../../../experiment-results/url-reputation/sampling-mode/"
-  val INITIAL_PIPELINE = "data/url-reputation/pipelines/sampling-mode/pipeline"
+  val INITIAL_PIPELINE = "data/url-reputation/pipelines/sampling-mode/pipeline-3000"
   val DELIMITER = ","
   // URL FEATURE SIZE
   //val NUM_FEATURES = 3231961
@@ -59,76 +59,76 @@ object SamplingModes {
 
     val ssc = new StreamingContext(conf, Seconds(1))
     val data = ssc.sparkContext.textFile(inputPath)
-//
-//    val noWindow = getPipeline(ssc.sparkContext,
-//      delimiter,
-//      numFeatures,
-//      numIterations,
-//      regParam,
-//      data,
-//      pipelineName,
-//      pipelineLocation)
-//
-//    new ContinuousDeploymentQualityAnalysis(history = inputPath,
-//      streamBase = streamPath,
-//      evaluation = s"$evaluationPath",
-//      resultPath = s"$resultPath/continuous",
-//      daysToProcess = days,
-//      slack = slack,
-//      sampler = new SimpleRandomSampler(samplingRate)).deploy(ssc, noWindow)
-//
-//
-//    val halfDayWindow = getPipeline(ssc.sparkContext,
-//      delimiter,
-//      numFeatures,
-//      numIterations,
-//      regParam,
-//      data,
-//      pipelineName,
-//      pipelineLocation)
-//
-//    new ContinuousDeploymentQualityAnalysis(history = inputPath,
-//      streamBase = streamPath,
-//      evaluation = s"$evaluationPath",
-//      resultPath = s"$resultPath/continuous",
-//      daysToProcess = days,
-//      slack = slack,
-//      sampler = new WindowBasedSampler(samplingRate, dayDuration / 2)).deploy(ssc, halfDayWindow)
-//
-//
-//    val fullDayWindow = getPipeline(ssc.sparkContext,
-//      delimiter,
-//      numFeatures,
-//      numIterations,
-//      regParam,
-//      data,
-//      pipelineName,
-//      pipelineLocation)
-//    new ContinuousDeploymentQualityAnalysis(history = inputPath,
-//      streamBase = streamPath,
-//      evaluation = s"$evaluationPath",
-//      resultPath = s"$resultPath/continuous",
-//      daysToProcess = days,
-//      slack = slack,
-//      sampler = new WindowBasedSampler(samplingRate, dayDuration)
-//    ).deploy(ssc, fullDayWindow)
-//
-//    val noSampling = getPipeline(ssc.sparkContext,
-//      delimiter,
-//      numFeatures,
-//      numIterations,
-//      regParam,
-//      data,
-//      pipelineName,
-//      pipelineLocation)
-//
-//    new ContinuousDeploymentQualityAnalysis(history = inputPath,
-//      streamBase = streamPath,
-//      evaluation = s"$evaluationPath",
-//      resultPath = s"$resultPath/continuous",
-//      daysToProcess = days,
-//      slack = slack,
-//      sampler = new ZeroSampler()).deploy(ssc, noSampling)
+
+    val noWindow = getPipeline(ssc.sparkContext,
+      delimiter,
+      numFeatures,
+      numIterations,
+      regParam,
+      data,
+      pipelineName,
+      pipelineLocation)
+
+    new ContinuousDeploymentQualityAnalysis(history = inputPath,
+      streamBase = streamPath,
+      evaluation = s"$evaluationPath",
+      resultPath = s"$resultPath/continuous",
+      daysToProcess = days,
+      slack = slack,
+      sampler = new SimpleRandomSampler(samplingRate)).deploy(ssc, noWindow)
+
+
+    val halfDayWindow = getPipeline(ssc.sparkContext,
+      delimiter,
+      numFeatures,
+      numIterations,
+      regParam,
+      data,
+      pipelineName,
+      pipelineLocation)
+
+    new ContinuousDeploymentQualityAnalysis(history = inputPath,
+      streamBase = streamPath,
+      evaluation = s"$evaluationPath",
+      resultPath = s"$resultPath/continuous",
+      daysToProcess = days,
+      slack = slack,
+      sampler = new WindowBasedSampler(samplingRate, dayDuration / 2)).deploy(ssc, halfDayWindow)
+
+
+    val fullDayWindow = getPipeline(ssc.sparkContext,
+      delimiter,
+      numFeatures,
+      numIterations,
+      regParam,
+      data,
+      pipelineName,
+      pipelineLocation)
+    new ContinuousDeploymentQualityAnalysis(history = inputPath,
+      streamBase = streamPath,
+      evaluation = s"$evaluationPath",
+      resultPath = s"$resultPath/continuous",
+      daysToProcess = days,
+      slack = slack,
+      sampler = new WindowBasedSampler(samplingRate, dayDuration)
+    ).deploy(ssc, fullDayWindow)
+
+    val noSampling = getPipeline(ssc.sparkContext,
+      delimiter,
+      numFeatures,
+      numIterations,
+      regParam,
+      data,
+      pipelineName,
+      pipelineLocation)
+
+    new ContinuousDeploymentQualityAnalysis(history = inputPath,
+      streamBase = streamPath,
+      evaluation = s"$evaluationPath",
+      resultPath = s"$resultPath/continuous",
+      daysToProcess = days,
+      slack = slack,
+      sampler = new ZeroSampler()).deploy(ssc, noSampling)
 
     val online = getPipeline(ssc.sparkContext,
       delimiter,
