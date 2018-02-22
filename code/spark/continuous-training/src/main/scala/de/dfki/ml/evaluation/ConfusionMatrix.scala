@@ -85,9 +85,11 @@ class ConfusionMatrix(val tp: Int,
 
 
   // tp, fp, tn, fn
-  def asCSV(): String = {
+  def rawScore(): String = {
     s"$tp,$fp,$tn,$fn"
   }
+
+  override def scoreType() = "confusion_matrix"
 }
 
 object ConfusionMatrix {

@@ -14,14 +14,15 @@ class LogisticLoss(val err: Double,
 
   override def score() = error
 
-  override def toString() = {
-    s"error($error)"
+  override def toString = {
+    s"logistic loss($error)"
   }
 
-  override def asCSV(): String = {
+  override def rawScore(): String = {
     s"$err,$count"
   }
 
+  override def scoreType() = "logistic_loss"
 }
 
 object LogisticLoss {

@@ -48,9 +48,7 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
       // initial evaluation of the pipeline right after deployment for non prequential based method
       evaluateStream(pipeline, testData, resultPath, sampler.name)
     }
-
     while (!streamingSource.allFileProcessed()) {
-
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
       rdd.setName(s"Stream $time")
       rdd.cache()
@@ -60,22 +58,24 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
         // perform evaluation
         evaluateStream(pipeline, rdd, resultPath, sampler.name)
       }
+      pipeline.updateTransformTrain(rdd)
+
       if (time % slack == 0) {
-        pipeline.update(streamingContext.sparkContext.union(processedRDD.slice(processedRDD.size - slack, processedRDD.size)))
-        val data = provideHistoricalSample(processedRDD, streamingContext.sparkContext)
-        val trainingData = pipeline.transform(data)
-        trainingData.cache()
-        pipeline.train(trainingData)
-        trainingData.unpersist()
-        if (evaluation != "prequential") {
-          // if evaluation method is not prequential, only perform evaluation after a training step
-          evaluateStream(pipeline, testData, resultPath, sampler.name)
+        val historicalSample = provideHistoricalSample(processedRDD, streamingContext.sparkContext)
+        if (historicalSample.nonEmpty) {
+          val trainingData = pipeline.transform(historicalSample.get)
+          trainingData.cache()
+          pipeline.train(trainingData)
+          trainingData.unpersist()
+          if (evaluation != "prequential") {
+            // if evaluation method is not prequential, only perform evaluation after a training step
+            evaluateStream(pipeline, testData, resultPath, sampler.name)
+          }
+        } else {
+          logger.warn(s"Sample in iteration $time is empty")
         }
       }
       time += 1
-    }
-    processedRDD.foreach {
-      r => r.unpersist(true)
     }
   }
 }

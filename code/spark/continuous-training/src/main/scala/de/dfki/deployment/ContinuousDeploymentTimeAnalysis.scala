@@ -59,26 +59,26 @@ class ContinuousDeploymentTimeAnalysis(history: String,
       storeTrainingTimes(updateTime, s"$resultPath/${sampler.name}", "update")
 
       if (time % slack == 0) {
-
         // transform and store transform time
         start = System.currentTimeMillis()
+        val historicalSample = provideHistoricalSample(processedRDD, streamingContext.sparkContext)
+        if (historicalSample.nonEmpty) {
+          val transformed = pipeline.transform(historicalSample.get)
+          transformed.cache()
+          transformed.count()
+          end = System.currentTimeMillis()
+          val transformTime = end - start
+          storeTrainingTimes(transformTime, s"$resultPath/${sampler.name}", "transform")
 
-        val nextBatch = provideHistoricalSample(processedRDD, streamingContext.sparkContext)
-        val transformed = pipeline.transform(nextBatch)
-        transformed.cache()
-        transformed.count()
-        end = System.currentTimeMillis()
-        val transformTime = end - start
-        storeTrainingTimes(transformTime, s"$resultPath/${sampler.name}", "transform")
+          // train and store train time
+          start = System.currentTimeMillis()
+          pipeline.train(transformed)
+          end = System.currentTimeMillis()
+          val trainTime = end - start
+          storeTrainingTimes(trainTime, s"$resultPath/${sampler.name}", "train")
 
-        // train and store train time
-        start = System.currentTimeMillis()
-        pipeline.train(transformed)
-        end = System.currentTimeMillis()
-        val trainTime = end - start
-        storeTrainingTimes(trainTime, s"$resultPath/${sampler.name}", "train")
-
-        transformed.unpersist(true)
+          transformed.unpersist(true)
+        }
       }
       time += 1
     }

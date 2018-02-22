@@ -25,10 +25,27 @@ abstract class Sampler(val rate: Double = 0.1,
 
   /**
     *
-    * @param processedRDD list of all the historical rdds
-    * @param spark
+    * @param indices original indices
+    * @return sampled indices
     */
-  def sample(processedRDD: ListBuffer[RDD[String]], spark: SparkContext): RDD[String]
+  def sampleIndices(indices: List[Int]): List[Int]
+
+  /**
+    * this method is called from other applications for returning a sample of the
+    * data
+    *
+    * @param processedRDD list of historical rdds
+    * @param spark        SparkContext object
+    * @return
+    */
+  def sample(processedRDD: ListBuffer[RDD[String]], spark: SparkContext): Option[RDD[String]] = {
+    val indices = sampleIndices(processedRDD.indices.toList)
+    if(indices.nonEmpty) {
+      Option(select(processedRDD, indices, spark))
+    } else {
+      None
+    }
+  }
 
   /**
     * return a name for logging and experiment results recording
@@ -50,9 +67,9 @@ abstract class Sampler(val rate: Double = 0.1,
     * Assemble the final sample
     *
     */
-  protected def select(processedRDD: ListBuffer[RDD[String]],
-                       indices: List[Int],
-                       spark: SparkContext) = {
+  private def select(processedRDD: ListBuffer[RDD[String]],
+                     indices: List[Int],
+                     spark: SparkContext) = {
     val sample = if (indices.contains(HISTORICAL_DATA_INDEX)) {
       processedRDD.head.sample(withReplacement = false, rate) :: indices.map(i => processedRDD(i))
     } else {

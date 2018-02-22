@@ -5,10 +5,12 @@ package de.dfki.ml.evaluation
   */
 trait Score extends Serializable {
 
-  def toString(): String
+  def toString: String
 
-  def asCSV(): String
+  def rawScore(): String
 
   def score(): Double
+
+  def scoreType(): String
 
 }

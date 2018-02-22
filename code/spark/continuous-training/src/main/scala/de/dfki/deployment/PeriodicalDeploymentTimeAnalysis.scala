@@ -16,8 +16,6 @@ class PeriodicalDeploymentTimeAnalysis(val history: String,
                                        val numIterations: Int = 500,
                                        val daysToProcess: Array[Int] = Array(1, 2, 3, 4, 5)) extends Deployment {
 
-  @transient private val logger = Logger.getLogger(getClass.getName)
-
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     val days = Array(history) ++ daysToProcess.map(i => s"$streamBase/day_$i")
     var copyPipeline = pipeline

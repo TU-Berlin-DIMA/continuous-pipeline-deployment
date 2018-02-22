@@ -25,8 +25,6 @@ class ContinuousDeploymentSamplingTimeAnalysis(val history: String,
                                                val iter: Int = 50,
                                                val windowSize: Int = -1) extends Deployment {
 
-  @transient lazy val logger = Logger.getLogger(getClass.getName)
-
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     // create rdd of the initial data that the pipeline was trained with
     val streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](streamingContext, streamBase, days = daysToProcess)

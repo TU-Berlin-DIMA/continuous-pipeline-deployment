@@ -42,16 +42,11 @@ class OnlineDeploymentQualityAnalysis(val history: String,
       if (evaluation == "prequential") {
         // perform evaluation
         evaluateStream(pipeline, rdd, resultPath, "online")
-      }
-      pipeline.update(rdd)
-      val trainingData = pipeline.transform(rdd)
-      trainingData.cache()
-      pipeline.train(trainingData)
-      trainingData.unpersist()
-      if (evaluation != "prequential") {
-        // if evaluation method is not prequential, only perform evaluation after a training step
+      } else {
         evaluateStream(pipeline, testData, resultPath, "online")
       }
+      pipeline.updateTransformTrain(rdd)
+      rdd.unpersist()
       time += 1
     }
   }
