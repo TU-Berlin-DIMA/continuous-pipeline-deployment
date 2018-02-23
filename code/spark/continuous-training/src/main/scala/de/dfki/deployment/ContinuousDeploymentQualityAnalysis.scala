@@ -6,6 +6,7 @@ import de.dfki.ml.pipelines.Pipeline
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.StreamingContext
 
 import scala.collection.mutable.ListBuffer
@@ -17,7 +18,7 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
                                           val streamBase: String,
                                           val evaluation: String = "prequential",
                                           val resultPath: String,
-                                          val daysToProcess: Array[Int] = Array(1, 2, 3, 4, 5),
+                                          val daysToProcess: Array[Int],
                                           slack: Int = 10,
                                           sampler: Sampler) extends Deployment(slack, sampler) {
 
@@ -51,7 +52,7 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
     while (!streamingSource.allFileProcessed()) {
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
       rdd.setName(s"Stream $time")
-      rdd.cache()
+      rdd.persist(StorageLevel.MEMORY_AND_DISK)
 
       processedRDD += rdd
       if (evaluation == "prequential") {
@@ -77,5 +78,6 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
       }
       time += 1
     }
+    processedRDD.foreach(r => r.unpersist())
   }
 }

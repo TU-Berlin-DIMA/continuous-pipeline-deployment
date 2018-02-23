@@ -182,6 +182,7 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](_ssc: StreamingCont
     */
   def generateNextRDD(): Option[RDD[(K, V)]] = {
     if (!allFileProcessed()) {
+      logger.info(s"reading ${files(lastProcessedFileIndex)}")
       val rdd = rddFromFile(files(lastProcessedFileIndex))
       processedFiles = processedFiles :+ files(lastProcessedFileIndex)
       lastProcessedFileIndex += 1
@@ -211,8 +212,7 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](_ssc: StreamingCont
     }
 
     val allFiles = directories
-      .flatMap(dir => fs.listStatus(dir, pathFilter).map(_.getPath.toString))
-      .sortWith(sortByName)
+      .flatMap(dir => fs.listStatus(dir, pathFilter).map(_.getPath.toString).sortWith(sortByName))
 
     allFiles
   }

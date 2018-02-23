@@ -13,7 +13,7 @@ class OnlineDeploymentQualityAnalysis(val history: String,
                                       val streamBase: String,
                                       val evaluation: String = "prequential",
                                       val resultPath: String,
-                                      val daysToProcess: Array[Int] = Array(1, 2, 3, 4, 5)) extends Deployment {
+                                      val daysToProcess: Array[Int]) extends Deployment {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     val testData = streamingContext
