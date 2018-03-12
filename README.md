@@ -14,3 +14,7 @@ Repository for continuous training (latex files + code)
 3- About citing "Adaptive SubgradientMethods for Online Learning and Stochastic Optimization" based on page 2 and second paragraph of the related work is similar to what Adam* is doing
 
 4- Trade off: efficient computation (time, resource) and accuracy
+
+## Related Work
+### Weasel
+"The main contribution of WEASEL is not the approach itself, but the several pieces that compose the solution related to feautre crafting".
