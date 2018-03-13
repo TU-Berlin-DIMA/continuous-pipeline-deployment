@@ -8,7 +8,7 @@ When online learning alone is not adequate to guarantee the prediction accuracy,
 While the online training is fast, the retraining of the pipeline is time-consuming and adds extra overhead and complexity to the process of deployment.
 
 We propose a novel approach for continuously updating the deployed pipelines using a combination of the incoming streaming data and the existing batch data.
-We offer fast sampling techniques for including the historical data it in the training process, thus eliminating the need for complete retraining of deployed pipeline.
+We offer fast sampling techniques for including the historical data in the training process, thus eliminating the need for complete retraining of deployed pipeline.
 Moreover, we offer two optimization techniques: \textit{live statistics analysis} and \textit{materialization of preprocessed data} to minimize the total training and data preprocessing time.
 In our experiments, we show that our continuous training approach updates the pipeline more frequently while using fewer resources which results in an improvement of \hl{$1.6\%$} in error rate and up to \hl{$2$} orders of magnitude faster than state-of-the-art deployment approaches.
 \end{abstract}
