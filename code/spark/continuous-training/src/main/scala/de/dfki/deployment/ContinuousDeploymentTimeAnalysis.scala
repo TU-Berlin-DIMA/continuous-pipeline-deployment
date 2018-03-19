@@ -48,8 +48,6 @@ class ContinuousDeploymentTimeAnalysis(history: String,
       rdd.cache()
       rdd.count()
 
-      processedRDD += rdd
-
       // update and store update time
       var start = System.currentTimeMillis()
       pipeline.update(rdd)
@@ -80,11 +78,10 @@ class ContinuousDeploymentTimeAnalysis(history: String,
           transformed.unpersist(true)
         }
       }
+      processedRDD += rdd
       time += 1
     }
-    processedRDD.foreach {
-      r => r.unpersist(true)
-    }
+    processedRDD.foreach { r => r.unpersist(true) }
   }
 
 }

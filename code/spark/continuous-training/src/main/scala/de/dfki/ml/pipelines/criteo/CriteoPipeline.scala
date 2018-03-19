@@ -64,8 +64,10 @@ class CriteoPipeline(@transient var spark: SparkContext,
     *
     * @param data materialized training data
     */
-  override def train(data: RDD[LabeledPoint]) = {
+  override def train(data: RDD[LabeledPoint], iterations: Int = 1) = {
+    model.setNumIterations(iterations)
     model.train(data)
+    model.setNumIterations(1)
   }
 
   /**
@@ -73,14 +75,16 @@ class CriteoPipeline(@transient var spark: SparkContext,
     *
     * @param data
     */
-  override def updateTransformTrain(data: RDD[String]) = {
+  override def updateTransformTrain(data: RDD[String], iterations: Int = 1) = {
     val parsedData = fileReader.transform(spark, data)
     val filledData = missingValueImputer.transform(spark, parsedData)
     val scaledData = standardScaler.updateAndTransform(spark, filledData)
     val training = oneHotEncoder.transform(spark, scaledData)
     training.cache()
     training.count()
+    model.setNumIterations(iterations)
     model.train(training)
+    model.setNumIterations(1)
     training.unpersist()
   }
 

@@ -22,9 +22,9 @@ trait Pipeline extends Serializable {
 
   def transform(data: RDD[String]): RDD[LabeledPoint]
 
-  def train(data: RDD[LabeledPoint])
+  def train(data: RDD[LabeledPoint], iterations: Int = 1)
 
-  def updateTransformTrain(data: RDD[String])
+  def updateTransformTrain(data: RDD[String], iterations: Int = 1)
 
   def updateAndTransform(data: RDD[String]): RDD[LabeledPoint]
 

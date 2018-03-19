@@ -54,7 +54,6 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
       rdd.setName(s"Stream $time")
       rdd.persist(StorageLevel.MEMORY_AND_DISK)
 
-      processedRDD += rdd
       if (evaluation == "prequential") {
         // perform evaluation
         evaluateStream(pipeline, rdd, resultPath, sampler.name)
@@ -66,7 +65,7 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
         if (historicalSample.nonEmpty) {
           val trainingData = pipeline.transform(historicalSample.get)
           trainingData.cache()
-          pipeline.train(trainingData)
+          pipeline.train(trainingData, iterations = 20)
           trainingData.unpersist()
           if (evaluation != "prequential") {
             // if evaluation method is not prequential, only perform evaluation after a training step
@@ -76,8 +75,9 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
           logger.warn(s"Sample in iteration $time is empty")
         }
       }
+      processedRDD += rdd
       time += 1
     }
-    processedRDD.foreach(r => r.unpersist())
+    processedRDD.foreach(r => r.unpersist(true))
   }
 }

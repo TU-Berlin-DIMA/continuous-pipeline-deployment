@@ -54,11 +54,6 @@ abstract class Deployment(val slack: Int = 0,
   }
 
   def provideHistoricalSample(processedRDD: ListBuffer[RDD[String]], spark: SparkContext): Option[RDD[String]] = {
-    //    val now = processedRDD.size
-    //    val history = now - slack
-    //    val recent = spark.union(processedRDD.slice(history, now))
-    //    val historySample = sampler.sample(processedRDD.slice(0, history), spark)
-    //    spark.union(historySample, recent)
     sampler.sample(processedRDD, spark)
   }
 }

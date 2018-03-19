@@ -20,7 +20,7 @@ object SamplingModes {
   val INPUT_PATH = "data/url-reputation/processed/initial-training/day_0"
   val STREAM_PATH = "data/url-reputation/processed/stream"
   val EVALUATION_PATH = "prequential"
-  val RESULT_PATH = "../../../experiment-results/url-reputation/sampling-random"
+  val RESULT_PATH = "../../../experiment-results/url-reputation/sampling-moreiters"
   val INITIAL_PIPELINE = "data/url-reputation/pipelines/sampling-mode/pipeline-3000"
   val DELIMITER = ","
   // URL FEATURE SIZE
@@ -30,7 +30,7 @@ object SamplingModes {
   val SLACK = 5
   // 44 no error all 4400 rows are ok
   // 45 error but 3900 rows are only ok
-  val DAYS = "1,60"
+  val DAYS = "1,120"
   val SAMPLING_RATE = 0.1
   val DAY_DURATION = 100
   val PIPELINE_NAME = "url-rep"
@@ -61,41 +61,24 @@ object SamplingModes {
 
     val ssc = new StreamingContext(conf, Seconds(1))
     val data = ssc.sparkContext.textFile(inputPath)
-
-    val windowBasedSampling = getPipeline(ssc.sparkContext,
-      delimiter,
-      numFeatures,
-      numIterations,
-      regParam,
-      data,
-      pipelineName,
-      pipelineLocation)
-
-    new ContinuousDeploymentQualityAnalysis(history = inputPath,
-      streamBase = streamPath,
-      evaluation = s"$evaluationPath",
-      resultPath = s"$resultPath/continuous",
-      daysToProcess = days,
-      slack = slack,
-      sampler = new WindowBasedSampler(samplingRate, dayDuration)).deploy(ssc, windowBasedSampling)
-
-    val simpleSampling = getPipeline(ssc.sparkContext,
-      delimiter,
-      numFeatures,
-      numIterations,
-      regParam,
-      data,
-      pipelineName,
-      pipelineLocation)
-
-    new ContinuousDeploymentQualityAnalysis(history = inputPath,
-      streamBase = streamPath,
-      evaluation = s"$evaluationPath",
-      resultPath = s"$resultPath/continuous",
-      daysToProcess = days,
-      slack = slack,
-      sampler = new SimpleRandomSampler(samplingRate)).deploy(ssc, simpleSampling)
-
+    //
+    //    val simpleSampling = getPipeline(ssc.sparkContext,
+    //      delimiter,
+    //      numFeatures,
+    //      numIterations,
+    //      regParam,
+    //      data,
+    //      pipelineName,
+    //      pipelineLocation)
+    //
+    //    new ContinuousDeploymentQualityAnalysis(history = inputPath,
+    //      streamBase = streamPath,
+    //      evaluation = s"$evaluationPath",
+    //      resultPath = s"$resultPath/continuous",
+    //      daysToProcess = days,
+    //      slack = slack,
+    //      sampler = new SimpleRandomSampler(samplingRate)).deploy(ssc, simpleSampling)
+    //
     val timeBased = getPipeline(ssc.sparkContext,
       delimiter,
       numFeatures,
@@ -113,20 +96,20 @@ object SamplingModes {
       slack = slack,
       sampler = new TimeBasedSampler(samplingRate)).deploy(ssc, timeBased)
 
-    val online = getPipeline(ssc.sparkContext,
-      delimiter,
-      numFeatures,
-      numIterations,
-      regParam,
-      data,
-      pipelineName,
-      pipelineLocation)
-
-    new OnlineDeploymentQualityAnalysis(history = inputPath,
-      streamBase = streamPath,
-      evaluation = s"$evaluationPath",
-      resultPath = s"$resultPath/continuous",
-      daysToProcess = days).deploy(ssc, online)
+//    val online = getPipeline(ssc.sparkContext,
+//      delimiter,
+//      numFeatures,
+//      numIterations,
+//      regParam,
+//      data,
+//      pipelineName,
+//      pipelineLocation)
+//
+//    new OnlineDeploymentQualityAnalysis(history = inputPath,
+//      streamBase = streamPath,
+//      evaluation = s"$evaluationPath",
+//      resultPath = s"$resultPath/continuous",
+//      daysToProcess = days).deploy(ssc, online)
 
   }
 
@@ -155,7 +138,7 @@ object SamplingModes {
           numIterations = numIterations,
           numCategories = numFeatures,
           regParam = regParam)
-        pipeline.updateTransformTrain(data)
+        pipeline.updateTransformTrain(data, numIterations)
         CriteoPipeline.saveToDisk(pipeline, pipelineLocation)
         pipeline
       } else if (pipelineName == "url-rep") {
@@ -165,7 +148,7 @@ object SamplingModes {
           numIterations = numIterations,
           numCategories = numFeatures,
           regParam = regParam)
-        pipeline.updateTransformTrain(data)
+        pipeline.updateTransformTrain(data, numIterations)
         URLRepPipeline.saveToDisk(pipeline, pipelineLocation)
         pipeline
       } else {
