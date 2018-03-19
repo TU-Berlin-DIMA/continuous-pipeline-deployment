@@ -1,13 +1,13 @@
 \section{Introduction} \label{introduction}
 %% General Introduction
 Machine learning techniques are increasingly being used in industrial and scientific applications to gain insight from the data.
-Typically, a machine learning pipeline is a series of complex data processing steps to process a labeled training dataset and results in a machine learning model.
+Typically, a machine learning pipeline is a series of complex data processing steps to process a labeled training dataset and produce a machine learning model.
 The machine learning pipeline is then used to make predictions on new unlabeled data.
 To fully utilize the pipeline, it has to be deployed into an environment where it can answer prediction queries in real-time.
 
 %% Intro to the problem of continuous improvement
 After the pipeline is deployed, new training data may become available.
-In order to adapt to the new training data, one has to train and redeploy the pipeline.
+In order to adapt to the new training data, one has to retrain and redeploy the pipeline.
 In many real-world use cases, training datasets are very large which may require hours of training to result in a pipeline.
 Therefore, it is not feasible to train new pipelines frequently.
 This means that the deployed pipeline is not always up-to-date.
@@ -60,17 +60,17 @@ The deployment platform forwards each batch of the data through the pipeline and
 The updated pipeline is immediately ready for answering prediction queries.
 Our experiments show that proactive training of the pipeline achieves more accurate predictions over time and requires fewer resources when compared to the full pipeline retraining.
 
-\textit{Online Statistics Computation and Data Materialization}
+\textit{Online Statistics Computation and Feature Materialization}
 Our deployment platform updates the pipeline using the real-time training data by employing advanced online machine learning algorithms (such as Adagrad \cite{duchi2011adaptive}), before storing it for the proactive training.
-Since the real-time training data is traveling through the pipeline during the online training phase, we compute statistics required by the pipeline, update the pipeline components, and transform and materialize the data before storing it with the rest of the historical data.
-As a result, during the proactive training, the data processing and the feature processing steps of the pipeline are skipped and the materialized data is directly used in the model trainer component of the pipeline.
+Since the real-time training data is traveling through the pipeline during the online training phase, we compute statistics required by the pipeline, update the pipeline components, and transform the data to the set of usable features required for the model before storing it with the rest of the historical data.
+As a result, during the proactive training, the data and feature processing steps of the pipeline are skipped and the materialized features are directly used in the model trainer component of the pipeline.
 
 % Our contributions
 In summary, our contributions are:
 \begin{itemize}
-\item A platform for continuously training deployed machine learning pipelines that adapts to the rate of the incoming data.
+\item A platform for continuously training deployed machine learning pipelines that adapts to the changes in the incoming data.
 \item Proactive training of the deployed pipelines that frequently updates the pipeline in-place using a combination of the historical and the real-time data and increases the prediction accuracy when compared with state of the art.
-\item Efficient pipeline training by online statistics computation and data materialization, thus guaranteeing the availability of up-to-date pipelines for answering prediction queries.
+\item Efficient pipeline training by online statistics computation and feature materialization, thus guaranteeing the availability of up-to-date pipelines for answering prediction queries.
 \end{itemize}
 
 The rest of this paper is organized as follows:
