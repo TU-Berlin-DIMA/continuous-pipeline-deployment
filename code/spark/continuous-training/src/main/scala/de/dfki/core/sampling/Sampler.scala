@@ -1,5 +1,6 @@
 package de.dfki.core.sampling
 
+import org.apache.log4j.Logger
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
@@ -14,6 +15,8 @@ import scala.util.Random
   */
 abstract class Sampler(val rate: Double = 0.1,
                        val rand: Random = new Random(System.currentTimeMillis())) {
+
+  @transient lazy val logger = Logger.getLogger(getClass.getName)
 
   /** this is where by default the initial historical data rdd is stored.
     * if this index is selected to be in the next random sample, the user should
@@ -71,10 +74,12 @@ abstract class Sampler(val rate: Double = 0.1,
                      indices: List[Int],
                      spark: SparkContext) = {
     val sample = if (indices.contains(HISTORICAL_DATA_INDEX)) {
-      processedRDD.head.sample(withReplacement = false, rate) :: indices.map(i => processedRDD(i))
+      // TODO: 0.1 is hard coded figure out a way to make it better
+      processedRDD.head.sample(withReplacement = false, 0.1) :: indices.map(i => processedRDD(i))
     } else {
       indices.map(i => processedRDD(i))
     }
+    logger.info(s"Return ${indices.size} rdds in the sample")
     spark.union(sample)
   }
 }

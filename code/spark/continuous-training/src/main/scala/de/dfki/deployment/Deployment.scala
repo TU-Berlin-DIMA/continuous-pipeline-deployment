@@ -2,7 +2,7 @@ package de.dfki.deployment
 
 import java.io.{File, FileWriter}
 
-import de.dfki.core.sampling.{Sampler, SimpleRandomSampler}
+import de.dfki.core.sampling.{Sampler, RateBasedSampler}
 import de.dfki.ml.evaluation.Score
 import de.dfki.ml.pipelines.Pipeline
 import org.apache.log4j.Logger
@@ -16,7 +16,7 @@ import scala.collection.mutable.ListBuffer
   * @author behrouz
   */
 abstract class Deployment(val slack: Int = 0,
-                          val sampler: Sampler = new SimpleRandomSampler) {
+                          val sampler: Sampler = new RateBasedSampler) {
 
   @transient lazy val logger = Logger.getLogger(getClass.getName)
 

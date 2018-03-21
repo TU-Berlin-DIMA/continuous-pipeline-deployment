@@ -1,6 +1,6 @@
 package de.dfki.deployment.classifiers
 
-import de.dfki.core.sampling.SimpleRandomSampler
+import de.dfki.core.sampling.RateBasedSampler
 import de.dfki.deployment.ContinuousDeploymentTimeAnalysis
 import de.dfki.utils.CommandLineParser
 
@@ -57,7 +57,7 @@ object ContinuousClassifier extends Classifier {
       evaluationPath = evaluationDataPath,
       resultPath = s"$resultPath/loss",
       slack = 1,
-      sampler = new SimpleRandomSampler(0.1))
+      sampler = new RateBasedSampler(0.1))
 
     deployment.deploy(ssc, pipeline)
   }

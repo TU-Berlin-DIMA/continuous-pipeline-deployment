@@ -3,7 +3,7 @@ package de.dfki.experiments
 import java.io.{File, FileWriter}
 import java.nio.file.{Files, Paths}
 
-import de.dfki.core.sampling.{SimpleRandomSampler, WindowBasedSampler}
+import de.dfki.core.sampling.{RateBasedSampler, WindowBasedSampler}
 import de.dfki.deployment.ContinuousDeploymentQualityAnalysis
 import de.dfki.ml.evaluation.LogisticLoss
 import de.dfki.ml.optimization.updater.Updater
@@ -100,7 +100,7 @@ object ParameterSelection {
         resultPath = s"$resultPath/${updater.name}",
         daysToProcess = days,
         slack = slack,
-        sampler = new WindowBasedSampler(0.1, dayDuration))
+        sampler = new WindowBasedSampler(dayDuration, dayDuration * 7))
 
       deployment.deploy(ssc, criteoPipeline)
     }

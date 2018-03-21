@@ -5,11 +5,11 @@ package de.dfki.core.sampling
   *
   * @author behrouz
   */
-class SimpleRandomSampler(rate: Double = 0.1) extends Sampler(rate = rate) {
+class RateBasedSampler(rate: Double = 0.1) extends Sampler(rate = rate) {
 
   override def sampleIndices(indices: List[Int]) = {
     indices.filter(_ => rand.nextDouble < rate)
   }
 
-  override def name = "entire_history"
+  override def name = "rate_based"
 }

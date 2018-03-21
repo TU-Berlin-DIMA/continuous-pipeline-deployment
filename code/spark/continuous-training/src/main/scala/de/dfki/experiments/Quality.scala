@@ -66,7 +66,7 @@ object Quality {
       resultPath = s"$resultPath/continuous",
       daysToProcess = days,
       slack = slack,
-      sampler = new WindowBasedSampler(samplingRate, dayDuration)
+      sampler = new WindowBasedSampler(dayDuration, dayDuration * 7)
     ).deploy(ssc, continuous)
 
     val periodical = CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)
