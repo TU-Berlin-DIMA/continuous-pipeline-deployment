@@ -23,7 +23,6 @@ class SquaredL2UpdaterWithAdam(beta1: Double = 0.9,
                        iterDisabled: Int) = {
     val brzGradient = asBreeze(gradient)
     val thisIterStepSize = stepSize
-    //stepSize / sqrt(iterCounter)
     val size = brzGradient.size
     if (gradientsSquared == null) {
       gradientsSquared = BDV.zeros[Double](size)
@@ -52,10 +51,9 @@ class SquaredL2UpdaterWithAdam(beta1: Double = 0.9,
     // d = (lr / (sqrt(v_) + eps)) * m_
     val deltas = (thisIterStepSize / (sqrt(bias_gs) + eps)) :* bias_g
 
+    val brzWeights: BV[Double] = asBreeze(weightsOld).toDenseVector
 
-    val brzWeights = asBreeze(weightsOld)
-
-    logger.info(s"current step-size ($thisIterStepSize)")
+    //logger.info(s"current step-size ($thisIterStepSize)")
 
     brzAxpy(-1.0, deltas, brzWeights)
 

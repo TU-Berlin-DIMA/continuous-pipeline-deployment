@@ -49,7 +49,7 @@ class SquaredL2UpdaterWithAdaDelta(var gamma: Double = 0.9) extends Updater {
       */
     deltasSquared :*= gamma
     brzAxpy(1 - gamma, deltas :* deltas, deltasSquared)
-    val brzWeights = asBreeze(weightsOld)
+    val brzWeights: BV[Double] = asBreeze(weightsOld).toDenseVector
 
     logger.info(s"current step-size ($thisIterStepSize)")
 

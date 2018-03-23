@@ -94,6 +94,7 @@ class GradientDescent(var numIterations: Int,
 object GradientDescent {
   @transient val logger = Logger.getLogger(getClass.getName)
 
+
   /**
     * Run stochastic gradient descent (SGD) in parallel using mini batches.
     * In each iteration, we sample a subset (fraction miniBatchFraction) of the total data
@@ -147,6 +148,10 @@ object GradientDescent {
 
     var previousWeights: Option[Vector] = None
     var currentWeights: Option[Vector] = None
+    val reportIncrement = 10
+    val lossArray = Array.ofDim[Double](reportIncrement * 2)
+    var lossIndex = 0
+
 
     val numFeatures = initialWeights.size
     logger.info(s"Readjusting the weight size to $numFeatures")
@@ -190,29 +195,36 @@ object GradientDescent {
       // the gradient computation takes care of dividing the loss and gradient by the number of items in the sample
       val (lossSum, newGradients) = gradient.compute(sampledData, weights)
 
-      previousWeights = Some(weights)
-      weights = updater.compute(weights,LinearAlgebra.fromBreeze(newGradients), stepSize, i)
-      // divide loss by the mini batch size
+
+      weights = updater.compute(weights, LinearAlgebra.fromBreeze(newGradients), stepSize, i)
+
       currLoss = lossSum
-
+      previousWeights = currentWeights
       currentWeights = Some(weights)
+      // only keep the loss from the last 2 * report increments
+      lossArray(lossIndex % (reportIncrement * 2)) = lossSum
+      lossIndex += 1
 
-      //converged = isConverged(currentWeights.get, previousWeights.get, convergenceTol)
-      converged = isConverged(prevLoss, currLoss, convergenceTol)
+
+      if (previousWeights.isDefined && currentWeights.isDefined &&
+        convergenceTol > 0.0 && i % reportIncrement == 0) {
+        // convergence check based on loss is cheaper. Do that first
+        converged = isConverged(lossArray,
+          reportIncrement,
+          convergenceTol)
+
+        if (!converged) {
+          converged = isConverged(previousWeights.get,
+            currentWeights.get,
+            convergenceTol)
+        }
+      }
 
       logger.info(s"Iteration ($i/$numIterations) ,loss($currLoss)")
       i += 1
     }
+    logger.info(s"converged after $i iterations")
     weights
-  }
-
-
-  private def isConverged(previousLoss: Double,
-                          currentLoss: Double,
-                          convergenceTol: Double): Boolean = {
-    val diff = Math.abs(previousLoss - currentLoss)
-    logger.info(s"diff($diff) and convergenceTol($convergenceTol)")
-    diff < convergenceTol
   }
 
   private def isConverged(previousWeights: Vector,
@@ -222,6 +234,12 @@ object GradientDescent {
     val previousBDV = asBreeze(previousWeights).toDenseVector
     val currentBDV = asBreeze(currentWeights).toDenseVector
 
+    if (previousBDV == currentBDV) {
+      println("THEY ARE THE SAME")
+    }
+
+    //    logger.info(s"${previousBDV.slice(0,100).toString}")
+    //    logger.info(s"${currentBDV.slice(0,100).toString}")
     // This represents the difference of updated weights in the iteration.
     val solutionVecDiff: Double = norm(previousBDV - currentBDV)
 
@@ -230,6 +248,17 @@ object GradientDescent {
     logger.info(s"diff($solutionVecDiff) and convergenceTol(${convergenceTol * Math.max(currentBDVNorm, 1.0)})")
 
     solutionVecDiff < convergenceTol * Math.max(norm(currentBDV), 1.0)
+  }
+
+  // convergence check based on the changes in the average of loss value
+  def isConverged(lossArray: Array[Double],
+                  reportIncrement: Int,
+                  convergenceTol: Double): Boolean = {
+    val l1 = lossArray.slice(0, reportIncrement).sum / reportIncrement
+    val l2 = lossArray.slice(reportIncrement, lossArray.length).sum / reportIncrement
+    val diff = math.abs(l2 - l1)
+    logger.info(s"diff($diff) and convergenceTol($convergenceTol)")
+    diff < convergenceTol
   }
 
 

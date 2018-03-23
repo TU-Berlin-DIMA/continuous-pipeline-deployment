@@ -39,7 +39,7 @@ class SquaredL2UpdaterWithRMSProp(gamma: Double = 0.9) extends Updater {
     brzAxpy(1 - gamma, brzGradient :* brzGradient, gradientsSquared)
     val deltas = (thisIterStepSize / sqrt(gradientsSquared + eps)) :* brzGradient
 
-    val brzWeights = asBreeze(weightsOld)
+    val brzWeights: BV[Double] = asBreeze(weightsOld).toDenseVector
 
     logger.info(s"current step-size ($thisIterStepSize)")
 

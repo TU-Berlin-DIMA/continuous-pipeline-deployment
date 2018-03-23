@@ -19,4 +19,7 @@ object CriteoClusterProfile extends Profile{
   override val PIPELINE_NAME = "criteo"
   override val REG_PARAM = 0.01
   override val PROFILE_NAME = "criteo-cluster"
+  override val CONVERGENCE_TOL = 1E-6
+  override val STEP_SIZE = 0.001
+  override val MINI_BATCH = 0.1
 }

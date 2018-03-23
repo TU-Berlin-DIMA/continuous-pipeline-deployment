@@ -75,16 +75,17 @@ class URLRepPipeline(@transient var spark: SparkContext,
     *
     * @param data
     */
-  override def updateTransformTrain(data: RDD[String], iterations: Int = 1) = {
+  override def updateTransformTrain(data: RDD[String], iterations: Int = numIterations) = {
     val parsedData = fileReader.transform(spark, data)
     val filledData = missingValueImputer.transform(spark, parsedData)
     val scaledData = standardScaler.updateAndTransform(spark, filledData)
     val training = oneHotEncoder.transform(spark, scaledData)
     training.cache()
     training.count()
+
     model.setNumIterations(iterations)
     model.train(training)
-    model.setNumIterations(1)
+    model.setNumIterations(numIterations)
     training.unpersist()
   }
 
@@ -148,34 +149,25 @@ object URLRepPipeline {
 
     val spark = new SparkContext(conf)
     val urlRepPipeline = new URLRepPipeline(spark,
-      numIterations = 1000,
-      stepSize = 0.001,
+      numIterations = 50000,
+      stepSize = 0.0001,
       updater = new SquaredL2UpdaterWithAdam(),
       miniBatchFraction = 1,
-      regParam = 0.01,
-      numCategories = 300000)
+      regParam = 0.001,
+      numCategories = 30000,
+      convergenceTol = 1E-6)
+
     val rawTraining = spark.textFile(inputPath)
     urlRepPipeline.updateTransformTrain(rawTraining)
-    //urlRepPipeline.updateAndTransform(rawTraining).saveAsTextFile("data/url-reputation/processed/stream/day_1")
-    URLRepPipeline.saveToDisk(urlRepPipeline, "data/url-reputation/pipelines/test")
 
-    //val loadedPipeline = URLRepPipeline.loadFromDisk("data/url-reputation/pipelines/test", spark)
-
-    //val day1 = spark.textFile("data/url-reputation/processed/stream/day_1")
-    //loadedPipeline.updateTransformTrain(day1)
-
-    //urlRepPipeline.updateTransformTrain(day1)
 
     val rawTest = spark.textFile(testPath)
 
     val baseResult = urlRepPipeline.predict(rawTest)
     val cMatrix = ConfusionMatrix.fromRDD(baseResult)
 
-    //    val loadedResult = loadedPipeline.predict(rawTest)
-    //    val loadedLoss = LogisticLoss.logisticLoss(loadedResult)
-    //baseResult.saveAsTextFile("data/url-reputation/result/")
-    println(s"Base Loss = $cMatrix")
-    //println(s"Loaded Loss = $loadedLoss")
+    println(s"confusion matrix = $cMatrix")
+
   }
 
   def saveToDisk(pipeline: URLRepPipeline, path: String): Unit = {

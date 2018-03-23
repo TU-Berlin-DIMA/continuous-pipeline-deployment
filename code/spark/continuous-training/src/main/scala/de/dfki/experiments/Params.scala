@@ -16,6 +16,8 @@ case class Params(inputPath: String = "",
                   sampleSize: Int = 100,
                   dayDuration: Int = 100,
                   pipelineName: String = "url-rep",
-                  regParam: Double = 0.001) {
+                  regParam: Double = 0.001,
+                  convergenceTol: Double = 1E-6,
+                  miniBatch: Double = 0.1) {
 
 }

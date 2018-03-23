@@ -1,10 +1,7 @@
 package de.dfki.experiments
 
-import java.nio.file.{Files, Paths}
-
-import de.dfki.core.sampling.{TimeBasedSampler, UniformSampler, WindowBasedSampler}
+import de.dfki.core.sampling.TimeBasedSampler
 import de.dfki.deployment.{ContinuousDeploymentQualityAnalysis, OnlineDeploymentQualityAnalysis, PeriodicalDeploymentQualityAnalysis}
-import de.dfki.experiments.SamplingModes.getPipeline
 import de.dfki.experiments.profiles.Profile
 import de.dfki.ml.optimization.updater.SquaredL2UpdaterWithAdam
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
@@ -27,7 +24,7 @@ object DeploymentModesQuality extends Experiment {
     // URL FEATURE SIZE
     // val NUM_FEATURES = 3231961
     val NUM_FEATURES = 3000
-    val NUM_ITERATIONS = 2000
+    val NUM_ITERATIONS = 20000
     val SLACK = 5
     // 44 no error all 4400 rows are ok
     // 45 error but 3900 rows are only ok
@@ -38,6 +35,9 @@ object DeploymentModesQuality extends Experiment {
     val REG_PARAM = 0.001
     override val SAMPLE_SIZE = 100
     override val PROFILE_NAME = "default"
+    override val CONVERGENCE_TOL = 1E-6
+    override val STEP_SIZE = 0.001
+    override val MINI_BATCH = 0.1
   }
 
   def main(args: Array[String]): Unit = {
@@ -52,14 +52,7 @@ object DeploymentModesQuality extends Experiment {
     val data = ssc.sparkContext.textFile(params.inputPath)
 
     // continuously trained with a uniform sample of the historical data
-    val onlinePipeline = getPipeline(ssc.sparkContext,
-      params.delimiter,
-      params.numFeatures,
-      params.numIterations,
-      params.regParam,
-      data,
-      params.pipelineName,
-      params.initialPipeline)
+    val onlinePipeline = getPipeline(ssc.sparkContext, params)
 
     new OnlineDeploymentQualityAnalysis(history = params.inputPath,
       streamBase = params.streamPath,
@@ -68,14 +61,7 @@ object DeploymentModesQuality extends Experiment {
       daysToProcess = params.days).deploy(ssc, onlinePipeline)
 
     // continuously trained with a time based sample of the historical data
-    val continuousPipeline = getPipeline(ssc.sparkContext,
-      params.delimiter,
-      params.numFeatures,
-      params.numIterations,
-      params.regParam,
-      data,
-      params.pipelineName,
-      params.initialPipeline)
+    val continuousPipeline = getPipeline(ssc.sparkContext, params)
 
     new ContinuousDeploymentQualityAnalysis(history = params.inputPath,
       streamBase = params.streamPath,
@@ -85,14 +71,7 @@ object DeploymentModesQuality extends Experiment {
       slack = params.slack,
       sampler = new TimeBasedSampler(size = params.dayDuration)).deploy(ssc, continuousPipeline)
 
-    val periodicalPipeline = getPipeline(ssc.sparkContext,
-      params.delimiter,
-      params.numFeatures,
-      params.numIterations,
-      params.regParam,
-      data,
-      params.pipelineName,
-      params.initialPipeline)
+    val periodicalPipeline = getPipeline(ssc.sparkContext, params)
 
     new PeriodicalDeploymentQualityAnalysis(history = params.inputPath,
       streamBase = params.streamPath,

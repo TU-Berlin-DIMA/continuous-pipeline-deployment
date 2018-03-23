@@ -20,6 +20,9 @@ abstract class Profile {
   val DAY_DURATION: Int
   val PIPELINE_NAME: String
   val REG_PARAM: Double
+  val CONVERGENCE_TOL: Double
+  val MINI_BATCH: Double
+  val STEP_SIZE: Double
 
   val PROFILE_NAME: String
 }

@@ -1,17 +1,10 @@
 package de.dfki.experiments
 
-import java.nio.file.{Files, Paths}
-
 import de.dfki.core.sampling._
 import de.dfki.deployment.ContinuousDeploymentQualityAnalysis
-import de.dfki.experiments.profiles.Profile
-import de.dfki.ml.optimization.updater.SquaredL2UpdaterWithAdam
-import de.dfki.ml.pipelines.Pipeline
-import de.dfki.ml.pipelines.criteo.CriteoPipeline
-import de.dfki.ml.pipelines.urlrep.URLRepPipeline
-import org.apache.spark.rdd.RDD
+import de.dfki.experiments.profiles.{Profile, URLProfile}
+import org.apache.spark.SparkConf
 import org.apache.spark.streaming.{Seconds, StreamingContext}
-import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * @author behrouz
@@ -33,33 +26,27 @@ object SamplingModes extends Experiment {
     // 44 no error all 4400 rows are ok
     // 45 error but 3900 rows are only ok
     val DAYS = "1,120"
-    val SAMPLING_RATE = 0.1
     val DAY_DURATION = 100
     val PIPELINE_NAME = "url-rep"
     val REG_PARAM = 0.001
     override val SAMPLE_SIZE = 100
     override val PROFILE_NAME = "default"
+    override val CONVERGENCE_TOL = 1E-6
+    override val STEP_SIZE = 0.0001
+    override val MINI_BATCH = 1.0
   }
 
   def main(args: Array[String]): Unit = {
-    val params = getParams(args, DefaultProfile)
+    val params = getParams(args, URLProfile)
 
     val conf = new SparkConf().setAppName("Sampling Mode Experiment")
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
 
     val ssc = new StreamingContext(conf, Seconds(1))
-    val data = ssc.sparkContext.textFile(params.inputPath)
 
     // continuously trained with a uniform sample of the historical data
-    val uniformPipeline = getPipeline(ssc.sparkContext,
-      params.delimiter,
-      params.numFeatures,
-      params.numIterations,
-      params.regParam,
-      data,
-      params.pipelineName,
-      params.initialPipeline)
+    val uniformPipeline = getPipeline(ssc.sparkContext, params)
 
     new ContinuousDeploymentQualityAnalysis(history = params.inputPath,
       streamBase = params.streamPath,
@@ -70,14 +57,7 @@ object SamplingModes extends Experiment {
       sampler = new UniformSampler(size = params.dayDuration)).deploy(ssc, uniformPipeline)
 
     // continuously trained with a window based sample of the historical data
-    val windowBased = getPipeline(ssc.sparkContext,
-      params.delimiter,
-      params.numFeatures,
-      params.numIterations,
-      params.regParam,
-      data,
-      params.pipelineName,
-      params.initialPipeline)
+    val windowBased = getPipeline(ssc.sparkContext, params)
 
     new ContinuousDeploymentQualityAnalysis(history = params.inputPath,
       streamBase = params.streamPath,
@@ -88,14 +68,7 @@ object SamplingModes extends Experiment {
       sampler = new WindowBasedSampler(size = params.dayDuration, window = params.dayDuration * 10)).deploy(ssc, windowBased)
 
     // continuously trained with a time based sample of the historical data
-    val timeBasedFix = getPipeline(ssc.sparkContext,
-      params.delimiter,
-      params.numFeatures,
-      params.numIterations,
-      params.regParam,
-      data,
-      params.pipelineName,
-      params.initialPipeline)
+    val timeBasedFix = getPipeline(ssc.sparkContext, params)
 
     new ContinuousDeploymentQualityAnalysis(history = params.inputPath,
       streamBase = params.streamPath,

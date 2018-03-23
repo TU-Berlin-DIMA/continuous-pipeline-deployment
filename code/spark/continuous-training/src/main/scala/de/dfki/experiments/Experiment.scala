@@ -9,7 +9,6 @@ import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.ml.pipelines.urlrep.URLRepPipeline
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.SparkContext
-import org.apache.spark.rdd.RDD
 
 /**
   * @author behrouz
@@ -33,6 +32,7 @@ class Experiment {
     val days = Array.range(streamingDays(0), streamingDays(1) + 1)
     val dayDuration = parser.getInteger("day_duration", profile.DAY_DURATION)
     val sampleSize = parser.getInteger("sample_size", profile.SAMPLE_SIZE)
+    val convergenceTol = parser.getDouble("convergence_tol", profile.CONVERGENCE_TOL)
 
     Params(inputPath = inputPath,
       streamPath = streamPath,
@@ -47,49 +47,46 @@ class Experiment {
       sampleSize = sampleSize,
       dayDuration = dayDuration,
       pipelineName = pipelineName,
-      regParam = regParam)
+      regParam = regParam,
+      convergenceTol = convergenceTol)
   }
 
   def getPipeline(spark: SparkContext,
-                  delimiter: String,
-                  numFeatures: Int,
-                  numIterations: Int,
-                  regParam: Double,
-                  data: RDD[String],
-                  pipelineName: String,
-                  pipelineLocation: String): Pipeline = {
-    if (Files.exists(Paths.get(pipelineLocation))) {
-      if (pipelineName == "criteo") {
-        CriteoPipeline.loadFromDisk(pipelineLocation, spark)
-      } else if (pipelineName == "url-rep") {
-        URLRepPipeline.loadFromDisk(pipelineLocation, spark)
+                  params: Params): Pipeline = {
+    if (Files.exists(Paths.get(params.initialPipeline))) {
+      if (params.pipelineName == "criteo") {
+        CriteoPipeline.loadFromDisk(params.initialPipeline, spark)
+      } else if (params.pipelineName == "url-rep") {
+        URLRepPipeline.loadFromDisk(params.initialPipeline, spark)
       } else {
-        throw new IllegalArgumentException(s"Pipeline $pipelineName has not been constructed!!!")
+        throw new IllegalArgumentException(s"Pipeline ${params.pipelineName} has not been constructed!!!")
       }
     } else {
-      if (pipelineName == "criteo") {
+      val data = spark.textFile(params.inputPath)
+      if (params.pipelineName == "criteo") {
         val pipeline = new CriteoPipeline(spark,
-          delim = delimiter,
+          delim = params.delimiter,
           updater = new SquaredL2UpdaterWithAdam(),
-          miniBatchFraction = 0.1,
-          numIterations = numIterations,
-          numCategories = numFeatures,
-          regParam = regParam)
-        pipeline.updateTransformTrain(data, numIterations)
-        CriteoPipeline.saveToDisk(pipeline, pipelineLocation)
+          miniBatchFraction = params.miniBatch,
+          numIterations = params.numIterations,
+          numCategories = params.numFeatures,
+          regParam = params.regParam)
+        pipeline.updateTransformTrain(data, params.numIterations)
+        CriteoPipeline.saveToDisk(pipeline, params.initialPipeline)
         pipeline
-      } else if (pipelineName == "url-rep") {
+      } else if (params.pipelineName == "url-rep") {
         val pipeline = new URLRepPipeline(spark,
           updater = new SquaredL2UpdaterWithAdam(),
-          miniBatchFraction = 0.1,
-          numIterations = numIterations,
-          numCategories = numFeatures,
-          regParam = regParam)
-        pipeline.updateTransformTrain(data, numIterations)
-        URLRepPipeline.saveToDisk(pipeline, pipelineLocation)
+          miniBatchFraction = params.miniBatch,
+          numIterations = params.numIterations,
+          numCategories = params.numFeatures,
+          regParam = params.regParam,
+          convergenceTol = params.convergenceTol)
+        pipeline.updateTransformTrain(data, params.numIterations)
+        URLRepPipeline.saveToDisk(pipeline, params.initialPipeline)
         pipeline
       } else {
-        throw new IllegalArgumentException(s"Pipeline $pipelineName has not been constructed!!!")
+        throw new IllegalArgumentException(s"Pipeline ${params.pipelineName} has not been constructed!!!")
       }
     }
   }
