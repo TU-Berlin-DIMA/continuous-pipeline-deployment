@@ -6,7 +6,7 @@ import breeze.linalg.{DenseVector => BDV, Vector => BV, axpy => brzAxpy, norm =>
 import breeze.numerics.sqrt
 
 /**
-  * @author behrouz
+  * @author behrouz derakhshan
   */
 class SquaredL2UpdaterWithAdam(beta1: Double = 0.9,
                                beta2: Double = 0.999) extends Updater {

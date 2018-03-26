@@ -3,7 +3,7 @@ package de.dfki.experiments.profiles
 /**
   * @author behrouz
   */
-object CriteoClusterProfile extends Profile{
+class CriteoClusterProfile extends Profile{
   override val INPUT_PATH = "hdfs://cloud-11:44000/user/behrouz/criteo/experiments/initial-training/day_0"
   override val STREAM_PATH = "hdfs://cloud-11:44000/user/behrouz/criteo/experiments/stream"
   override val EVALUATION_PATH = "prequential"

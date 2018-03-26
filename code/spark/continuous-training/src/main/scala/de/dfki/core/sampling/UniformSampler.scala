@@ -22,5 +22,5 @@ class UniformSampler(size: Int = 100) extends Sampler {
     *
     * @return
     */
-  override def name = "uniform"
+  override def name = s"uniform-$size"
 }

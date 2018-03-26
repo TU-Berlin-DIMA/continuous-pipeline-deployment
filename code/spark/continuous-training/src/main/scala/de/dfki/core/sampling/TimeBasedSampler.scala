@@ -28,5 +28,5 @@ class TimeBasedSampler(size: Int = 100) extends Sampler {
     *
     * @return
     */
-  override def name = "time_based"
+  override def name = s"time_based-$size"
 }

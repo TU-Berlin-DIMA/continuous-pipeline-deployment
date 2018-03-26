@@ -26,11 +26,12 @@ class OnlineDeploymentQualityAnalysis(val history: String,
 
     pipeline.model.setMiniBatchFraction(1.0)
     pipeline.model.setNumIterations(1)
+    pipeline.model.setConvergenceTol(0.0)
     var time = 1
 
     if (evaluation != "prequential") {
       // initial evaluation of the pipeline right after deployment for non prequential based method
-      evaluateStream(pipeline, testData, resultPath, sampler.name)
+      evaluateStream(pipeline, testData, resultPath, "online")
     }
 
     while (!streamingSource.allFileProcessed()) {

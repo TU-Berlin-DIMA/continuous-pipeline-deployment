@@ -29,7 +29,7 @@ class SquaredL2UpdaterWithMomentum(var gamma: Double = 0.9) extends Updater {
 
     val brzWeights: BV[Double] = asBreeze(weightsOld).toDenseVector
     val brzGradient = asBreeze(gradient)
-    val thisIterStepSize = stepSize / math.sqrt(iterCounter)
+    val thisIterStepSize = stepSize
     val size = brzGradient.size
     if (updateVector == null) {
       updateVector = BDV.zeros[Double](weightsOld.size)

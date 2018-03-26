@@ -65,9 +65,10 @@ class CriteoPipeline(@transient var spark: SparkContext,
     * @param data materialized training data
     */
   override def train(data: RDD[LabeledPoint], iterations: Int = 1) = {
+    val currentIter = model.getNumIterations
     model.setNumIterations(iterations)
     model.train(data)
-    model.setNumIterations(1)
+    model.setNumIterations(currentIter)
   }
 
   /**
@@ -82,9 +83,10 @@ class CriteoPipeline(@transient var spark: SparkContext,
     val training = oneHotEncoder.transform(spark, scaledData)
     training.cache()
     training.count()
+    val currentIter = model.getNumIterations
     model.setNumIterations(iterations)
     model.train(training)
-    model.setNumIterations(1)
+    model.setNumIterations(currentIter)
     training.unpersist()
   }
 

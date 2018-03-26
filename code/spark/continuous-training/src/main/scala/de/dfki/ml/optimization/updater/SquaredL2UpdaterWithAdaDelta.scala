@@ -22,7 +22,7 @@ class SquaredL2UpdaterWithAdaDelta(var gamma: Double = 0.9) extends Updater {
                        stepSize: Double,
                        iter: Int) = {
     val brzGradient = asBreeze(gradient)
-    val thisIterStepSize = stepSize / sqrt(iterCounter)
+    val thisIterStepSize = stepSize
     val size = brzGradient.size
     // initialize the update vectors
     if (gradientsSquared == null) {

@@ -2,18 +2,25 @@ package de.dfki.experiments
 
 import java.nio.file.{Files, Paths}
 
+import de.dfki.experiments.ParameterSelection.getClass
 import de.dfki.experiments.profiles.Profile
-import de.dfki.ml.optimization.updater.SquaredL2UpdaterWithAdam
+import de.dfki.ml.optimization.updater.{SquaredL2UpdaterWithAdam, Updater}
 import de.dfki.ml.pipelines.Pipeline
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.ml.pipelines.urlrep.URLRepPipeline
 import de.dfki.utils.CommandLineParser
+import org.apache.log4j.Logger
 import org.apache.spark.SparkContext
 
 /**
   * @author behrouz
   */
-class Experiment {
+abstract class Experiment {
+
+  val defaultProfile: Profile
+
+  @transient lazy val logger = Logger.getLogger(getClass.getName)
+
   def getParams(args: Array[String], profile: Profile): Params = {
     val parser = new CommandLineParser(args).parse()
     val inputPath = parser.get("input", profile.INPUT_PATH)
@@ -33,6 +40,8 @@ class Experiment {
     val dayDuration = parser.getInteger("day_duration", profile.DAY_DURATION)
     val sampleSize = parser.getInteger("sample_size", profile.SAMPLE_SIZE)
     val convergenceTol = parser.getDouble("convergence_tol", profile.CONVERGENCE_TOL)
+    val updater = Updater.getUpdater(parser.get("updater", profile.UPDATER))
+    val stepSize = parser.getDouble("step_size", profile.STEP_SIZE)
 
     Params(inputPath = inputPath,
       streamPath = streamPath,
@@ -48,11 +57,12 @@ class Experiment {
       dayDuration = dayDuration,
       pipelineName = pipelineName,
       regParam = regParam,
-      convergenceTol = convergenceTol)
+      convergenceTol = convergenceTol,
+      updater = updater,
+      stepSize = stepSize)
   }
 
-  def getPipeline(spark: SparkContext,
-                  params: Params): Pipeline = {
+  def getPipeline(spark: SparkContext, params: Params): Pipeline = {
     if (Files.exists(Paths.get(params.initialPipeline))) {
       if (params.pipelineName == "criteo") {
         CriteoPipeline.loadFromDisk(params.initialPipeline, spark)

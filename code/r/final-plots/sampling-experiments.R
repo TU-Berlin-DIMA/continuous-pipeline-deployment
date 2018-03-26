@@ -5,25 +5,25 @@ library(tikzDevice)
 library(ggpubr)
 
 # misclassiffication
-weighted = cumsum(read.csv('sampling/continuous/confusion_matrix-fixed_time_based', header = FALSE, col.names = c('tp','fp','tn','fn')))
+weighted = cumsum(read.csv('sampling/continuous/confusion_matrix-time_based-100', header = FALSE, col.names = c('tp','fp','tn','fn')))
 weighted$mc = (weighted$fp + weighted$fn) / (weighted$fp + weighted$fn + weighted$tp + weighted$tn)
 #online = cumsum(read.csv('sampling/continuous/confusion_matrix-online', header = FALSE, col.names = c('tp','fp','tn','fn')))
 #online$mc = (online$fp + online$fn) / (online$fp + online$fn + online$tp + online$tn)
-window = cumsum(read.csv('sampling/continuous/confusion_matrix-window(1000)', header = FALSE, col.names = c('tp','fp','tn','fn')))
+window = cumsum(read.csv('sampling/continuous/confusion_matrix-window(1000)-100', header = FALSE, col.names = c('tp','fp','tn','fn')))
 window$mc = (window$fp + window$fn) / (window$fp + window$fn + window$tp + window$tn)
-uniform = cumsum(read.csv('sampling/continuous/confusion_matrix-uniform', header = FALSE, col.names = c('tp','fp','tn','fn')))
+uniform = cumsum(read.csv('sampling/continuous/confusion_matrix-uniform-100', header = FALSE, col.names = c('tp','fp','tn','fn')))
 uniform$mc = (uniform$fp + uniform$fn) / (uniform$fp + uniform$fn + uniform$tp + uniform$tn)
 breaks = c(1,2000,4000,6000, 8000, 10000, 12000)
 labels = c("Deploy","20","40", "60", "80", "100", "120")
-
 
 df = data.frame(Time = 1:nrow(window),
                 weighted = weighted$mc,
                 # online = online$mc, 
                 window = window$mc, 
                 uniform = uniform$mc)
+
 DAY_DURATION = 100
-df = df[((df$Time %% (10 * DAY_DURATION) == 0) | df$Time == 200 ), ]
+df = df[((df$Time %% (10 * DAY_DURATION) == 0) | df$Time == 1 ), ]
 df$weighted = df$weighted * 100
 df$window = df$window * 100
 df$uniform = df$uniform * 100

@@ -11,5 +11,5 @@ class RateBasedSampler(rate: Double = 0.1) extends Sampler(rate = rate) {
     indices.filter(_ => rand.nextDouble < rate)
   }
 
-  override def name = "rate_based"
+  override def name = s"rate_based-$rate"
 }

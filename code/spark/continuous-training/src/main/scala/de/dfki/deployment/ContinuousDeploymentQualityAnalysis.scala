@@ -43,6 +43,8 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
 
     pipeline.model.setMiniBatchFraction(1.0)
     pipeline.model.setNumIterations(1)
+    pipeline.model.setConvergenceTol(0.0)
+
     var time = 1
 
     if (evaluation != "prequential") {

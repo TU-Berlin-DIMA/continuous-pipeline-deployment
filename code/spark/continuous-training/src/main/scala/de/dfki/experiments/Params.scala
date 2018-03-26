@@ -1,5 +1,7 @@
 package de.dfki.experiments
 
+import de.dfki.ml.optimization.updater.{SquaredL2UpdaterWithAdam, Updater}
+
 /**
   * @author behrouz
   */
@@ -7,7 +9,7 @@ case class Params(inputPath: String = "",
                   streamPath: String = "",
                   evaluationPath: String = "prequential",
                   resultPath: String = "",
-                  initialPipeline: String = "",
+                  var initialPipeline: String = "",
                   delimiter: String = "",
                   numFeatures: Int = 100,
                   numIterations: Int = 500,
@@ -16,8 +18,10 @@ case class Params(inputPath: String = "",
                   sampleSize: Int = 100,
                   dayDuration: Int = 100,
                   pipelineName: String = "url-rep",
-                  regParam: Double = 0.001,
+                  var regParam: Double = 0.001,
                   convergenceTol: Double = 1E-6,
-                  miniBatch: Double = 0.1) {
+                  miniBatch: Double = 0.1,
+                  var stepSize: Double = 0.1,
+                  var updater: Updater = new SquaredL2UpdaterWithAdam()) {
 
 }

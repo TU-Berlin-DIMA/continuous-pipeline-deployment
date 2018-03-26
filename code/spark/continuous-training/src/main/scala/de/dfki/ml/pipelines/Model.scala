@@ -16,7 +16,7 @@ trait Model extends Serializable {
 
   /**
     *
-    * @param data      training data rdd
+    * @param data training data rdd
     */
   def train(data: RDD[LabeledPoint])
 
@@ -28,4 +28,8 @@ trait Model extends Serializable {
   def setMiniBatchFraction(miniBatchFraction: Double)
 
   def setNumIterations(numIterations: Int)
+
+  def setConvergenceTol(convergenceTol: Double)
+
+  def getNumIterations: Int
 }

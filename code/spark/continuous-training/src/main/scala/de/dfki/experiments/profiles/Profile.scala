@@ -1,7 +1,5 @@
 package de.dfki.experiments.profiles
 
-import de.dfki.experiments.SamplingModes
-
 /**
   * @author behrouz
   */
@@ -11,24 +9,25 @@ abstract class Profile {
   val EVALUATION_PATH: String
   val RESULT_PATH: String
   val INITIAL_PIPELINE: String
-  val DELIMITER: String
+  val DELIMITER: String = ","
   val NUM_FEATURES: Int
-  val NUM_ITERATIONS: Int
+  val NUM_ITERATIONS: Int = 2000
   val SLACK: Int
   val DAYS: String
   val SAMPLE_SIZE: Int
   val DAY_DURATION: Int
   val PIPELINE_NAME: String
-  val REG_PARAM: Double
-  val CONVERGENCE_TOL: Double
-  val MINI_BATCH: Double
-  val STEP_SIZE: Double
+  val REG_PARAM: Double = 0.001
+  val CONVERGENCE_TOL: Double = 1E-6
+  val MINI_BATCH: Double = 0.1
+  val STEP_SIZE: Double = 0.0001
+  val UPDATER: String = "adam"
 
   val PROFILE_NAME: String
 }
 
 object Profile {
-  val availableProfiles: List[Profile] = List(CriteoClusterProfile, URLProfile, SamplingModes.DefaultProfile)
+  val availableProfiles: List[Profile] = List(new CriteoClusterProfile(), new URLProfile())
 
   def getProfile(name: String): Profile = {
     availableProfiles.filter(_.PROFILE_NAME == name).head

@@ -1,110 +1,109 @@
 package de.dfki.experiments
 
 import java.io.{File, FileWriter}
-import java.nio.file.{Files, Paths}
 
-import de.dfki.core.sampling.{RateBasedSampler, WindowBasedSampler}
+import de.dfki.core.sampling.TimeBasedSampler
 import de.dfki.deployment.ContinuousDeploymentQualityAnalysis
-import de.dfki.ml.evaluation.LogisticLoss
-import de.dfki.ml.optimization.updater.Updater
-import de.dfki.ml.pipelines.criteo.CriteoPipeline
+import de.dfki.experiments.profiles.URLProfile
+import de.dfki.ml.optimization.updater._
 import de.dfki.utils.CommandLineParser
-import org.apache.log4j.Logger
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 
 /**
-  * TODO: FIX THIS
   *
   * @author behrouz
   */
-object ParameterSelection {
-  val INPUT_PATH = "data/criteo-full/experiments/initial-training/0"
-  val STREAM_PATH = "data/criteo-full/experiments/stream"
-  val EVALUATION_PATH = "data/criteo-full/experiments/evaluation/6"
-  val RESULT_PATH = "../../../experiment-results/criteo-full/quality/loss-new"
-  val PIPELINE_DIRECTORY = "data/criteo-full/pipelines/parameter-selection/"
-  val UPDATER = "adam,rmsprop,momentum,adadelta"
-  val DEFAULT_INCREMENT = "20,40,80,160,320,500"
-  val DELIMITER = ","
-  val NUM_FEATURES = 30000
-  val SLACK = 10
-  val DAYS = "1"
-  val DAY_DURATION = 100
-  val STEP_SIZE = 0.1
+object ParameterSelection extends Experiment {
+  val UPDATERS: List[Updater] = List(
+    new SquaredL2UpdaterWithAdam(),
+    new SquaredL2UpdaterWithRMSProp(),
+    new SquaredL2UpdaterWithAdaDelta(),
+    new SquaredL2UpdaterWithMomentum())
 
+  val REGULARIZATIONS: List[Double] = List(0.001, 0.0001)
 
-  @transient lazy val logger = Logger.getLogger(getClass.getName)
+  val STEP_SIZES: List[Double] = List(0.01, 0.001, 0.0001)
+
+  val BATCH_EVALUATION = "data/url-reputation/processed/stream/day_1"
+
+  override val defaultProfile = new URLProfile {
+    override val RESULT_PATH = "../../../experiment-results/url-reputation/param_selection"
+    override val INITIAL_PIPELINE = "data/url-reputation/pipelines/param-selection"
+  }
 
   def main(args: Array[String]): Unit = {
-    val parser = new CommandLineParser(args).parse()
-    val inputPath = parser.get("input", INPUT_PATH)
-    val streamPath = parser.get("stream", STREAM_PATH)
-    val evaluationPath = parser.get("evaluation", EVALUATION_PATH)
-    val resultPath = parser.get("result", RESULT_PATH)
-    val increments = parser.get("increments", DEFAULT_INCREMENT).split(",").map(_.toInt)
-    val updaters = parser.get("updater", UPDATER).split(",")
-    val delimiter = parser.get("delimiter", DELIMITER)
-    val stepSize = parser.getDouble("step", STEP_SIZE)
-    val numFeatures = parser.getInteger("features", NUM_FEATURES)
-    val pipelineDirectory = parser.get("pipeline", PIPELINE_DIRECTORY)
-    val slack = parser.getInteger("slack", SLACK)
-    val days = parser.get("days", DAYS).split(",").map(_.toInt)
-    val dayDuration = parser.getInteger("day_duration", DAY_DURATION)
-
+    val params = getParams(args, defaultProfile)
     val conf = new SparkConf().setAppName("Learning Rate Selection Criteo")
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
 
     val ssc = new StreamingContext(conf, Seconds(1))
-    val data = ssc.sparkContext.textFile(inputPath)
-    val eval = ssc.sparkContext.textFile(evaluationPath)
 
-    for (u <- updaters) {
-      val updater = Updater.getUpdater(u)
-      var criteoPipeline = new CriteoPipeline(ssc.sparkContext,
-        stepSize = stepSize,
-        delim = delimiter,
-        updater = updater,
-        miniBatchFraction = 0.1,
-        numCategories = numFeatures)
-      val transformed = criteoPipeline.updateAndTransform(data).setName("Transformed Training Data")
-      transformed.cache()
-      var cur = 0
-      increments.foreach { iter =>
-        val pipelineName = s"$pipelineDirectory/${updater.name}-$iter"
-        if (Files.exists(Paths.get(pipelineName))) {
-          logger.info(s"Pipeline for updater ${updater.name} and Iter $iter exists !!!")
-          criteoPipeline = CriteoPipeline.loadFromDisk(pipelineName, ssc.sparkContext)
-        } else {
-          criteoPipeline.model.setNumIterations(iter - cur)
-          criteoPipeline.train(transformed)
-          CriteoPipeline.saveToDisk(criteoPipeline, pipelineName)
-        }
-        val loss = LogisticLoss.fromRDD(criteoPipeline.predict(eval))
-        cur = iter
-        val file = new File(s"$resultPath/${updater.name}/loss")
-        file.getParentFile.mkdirs()
-        val fw = new FileWriter(file, true)
-        try {
-          fw.write(s"$iter,$loss\n")
-        }
-        finally {
-          fw.close()
+    // parser for extra parameters
+    val parser = new CommandLineParser(args).parse()
+    val evalSet = parser.get("eval-set", BATCH_EVALUATION)
+    val evaluationSet = ssc.sparkContext.textFile(evalSet)
+    val rootPipelines = params.initialPipeline
+
+    // hyper parameter evaluation for batch training
+    for (u <- UPDATERS) {
+      for (r <- REGULARIZATIONS) {
+        for (s <- if (u.name == "adadelta") List(0.001) else STEP_SIZES) {
+          params.updater = u
+          params.regParam = r
+          params.stepSize = s
+          params.initialPipeline = s"$rootPipelines/${u.name}-${params.stepSize}-$r"
+          val pipeline = getPipeline(ssc.sparkContext, params)
+          val matrix = pipeline.score(evaluationSet)
+          val file = new File(s"${params.resultPath}/training")
+          file.getParentFile.mkdirs()
+          val fw = new FileWriter(file, true)
+          try {
+            fw.write(s"${u.name}(${params.stepSize}),$r,${matrix.rawScore()}\n")
+          }
+          finally {
+            fw.close()
+          }
         }
       }
-
-      val deployment = new ContinuousDeploymentQualityAnalysis(history = inputPath,
-        streamBase = streamPath,
-        evaluation = evaluationPath,
-        resultPath = s"$resultPath/${updater.name}",
-        daysToProcess = days,
-        slack = slack,
-        sampler = new WindowBasedSampler(dayDuration, dayDuration * 7))
-
-      deployment.deploy(ssc, criteoPipeline)
     }
+    // hyper parameter evaluation for deployment
+    for (u <- UPDATERS) {
+      for (r <- REGULARIZATIONS) {
+        for (s <- if (u.name == "adadelta") List(0.001) else STEP_SIZES) {
+          params.updater = u
+          params.regParam = r
+          params.stepSize = s
+          params.initialPipeline = s"$rootPipelines/${u.name}(${params.stepSize})-$r"
+          val pipeline = getPipeline(ssc.sparkContext, params)
+          new ContinuousDeploymentQualityAnalysis(history = params.inputPath,
+            streamBase = params.streamPath,
+            evaluation = s"${params.evaluationPath}",
+            resultPath = s"${params.resultPath}",
+            daysToProcess = params.days,
+            slack = params.slack,
+            sampler = new TimeBasedSampler(size = params.sampleSize)).deploy(ssc, pipeline)
+        }
+      }
+    }
+
   }
 
+  /**
+    * manually prepared function, it contains the best pipeline found
+    * for every learning rate adaptation technique
+    *
+    * @param name name of the learning rate adaptation technique
+    * @return
+    */
+  def URLBestPipelines(name: String): String = {
+    name match {
+      case "adadelta" => s"${defaultProfile.INITIAL_PIPELINE}-adadelta-0.001-0.001"
+      case "adam" => s"${defaultProfile.INITIAL_PIPELINE}-adam-0.001-0.001"
+      case "rmsprop" => s"${defaultProfile.INITIAL_PIPELINE}-rmsprop-1.0E-4-0.001"
+      case "momentum" => s"${defaultProfile.INITIAL_PIPELINE}-momentum-0.001-0.001"
+    }
 
+  }
 }

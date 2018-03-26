@@ -22,7 +22,7 @@ class SquaredL2UpdaterWithRMSProp(gamma: Double = 0.9) extends Updater {
                        iter: Int) = {
     val brzGradient = asBreeze(gradient)
     // seems using any value greater than 0.001 diverges the solution
-    val thisIterStepSize = stepSize / sqrt(iterCounter)
+    val thisIterStepSize = stepSize
     val size = brzGradient.size
     // initialize the update vectors
     if (gradientsSquared == null) {

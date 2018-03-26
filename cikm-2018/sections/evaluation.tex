@@ -40,12 +40,12 @@ We use the Day 0 of the Criteo data to investigate the effect of the learning ra
 Figure \ref{fig:criteo-learning-rate} shows the logistic loss error rate of different learning adaptation techniques. 
 During the SGD training phase, we capture the logistic loss on the evaluation dataset after 20, 40, 80, 160, 320, and 500 iterations of training.
 
-
-\begin{figure}[h!]
-\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-learning-rate-experiment.pdf}
-\caption{Learning rate adaptation techniques for Criteo pipeline}
-\label{fig:criteo-learning-rate}
-\end{figure}
+\input{../images/experiment-results/tikz/parameter-selection-table}
+%\begin{figure}[h!]
+%\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-learning-rate-experiment.pdf}
+%\caption{Learning rate adaptation techniques for Criteo pipeline}
+%\label{fig:criteo-learning-rate}
+%\end{figure}
 
 Adadelta performs very poorly during the offline training phase.
 The Criteo dataset is a complex and high-dimensional data, where features are a mix of numerical and categorical variables.

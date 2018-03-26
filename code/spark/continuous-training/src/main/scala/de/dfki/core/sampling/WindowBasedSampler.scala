@@ -18,5 +18,5 @@ class WindowBasedSampler(size: Int = 100,
     Random.shuffle(slice).take(sampleSize)
   }
 
-  override def name = s"window($window)"
+  override def name = s"window($window)-$size"
 }
