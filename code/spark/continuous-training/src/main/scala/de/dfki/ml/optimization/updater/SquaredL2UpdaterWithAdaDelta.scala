@@ -51,11 +51,12 @@ class SquaredL2UpdaterWithAdaDelta(var gamma: Double = 0.9) extends Updater {
     brzAxpy(1 - gamma, deltas :* deltas, deltasSquared)
     val brzWeights: BV[Double] = asBreeze(weightsOld).toDenseVector
 
-    logger.info(s"current step-size ($thisIterStepSize)")
-
     brzAxpy(-1.0, deltas, brzWeights)
 
     iterCounter = iterCounter + 1
+    if (iterCounter % 100 == 0) {
+      logger.info(s"learning rate tuning using a default rate of :$thisIterStepSize")
+    }
 
     fromBreeze(brzWeights)
   }

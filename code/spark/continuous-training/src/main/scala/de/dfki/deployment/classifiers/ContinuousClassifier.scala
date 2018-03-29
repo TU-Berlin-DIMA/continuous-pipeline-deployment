@@ -1,7 +1,7 @@
 package de.dfki.deployment.classifiers
 
 import de.dfki.core.sampling.RateBasedSampler
-import de.dfki.deployment.ContinuousDeploymentTimeAnalysis
+import de.dfki.deployment.continuous.ContinuousDeploymentTimeAnalysis
 import de.dfki.utils.CommandLineParser
 
 /**

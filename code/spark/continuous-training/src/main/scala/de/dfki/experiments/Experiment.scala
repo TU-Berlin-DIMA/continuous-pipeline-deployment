@@ -2,7 +2,6 @@ package de.dfki.experiments
 
 import java.nio.file.{Files, Paths}
 
-import de.dfki.experiments.ParameterSelection.getClass
 import de.dfki.experiments.profiles.Profile
 import de.dfki.ml.optimization.updater.{SquaredL2UpdaterWithAdam, Updater}
 import de.dfki.ml.pipelines.Pipeline
@@ -42,6 +41,7 @@ abstract class Experiment {
     val convergenceTol = parser.getDouble("convergence_tol", profile.CONVERGENCE_TOL)
     val updater = Updater.getUpdater(parser.get("updater", profile.UPDATER))
     val stepSize = parser.getDouble("step_size", profile.STEP_SIZE)
+    val miniBatch = parser.getDouble("mini_batch", profile.MINI_BATCH)
 
     Params(inputPath = inputPath,
       streamPath = streamPath,
@@ -59,7 +59,8 @@ abstract class Experiment {
       regParam = regParam,
       convergenceTol = convergenceTol,
       updater = updater,
-      stepSize = stepSize)
+      stepSize = stepSize,
+      miniBatch = miniBatch)
   }
 
   def getPipeline(spark: SparkContext, params: Params): Pipeline = {
@@ -86,7 +87,7 @@ abstract class Experiment {
         pipeline
       } else if (params.pipelineName == "url-rep") {
         val pipeline = new URLRepPipeline(spark,
-          updater = new SquaredL2UpdaterWithAdam(),
+          updater = params.updater,
           miniBatchFraction = params.miniBatch,
           numIterations = params.numIterations,
           numCategories = params.numFeatures,

@@ -1,6 +1,8 @@
-package de.dfki.deployment
+package de.dfki.deployment.continuous
 
+import de.dfki.core.sampling.Sampler
 import de.dfki.core.streaming.BatchFileInputDStream
+import de.dfki.deployment.Deployment
 import de.dfki.ml.pipelines.Pipeline
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
@@ -13,12 +15,13 @@ import scala.collection.mutable.ListBuffer
 /**
   * @author behrouz
   */
-class PeriodicalDeploymentQualityAnalysis(val history: String,
+class ContinuousDeploymentQualityAnalysis(val history: String,
                                           val streamBase: String,
-                                          val evaluation: String,
+                                          val evaluation: String = "prequential",
                                           val resultPath: String,
-                                          val daysToProcess: Array[Int] = Array(1, 2, 3, 4, 5),
-                                          val dayDuration: Int = 100) extends Deployment {
+                                          val daysToProcess: Array[Int],
+                                          slack: Int = 10,
+                                          sampler: Sampler) extends Deployment(slack, sampler) {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     // create rdd of the initial data that the pipeline was trained with
@@ -27,7 +30,7 @@ class PeriodicalDeploymentQualityAnalysis(val history: String,
       .setName("Historical data")
       .cache()
     data.count()
-    var copyPipeline = pipeline
+
     val testData = streamingContext
       .sparkContext
       .textFile(evaluation)
@@ -39,10 +42,15 @@ class PeriodicalDeploymentQualityAnalysis(val history: String,
     var processedRDD: ListBuffer[RDD[String]] = new ListBuffer[RDD[String]]()
     processedRDD += data
 
+    pipeline.model.setMiniBatchFraction(1.0)
+    pipeline.model.setNumIterations(1)
+    pipeline.model.setConvergenceTol(0.0)
+
     var time = 1
+
     if (evaluation != "prequential") {
       // initial evaluation of the pipeline right after deployment for non prequential based method
-      evaluateStream(copyPipeline, testData, resultPath, "periodical")
+      evaluateStream(pipeline, testData, resultPath, sampler.name)
     }
     while (!streamingSource.allFileProcessed()) {
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
@@ -51,19 +59,30 @@ class PeriodicalDeploymentQualityAnalysis(val history: String,
 
       if (evaluation == "prequential") {
         // perform evaluation
-        evaluateStream(copyPipeline, rdd, resultPath, "periodical")
+        evaluateStream(pipeline, rdd, resultPath, sampler.name)
+      }
+      pipeline.updateTransformTrain(rdd)
+
+      if (time % slack == 0) {
+        val historicalSample = provideHistoricalSample(processedRDD, streamingContext.sparkContext)
+        if (historicalSample.nonEmpty) {
+          val cached = historicalSample.get.repartition(streamingContext.sparkContext.defaultParallelism).cache()
+          cached.count()
+          val trainingData = pipeline.transform(cached)
+          trainingData.cache()
+          pipeline.train(trainingData, 20)
+          trainingData.unpersist(blocking = true)
+          if (evaluation != "prequential") {
+            // if evaluation method is not prequential, only perform evaluation after a training step
+            evaluateStream(pipeline, testData, resultPath, sampler.name)
+          }
+        } else {
+          logger.warn(s"Sample in iteration $time is empty")
+        }
       }
       processedRDD += rdd
-      if (time % dayDuration == 0) {
-        // start of a new day
-        copyPipeline = copyPipeline.newPipeline()
-        val data = streamingContext.sparkContext.union(processedRDD)
-        copyPipeline.updateTransformTrain(data)
-      }
       time += 1
     }
     processedRDD.foreach(r => r.unpersist(true))
   }
-
 }
-

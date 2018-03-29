@@ -26,6 +26,7 @@ class GradientDescent(var numIterations: Int,
   @transient lazy val logger = Logger.getLogger(getClass.getName)
 
   var numFeatures: Int = _
+  var convergedAfter: Int = 0
 
   def setConvergenceTol(convergenceTol: Double): this.type = {
     this.convergenceTol = convergenceTol
@@ -60,6 +61,8 @@ class GradientDescent(var numIterations: Int,
     this
   }
 
+  def getConvergedAfter = convergedAfter
+
   def this() = this(100, 1.0, 0.0, 1E-6, 1.0, true, new LogisticGradient(true, 1.0), new SquaredL2Updater)
 
 
@@ -76,7 +79,7 @@ class GradientDescent(var numIterations: Int,
   }
 
   override def optimize(data: RDD[(Double, Vector)], initialWeights: Vector, intercept: Double): Vector = {
-    GradientDescent.runMiniBatchSGD(
+    val result = GradientDescent.runMiniBatchSGD(
       data,
       gradient,
       updater,
@@ -88,6 +91,8 @@ class GradientDescent(var numIterations: Int,
       initialWeights,
       fitIntercept,
       intercept)
+    convergedAfter = result._2
+    result._1
   }
 }
 
@@ -130,7 +135,7 @@ object GradientDescent {
                       miniBatchFraction: Double,
                       initialWeights: Vector,
                       fitIntercept: Boolean,
-                      intercept: Double): Vector = {
+                      intercept: Double): (Vector, Int) = {
 
     // convergenceTol should be set with non minibatch settings
     if (miniBatchFraction < 1.0 && convergenceTol > 0.0) {
@@ -186,10 +191,12 @@ object GradientDescent {
     var i = 1
     while (!converged && i <= numIterations) {
       // this is to avoid the unnecessary sampling if sampling rate is 1.0
-      val sampledData = if (miniBatchFraction == 1.0)
+      val sampledData = if (miniBatchFraction == 1.0) {
         data
-      else
+      }
+      else {
         data.sample(withReplacement = false, miniBatchFraction)
+      }
 
       prevLoss = currLoss
       // the gradient computation takes care of dividing the loss and gradient by the number of items in the sample
@@ -217,14 +224,16 @@ object GradientDescent {
           converged = isConverged(previousWeights.get,
             currentWeights.get,
             convergenceTol)
+          logger.info(s"Model not converged after $i iterations")
         }
       }
 
-      logger.info(s"Iteration ($i/$numIterations) ,loss($currLoss)")
+      //logger.info(s"Iteration ($i/$numIterations) ,loss($currLoss)")
       i += 1
     }
-    logger.info(s"converged after $i iterations")
-    weights
+
+    logger.info(s"converged after ${i - 1} iterations")
+    (weights, i - 1)
   }
 
   private def isConverged(previousWeights: Vector,
@@ -234,13 +243,6 @@ object GradientDescent {
     val previousBDV = asBreeze(previousWeights).toDenseVector
     val currentBDV = asBreeze(currentWeights).toDenseVector
 
-    if (previousBDV == currentBDV) {
-      println("THEY ARE THE SAME")
-    }
-
-    //    logger.info(s"${previousBDV.slice(0,100).toString}")
-    //    logger.info(s"${currentBDV.slice(0,100).toString}")
-    // This represents the difference of updated weights in the iteration.
     val solutionVecDiff: Double = norm(previousBDV - currentBDV)
 
     val currentBDVNorm = norm(currentBDV)

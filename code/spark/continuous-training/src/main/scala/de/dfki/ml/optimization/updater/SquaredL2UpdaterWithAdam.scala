@@ -58,6 +58,9 @@ class SquaredL2UpdaterWithAdam(beta1: Double = 0.9,
     brzAxpy(-1.0, deltas, brzWeights)
 
     iterCounter = iterCounter + 1
+    if (iterCounter % 100 == 0) {
+      logger.info(s"learning rate tuning using a default rate of :$thisIterStepSize")
+    }
 
     fromBreeze(brzWeights)
   }

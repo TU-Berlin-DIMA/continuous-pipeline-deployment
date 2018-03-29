@@ -8,11 +8,11 @@ class URLProfile extends Profile {
   val STREAM_PATH = "data/url-reputation/processed/stream"
   val EVALUATION_PATH = "prequential"
   val RESULT_PATH = "../../../experiment-results/url-reputation/sampling"
-  val INITIAL_PIPELINE = "data/url-reputation/pipelines/sampling-mode/pipeline-30000"
+  val INITIAL_PIPELINE = "data/url-reputation/pipelines/best"
   override val DELIMITER = ","
   // val NUM_FEATURES = 3231961
-  val NUM_FEATURES = 30000
-  override val NUM_ITERATIONS = 20000
+  val NUM_FEATURES = 3000
+  override val NUM_ITERATIONS = 10000
   val SLACK = 5
   // 44 no error all 4400 rows are ok
   // 45 error but 3900 rows are only ok
@@ -24,7 +24,7 @@ class URLProfile extends Profile {
   override val CONVERGENCE_TOL = 1E-6
 
   override val PROFILE_NAME = "url"
-  override val STEP_SIZE = 0.0001
+  override val STEP_SIZE = 0.01
   override val MINI_BATCH = 1.0
 }
 

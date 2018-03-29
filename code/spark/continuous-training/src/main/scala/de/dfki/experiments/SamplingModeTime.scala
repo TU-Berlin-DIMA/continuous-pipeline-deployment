@@ -1,6 +1,6 @@
 package de.dfki.experiments
 
-import de.dfki.deployment.ContinuousDeploymentSamplingTimeAnalysis
+import de.dfki.deployment.continuous.ContinuousDeploymentSamplingTimeAnalysis
 import de.dfki.ml.optimization.updater.SquaredL2UpdaterWithAdam
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.utils.CommandLineParser

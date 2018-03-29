@@ -32,4 +32,6 @@ trait Model extends Serializable {
   def setConvergenceTol(convergenceTol: Double)
 
   def getNumIterations: Int
+
+  def getConvergedAfter: Int
 }

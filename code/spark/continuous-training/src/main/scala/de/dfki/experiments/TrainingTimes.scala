@@ -2,6 +2,8 @@ package de.dfki.experiments
 
 import de.dfki.core.sampling.WindowBasedSampler
 import de.dfki.deployment._
+import de.dfki.deployment.continuous.ContinuousDeploymentTimeAnalysis
+import de.dfki.deployment.periodical.PeriodicalDeploymentTimeAnalysis
 import de.dfki.ml.optimization.updater.SquaredL2UpdaterWithAdam
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.utils.CommandLineParser

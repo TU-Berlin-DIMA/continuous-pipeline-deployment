@@ -132,6 +132,8 @@ class CriteoPipeline(@transient var spark: SparkContext,
   override def score(data: RDD[String]): Score = {
     LogisticLoss.fromRDD(predict(data))
   }
+
+  override def getConvergedAfter = model.getConvergedAfter
 }
 
 // example use case of criteo pipeline

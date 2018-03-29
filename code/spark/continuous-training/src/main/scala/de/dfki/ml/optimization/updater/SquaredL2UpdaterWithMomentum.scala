@@ -44,12 +44,15 @@ class SquaredL2UpdaterWithMomentum(var gamma: Double = 0.9) extends Updater {
     // part 2: v = v + learningRate * gradient
     //brzAxpy(thisIterStepSize, asBreeze(gradient), updateVector)
 
-    logger.info(s"current step-size ($thisIterStepSize)")
+    //logger.info(s"current step-size ($thisIterStepSize)")
 
     // w' = w - v
     brzAxpy(-1.0, updateVector, brzWeights)
 
     iterCounter = iterCounter + 1
+    if (iterCounter % 100 == 0) {
+      logger.info(s"learning rate tuning using a default rate of :$thisIterStepSize")
+    }
 
     fromBreeze(brzWeights)
   }

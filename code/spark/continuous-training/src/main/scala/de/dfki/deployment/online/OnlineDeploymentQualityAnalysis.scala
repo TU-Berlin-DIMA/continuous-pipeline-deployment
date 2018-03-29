@@ -1,6 +1,7 @@
-package de.dfki.deployment
+package de.dfki.deployment.online
 
 import de.dfki.core.streaming.BatchFileInputDStream
+import de.dfki.deployment.Deployment
 import de.dfki.ml.pipelines.Pipeline
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
@@ -9,8 +10,7 @@ import org.apache.spark.streaming.StreamingContext
 /**
   * @author behrouz
   */
-class OnlineDeploymentQualityAnalysis(val history: String,
-                                      val streamBase: String,
+class OnlineDeploymentQualityAnalysis(val streamBase: String,
                                       val evaluation: String = "prequential",
                                       val resultPath: String,
                                       val daysToProcess: Array[Int]) extends Deployment {

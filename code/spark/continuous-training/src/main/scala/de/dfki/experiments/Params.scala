@@ -8,7 +8,7 @@ import de.dfki.ml.optimization.updater.{SquaredL2UpdaterWithAdam, Updater}
 case class Params(inputPath: String = "",
                   streamPath: String = "",
                   evaluationPath: String = "prequential",
-                  resultPath: String = "",
+                  var resultPath: String = "",
                   var initialPipeline: String = "",
                   delimiter: String = "",
                   numFeatures: Int = 100,

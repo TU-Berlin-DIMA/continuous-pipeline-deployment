@@ -1,7 +1,7 @@
-package de.dfki.deployment
+package de.dfki.deployment.periodical
 
+import de.dfki.deployment.Deployment
 import de.dfki.ml.pipelines.Pipeline
-import org.apache.log4j.Logger
 import org.apache.spark.streaming.StreamingContext
 
 /**

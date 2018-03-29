@@ -1,12 +1,12 @@
-package de.dfki.deployment
+package de.dfki.deployment.continuous
 
 import java.io.{File, FileWriter}
 
 import de.dfki.core.streaming.BatchFileInputDStream
+import de.dfki.deployment.Deployment
 import de.dfki.ml.pipelines.Pipeline
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
-import org.apache.log4j.Logger
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.StreamingContext
 

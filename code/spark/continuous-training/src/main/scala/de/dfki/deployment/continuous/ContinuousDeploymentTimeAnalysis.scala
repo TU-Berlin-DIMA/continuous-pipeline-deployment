@@ -1,7 +1,8 @@
-package de.dfki.deployment
+package de.dfki.deployment.continuous
 
 import de.dfki.core.sampling.Sampler
 import de.dfki.core.streaming.BatchFileInputDStream
+import de.dfki.deployment.Deployment
 import de.dfki.ml.pipelines.Pipeline
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat

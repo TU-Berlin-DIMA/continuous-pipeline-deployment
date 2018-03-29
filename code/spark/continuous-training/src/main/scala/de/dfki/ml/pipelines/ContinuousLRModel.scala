@@ -77,4 +77,6 @@ class ContinuousLRModel(private var stepSize: Double,
   }
 
   override def getNumIterations = this.algorithm.optimizer.numIterations
+
+  override def getConvergedAfter = this.algorithm.optimizer.getConvergedAfter
 }
