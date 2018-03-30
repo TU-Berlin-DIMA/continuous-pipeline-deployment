@@ -28,7 +28,7 @@ We then deploy the model (and the pipeline) and use the rest of the data for rep
 The URL and the Criteo datasets do not have timestamps, therefore we divide every day into micro batches of roughly 1 minute of data. 
 Each micro batch is sequentially sent to the deployment environment where first they are used for reporting the quality and then used for training model.
 
-\subsection{Deployment Modes}
+\subsection{EX1: Deployment Modes}
 In this experiment, we investigate the effect of our continuous deployment approach on model quality and total training time.
 We use 4 different deployment approaches.
 \begin{itemize}
@@ -58,7 +58,7 @@ Figure \ref{deployment-time-figure} shows the total training time for each deplo
 \label{deployment-time-figure}
 \end{figure}
 
-\subsection{Tuning the System}
+\subsection{EX2: System Tuning}
 In this experiment, we investigate the effect of different parameters on the quality of the models after deployment (answering the second question).
 
 \textbf{Optimization algorithm parameters. }
@@ -123,7 +123,7 @@ Using the slack parameter, we can guide the scheduler to increase or decrease th
 The slack parameter allows for the deployment platform to accommodate surges in the incoming prediction requests and new training data.
 In scenarios where sudden surges are expected (e.g., online stores), we recommend a large slack parameter (recommended value is $10$). \todo[inline]{No exp. validate this}
 
-\subsection{Optimizations}
+\subsection{EX3: Optimizations Effects}
 In this experiment, we analyze the effects of the two optimizations, live statistics analysis and materialization of preprocess features, on the total training time.
 Figure \ref{optimization-effect} shows the effect of optimizations on total training time.
 \begin{figure}
