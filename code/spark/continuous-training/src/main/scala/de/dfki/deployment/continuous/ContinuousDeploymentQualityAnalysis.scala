@@ -70,7 +70,7 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
           cached.count()
           val trainingData = pipeline.transform(cached)
           trainingData.cache()
-          pipeline.train(trainingData, 20)
+          pipeline.train(trainingData)
           trainingData.unpersist(blocking = true)
           if (evaluation != "prequential") {
             // if evaluation method is not prequential, only perform evaluation after a training step

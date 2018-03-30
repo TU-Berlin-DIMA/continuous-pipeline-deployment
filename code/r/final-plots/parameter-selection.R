@@ -54,22 +54,32 @@ baseSize = 20
 breaks = c(1,200,400,600, 800, 1000)
 labels = c("0","2","4", "6", "8", "10")
 
-url_plot = ggline(urlData, 'Time', 'value', ylab = "Misclass (\\%)", xlab = 'Time (day)',
+url_plot = ggline(urlData, 'Time', 'value', ylab = "Misclass (\\%)", xlab = 'Day',
                   shape = '-1', linetype ='Adaptation', size =2, color = "Adaptation", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = breaks, labels= labels)
 url_plot = ggpar(url_plot, font.x = c(fontLabelSize), font.y=c(fontLabelSize), legend.title = NULL) +
-  theme(plot.margin = unit(c(0,0,0,0), "lines"), axis.title.y = element_text(margin = margin(r=0))) 
+  theme(plot.margin = unit(c(0,0,0,0), "lines"), 
+        axis.title.y = element_text(margin = margin(r=-3)),
+        axis.title.x = element_text(margin = margin(t=-2)),
+        axis.text.x = element_text(margin = margin(t=-3)))
 
-criteo_plot = ggline(criteoData, 'Time', 'value', ylab = "MSE", xlab = 'Time (day)',
+criteo_plot = ggline(criteoData, 'Time', 'value', ylab = "MSE", xlab = 'Day',
                      shape = '-1', linetype ='Adaptation', size =2, color = "Adaptation", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = breaks, labels= labels)
 criteo_plot = ggpar(criteo_plot, font.x = c(fontLabelSize), font.y=c(fontLabelSize), legend.title = NULL) +
-  theme(plot.margin = unit(c(0,0,0,0), "lines"), axis.title.y = element_text(margin = margin(r=0)))
-taxi_plot = ggline(taxiData, 'Time', 'value', ylab = "MSE", xlab = 'Time (day)',
-                   shape = '-1', linetype ='Adaptation',size =2, color = "Adaptation", ggtheme = theme_pubclean(base_size = baseSize)) + 
+  theme(plot.margin = unit(c(0,0,0,0), "lines"), 
+        axis.title.y = element_text(margin = margin(r=-3)),
+        axis.title.x = element_text(margin = margin(t=-2)),
+        axis.text.x = element_text(margin = margin(t=-3)))
+
+taxi_plot = ggline(taxiData, 'Time', 'value', ylab = "MSE", xlab = 'Day',
+                   shape = '-1', linetype ='Adaptation',size = 2, color = "Adaptation", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = breaks, labels = labels)
 taxi_plot = ggpar(taxi_plot, font.x = c(fontLabelSize), font.y=c(fontLabelSize), legend.title = NULL)+
-  theme(plot.margin = unit(c(0,0,0,0), "lines"), axis.title.y = element_text(margin = margin(r=0)))
+  theme(plot.margin = unit(c(0,0,0,0), "lines"), 
+        axis.title.y = element_text(margin = margin(r=-3)),
+        axis.title.x = element_text(margin = margin(t=-2)),
+        axis.text.x = element_text(margin = margin(t=-3)))
 
 param_selection_plot = ggarrange(url_plot, taxi_plot,criteo_plot,  nrow = 1, ncol = 3, common.legend = TRUE) + theme(legend.title = NULL)
 tikz(file = "../../images/experiment-results/tikz/parameter-selection-figure.tex", width = 6, height = 2)

@@ -10,8 +10,8 @@ by simulating the deployment of machine learning pipelines using different real-
 \subsection{Setup}\label{subsec:setup}
 \textbf{Pipelines.}
 We design three pipelines for all the experiments.\\
-\textit{URL pipeline. } The URL pipeline consists of 5 components: input parser, missing value imputer, standard scaler, feature hasher, and a SVM model.
-We use the URL pipeline to process the URL dataset for classifying URLs, gathered over a 120 days period, into maliciuous and legitimate groups \cite{ma2009identifying}.\\
+\textit{URL pipeline. } The URL pipeline consists of 5 components: input parser, missing value imputer, standard scaler, feature hasher, and an SVM model.
+We use the URL pipeline to process the URL dataset for classifying URLs, gathered over a 120 days period, into malicious and legitimate groups \cite{ma2009identifying}.\\
 \textit{Criteo Pipeline.} 
 The Criteo pipeline consists of 5 components: input parser, missing value imputer, standard scaler, feature hasher, and a Logistic Regression model.
 The Criteo pipeline process the Terabyte Criteo click log dataset is used for benchmarking algorithms for clickthrough rate (CTR) prediction \cite{criteo-log}.\\
@@ -19,14 +19,14 @@ The Criteo pipeline process the Terabyte Criteo click log dataset is used for be
 The Criteo pipeline consists of 4 components: input parser, missing value imputer, feature extractor, standard scaler, and a Linear Regression model.
 
 \textbf{Deployment Environment. }
-We deploy the URL pipeline on a single laptop running a macOS with 2,2 GHz intel Core i7 and 16 GB of RAM and the Criteo pipeline on a cluster of 21 machines (intel Xeon 2.4 GHz 16 cores, 28 of dedicate RAM per node).
-Both environment are using using Apache Spark 2.2.0.
+We deploy the URL pipeline on a single laptop running a macOS with 2,2 GHz intel Core i7 and 16 GB of RAM and the Criteo pipeline on a cluster of 21 machines (intel Xeon 2.4 GHz 16 cores, 28 of dedicated RAM per node).
+Both environments are using Apache Spark 2.2.0 as their execution engine.
 
 \textbf{Deployment Process. }
 For both the URL and the Criteo pipeline we first trained a model on the first day of the data.
 We then deploy the model (and the pipeline) and use the rest of the data for reporting the prediction quality and further training.
-The URL and the Criteo datasets do not have timestamps, therefore we divide everyday into micro batches of roughly 1 minute of data. 
-Each micro batch is sequentially send to the deployment environment where first they are used for reporting the quality and then used for training model.
+The URL and the Criteo datasets do not have timestamps, therefore we divide every day into micro batches of roughly 1 minute of data. 
+Each micro batch is sequentially sent to the deployment environment where first they are used for reporting the quality and then used for training model.
 
 \subsection{Deployment Modes}
 In this experiment, we investigate the effect of our continuous deployment approach on model quality and total training time.
@@ -86,7 +86,7 @@ For each learning rate adaptation technique, we pick the learning rate and regul
 \label{hyper-param-figure}
 \end{figure}
 
-\textbf. {Sampling Methods}
+\textbf{Sampling Methods. }
 Figure \ref{sampling-method-figure} shows the effect of different sampling methods on the quality.
 \begin{figure}
 \centering
