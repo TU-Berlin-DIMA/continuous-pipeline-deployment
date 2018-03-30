@@ -41,7 +41,7 @@ We use 4 different deployment approaches.
 \textbf{Model Quality. }
 Figure \ref{deployment-quality-figure} shows the quality of different deployment methods for each pipeline.
 
-\begin{figure}
+\begin{figure}[h!]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/deployment-quality-experiment}}
 \caption{Model Quality for different deployment approaches}
@@ -51,7 +51,7 @@ Figure \ref{deployment-quality-figure} shows the quality of different deployment
 \textbf{Total Training Time. }
 Figure \ref{deployment-time-figure} shows the total training time for each deployment approach.
 
-\begin{figure}
+\begin{figure}[h!]
 \centering
 \includegraphics[width=\columnwidth]{../images/placeholder.jpeg}
 \caption{Total training time for different deployment approaches}
@@ -67,7 +67,7 @@ To find the best hyperparameters, we perform a grid search and for each configur
 We then show that using the configuration that yields the lowest generalization error during the initial training will also result in the best set of hyperparameters for our continuous training approach.
 
 Table \ref{hyper-param-table} shows the result of performing hyperparameter tuning.
-\begin{table*}[t]
+\begin{table*}[!h]
 \centering
 \begin{adjustbox}{max width=\textwidth}
 \input{../images/experiment-results/tikz/parameter-selection-table}
@@ -79,7 +79,7 @@ Table \ref{hyper-param-table} shows the result of performing hyperparameter tuni
 Figure \ref{hyper-param-figure} shows the quality of deployed pipelines trained using the best set of hyperparameters. 
 For each learning rate adaptation technique, we pick the learning rate and regularization parameter that yields the lowest generalization error.
 
-\begin{figure}
+\begin{figure}[!h]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/parameter-selection-figure}}
 \caption{Hyperparameter tuning during first days of deployment}
@@ -88,7 +88,7 @@ For each learning rate adaptation technique, we pick the learning rate and regul
 
 \textbf{Sampling Methods. }
 Figure \ref{sampling-method-figure} shows the effect of different sampling methods on the quality.
-\begin{figure}
+\begin{figure}[!h]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/parameter-selection-figure}}
 \caption{Effect different sampling methods on quality}
