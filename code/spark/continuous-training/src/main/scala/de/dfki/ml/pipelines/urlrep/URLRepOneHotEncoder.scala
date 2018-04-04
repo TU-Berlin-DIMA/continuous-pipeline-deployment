@@ -18,7 +18,7 @@ import scala.util.hashing.MurmurHash3
 class URLRepOneHotEncoder(val numCategories: Int) extends Component[URLRepRawType, LabeledPoint] {
   var encoding: RDD[(String, Int)] = _
   var approximateFeatureSize = 0L
-  var bloomFilter = BloomFilter.create(numCategories, 0.1)
+ // var bloomFilter = BloomFilter.create(numCategories, 0.1)
 
   override def transform(spark: SparkContext, input: RDD[URLRepRawType]): RDD[LabeledPoint] = {
     input.map {
@@ -38,29 +38,29 @@ class URLRepOneHotEncoder(val numCategories: Int) extends Component[URLRepRawTyp
   }
 
   override def update(spark: SparkContext, input: RDD[URLRepRawType]) = {
-    val filter = spark.broadcast(bloomFilter)
-    val uniques = input
-      .flatMap(_.categorical)
-      .distinct()
-      .repartition(20)
-      .cache()
-    val size = uniques.count()
-    if (approximateFeatureSize == 0) {
-      // bloom filter is empty, update the count from the exact value
-      approximateFeatureSize = size
-    }
-    else {
-      approximateFeatureSize += uniques.filter(!filter.value.mightContainString(_)).count()
-    }
-    // update the bloomfilter
-    val updatedFilters = uniques.mapPartitions {
-      partition =>
-        val curFilter = filter.value
-        for (s <- partition)
-          curFilter.putString(s)
-        Seq(curFilter).iterator
-    }.collect()
-    bloomFilter = updatedFilters.reduce((b1, b2) => b1.mergeInPlace(b2))
+//    val filter = spark.broadcast(bloomFilter)
+//    val uniques = input
+//      .flatMap(_.categorical)
+//      .distinct()
+//      .repartition(20)
+//      .cache()
+//    val size = uniques.count()
+//    if (approximateFeatureSize == 0) {
+//      // bloom filter is empty, update the count from the exact value
+//      approximateFeatureSize = size
+//    }
+//    else {
+//      approximateFeatureSize += uniques.filter(!filter.value.mightContainString(_)).count()
+//    }
+//    // update the bloomfilter
+//    val updatedFilters = uniques.mapPartitions {
+//      partition =>
+//        val curFilter = filter.value
+//        for (s <- partition)
+//          curFilter.putString(s)
+//        Seq(curFilter).iterator
+//    }.collect()
+//    bloomFilter = updatedFilters.reduce((b1, b2) => b1.mergeInPlace(b2))
   }
 
   private def murmurHash(feature: String, numFeatures: Int): Int = {

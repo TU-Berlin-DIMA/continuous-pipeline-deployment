@@ -30,7 +30,9 @@ class URLRepSVMParser() extends Component[String, URLRepRawType] {
     }
   }
 
-  override def update(sparkContext: SparkContext, input: RDD[String]) = ???
+  override def update(sparkContext: SparkContext, input: RDD[String]) = {}
 
-  override def updateAndTransform(spark: SparkContext, input: RDD[String]) = ???
+  override def updateAndTransform(spark: SparkContext, input: RDD[String]) = {
+    transform(spark, input)
+  }
 }

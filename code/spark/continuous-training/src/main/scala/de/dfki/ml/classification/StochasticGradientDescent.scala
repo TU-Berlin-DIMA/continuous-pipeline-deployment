@@ -10,6 +10,8 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 
 /**
+  * TODO: This class can be removed and the methods refactored
+  *
   * @author behrouz
   */
 abstract class StochasticGradientDescent[M <: GeneralizedLinearModel](val stepSize: Double,
@@ -18,21 +20,19 @@ abstract class StochasticGradientDescent[M <: GeneralizedLinearModel](val stepSi
                                                                       val convergenceTol: Double,
                                                                       val miniBatchFraction: Double,
                                                                       val fitIntercept: Boolean,
-                                                                      val updater: Updater)
-  extends GeneralizedLinearAlgorithm[M] {
+                                                                      val updater: Updater) extends GeneralizedLinearAlgorithm[M] {
 
   setIntercept(fitIntercept)
-
   def gradientFunction: BatchGradient
 
-  override val optimizer = new GradientDescent(numIterations,
-    stepSize,
-    regParam,
-    convergenceTol,
-    miniBatchFraction,
-    fitIntercept,
-    gradientFunction,
-    updater)
+  override val optimizer = new GradientDescent(stepSize = stepSize,
+    numIterations = numIterations,
+    regParam = regParam,
+    convergenceTol = convergenceTol,
+    miniBatchFraction = miniBatchFraction,
+    fitIntercept = fitIntercept,
+    gradient = gradientFunction,
+    updater = updater)
 
   override protected val validators = List(DataValidators.binaryLabelValidator)
 

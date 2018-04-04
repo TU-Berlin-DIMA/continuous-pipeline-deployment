@@ -17,7 +17,8 @@ class LogisticRegressionWithSGD(stepSize: Double,
                                 convergenceTol: Double,
                                 fitIntercept: Boolean,
                                 updater: Updater)
-  extends StochasticGradientDescent[LogisticRegressionModel](stepSize,
+  extends StochasticGradientDescent[LogisticRegressionModel](
+    stepSize,
     numIterations,
     regParam,
     miniBatchFraction,

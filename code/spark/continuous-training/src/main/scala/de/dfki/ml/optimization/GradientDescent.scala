@@ -15,8 +15,8 @@ import org.apache.spark.rdd.RDD
   *
   * @author bede01.
   */
-class GradientDescent(var numIterations: Int,
-                      var stepSize: Double,
+class GradientDescent(var stepSize: Double,
+                      var numIterations: Int,
                       var regParam: Double,
                       var convergenceTol: Double,
                       var miniBatchFraction: Double,
@@ -63,9 +63,6 @@ class GradientDescent(var numIterations: Int,
 
   def getConvergedAfter = convergedAfter
 
-  def this() = this(100, 1.0, 0.0, 1E-6, 1.0, true, new LogisticGradient(true, 1.0), new SquaredL2Updater)
-
-
   /**
     * :: DeveloperApi ::
     * Runs gradient descent on the given training data.
@@ -80,17 +77,17 @@ class GradientDescent(var numIterations: Int,
 
   override def optimize(data: RDD[(Double, Vector)], initialWeights: Vector, intercept: Double): Vector = {
     val result = GradientDescent.runMiniBatchSGD(
-      data,
-      gradient,
-      updater,
-      stepSize,
-      numIterations,
-      regParam,
-      convergenceTol,
-      miniBatchFraction,
-      initialWeights,
-      fitIntercept,
-      intercept)
+      data = data,
+      gradient = gradient,
+      updater = updater,
+      stepSize = stepSize,
+      numIterations = numIterations,
+      regParam = regParam,
+      convergenceTol = convergenceTol,
+      miniBatchFraction = miniBatchFraction,
+      initialWeights = initialWeights,
+      fitIntercept = fitIntercept,
+      intercept = intercept)
     convergedAfter = result._2
     result._1
   }

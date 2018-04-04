@@ -18,8 +18,8 @@ class URLRepPipeline(@transient var spark: SparkContext,
                      val stepSize: Double = 0.001,
                      val numIterations: Int = 500,
                      val regParam: Double = 0.0,
-                     val miniBatchFraction: Double = 1.0,
                      val convergenceTol: Double = 1E-6,
+                     val miniBatchFraction: Double = 1.0,
                      val updater: Updater = new SquaredL2UpdaterWithAdam(),
                      val numCategories: Int = 300000) extends Pipeline {
   val fileReader = new URLRepSVMParser()
@@ -34,13 +34,13 @@ class URLRepPipeline(@transient var spark: SparkContext,
     *
     * @param sc
     */
-  def setSparkContext(sc: SparkContext): Unit = {
+  override def setSparkContext(sc: SparkContext): Unit = {
     this.spark = sc
   }
 
   override def update(data: RDD[String]) = {
-    val parsedData = fileReader.transform(spark, data)
-    val filledData = missingValueImputer.transform(spark, parsedData)
+    val parsedData = fileReader.updateAndTransform(spark, data)
+    val filledData = missingValueImputer.updateAndTransform(spark, parsedData)
     val scaledData = standardScaler.update(spark, filledData)
     //oneHotEncoder.update(spark, scaledData)
   }
@@ -53,10 +53,10 @@ class URLRepPipeline(@transient var spark: SparkContext,
   }
 
   override def updateAndTransform(data: RDD[String]): RDD[LabeledPoint] = {
-    val parsedData = fileReader.transform(spark, data)
-    val filledData = missingValueImputer.transform(spark, parsedData)
+    val parsedData = fileReader.updateAndTransform(spark, data)
+    val filledData = missingValueImputer.updateAndTransform(spark, parsedData)
     val scaledData = standardScaler.updateAndTransform(spark, filledData)
-    oneHotEncoder.transform(spark, scaledData)
+    oneHotEncoder.updateAndTransform(spark, scaledData)
   }
 
   /**
@@ -77,10 +77,10 @@ class URLRepPipeline(@transient var spark: SparkContext,
     * @param data
     */
   override def updateTransformTrain(data: RDD[String], iterations: Int = 1) = {
-    val parsedData = fileReader.transform(spark, data)
-    val filledData = missingValueImputer.transform(spark, parsedData)
+    val parsedData = fileReader.updateAndTransform(spark, data)
+    val filledData = missingValueImputer.updateAndTransform(spark, parsedData)
     val scaledData = standardScaler.updateAndTransform(spark, filledData)
-    val training = oneHotEncoder.transform(spark, scaledData)
+    val training = oneHotEncoder.updateAndTransform(spark, scaledData)
     training.cache()
     training.count()
     val currentIter = model.getNumIterations
@@ -107,8 +107,6 @@ class URLRepPipeline(@transient var spark: SparkContext,
     */
   override def predict(data: DStream[String]): DStream[(Double, Double)] = {
     data.transform(rdd => predict(rdd))
-    //    val testData = dataProcessing(data)
-    //    model.predict(testData.map(v => (v.label, v.features)))
   }
 
 
@@ -133,8 +131,6 @@ class URLRepPipeline(@transient var spark: SparkContext,
   override def score(data: RDD[String]): Score = {
     ConfusionMatrix.fromRDD(predict(data))
   }
-
-  override def getConvergedAfter = model.getConvergedAfter
 }
 
 object URLRepPipeline {
@@ -150,28 +146,27 @@ object URLRepPipeline {
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
     val spark = new SparkContext(conf)
-    val pipeline = loadFromDisk("data/url-reputation/pipelines/ps-i20000-c7/adam-best",spark)
-    println(s"${pipeline.model.model.get.weights.size}")
-//    val spark = new SparkContext(conf)
-//    val urlRepPipeline = new URLRepPipeline(spark,
-//      numIterations = 50000,
-//      stepSize = 0.0001,
-//      updater = new SquaredL2UpdaterWithAdam(),
-//      miniBatchFraction = 1,
-//      regParam = 0.001,
-//      numCategories = 30000,
-//      convergenceTol = 1E-6)
-//
-//    val rawTraining = spark.textFile(inputPath)
-//    urlRepPipeline.updateTransformTrain(rawTraining)
-//
-//
-//    val rawTest = spark.textFile(testPath)
-//
-//    val baseResult = urlRepPipeline.predict(rawTest)
-//    val cMatrix = ConfusionMatrix.fromRDD(baseResult)
-//
-//    println(s"confusion matrix = $cMatrix")
+    //val pipeline = loadFromDisk("data/url-reputation/pipelines/ps-i20000-c7/adam-best",spark)
+
+    val urlRepPipeline = new URLRepPipeline(spark = spark,
+      numIterations = 10000,
+      stepSize = 0.01,
+      updater = new SquaredL2UpdaterWithAdam(),
+      miniBatchFraction = 1,
+      regParam = 0.001,
+      numCategories = 30000,
+      convergenceTol = 1E-6)
+
+    val rawTraining = spark.textFile(inputPath)
+    urlRepPipeline.updateTransformTrain(rawTraining, 10000)
+
+
+    val rawTest = spark.textFile(testPath)
+
+    val baseResult = urlRepPipeline.predict(rawTest)
+    val cMatrix = ConfusionMatrix.fromRDD(baseResult)
+
+    println(s"confusion matrix = $cMatrix")
 
   }
 

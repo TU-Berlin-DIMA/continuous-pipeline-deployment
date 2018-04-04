@@ -4,7 +4,7 @@ import java.io._
 
 import de.dfki.ml.evaluation.{LogisticLoss, Score}
 import de.dfki.ml.optimization.updater.{SquaredL2UpdaterWithAdam, Updater}
-import de.dfki.ml.pipelines.{ContinuousLRModel, Pipeline}
+import de.dfki.ml.pipelines.{ContinuousLogisticRegressionModel, Pipeline}
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
@@ -19,6 +19,7 @@ class CriteoPipeline(@transient var spark: SparkContext,
                      val stepSize: Double = 0.001,
                      val numIterations: Int = 500,
                      val regParam: Double = 0.0,
+                     val convergenceTol: Double = 1E-6,
                      val miniBatchFraction: Double = 1.0,
                      val updater: Updater = new SquaredL2UpdaterWithAdam(),
                      val numCategories: Int = 300000) extends Pipeline {
@@ -27,14 +28,19 @@ class CriteoPipeline(@transient var spark: SparkContext,
   val missingValueImputer = new MissingValueImputer()
   var standardScaler = new StandardScaler()
   val oneHotEncoder = new OneHotEncoder(numCategories)
-  val model = new ContinuousLRModel(stepSize, numIterations, regParam, miniBatchFraction, updater)
+  val model = new ContinuousLogisticRegressionModel(stepSize = stepSize,
+    numIterations = numIterations,
+    regParam = regParam,
+    convergenceTol = convergenceTol,
+    miniBatchFraction = miniBatchFraction,
+    updater = updater)
 
   /**
     * This method have to be called if the pipeline is loaded from the disk
     *
     * @param sc
     */
-  def setSparkContext(sc: SparkContext): Unit = {
+  override def setSparkContext(sc: SparkContext): Unit = {
     this.spark = sc
   }
 
@@ -132,8 +138,6 @@ class CriteoPipeline(@transient var spark: SparkContext,
   override def score(data: RDD[String]): Score = {
     LogisticLoss.fromRDD(predict(data))
   }
-
-  override def getConvergedAfter = model.getConvergedAfter
 }
 
 // example use case of criteo pipeline

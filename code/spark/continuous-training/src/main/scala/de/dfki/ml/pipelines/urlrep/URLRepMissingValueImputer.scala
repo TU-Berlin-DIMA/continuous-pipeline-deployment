@@ -11,7 +11,9 @@ import org.apache.spark.rdd.RDD
 class URLRepMissingValueImputer() extends Component[URLRepRawType, URLRepRawType] {
   override def transform(spark: SparkContext, input: RDD[URLRepRawType]) = input
 
-  override def update(sparkContext: SparkContext, input: RDD[URLRepRawType]) = ???
+  override def update(sparkContext: SparkContext, input: RDD[URLRepRawType]) = {}
 
-  override def updateAndTransform(spark: SparkContext, input: RDD[URLRepRawType]) = ???
+  override def updateAndTransform(spark: SparkContext, input: RDD[URLRepRawType]) = {
+    transform(spark, input)
+  }
 }
