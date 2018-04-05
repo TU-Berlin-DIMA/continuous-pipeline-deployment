@@ -10,10 +10,10 @@ import org.apache.spark.streaming.StreamingContext
 /**
   * @author behrouz
   */
-class BaselineDeploymentQualityAnalysis(val streamBase: String,
-                                        val evaluation: String = "prequential",
-                                        val resultPath: String,
-                                        val daysToProcess: Array[Int]) extends Deployment {
+class BaselineDeployment(val streamBase: String,
+                         val evaluation: String = "prequential",
+                         val resultPath: String,
+                         val daysToProcess: Array[Int]) extends Deployment {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     val testData = streamingContext

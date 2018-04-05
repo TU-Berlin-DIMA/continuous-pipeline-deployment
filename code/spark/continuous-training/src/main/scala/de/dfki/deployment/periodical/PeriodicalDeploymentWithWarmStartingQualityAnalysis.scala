@@ -21,6 +21,7 @@ class PeriodicalDeploymentWithWarmStartingQualityAnalysis(val history: String,
                                                           val frequency: Int = 100) extends Deployment {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
+    val start = System.currentTimeMillis()
     // create rdd of the initial data that the pipeline was trained with
     val data = streamingContext.sparkContext
       .textFile(history)
@@ -72,6 +73,9 @@ class PeriodicalDeploymentWithWarmStartingQualityAnalysis(val history: String,
       }
       time += 1
     }
+    val end = System.currentTimeMillis()
+    val trainTime = end - start
+    storeTrainingTimes(trainTime, s"$resultPath", "periodical-deployment-warm-starting-time")
     processedRDD.foreach(r => r.unpersist(true))
   }
 

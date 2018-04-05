@@ -10,12 +10,13 @@ import org.apache.spark.streaming.StreamingContext
 /**
   * @author behrouz
   */
-class OnlineDeploymentQualityAnalysis(val streamBase: String,
-                                      val evaluation: String = "prequential",
-                                      val resultPath: String,
-                                      val daysToProcess: Array[Int]) extends Deployment {
+class OnlineDeployment(val streamBase: String,
+                       val evaluation: String = "prequential",
+                       val resultPath: String,
+                       val daysToProcess: Array[Int]) extends Deployment {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
+    val start = System.currentTimeMillis()
     val testData = streamingContext
       .sparkContext
       .textFile(evaluation)
@@ -50,5 +51,9 @@ class OnlineDeploymentQualityAnalysis(val streamBase: String,
       rdd.unpersist()
       time += 1
     }
+
+    val end = System.currentTimeMillis()
+    val trainTime = end - start
+    storeTrainingTimes(trainTime, s"$resultPath", "continuous-full-optimization-time")
   }
 }

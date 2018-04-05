@@ -73,7 +73,7 @@ abstract class Experiment {
         throw new IllegalArgumentException(s"Pipeline ${params.pipelineName} has not been constructed!!!")
       }
     } else {
-      val data = spark.textFile(params.inputPath)
+      val data = spark.textFile(params.inputPath).repartition(spark.defaultParallelism)
       if (params.pipelineName == "criteo") {
         val pipeline = new CriteoPipeline(spark,
           delim = params.delimiter,

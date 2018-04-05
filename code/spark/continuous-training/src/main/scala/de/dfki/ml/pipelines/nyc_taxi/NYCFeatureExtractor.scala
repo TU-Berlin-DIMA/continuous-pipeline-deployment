@@ -8,7 +8,7 @@ import org.apache.commons.lang3.time.DateUtils
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
-import math._
+import scala.math._
 
 /**
   * @author behrouz

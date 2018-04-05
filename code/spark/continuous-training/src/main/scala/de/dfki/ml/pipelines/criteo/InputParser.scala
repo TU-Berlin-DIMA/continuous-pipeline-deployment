@@ -1,9 +1,9 @@
 package de.dfki.ml.pipelines.criteo
 
 import de.dfki.ml.pipelines.Component
+import de.dfki.ml.pipelines.criteo.GLOBAL_VARIABLES._
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import GLOBAL_VARIABLES._
 
 /**
   * @author behrouz

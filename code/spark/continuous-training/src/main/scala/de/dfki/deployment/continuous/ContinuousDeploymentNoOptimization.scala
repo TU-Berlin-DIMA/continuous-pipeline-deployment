@@ -15,15 +15,16 @@ import scala.collection.mutable.ListBuffer
 /**
   * @author behrouz
   */
-class ContinuousDeploymentQualityAnalysis(val history: String,
-                                          val streamBase: String,
-                                          val evaluation: String = "prequential",
-                                          val resultPath: String,
-                                          val daysToProcess: Array[Int],
-                                          slack: Int = 10,
-                                          sampler: Sampler) extends Deployment(slack, sampler) {
+class ContinuousDeploymentNoOptimization(val history: String,
+                                         val streamBase: String,
+                                         val evaluation: String = "prequential",
+                                         val resultPath: String,
+                                         val daysToProcess: Array[Int],
+                                         slack: Int = 10,
+                                         sampler: Sampler) extends Deployment(slack, sampler) {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
+    val start = System.currentTimeMillis()
     // create rdd of the initial data that the pipeline was trained with
     val data = streamingContext.sparkContext
       .textFile(history)
@@ -83,6 +84,10 @@ class ContinuousDeploymentQualityAnalysis(val history: String,
       processedRDD += rdd
       time += 1
     }
+    val end = System.currentTimeMillis()
+    val trainTime = end - start
+    storeTrainingTimes(trainTime, s"$resultPath", "continuous-no-optimization-time")
+
     processedRDD.foreach(r => r.unpersist(true))
   }
 }

@@ -1,4 +1,4 @@
-package de.dfki.experiments
+package de.dfki.experiments.misc
 
 import java.io.{File, FileWriter}
 

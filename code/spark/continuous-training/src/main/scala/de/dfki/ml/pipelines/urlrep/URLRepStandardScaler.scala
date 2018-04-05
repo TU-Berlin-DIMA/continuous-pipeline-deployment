@@ -18,12 +18,17 @@ class URLRepStandardScaler extends Component[URLRepRawType, URLRepRawType] {
   override def transform(spark: SparkContext, input: RDD[URLRepRawType]): RDD[URLRepRawType] = {
     val broadcastMean = spark.broadcast(featuresMean)
     val broadcastStd = spark.broadcast(featuresStd)
-    input.map {
-      row =>
-        val scaledValues = (row.numerical, broadcastMean.value, broadcastStd.value).zipped.toList.map {
-          case (feature, mean, standardDeviation) => (feature - mean) / standardDeviation
-        }.toArray
-        URLRepRawType(row.label, scaledValues, row.categorical)
+
+    input.mapPartitions { iter =>
+      val fm = broadcastMean.value
+      val fs = broadcastStd.value
+      iter.map {
+        row =>
+          val scaledValues = (row.numerical, fm, fs).zipped.toList.map {
+            case (feature, mean, standardDeviation) => (feature - mean) / standardDeviation
+          }.toArray
+          URLRepRawType(row.label, scaledValues, row.categorical)
+      }
     }
   }
 

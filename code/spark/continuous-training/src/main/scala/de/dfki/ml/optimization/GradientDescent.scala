@@ -3,8 +3,8 @@ package de.dfki.ml.optimization
 import breeze.linalg.norm
 import de.dfki.ml.LinearAlgebra
 import de.dfki.ml.LinearAlgebra._
-import de.dfki.ml.optimization.gradient.{BatchGradient, LogisticGradient}
-import de.dfki.ml.optimization.updater.{SquaredL2Updater, Updater}
+import de.dfki.ml.optimization.gradient.BatchGradient
+import de.dfki.ml.optimization.updater.Updater
 import org.apache.log4j.Logger
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD

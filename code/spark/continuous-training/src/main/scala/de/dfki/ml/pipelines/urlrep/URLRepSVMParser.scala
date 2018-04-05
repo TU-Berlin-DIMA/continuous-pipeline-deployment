@@ -1,10 +1,9 @@
 package de.dfki.ml.pipelines.urlrep
 
 import de.dfki.ml.pipelines.Component
-import de.dfki.ml.pipelines.urlrep.GlobalVariables.URLRepRawType
+import de.dfki.ml.pipelines.urlrep.GlobalVariables.{URLRepRawType, _}
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import de.dfki.ml.pipelines.urlrep.GlobalVariables._
 
 /**
   * @author behrouz

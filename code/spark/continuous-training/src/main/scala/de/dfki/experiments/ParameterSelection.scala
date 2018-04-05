@@ -1,9 +1,5 @@
 package de.dfki.experiments
 
-import java.io.{File, FileWriter}
-
-import de.dfki.core.sampling.TimeBasedSampler
-import de.dfki.deployment.continuous.ContinuousDeploymentQualityAnalysis
 import de.dfki.experiments.profiles.URLProfile
 import de.dfki.ml.optimization.updater._
 import de.dfki.utils.CommandLineParser
@@ -18,14 +14,11 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
   */
 object ParameterSelection extends Experiment {
   val UPDATERS: List[Updater] = List(
-    new SquaredL2UpdaterWithAdam(),
-    new SquaredL2UpdaterWithRMSProp(),
-    new SquaredL2UpdaterWithAdaDelta(),
-    new SquaredL2UpdaterWithMomentum())
+    new SquaredL2UpdaterWithAdam())
 
-  val REGULARIZATIONS: List[Double] = List(0.01, 0.001, 0.0001)
+  val REGULARIZATIONS: List[Double] = List(0.001)
 
-  val STEP_SIZES: List[Double] = List(0.01, 0.001, 0.0001)
+  val STEP_SIZES: List[Double] = List(0.01)
 
   val BATCH_EVALUATION = "data/url-reputation/processed/stream/day_1"
 
@@ -33,7 +26,7 @@ object ParameterSelection extends Experiment {
     override val RESULT_PATH = "../../../experiment-results/url-reputation/param-selection"
     override val INITIAL_PIPELINE = "data/url-reputation/pipelines/param-selection"
     override val NUM_FEATURES = 3000
-    override val CONVERGENCE_TOL = 1E-6
+    override val CONVERGENCE_TOL = 1E-7
     override val NUM_ITERATIONS = 10000
     override val DAYS = "1,10"
   }
@@ -53,40 +46,41 @@ object ParameterSelection extends Experiment {
     val rootPipelines = params.initialPipeline
 
     // hyper parameter evaluation for batch training
-    //    for (u <- UPDATERS) {
-    //      for (r <- REGULARIZATIONS) {
-    //        for (s <- if (u.name == "adadelta") List(0.001) else STEP_SIZES) {
-    //          params.updater = u
-    //          params.regParam = r
-    //          params.stepSize = s
-    //          params.initialPipeline = s"$rootPipelines/${u.name}-$s-$r"
-    //          val pipeline = getPipeline(ssc.sparkContext, params)
-    //          val matrix = pipeline.score(evaluationSet)
-    //          val file = new File(s"${params.resultPath}/training")
-    //          file.getParentFile.mkdirs()
-    //          val fw = new FileWriter(file, true)
-    //          try {
-    //            fw.write(s"${u.name}(${params.stepSize}),$r,${matrix.rawScore()},${pipeline.getConvergedAfter}\n")
-    //          }
-    //          finally {
-    //            fw.close()
-    //          }
-    //        }
-    //      }
-    //    }
-    // hyper parameter evaluation for deployment
     for (u <- UPDATERS) {
-      params.updater = u
-      val deploymentParams = URLBestStochastic(params)
-      val pipeline = getPipeline(ssc.sparkContext, deploymentParams)
-      new ContinuousDeploymentQualityAnalysis(history = params.inputPath,
-        streamBase = deploymentParams.streamPath,
-        evaluation = s"${deploymentParams.evaluationPath}",
-        resultPath = s"${deploymentParams.resultPath}",
-        daysToProcess = deploymentParams.days,
-        slack = params.slack,
-        sampler = new TimeBasedSampler(size = deploymentParams.sampleSize)).deploy(ssc, pipeline)
+      for (r <- REGULARIZATIONS) {
+        for (s <- if (u.name == "adadelta") List(0.001) else STEP_SIZES) {
+          params.updater = u
+          params.regParam = r
+          params.stepSize = s
+          params.initialPipeline = s"$rootPipelines/${u.name}-$s-$r"
+          val pipeline = getPipeline(ssc.sparkContext, params)
+          val matrix = pipeline.score(evaluationSet)
+          println(s"${matrix.score()}")
+          //val file = new File(s"${params.resultPath}/training")
+          //file.getParentFile.mkdirs()
+          //val fw = new FileWriter(file, true)
+//          try {
+//            fw.write(s"${u.name}(${params.stepSize}),$r,${matrix.rawScore()},${pipeline.getConvergedAfter}\n")
+//          }
+//          finally {
+//            fw.close()
+//          }
+        }
+      }
     }
+    // hyper parameter evaluation for deployment
+    //    for (u <- UPDATERS) {
+    //      params.updater = u
+    //      val deploymentParams = URLBestStochastic(params)
+    //      val pipeline = getPipeline(ssc.sparkContext, deploymentParams)
+    //      new ContinuousDeploymentQualityAnalysis(history = params.inputPath,
+    //        streamBase = deploymentParams.streamPath,
+    //        evaluation = s"${deploymentParams.evaluationPath}",
+    //        resultPath = s"${deploymentParams.resultPath}",
+    //        daysToProcess = deploymentParams.days,
+    //        slack = params.slack,
+    //        sampler = new TimeBasedSampler(size = deploymentParams.sampleSize)).deploy(ssc, pipeline)
+    //    }
   }
 
   /**

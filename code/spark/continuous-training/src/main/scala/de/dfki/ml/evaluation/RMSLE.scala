@@ -1,7 +1,8 @@
 package de.dfki.ml.evaluation
 
 import org.apache.spark.rdd.RDD
-import math._
+
+import scala.math._
 
 /**
   * Root Mean Squared Logarithmic Error calculated based on:

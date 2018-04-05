@@ -8,7 +8,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 /**
   * @author behrouz
   */
-object MaterializeTheData {
+object EffectOfOptimizations {
   val INPUT_PATH = "data/criteo-full/experiments/stream/day_5"
   val MATERIALIZED_PATH = "data/criteo-full/experiments/materialized/stream/day_5"
   val DELIMITER = ","

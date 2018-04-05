@@ -1,10 +1,10 @@
 package de.dfki.experiments
 
 import de.dfki.core.sampling.TimeBasedSampler
-import de.dfki.deployment.baseline.BaselineDeploymentQualityAnalysis
-import de.dfki.deployment.continuous.ContinuousDeploymentQualityAnalysis
-import de.dfki.deployment.online.OnlineDeploymentQualityAnalysis
-import de.dfki.deployment.periodical.{PeriodicalDeploymentQualityAnalysis, PeriodicalDeploymentWithWarmStartingQualityAnalysis}
+import de.dfki.deployment.baseline.BaselineDeployment
+import de.dfki.deployment.continuous.ContinuousDeploymentNoOptimization
+import de.dfki.deployment.online.OnlineDeployment
+import de.dfki.deployment.periodical.PeriodicalDeployment
 import de.dfki.experiments.profiles.URLProfile
 import de.dfki.ml.optimization.updater.SquaredL2UpdaterWithAdam
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
@@ -34,7 +34,7 @@ object DeploymentModesQuality extends Experiment {
 
     // continuously trained with a uniform sample of the historical data
     val onlinePipeline = getPipeline(ssc.sparkContext, params)
-    new OnlineDeploymentQualityAnalysis(
+    new OnlineDeployment(
       streamBase = params.streamPath,
       evaluation = s"${params.evaluationPath}",
       resultPath = s"${params.resultPath}",
@@ -42,7 +42,7 @@ object DeploymentModesQuality extends Experiment {
 
     // continuously trained with a time based sample of the historical data
     val continuousPipeline = getPipeline(ssc.sparkContext, params)
-    new ContinuousDeploymentQualityAnalysis(history = params.inputPath,
+    new ContinuousDeploymentNoOptimization(history = params.inputPath,
       streamBase = params.streamPath,
       evaluation = s"${params.evaluationPath}",
       resultPath = s"${params.resultPath}",
@@ -50,31 +50,23 @@ object DeploymentModesQuality extends Experiment {
       slack = params.slack,
       sampler = new TimeBasedSampler(size = params.sampleSize)).deploy(ssc, continuousPipeline)
 
-
+    // baseline with no online learning
     val baselinePipeline = getPipeline(ssc.sparkContext, params)
-    new BaselineDeploymentQualityAnalysis(streamBase = params.streamPath,
+    new BaselineDeployment(streamBase = params.streamPath,
       evaluation = s"${params.evaluationPath}",
       resultPath = s"${params.resultPath}",
       daysToProcess = params.days
     ).deploy(ssc, baselinePipeline)
 
+    // periodical with online learning
     val periodicalPipeline = getPipeline(ssc.sparkContext, params)
-    new PeriodicalDeploymentQualityAnalysis(history = params.inputPath,
+    new PeriodicalDeployment(history = params.inputPath,
       streamBase = params.streamPath,
       evaluation = s"${params.evaluationPath}",
       resultPath = s"${params.resultPath}",
       daysToProcess = params.days,
       frequency = params.dayDuration * 10
     ).deploy(ssc, periodicalPipeline)
-
-    val periodicalWarmStartPipeline = getPipeline(ssc.sparkContext, params)
-    new PeriodicalDeploymentWithWarmStartingQualityAnalysis(history = params.inputPath,
-      streamBase = params.streamPath,
-      evaluation = s"${params.evaluationPath}",
-      resultPath = s"${params.resultPath}",
-      daysToProcess = params.days,
-      frequency = params.dayDuration * 10
-    ).deploy(ssc, periodicalWarmStartPipeline)
 
   }
 

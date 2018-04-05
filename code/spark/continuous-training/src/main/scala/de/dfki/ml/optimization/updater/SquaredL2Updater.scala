@@ -1,8 +1,8 @@
 package de.dfki.ml.optimization.updater
 
+import breeze.linalg.{Vector => BV, axpy => brzAxpy, norm => brzNorm}
 import de.dfki.ml.LinearAlgebra.{asBreeze, fromBreeze}
 import org.apache.spark.mllib.linalg.Vector
-import breeze.linalg.{Vector => BV, axpy => brzAxpy, norm => brzNorm}
 
 /**
   * @author behrouz

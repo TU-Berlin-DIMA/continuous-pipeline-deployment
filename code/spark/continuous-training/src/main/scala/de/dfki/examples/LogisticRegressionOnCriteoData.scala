@@ -6,11 +6,9 @@ import java.nio.file.{Files, Paths}
 import de.dfki.ml.LinearAlgebra
 import de.dfki.ml.classification.LogisticRegressionWithSGD
 import de.dfki.ml.evaluation.LogisticLoss
-import de.dfki.ml.optimization._
 import de.dfki.ml.optimization.updater._
 import de.dfki.preprocessing.parsers.CustomVectorParser
 import de.dfki.utils.CommandLineParser
-import org.apache.spark.mllib.classification.{LogisticRegressionModel, LogisticRegressionWithLBFGS}
 import org.apache.spark.mllib.linalg.Vector
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.{SparkConf, SparkContext}

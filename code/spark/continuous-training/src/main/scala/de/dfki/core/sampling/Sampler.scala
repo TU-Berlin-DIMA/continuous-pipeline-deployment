@@ -41,7 +41,7 @@ abstract class Sampler(val rate: Double = 0.1,
     * @param spark        SparkContext object
     * @return
     */
-  def sample(processedRDD: ListBuffer[RDD[String]], spark: SparkContext): Option[RDD[String]] = {
+  def sample[T](processedRDD: ListBuffer[RDD[T]], spark: SparkContext): Option[RDD[T]] = {
     val indices = sampleIndices(processedRDD.indices.toList)
     if(indices.nonEmpty) {
       Option(select(processedRDD, indices, spark))
@@ -70,7 +70,7 @@ abstract class Sampler(val rate: Double = 0.1,
     * Assemble the final sample
     *
     */
-  private def select(processedRDD: ListBuffer[RDD[String]],
+  private def select[T](processedRDD: ListBuffer[RDD[T]],
                      indices: List[Int],
                      spark: SparkContext) = {
     val sample = if (indices.contains(HISTORICAL_DATA_INDEX)) {

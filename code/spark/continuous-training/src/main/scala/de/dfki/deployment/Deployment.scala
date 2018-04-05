@@ -2,7 +2,7 @@ package de.dfki.deployment
 
 import java.io.{File, FileWriter}
 
-import de.dfki.core.sampling.{Sampler, RateBasedSampler}
+import de.dfki.core.sampling.{RateBasedSampler, Sampler}
 import de.dfki.ml.evaluation.Score
 import de.dfki.ml.pipelines.Pipeline
 import org.apache.log4j.Logger
@@ -53,7 +53,7 @@ abstract class Deployment(val slack: Int = 0,
     finally fw.close()
   }
 
-  def provideHistoricalSample(processedRDD: ListBuffer[RDD[String]], spark: SparkContext): Option[RDD[String]] = {
+  def provideHistoricalSample[T](processedRDD: ListBuffer[RDD[T]], spark: SparkContext): Option[RDD[T]] = {
     sampler.sample(processedRDD, spark)
   }
 }
