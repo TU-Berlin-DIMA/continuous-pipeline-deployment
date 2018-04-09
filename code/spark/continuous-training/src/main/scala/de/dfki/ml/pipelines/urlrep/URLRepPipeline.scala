@@ -8,6 +8,7 @@ import de.dfki.ml.pipelines.{ContinuousSVMModel, Pipeline}
 import de.dfki.utils.CommandLineParser
 import org.apache.spark.mllib.regression.LabeledPoint
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.{SparkConf, SparkContext}
 
@@ -81,7 +82,7 @@ class URLRepPipeline(@transient var spark: SparkContext,
     val filledData = missingValueImputer.updateAndTransform(spark, parsedData)
     val scaledData = standardScaler.updateAndTransform(spark, filledData)
     val training = oneHotEncoder.updateAndTransform(spark, scaledData)
-    training.cache()
+    training.persist(StorageLevel.MEMORY_AND_DISK)
     training.count()
     val currentIter = model.getNumIterations
     model.setNumIterations(iterations)

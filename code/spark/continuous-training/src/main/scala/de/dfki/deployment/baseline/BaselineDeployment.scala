@@ -16,6 +16,7 @@ class BaselineDeployment(val streamBase: String,
                          val daysToProcess: Array[Int]) extends Deployment {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
+    val start = System.currentTimeMillis()
     val testData = streamingContext
       .sparkContext
       .textFile(evaluation)

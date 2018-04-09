@@ -1,5 +1,6 @@
 package de.dfki.experiments
 
+import java.io.{File, FileWriter}
 import java.nio.file.{Files, Paths}
 
 import de.dfki.experiments.profiles.Profile
@@ -19,6 +20,17 @@ abstract class Experiment {
   val defaultProfile: Profile
 
   @transient lazy val logger = Logger.getLogger(getClass.getName)
+
+
+  def storeTime(time: Long, root: String, name: String = "time") = {
+    val file = new File(s"$root/$name")
+    file.getParentFile.mkdirs()
+    val fw = new FileWriter(file, true)
+    try {
+      fw.write(s"$time\n")
+    }
+    finally fw.close()
+  }
 
   def getParams(args: Array[String], profile: Profile): Params = {
     val parser = new CommandLineParser(args).parse()

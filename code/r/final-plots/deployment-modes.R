@@ -6,16 +6,16 @@ library(ggpubr)
 
 
 urlDataProcessing <- function(){
-  online = cumsum(read.csv('deployment-modes/confusion_matrix-online', header = FALSE, col.names = c('tp','fp','tn','fn')))
+  online = cumsum(read.csv('deployment-modes-quality-time/confusion_matrix-online', header = FALSE, col.names = c('tp','fp','tn','fn')))
   online$mc = (online$fp + online$fn) / (online$fp + online$fn + online$tp + online$tn)
   
-  continuous = cumsum(read.csv('deployment-modes/confusion_matrix-time_based-100-1iter', header = FALSE, col.names = c('tp','fp','tn','fn')))
+  continuous = cumsum(read.csv('deployment-modes-quality-time/confusion_matrix-time_based-100', header = FALSE, col.names = c('tp','fp','tn','fn')))
   continuous$mc = (continuous$fp + continuous$fn) / (continuous$fp + continuous$fn + continuous$tp + continuous$tn)
   
-  baseline = cumsum(read.csv('deployment-modes/confusion_matrix-baseline', header = FALSE, col.names = c('tp','fp','tn','fn')))
+  baseline = cumsum(read.csv('deployment-modes-quality-time/confusion_matrix-baseline', header = FALSE, col.names = c('tp','fp','tn','fn')))
   baseline$mc = (baseline$fp + baseline$fn) / (baseline$fp + baseline$fn + baseline$tp + baseline$tn)
   
-  periodical = cumsum(read.csv('deployment-modes/confusion_matrix-periodical', header = FALSE, col.names = c('tp','fp','tn','fn')))
+  periodical = cumsum(read.csv('deployment-modes-quality-time/confusion_matrix-periodical-2', header = FALSE, col.names = c('tp','fp','tn','fn')))
   periodical$mc = (periodical$fp + periodical$fn) / (periodical$fp + periodical$fn + periodical$tp + periodical$tn)
   
   append <- function(vec, maxLength){

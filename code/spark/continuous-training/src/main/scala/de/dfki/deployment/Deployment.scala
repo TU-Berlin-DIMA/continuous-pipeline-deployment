@@ -6,7 +6,6 @@ import de.dfki.core.sampling.{RateBasedSampler, Sampler}
 import de.dfki.ml.evaluation.Score
 import de.dfki.ml.pipelines.Pipeline
 import org.apache.log4j.Logger
-import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.streaming.StreamingContext
 
@@ -43,17 +42,7 @@ abstract class Deployment(val slack: Int = 0,
     finally fw.close()
   }
 
-  def storeTrainingTimes(time: Long, root: String, name: String = "time") = {
-    val file = new File(s"$root/$name")
-    file.getParentFile.mkdirs()
-    val fw = new FileWriter(file, true)
-    try {
-      fw.write(s"$time\n")
-    }
-    finally fw.close()
-  }
-
-  def provideHistoricalSample[T](processedRDD: ListBuffer[RDD[T]], spark: SparkContext): Option[RDD[T]] = {
-    sampler.sample(processedRDD, spark)
+  def provideHistoricalSample[T](processedRDD: ListBuffer[RDD[T]]): List[RDD[T]] = {
+    sampler.sample(processedRDD)
   }
 }

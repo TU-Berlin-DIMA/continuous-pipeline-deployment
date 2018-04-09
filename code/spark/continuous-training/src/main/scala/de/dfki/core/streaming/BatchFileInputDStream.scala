@@ -35,11 +35,17 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](_ssc: StreamingCont
   @transient private var schedulingPolicy = FixedIntervalScheduler.SCHEDULING_TYPE
 
 
-  private def files: Array[String] = {
+  def files: Array[String] = {
     if (_files == null) _files = listFiles()
     _files
   }
 
+
+  def setLastIndex(index: Int): Unit = {
+    this.lastProcessedFileIndex = index
+  }
+
+  def getLastIndex = this.lastProcessedFileIndex
 
   /**
     * starting the streaming source

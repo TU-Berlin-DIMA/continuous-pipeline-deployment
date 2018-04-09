@@ -27,8 +27,6 @@ class ContinuousDeploymentWithOptimizations(val history: String,
                                             sampler: Sampler) extends Deployment(slack, sampler) {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
-    // update and store update time
-    val start = System.currentTimeMillis()
     // create rdd of the initial data that the pipeline was trained with
     val data = streamingContext.sparkContext
       .textFile(history)
@@ -60,9 +58,10 @@ class ContinuousDeploymentWithOptimizations(val history: String,
 
 
       if (time % slack == 0) {
-        val historicalSample = provideHistoricalSample(processedRDD, streamingContext.sparkContext)
+        val historicalSample = provideHistoricalSample(processedRDD)
         if (historicalSample.nonEmpty) {
-          val transformed = historicalSample.get.repartition(streamingContext.sparkContext.defaultParallelism).cache()
+          val transformed = streamingContext.sparkContext.union(historicalSample)
+            .repartition(streamingContext.sparkContext.defaultParallelism).cache()
           pipeline.train(transformed)
           transformed.unpersist(true)
         }
@@ -70,12 +69,5 @@ class ContinuousDeploymentWithOptimizations(val history: String,
       processedRDD += pRDD
       time += 1
     }
-
-    val end = System.currentTimeMillis()
-    val trainTime = end - start
-    storeTrainingTimes(trainTime, s"$resultPath", "continuous-full-optimization-time")
-
-    processedRDD.foreach { r => r.unpersist(true) }
   }
-
 }

@@ -38,15 +38,14 @@ abstract class Sampler(val rate: Double = 0.1,
     * data
     *
     * @param processedRDD list of historical rdds
-    * @param spark        SparkContext object
     * @return
     */
-  def sample[T](processedRDD: ListBuffer[RDD[T]], spark: SparkContext): Option[RDD[T]] = {
+  def sample[T](processedRDD: ListBuffer[RDD[T]]): List[RDD[T]] = {
     val indices = sampleIndices(processedRDD.indices.toList)
-    if(indices.nonEmpty) {
-      Option(select(processedRDD, indices, spark))
+    if (indices.nonEmpty) {
+      select(processedRDD, indices)
     } else {
-      None
+      List()
     }
   }
 
@@ -71,15 +70,12 @@ abstract class Sampler(val rate: Double = 0.1,
     *
     */
   private def select[T](processedRDD: ListBuffer[RDD[T]],
-                     indices: List[Int],
-                     spark: SparkContext) = {
-    val sample = if (indices.contains(HISTORICAL_DATA_INDEX)) {
+                        indices: List[Int]): List[RDD[T]] = {
+    if (indices.contains(HISTORICAL_DATA_INDEX)) {
       // TODO: 0.1 is hard coded figure out a way to make it better
       processedRDD.head.sample(withReplacement = false, 0.1) :: indices.map(i => processedRDD(i))
     } else {
       indices.map(i => processedRDD(i))
     }
-    logger.info(s"Return ${indices.size} rdds in the sample")
-    spark.union(sample)
   }
 }

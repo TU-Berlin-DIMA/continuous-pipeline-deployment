@@ -65,9 +65,10 @@ class ContinuousDeploymentNoOptimization(val history: String,
       pipeline.updateTransformTrain(rdd)
 
       if (time % slack == 0) {
-        val historicalSample = provideHistoricalSample(processedRDD, streamingContext.sparkContext)
+        val historicalSample = provideHistoricalSample(processedRDD)
         if (historicalSample.nonEmpty) {
-          val cached = historicalSample.get.repartition(streamingContext.sparkContext.defaultParallelism).cache()
+          val cached = streamingContext.sparkContext.union(historicalSample)
+            .repartition(streamingContext.sparkContext.defaultParallelism).cache()
           cached.count()
           val trainingData = pipeline.transform(cached)
           trainingData.cache()
@@ -84,10 +85,5 @@ class ContinuousDeploymentNoOptimization(val history: String,
       processedRDD += rdd
       time += 1
     }
-    val end = System.currentTimeMillis()
-    val trainTime = end - start
-    storeTrainingTimes(trainTime, s"$resultPath", "continuous-no-optimization-time")
-
-    processedRDD.foreach(r => r.unpersist(true))
   }
 }

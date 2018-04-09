@@ -16,7 +16,6 @@ class OnlineDeployment(val streamBase: String,
                        val daysToProcess: Array[Int]) extends Deployment {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
-    val start = System.currentTimeMillis()
     val testData = streamingContext
       .sparkContext
       .textFile(evaluation)
@@ -51,9 +50,5 @@ class OnlineDeployment(val streamBase: String,
       rdd.unpersist()
       time += 1
     }
-
-    val end = System.currentTimeMillis()
-    val trainTime = end - start
-    storeTrainingTimes(trainTime, s"$resultPath", "continuous-full-optimization-time")
   }
 }
