@@ -1,11 +1,12 @@
 \section{Evaluation} \label{evaluation} 
-To evaluate our continuous training approach, we perform several experiments.
+To evaluate the performance of our deployment platform, we perform several experiments.
 The goal of the experiments is to answer the following questions:\\
 1. How does our continuous deployment approach perform in comparison to online and periodical deployment approaches with regards to model quality and training time? \\
-2. What is the effect of learning rate, regularization, and sample size on the continuous deployment? \\
+2. What is the effect of the learning rate, the regularization parameter, and the sampling method on the continuous deployment? \\
 3. What are the effects of live statistics analysis and materialization of preprocessed features on the training time?
 
-by simulating the deployment of machine learning pipelines using different real-world datasets.
+To that end, first, we design several pipelines each processing one real-world dataset.
+Then, we deploy the pipelines using the different deployment approaches.
 
 \subsection{Setup}\label{subsec:setup}
 \textbf{Pipelines.}
@@ -14,28 +15,35 @@ We design three pipelines for all the experiments.\\
 We use the URL pipeline to process the URL dataset for classifying URLs, gathered over a 120 days period, into malicious and legitimate groups \cite{ma2009identifying}.\\
 \textit{Criteo Pipeline.} 
 The Criteo pipeline consists of 5 components: input parser, missing value imputer, standard scaler, feature hasher, and a Logistic Regression model.
-The Criteo pipeline process the Terabyte Criteo click log dataset is used for benchmarking algorithms for clickthrough rate (CTR) prediction \cite{criteo-log}.\\
-\textit{\hl{Probably} NewYork Taxi.}
-The Criteo pipeline consists of 4 components: input parser, missing value imputer, feature extractor, standard scaler, and a Linear Regression model.
+The Criteo pipeline processes the Terabyte Criteo click log dataset and predicts the clickthrough rate (CTR) for each data point \cite{criteo-log}.\\
+\textit{Taxi Pipeline.}
+The Taxi pipeline consists of 4 components: input parser, feature extractor, anomaly detector, standard scaler, and a Linear Regression model.
+The Taxi pipeline process the Newyork taxi trip dataset and predicts the trip duration of every taxi ride \cite{newyork-taxi}. The Taxi pipeline is more complex than Criteo and URL pipelines. We designed the pipeline based on the top solutions of the top scorers of the New York City Taxi Trip Duration Kaggle competition\footnote{https://www.kaggle.com/c/nyc-taxi-trip-duration/}. The input parser computes the actual trip duration by first extracting the pickup and drop off time fields from the input records and calculating the difference (in seconds) between the two values.
+The feature extractor computes the havesine distance\footnote{https://en.wikipedia.org/wiki/Haversine\_formula}, the bearing\footnote{https://en.wikipedia.org/wiki/Bearing\_(navigation)}, hour of the day, and day of the week from the input records. Finally, the anomaly detector filters the trips that are longer than 22 hours, smaller than 10 seconds, or the trips that have a total distance of zero (the car never moved). 
 
 \textbf{Deployment Environment. }
-We deploy the URL pipeline on a single laptop running a macOS with 2,2 GHz intel Core i7 and 16 GB of RAM and the Criteo pipeline on a cluster of 21 machines (intel Xeon 2.4 GHz 16 cores, 28 of dedicated RAM per node).
+We deploy the URL pipeline on a single laptop running a macOS with 2,2 GHz intel Core i7 and 16 GB of RAM and the Criteo and the Taxi pipelines on a cluster of 21 machines (intel Xeon 2.4 GHz 16 cores, 28 of dedicated RAM per node).
 Both environments are using Apache Spark 2.2.0 as their execution engine.
 
 \textbf{Deployment Process. }
-For both the URL and the Criteo pipeline we first trained a model on the first day of the data.
+For both the URL and the Criteo pipeline, we first trained a model on the first day of the data.
+For the Taxi pipeline, we train a model using the data from the month of January 2015.
 We then deploy the model (and the pipeline) and use the rest of the data for reporting the prediction quality and further training.
 The URL and the Criteo datasets do not have timestamps, therefore we divide every day into micro batches of roughly 1 minute of data. 
 Each micro batch is sequentially sent to the deployment environment where first they are used for reporting the quality and then used for training model.
+The NYC taxi dataset includes timestamps. 
+In our experiments, each micro batch contains one hour of the data. 
+The micro batches are sent in order (from 2015-Feb-01  00:00 to 2016-Dec-31 24:00) to the deployment platform.
+
 
 \subsection{EX1: Deployment Modes}
 In this experiment, we investigate the effect of our continuous deployment approach on model quality and total training time.
 We use 4 different deployment approaches.
 \begin{itemize}
-\item Online: purely online learning
-\item Baseline: no training at all (only the initial model used)
-\item Periodical: periodically retraining the model and pipeline
-\item Continuous: our approach
+\item Baseline: deploy the pipeline with no further training
+\item Online: deploy the pipeline and only use online (gradient descent) method for updating the model
+\item Periodical: deploy the pipeline and periodically train new models 
+\item Continuous: deploy the pipeline and continuously update the model using proactive training approach
 \end{itemize}
 
 \textbf{Model Quality. }
