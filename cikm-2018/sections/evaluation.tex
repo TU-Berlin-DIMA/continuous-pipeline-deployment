@@ -55,7 +55,7 @@ Figure \ref{deployment-time-figure} shows the total training time for each deplo
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/deployment-time-experiment}}
 \caption{End-to-end deployment time for different deployment approaches}
-\label{deployment-quality-figure}
+\label{deployment-time-figure}
 \end{figure}
 
 \subsection{EX2: System Tuning}
@@ -126,9 +126,9 @@ In scenarios where sudden surges are expected (e.g., online stores), we recommen
 \subsection{EX3: Optimizations Effects}
 In this experiment, we analyze the effects of the two optimizations, live statistics analysis and materialization of preprocess features, on the total training time.
 Figure \ref{optimization-effect} shows the effect of optimizations on total training time.
-\begin{figure}
+\begin{figure}[h!]
 \centering
-\includegraphics[width=\columnwidth]{../images/placeholder.jpeg}
+\resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/optimization-time-experiment}}
 \caption{Effect of the optimizations on total training time in continuous deployment approach}
 \label{optimization-effect}
 \end{figure}

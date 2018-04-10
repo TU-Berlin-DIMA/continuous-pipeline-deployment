@@ -35,11 +35,15 @@ As a result, in the current deployment platforms, the deployed models and pipeli
 
 Figure \ref{fig:motivational-example} shows the typical deployment process of existing systems.
 From an existing dataset, a pipeline consists of several data and feature processing steps, and a training algorithm is trained \textcircled{1}.
-Then, a deployment platform deploys the model (with the pipeline) \textcircled{2} where the pipeline is used to process incoming prediction queries \textcircled{3} before the model makes a prediction  \textcircled{4}.
+Then, the deployment platform deploys the model (with the pipeline) \textcircled{2}.
+Prediction requests arrive at the deployment platform \textcircled{3} where first they are transformed into an unlabeled data point (by request processor) and then they are forwarded to the pipeline.
+The pipeline first transforms the unlabeled data into a set of features and then the model makes a prediction based on the feature values  \textcircled{4}.
 The resulting predictions are further processed and converted to meaningful actions before being presented back to the users or the entities issuing the prediction queries \textcircled{5}.
 Based on the result of the prediction query, feedback, containing the original prediction query and the correct label, may be generated that is appended to the existing training data \textcircled{6}.
+The deployment platform also uses the feedback data to further update the model using online learning methods \textcircled{7}.
+The deployment platform also provides statistics such as the prediction accuracy over time and rate of the incoming predictions and training data.
 Throughout the deployment process, it is possible that the accuracy of the predictions being made drop below an acceptable threshold due to the changes in the distribution of the incoming prediction requests.
-As a result, the model and the pipeline are regularly retrained and redeployed back into the deployment platform(\textcircled{1} to \textcircled{6} is repeated).
+As a result, the model and the pipeline are regularly retrained and redeployed back into the deployment platform(\textcircled{1} to \textcircled{7} is repeated).
 
 Several real-world use cases follow the workflow described in Figure \ref{fig:motivational-example}.
 One example is the problem of Ad click prediction \cite{macmahan2013}.
@@ -56,18 +60,21 @@ A flexible deployment platform should, therefore, be able to meet the model qual
 %% Our solution
 We propose a deployment platform that continuously updates the model (and the pipeline) using a combination of the historical and incoming data.
 Our deployment platform updates the model using the incoming feedback data (we call this the real-time training data) similar to how online machine learning algorithms work while simultaneously performs small batch updates using the historical data.
-Our solution offers two key optimizations.
+Our deployment platform offers two key optimizations.
 
 \textit{Proactive training.}
-Instead of fully training a new model using the historical training data, we continuously update the existing model using small sampled batches of the historical data.
-The deployment platform first, forwards each batch of the data through the pipeline and then, performs a partial model update using the processed batch.
+Instead of periodically training a new model using the historical training data, we continuously update the existing model using random batches sampled from the historical data.
+In proactive training, the deployment platform processes the batch using the pipeline first, and then it updates the model.
 The updated model is immediately ready for answering prediction queries.
-Our experiments show that proactive training of the model and pipeline achieves more accurate predictions over time and requires fewer resources when compared to the periodical retraining.
+Our experiments show that proactive training of the model achieves more accurate predictions over time and requires fewer resources when compared to the periodical retraining.
 
 \textit{Online Statistics Computation and Feature Materialization}
-Our deployment platform updates the model using the real-time training data by employing advanced online machine learning algorithms (such as Adagrad \cite{duchi2011adaptive}), before storing it for the proactive training.
-Since the real-time training data is traveling through the pipeline during the online training phase, we compute statistics required by the pipeline stages, update the pipeline stages, and transform the data to the set of usable features required for the model before storing it with the rest of the historical data.
-As a result, during the proactive training, the data and feature processing steps of the pipeline are skipped and the materialized features are directly used in the model trainer component of the pipeline.
+Our deployment platform employs advanced online learning methods (such as Adagrad \cite{duchi2011adaptive}) to update the model in real-time, before storing data.
+Before the model is updated, the pipeline has to process the real-time data.
+First, the pipeline computes the necessary statistics required by each component (such as feature mean and feature standard deviation for scaling the data).
+Then, the pipeline transforms the data into a set of features for updating the model. 
+The deployment platform stores the updated statistics for every pipeline component and materializes the transformed features by storing them in memory or disk.
+By reusing the computed statistics and the materialized features during the proactive training, we are able to decrease the proactive training time by 50\%.
 
 % Our contributions
 In summary, our contributions are:

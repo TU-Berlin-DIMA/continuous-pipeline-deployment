@@ -13,12 +13,9 @@ urlDataProcessing <- function(){
   
   continuous = read.csv('deployment-modes-quality-time/continuous-full-optimization-time', header = FALSE, col.names = c('time'))
   
-  #periodical = read.csv('deployment-modes-quality-time/continuous-full-optimization-time', header = FALSE, col.names = c('time'))
+  periodical = read.csv('deployment-modes-quality-time/periodical-time', header = FALSE, col.names = c('time'))
   
   baseline = read.csv('deployment-modes-quality-time/baseline-time', header = FALSE, col.names = c('time'))
-  
-  periodical = continuous
-  periodical$time = periodical$time * 5
   
   df = data.frame(Deployment = c('Online','Continuous', 'Periodical', 'Baseline'), 
                   Time = c(online$time, continuous$time, periodical$time,baseline$time))
@@ -35,10 +32,10 @@ urlData = urlDataProcessing()
 criteoData = urlDataProcessing()
 taxiData = urlDataProcessing()
 rows = c(1,2,3)
-urlPlot = ggbarplot(urlData[rows,], x = 'Deployment', y = 'Time',  ylab = 'Time (m)', xlab = "",
+urlPlot = ggbarplot(urlData[rows,], x = 'Deployment', y = 'Time',  ylab = 'Time (m)', xlab = "(a) URL",
           width = 1.0, size = 1.0,
           color = 'Deployment', fill = 'Deployment',
-          order = c('Online','Continuous','Periodical'),
+          order = c('Periodical','Online','Continuous'),
           ggtheme = theme_pubclean(base_size = baseSize)) + 
   geom_hline(aes(yintercept=criteoData[4,]$Time, linetype = 'Baseline') ) + rremove('x.ticks') + rremove('x.text') +
   theme(legend.key.width = unit(1.5,'cm'),
@@ -49,31 +46,12 @@ urlPlot = ggbarplot(urlData[rows,], x = 'Deployment', y = 'Time',  ylab = 'Time 
         axis.title.x = element_text(margin = margin(t=-4)),
         legend.spacing.x = unit(-0.5, "cm"))+
   scale_linetype_manual("",values = c("dashed",NA,NA,NA))
-urlPlot = ggpar(urlPlot, font.y=c(fontLabelSize)) + rremove('x.ticks') + rremove('x.text') 
+urlPlot = ggpar(urlPlot, font.y=c(fontLabelSize), font.x=c(fontLabelSize+2)) + rremove('x.ticks') + rremove('x.text') + rremove("legend")
   
-criteoPlot = ggbarplot(criteoData[rows,], x = 'Deployment', y = 'Time',  ylab = 'Time (m)', xlab = "",
-                       width = 1.0, size = 1.0,
-                       color = 'Deployment', fill = 'Deployment',
-                       order = c('Online','Continuous','Periodical'),
-                       #yscale="log10",
-                       ggtheme = theme_pubclean(base_size = baseSize)) + 
-  geom_hline(aes(yintercept=criteoData[4,]$Time, linetype = 'Baseline') ) + rremove('x.ticks') + rremove('x.text') +
-  theme(legend.key.width = unit(1.5,'cm'),
-        legend.key.height = unit(0.4,'cm'), 
-        legend.title = element_text(size = 0),
-        plot.margin = unit(c(0,0,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-3)), 
-        axis.title.x = element_text(margin = margin(t=-4)),
-        legend.spacing.x = unit(-0.5, "cm")) +
-  scale_linetype_manual("",values = c("dashed",NA,NA,NA))
-
-
-criteoPlot = ggpar(criteoPlot, font.y=c(fontLabelSize)) + rremove('x.ticks') + rremove('x.text') 
-
-taxiPlot = ggbarplot(taxiData[rows,], x = 'Deployment', y = 'Time',  ylab = 'Time (m)', xlab = "",
+taxiPlot = ggbarplot(taxiData[rows,], x = 'Deployment', y = 'Time',  ylab = 'Time (m)', xlab = "(b) Taxi",
                      width = 1.0, size = 1.0,
                      color = 'Deployment', fill = 'Deployment',
-                     order = c('Online','Continuous','Periodical'),
+                     order = c('Periodical','Online','Continuous'),
                      #yscale="log10",
                      ggtheme = theme_pubclean(base_size = baseSize)) + 
   geom_hline(aes(yintercept=criteoData[4,]$Time, linetype = 'Baseline') ) + rremove('x.ticks') + rremove('x.text') +
@@ -85,10 +63,27 @@ taxiPlot = ggbarplot(taxiData[rows,], x = 'Deployment', y = 'Time',  ylab = 'Tim
         axis.title.x = element_text(margin = margin(t=-4)),
         legend.spacing.x = unit(-0.5, "cm")) +
   scale_linetype_manual("",values = c("dashed",NA,NA,NA))
+taxiPlot = ggpar(taxiPlot, font.y=c(fontLabelSize), font.x=c(fontLabelSize+2)) + rremove('x.ticks') + rremove('x.text')
 
-taxiPlot = ggpar(taxiPlot, font.y=c(fontLabelSize)) + rremove('x.ticks') + rremove('x.text') 
+criteoPlot = ggbarplot(criteoData[rows,], x = 'Deployment', y = 'Time',  ylab = 'Time (m)', xlab = "(c) Criteo",
+                       width = 1.0, size = 1.0,
+                       color = 'Deployment', fill = 'Deployment',
+                       order = c('Periodical','Online','Continuous'),
+                       #yscale="log10",
+                       ggtheme = theme_pubclean(base_size = baseSize)) + 
+  geom_hline(aes(yintercept=criteoData[4,]$Time, linetype = 'Baseline') ) + rremove('x.ticks') + rremove('x.text') +
+  theme(legend.key.width = unit(1.5,'cm'),
+        legend.key.height = unit(0.4,'cm'), 
+        legend.title = element_text(size = 0),
+        plot.margin = unit(c(0,0,0,0), "lines"), 
+        axis.title.y = element_text(margin = margin(r=-3)), 
+        axis.title.x = element_text(margin = margin(t=-4)),
+        legend.spacing.x = unit(-0.5, "cm")) +
+  scale_linetype_manual("",values = c("dashed",NA,NA,NA))
+criteoPlot = ggpar(criteoPlot, font.y=c(fontLabelSize), font.x=c(fontLabelSize+2)) + rremove('x.ticks') + rremove('x.text')
 
-deployment_time = ggarrange(urlPlot, taxiPlot, criteoPlot,  nrow = 1, ncol = 3, common.legend = TRUE)
+
+deployment_time = ggarrange(urlPlot, taxiPlot, criteoPlot, nrow = 1, ncol = 3, common.legend = TRUE)
 
 tikz(file = "../../images/experiment-results/tikz/deployment-time-experiment.tex", width = 6, height = 2)
 deployment_time 
