@@ -35,15 +35,6 @@ class CriteoPipeline(@transient var spark: SparkContext,
     miniBatchFraction = miniBatchFraction,
     updater = updater)
 
-  /**
-    * This method have to be called if the pipeline is loaded from the disk
-    *
-    * @param sc
-    */
-  override def setSparkContext(sc: SparkContext): Unit = {
-    this.spark = sc
-  }
-
   override def update(data: RDD[String]) = {
     val parsedData = fileReader.transform(spark, data)
     val filledData = missingValueImputer.transform(spark, parsedData)

@@ -13,7 +13,7 @@ urlDataProcessing <- function(){
   
   continuous = read.csv('deployment-modes-quality-time/continuous-full-optimization-time', header = FALSE, col.names = c('time'))
   
-  periodical = read.csv('deployment-modes-quality-time/periodical-time', header = FALSE, col.names = c('time'))
+  periodical = read.csv('deployment-modes-quality-time/periodical-warm-time', header = FALSE, col.names = c('time'))
   
   baseline = read.csv('deployment-modes-quality-time/baseline-time', header = FALSE, col.names = c('time'))
   

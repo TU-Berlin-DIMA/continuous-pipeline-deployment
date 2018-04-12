@@ -16,12 +16,6 @@ class OnlineDeployment(val streamBase: String,
                        val daysToProcess: Array[Int]) extends Deployment {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
-    val testData = streamingContext
-      .sparkContext
-      .textFile(evaluation)
-      .setName("Evaluation Data set")
-      .cache()
-
     val streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](streamingContext, streamBase, days = daysToProcess)
 
     pipeline.model.setMiniBatchFraction(1.0)
@@ -29,10 +23,6 @@ class OnlineDeployment(val streamBase: String,
     pipeline.model.setConvergenceTol(0.0)
     var time = 1
 
-    if (evaluation != "prequential") {
-      // initial evaluation of the pipeline right after deployment for non prequential based method
-      evaluateStream(pipeline, testData, resultPath, "online")
-    }
 
     while (!streamingSource.allFileProcessed()) {
 
@@ -42,9 +32,7 @@ class OnlineDeployment(val streamBase: String,
 
       if (evaluation == "prequential") {
         // perform evaluation
-        evaluateStream(pipeline, rdd, resultPath, "online")
-      } else {
-        evaluateStream(pipeline, testData, resultPath, "online")
+        evaluateStream(pipeline, rdd, resultPath, "online-no-scaling")
       }
       pipeline.updateTransformTrain(rdd)
       rdd.unpersist()

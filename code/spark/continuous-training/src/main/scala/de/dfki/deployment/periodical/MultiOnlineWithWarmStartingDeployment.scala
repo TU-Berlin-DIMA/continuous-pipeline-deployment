@@ -20,37 +20,22 @@ class MultiOnlineWithWarmStartingDeployment(val history: String,
                                             val sparkConf: SparkConf) extends Deployment {
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     // create rdd of the initial data that the pipeline was trained with
-    var copyPipeline = pipeline
     streamingContext.stop(stopSparkContext = true, stopGracefully = true)
-
-    //    val conf = new SparkConf().setAppName("Optimization Time Experiment")
-    //    val masterURL = conf.get("spark.master", "local[*]")
-    //    conf.setMaster(masterURL)
     var copyContext = new StreamingContext(sparkConf, Seconds(1))
-    copyPipeline.setSparkContext(copyContext.sparkContext)
+    pipeline.setSparkContext(copyContext.sparkContext)
 
-    val testData = copyContext
-      .sparkContext
-      .textFile(evaluation)
-      .setName("Evaluation Data set")
-      .cache()
-    // TODO: Introduce these as pipeline level parameters
-    val initialNumIterations = copyPipeline.model.getNumIterations
+    val initialNumIterations = pipeline.model.getNumIterations
     val initialMiniBatch = 0.1
     val initialConvergenceTol = 1E-6
 
-    copyPipeline.model.setMiniBatchFraction(1.0)
-    copyPipeline.model.setNumIterations(1)
-    copyPipeline.model.setConvergenceTol(0.0)
+    pipeline.model.setMiniBatchFraction(1.0)
+    pipeline.model.setNumIterations(1)
+    pipeline.model.setConvergenceTol(0.0)
 
 
     var streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](copyContext, streamBase, days = daysToProcess)
 
     val ALLFILES = streamingSource.files
-    if (evaluation != "prequential") {
-      // initial evaluation of the pipeline right after deployment for non prequential based method
-      evaluateStream(copyPipeline, testData, resultPath, "periodical-warm")
-    }
     while (!streamingSource.allFileProcessed()) {
       var time = 1
       // code block for deployment between two periodical trainings
@@ -59,11 +44,10 @@ class MultiOnlineWithWarmStartingDeployment(val history: String,
 
         if (evaluation == "prequential") {
           // perform evaluation
-          evaluateStream(copyPipeline, rdd, resultPath, "periodical-warm")
-        } else {
-          evaluateStream(copyPipeline, testData, resultPath, "periodical-warm")
+          evaluateStream(pipeline, rdd, resultPath, "periodical-warm")
         }
-        copyPipeline.updateTransformTrain(rdd)
+
+        pipeline.updateTransformTrain(rdd)
         time += 1
       }
 
@@ -74,14 +58,15 @@ class MultiOnlineWithWarmStartingDeployment(val history: String,
       copyContext = new StreamingContext(sparkConf, Seconds(1))
 
      // copyPipeline = copyPipeline.newPipeline()
-      copyPipeline.setSparkContext(copyContext.sparkContext)
-      copyPipeline.model.setMiniBatchFraction(initialMiniBatch)
-      copyPipeline.model.setConvergenceTol(initialConvergenceTol)
+      pipeline.setSparkContext(copyContext.sparkContext)
+      pipeline.model.setMiniBatchFraction(initialMiniBatch)
+      pipeline.model.setConvergenceTol(initialConvergenceTol)
+
       val rdd = copyContext.sparkContext.textFile(path = nextBatch.mkString(",")).repartition(copyContext.sparkContext.defaultParallelism)
-      copyPipeline.updateTransformTrain(rdd, initialNumIterations)
-      copyPipeline.model.setMiniBatchFraction(1.0)
-      copyPipeline.model.setNumIterations(1)
-      copyPipeline.model.setConvergenceTol(0.0)
+      pipeline.updateTransformTrain(rdd, initialNumIterations)
+      pipeline.model.setMiniBatchFraction(1.0)
+      pipeline.model.setNumIterations(1)
+      pipeline.model.setConvergenceTol(0.0)
       streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](copyContext, streamBase, days = daysToProcess)
       streamingSource.setLastIndex(lastProcessed)
     }

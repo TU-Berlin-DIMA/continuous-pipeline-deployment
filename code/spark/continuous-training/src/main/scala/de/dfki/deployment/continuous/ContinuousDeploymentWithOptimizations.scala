@@ -48,7 +48,7 @@ class ContinuousDeploymentWithOptimizations(val history: String,
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
       if (evaluation == "prequential") {
         // perform evaluation
-        evaluateStream(pipeline, rdd, resultPath, s"${sampler.name}-with-optimization")
+        evaluateStream(pipeline, rdd, resultPath, s"${sampler.name}-with-optimization-20")
       }
       // update and transform using the pipeline and cache the materialized data
       val pRDD = pipeline.updateAndTransform(rdd).persist(StorageLevel.MEMORY_AND_DISK)
@@ -62,7 +62,7 @@ class ContinuousDeploymentWithOptimizations(val history: String,
         if (historicalSample.nonEmpty) {
           val transformed = streamingContext.sparkContext.union(historicalSample)
             .repartition(streamingContext.sparkContext.defaultParallelism).cache()
-          pipeline.train(transformed)
+          pipeline.train(transformed, iterations = 20)
           transformed.unpersist(true)
         }
       }
