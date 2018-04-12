@@ -8,13 +8,13 @@ To fully utilize the model, it has to be deployed into an environment where it c
 %% Intro to the problem of continuous improvement
 After the model is deployed, new training data may become available.
 In order to adapt to the new training data, one has to retrain and redeploy the model.
-In many real-world use cases, training datasets are very large which may require hours of data processing and training to result in a new model.
+In many real-world use cases, training datasets are very large which may require hours of data preprocessing and training to result in a new model.
 Therefore, it is not feasible to train a new model frequently.
 This means that the deployed model is not always up-to-date.
 Online learning methods are utilized to provide fresh and up-to-date models.
-However, unless the online learning method is highly tuned to the specific use case, they do not guarantee a high prediction accuracy \cite{ma2009identifying, macmahan2013}. 
+However, unless the online learning method is highly tuned to the specific use case, it does not guarantee a high prediction accuracy \cite{ma2009identifying, macmahan2013}. 
 This results in a trade-off between the model training cost and the model quality.
-Moreover, any incoming prediction and training data has to be first processed by the same pipeline that was used during the initial training. 
+Moreover, any incoming prediction and training data has to be first preprocessed by the same pipeline that was used during the initial training. 
 Therefore, deploying models alone are not adequate and the entire pipeline has to be deployed as well.
 
 %% Current Deployment Systems
@@ -68,7 +68,7 @@ In proactive training, the deployment platform processes the batch using the pip
 The updated model is immediately ready for answering prediction queries.
 Our experiments show that proactive training of the model achieves more accurate predictions over time and requires fewer resources when compared to the periodical retraining.
 
-\textit{Online Statistics Computation and Feature Materialization}
+\textit{Online Statistics Computation and Feature Materialization.}
 Our deployment platform employs advanced online learning methods (such as Adagrad \cite{duchi2011adaptive}) to update the model in real-time, before storing data.
 Before the model is updated, the pipeline has to process the real-time data.
 First, the pipeline computes the necessary statistics required by each component (such as feature mean and feature standard deviation for scaling the data).
