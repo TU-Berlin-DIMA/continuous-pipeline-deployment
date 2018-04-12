@@ -1,4 +1,4 @@
-setwd("~/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/")
+setwd("~/Documents/work/phd-papers/continuous-training/experiment-results/")
 library(ggplot2)
 library(reshape)
 library(tikzDevice)
@@ -7,15 +7,15 @@ library(ggpubr)
 
 
 urlDataProcessing <- function(){
-  online = read.csv('deployment-modes-quality-time/online-time', header = FALSE, col.names = c('time'))
+  online = read.csv('url-reputation/deployment-modes-quality-time/online-time', header = FALSE, col.names = c('time'))
 
   #continuousNo = read.csv('deployment-modes-quality-time/continuous-no-optimization-time', header = FALSE, col.names = c('time'))
   
-  continuous = read.csv('deployment-modes-quality-time/continuous-full-optimization-time', header = FALSE, col.names = c('time'))
+  continuous = read.csv('url-reputation/deployment-modes-quality-time/continuous-full-optimization-time', header = FALSE, col.names = c('time'))
   
-  periodical = read.csv('deployment-modes-quality-time/periodical-warm-time', header = FALSE, col.names = c('time'))
+  periodical = read.csv('url-reputation/deployment-modes-quality-time/periodical-warm-time', header = FALSE, col.names = c('time'))
   
-  baseline = read.csv('deployment-modes-quality-time/baseline-time', header = FALSE, col.names = c('time'))
+  baseline = read.csv('url-reputation/deployment-modes-quality-time/baseline-time', header = FALSE, col.names = c('time'))
   
   df = data.frame(Deployment = c('Online','Continuous', 'Periodical', 'Baseline'), 
                   Time = c(online$time, continuous$time, periodical$time,baseline$time))
@@ -37,7 +37,7 @@ urlPlot = ggbarplot(urlData[rows,], x = 'Deployment', y = 'Time',  ylab = 'Time 
           color = 'Deployment', fill = 'Deployment',
           order = c('Periodical','Online','Continuous'),
           ggtheme = theme_pubclean(base_size = baseSize)) + 
-  geom_hline(aes(yintercept=criteoData[4,]$Time, linetype = 'Baseline') ) + rremove('x.ticks') + rremove('x.text') +
+  geom_hline(aes(yintercept=criteoData[4,]$Time, linetype = 'Baseline'), size = 2) + rremove('x.ticks') + rremove('x.text') +
   theme(legend.key.width = unit(1.5,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         legend.title = element_text(size = 0),
@@ -54,7 +54,7 @@ taxiPlot = ggbarplot(taxiData[rows,], x = 'Deployment', y = 'Time',  ylab = 'Tim
                      order = c('Periodical','Online','Continuous'),
                      #yscale="log10",
                      ggtheme = theme_pubclean(base_size = baseSize)) + 
-  geom_hline(aes(yintercept=criteoData[4,]$Time, linetype = 'Baseline') ) + rremove('x.ticks') + rremove('x.text') +
+  geom_hline(aes(yintercept=criteoData[4,]$Time, linetype = 'Baseline') , size = 2) + rremove('x.ticks') + rremove('x.text') +
   theme(legend.key.width = unit(1.5,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         legend.title = element_text(size = 0),
@@ -71,7 +71,7 @@ criteoPlot = ggbarplot(criteoData[rows,], x = 'Deployment', y = 'Time',  ylab = 
                        order = c('Periodical','Online','Continuous'),
                        #yscale="log10",
                        ggtheme = theme_pubclean(base_size = baseSize)) + 
-  geom_hline(aes(yintercept=criteoData[4,]$Time, linetype = 'Baseline') ) + rremove('x.ticks') + rremove('x.text') +
+  geom_hline(aes(yintercept=criteoData[4,]$Time, linetype = 'Baseline') , size = 2) + rremove('x.ticks') + rremove('x.text') +
   theme(legend.key.width = unit(1.5,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         legend.title = element_text(size = 0),
@@ -83,10 +83,10 @@ criteoPlot = ggbarplot(criteoData[rows,], x = 'Deployment', y = 'Time',  ylab = 
 criteoPlot = ggpar(criteoPlot, font.y=c(fontLabelSize), font.x=c(fontLabelSize+2)) + rremove('x.ticks') + rremove('x.text')
 
 
-deployment_time = ggarrange(urlPlot, taxiPlot, criteoPlot, nrow = 1, ncol = 3, common.legend = TRUE)
+deploymentTime = ggarrange(urlPlot, taxiPlot, criteoPlot, nrow = 1, ncol = 3, common.legend = TRUE)
 
-tikz(file = "../../images/experiment-results/tikz/deployment-time-experiment.tex", width = 6, height = 2)
-deployment_time 
+tikz(file = "../images/experiment-results/tikz/deployment-time-experiment.tex", width = 6, height = 2)
+deploymentTime 
 dev.off()
 
  

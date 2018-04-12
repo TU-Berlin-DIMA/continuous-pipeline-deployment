@@ -1,4 +1,4 @@
-setwd("~/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/")
+setwd("~/Documents/work/phd-papers/continuous-training/experiment-results/")
 library(ggplot2)
 library(reshape)
 library(tikzDevice)
@@ -6,16 +6,16 @@ library(ggpubr)
 
 
 urlDataProcessing <- function(){
-  online = cumsum(read.csv('deployment-modes-quality-time/confusion_matrix-online', header = FALSE, col.names = c('tp','fp','tn','fn')))
+  online = cumsum(read.csv('url-reputation/deployment-modes-quality-time/confusion_matrix-online', header = FALSE, col.names = c('tp','fp','tn','fn')))
   online$mc = (online$fp + online$fn) / (online$fp + online$fn + online$tp + online$tn)
   
-  continuous = cumsum(read.csv('deployment-modes-quality-time/confusion_matrix-time_based-100-with-optimization', header = FALSE, col.names = c('tp','fp','tn','fn')))
+  continuous = cumsum(read.csv('url-reputation/deployment-modes-quality-time/confusion_matrix-time_based-100-with-optimization', header = FALSE, col.names = c('tp','fp','tn','fn')))
   continuous$mc = (continuous$fp + continuous$fn) / (continuous$fp + continuous$fn + continuous$tp + continuous$tn)
   
-  baseline = cumsum(read.csv('deployment-modes-quality-time/confusion_matrix-baseline', header = FALSE, col.names = c('tp','fp','tn','fn')))
+  baseline = cumsum(read.csv('url-reputation/deployment-modes-quality-time/confusion_matrix-baseline', header = FALSE, col.names = c('tp','fp','tn','fn')))
   baseline$mc = (baseline$fp + baseline$fn) / (baseline$fp + baseline$fn + baseline$tp + baseline$tn)
   
-  periodical = cumsum(read.csv('deployment-modes-quality-time/confusion_matrix-periodical-warm', header = FALSE, col.names = c('tp','fp','tn','fn')))
+  periodical = cumsum(read.csv('url-reputation/deployment-modes-quality-time/confusion_matrix-periodical-warm', header = FALSE, col.names = c('tp','fp','tn','fn')))
   periodical$mc = (periodical$fp + periodical$fn) / (periodical$fp + periodical$fn + periodical$tp + periodical$tn)
   
   append <- function(vec, maxLength){
@@ -49,40 +49,58 @@ taxiDataProcessing <- function(){
 
 urlData = urlDataProcessing()
 urlBreaks = c(1,3000, 6000 ,9000, 12000)
-urlLabels = c("day 1","day 30", "day 60", "day 90","day 120")
-criteoData = urlDataProcessing()
+urlLabels = c("day1","day30", "day60", "day90","day120")
+
 taxiData = urlDataProcessing()
 taxiBreaks = c(1,3000, 6000 ,9000, 12000)
-taxiLabels = c("Feb 2015","July 2015", "Jan 2016", "July 206", "Dec 2016")
+taxiLabels = c("Feb15","Jul15", "Jan16", "Jul16", "Dec16")
+
+criteoData = urlDataProcessing()
 criteoBreaks = c(1,3000, 6000 ,9000, 12000)
-criteoLabels = c("day 1","day 3", "day 6", "day 9","day 12")
+criteoLabels = c("day1","day3", "day6", "day9","day12")
+
 
 
 fontLabelSize = 10
 baseSize = 14
 
 
-url_plot = ggline(urlData, 'Time', 'value', ylab = "Misclassification (\\%)", xlab = '(a) URL',
-                  shape = '-1', size = 1, color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
+urlPlot = ggline(urlData, 'Time', 'value', ylab = "Misclassification (\\%)", xlab = '(a) URL',
+                  shape = '-1', size = 1, linetype ='Deployment', color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = urlBreaks, labels= urlLabels)
-url_plot = ggpar(url_plot, legend = "top", legend.title = "", font.x = c(fontLabelSize), font.y=c(fontLabelSize)) + 
-  theme(axis.text.x = element_text(margin = margin(t=-1)))
+urlPlot = ggpar(urlPlot, legend = "top", legend.title = "", font.x = c(fontLabelSize), font.y=c(fontLabelSize)) + 
+  theme(legend.title = element_text(size = 0), 
+        legend.key.width = unit(1.2,'cm'),
+        legend.key.height = unit(0.4,'cm'), 
+        plot.margin = unit(c(0,1.5,0,0), "lines"), 
+        axis.title.y = element_text(margin = margin(r=-1)),
+        axis.text.x = element_text(margin = margin(t=-1)))
 
 
-taxi_plot = ggline(taxiData, 'Time', 'value', ylab = "MSLE", xlab = '(b) Taxi',
-                  shape = '-1',size =1, color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
+taxiPlot = ggline(taxiData, 'Time', 'value', ylab = "RMSLE", xlab = '(b) Taxi',
+                  shape = '-1',size =1, linetype ='Deployment',color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = taxiBreaks, labels= taxiLabels) + rremove('legend')
-taxi_plot = ggpar(taxi_plot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) + 
-  theme(axis.text.x = element_text(margin = margin(t=-1)))
+taxiPlot = ggpar(taxiPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) + 
+  theme(legend.title = element_text(size = 0), 
+        legend.key.width = unit(1.2,'cm'),
+        legend.key.height = unit(0.4,'cm'), 
+        plot.margin = unit(c(0,1.5,0,0), "lines"), 
+        axis.title.y = element_text(margin = margin(r=-1)),
+        axis.text.x = element_text(margin = margin(t=-1)))
 
-criteo_plot = ggline(criteoData, 'Time', 'value', ylab = "MSE", xlab = '(c) Criteo',
-                     shape = '-1',size =1, color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
+criteoPlot = ggline(criteoData, 'Time', 'value', ylab = "MSE", xlab = '(c) Criteo',
+                     shape = '-1',size =1, linetype ='Deployment',color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = criteoBreaks, labels= criteoLabels) + rremove('legend')
-criteo_plot = ggpar(criteo_plot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) + 
-  theme(axis.text.x = element_text(margin = margin(t=-1)))
+criteoPlot = ggpar(criteoPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) + 
+  theme(legend.title = element_text(size = 0), 
+        legend.key.width = unit(1.2,'cm'),
+        legend.key.height = unit(0.4,'cm'), 
+        plot.margin = unit(c(0,1.5,0,0), "lines"), 
+        axis.title.y = element_text(margin = margin(r=-1)),
+        axis.text.x = element_text(margin = margin(t=-1)))
 
-deployment_quality = ggarrange(url_plot,taxi_plot,criteo_plot, nrow = 3, ncol = 1, common.legend = TRUE) + rremove('legend') 
+deploymentQuality = ggarrange(urlPlot,taxiPlot,criteoPlot, nrow = 3, ncol = 1, common.legend = TRUE)
 
-tikz(file = "../../images/experiment-results/tikz/deployment-quality-experiment.tex", width = 4, height = 4)
-deployment_quality 
+tikz(file = "../images/experiment-results/tikz/deployment-quality-experiment.tex", width = 4, height = 4)
+deploymentQuality 
 dev.off()

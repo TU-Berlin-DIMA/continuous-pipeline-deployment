@@ -1,4 +1,4 @@
-setwd("~/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/")
+setwd("~/Documents/work/phd-papers/continuous-training/experiment-results/")
 library(ggplot2)
 library(reshape)
 library(tikzDevice)
@@ -6,20 +6,20 @@ library(ggpubr)
 
 
 ## Read data for the batch training
-hyperParams = read.csv('param-selection/training', header = FALSE, col.names = c('updater','reg','tp','fp','tn','fn','iter'))
-hyperParams$mc = (hyperParams$fp + hyperParams$fn) / (hyperParams$fp + hyperParams$fn + hyperParams$tp + hyperParams$tn)
-results = data.frame(hyperParams[,c("updater","reg","mc","iter")])
+#hyperParams = read.csv('url-reputation/param-selection/training', header = FALSE, col.names = c('updater','reg','tp','fp','tn','fn','iter'))
+#hyperParams$mc = (hyperParams$fp + hyperParams$fn) / (hyperParams$fp + hyperParams$fn + hyperParams$tp + hyperParams$tn)
+#results = data.frame(hyperParams[,c("updater","reg","mc","iter")])
 #write.table(results, file = '../../images/experiment-results/tikz/ps-table.csv')
 
 ## Streaming data
 urlDataProcessing <- function(){
-  adam = cumsum(read.csv('param-selection/adam/confusion_matrix-time_based-100', header = FALSE, col.names = c('tp','fp','tn','fn')))
+  adam = cumsum(read.csv('url-reputation/param-selection/adam/confusion_matrix-time_based-100', header = FALSE, col.names = c('tp','fp','tn','fn')))
   adam$mc = (adam$fp + adam$fn) / (adam$fp + adam$fn + adam$tp + adam$tn)
-  rmsprop = cumsum(read.csv('param-selection/rmsprop/confusion_matrix-time_based-100', header = FALSE, col.names = c('tp','fp','tn','fn')))
+  rmsprop = cumsum(read.csv('url-reputation/param-selection/rmsprop/confusion_matrix-time_based-100', header = FALSE, col.names = c('tp','fp','tn','fn')))
   rmsprop$mc = (rmsprop$fp + rmsprop$fn) / (rmsprop$fp + rmsprop$fn + rmsprop$tp + rmsprop$tn)
-  adadelta = cumsum(read.csv('param-selection/adadelta/confusion_matrix-time_based-100', header = FALSE, col.names = c('tp','fp','tn','fn')))
+  adadelta = cumsum(read.csv('url-reputation/param-selection/adadelta/confusion_matrix-time_based-100', header = FALSE, col.names = c('tp','fp','tn','fn')))
   adadelta$mc = (adadelta$fp + adadelta$fn) / (adadelta$fp + adadelta$fn + adadelta$tp + adadelta$tn)
-  momentum = cumsum(read.csv('param-selection/momentum/confusion_matrix-time_based-100', header = FALSE, col.names = c('tp','fp','tn','fn')))
+  momentum = cumsum(read.csv('url-reputation/param-selection/momentum/confusion_matrix-time_based-100', header = FALSE, col.names = c('tp','fp','tn','fn')))
   momentum$mc = (momentum$fp + momentum$fn) / (momentum$fp + momentum$fn + momentum$tp + momentum$tn)
   append <- function(vec, maxLength){
     return (c(vec,rep(NA, maxLength - length(vec))))
@@ -46,42 +46,55 @@ taxiDataProcessing <- function(){
 
 
 urlData = urlDataProcessing()
-criteoData = urlDataProcessing()
+urlBreaks = c(100, 1000)
+urlLabels = c("day1","day10")
+
 taxiData = urlDataProcessing()
+taxiBreaks = c(100,1000)
+taxiLabels = c("Feb15", "Apr15")
+
+criteoData = urlDataProcessing()
+criteoBreaks = c(100,1000)
+criteoLabels = c("day1", "day5")
 
 fontLabelSize = 14
 baseSize = 20
-breaks = c(1,200,400,600, 800, 1000)
-labels = c("0","2","4", "6", "8", "10")
 
-url_plot = ggline(urlData, 'Time', 'value', ylab = "Misclass (\\%)", xlab = 'Day',
+
+urlPlot = ggline(urlData, 'Time', 'value', ylab = "Misclassification\\%", xlab = '(a) URL',
                   shape = '-1', linetype ='Adaptation', size =2, color = "Adaptation", ggtheme = theme_pubclean(base_size = baseSize)) + 
-  scale_x_continuous(breaks = breaks, labels= labels)
-url_plot = ggpar(url_plot, font.x = c(fontLabelSize), font.y=c(fontLabelSize), legend.title = NULL) +
-  theme(plot.margin = unit(c(0,0,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-3)),
-        axis.title.x = element_text(margin = margin(t=-2)),
-        axis.text.x = element_text(margin = margin(t=-3)))
+  scale_x_continuous(breaks = urlBreaks, labels= urlLabels)
+urlPlot = ggpar(urlPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) +
+  theme(legend.title = element_text(size = 0), 
+        legend.key.width = unit(1.2,'cm'),
+        legend.key.height = unit(0.4,'cm'), 
+        plot.margin = unit(c(0,1.2,0,0), "lines"), 
+        axis.title.y = element_text(margin = margin(r=-1)),
+        axis.text.x = element_text(margin = margin(t=-1)))
 
-criteo_plot = ggline(criteoData, 'Time', 'value', ylab = "MSE", xlab = 'Day',
-                     shape = '-1', linetype ='Adaptation', size =2, color = "Adaptation", ggtheme = theme_pubclean(base_size = baseSize)) + 
-  scale_x_continuous(breaks = breaks, labels= labels)
-criteo_plot = ggpar(criteo_plot, font.x = c(fontLabelSize), font.y=c(fontLabelSize), legend.title = NULL) +
-  theme(plot.margin = unit(c(0,0,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-3)),
-        axis.title.x = element_text(margin = margin(t=-2)),
-        axis.text.x = element_text(margin = margin(t=-3)))
-
-taxi_plot = ggline(taxiData, 'Time', 'value', ylab = "MSE", xlab = 'Day',
+taxiPlot = ggline(taxiData, 'Time', 'value', ylab = "RMSLE", xlab = '(b) Taxi',
                    shape = '-1', linetype ='Adaptation',size = 2, color = "Adaptation", ggtheme = theme_pubclean(base_size = baseSize)) + 
-  scale_x_continuous(breaks = breaks, labels = labels)
-taxi_plot = ggpar(taxi_plot, font.x = c(fontLabelSize), font.y=c(fontLabelSize), legend.title = NULL)+
-  theme(plot.margin = unit(c(0,0,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-3)),
-        axis.title.x = element_text(margin = margin(t=-2)),
-        axis.text.x = element_text(margin = margin(t=-3)))
+  scale_x_continuous(breaks = taxiBreaks, labels = taxiLabels)
+taxiPlot = ggpar(taxiPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize))+
+  theme(legend.title = element_text(size = 0), 
+        legend.key.width = unit(1.2,'cm'),
+        legend.key.height = unit(0.4,'cm'), 
+        plot.margin = unit(c(0,1.5,0,0), "lines"), 
+        axis.title.y = element_text(margin = margin(r=-1)),
+        axis.text.x = element_text(margin = margin(t=-1)))
 
-param_selection_plot = ggarrange(url_plot, taxi_plot,criteo_plot,  nrow = 1, ncol = 3, common.legend = TRUE) + theme(legend.title = NULL)
-tikz(file = "../../images/experiment-results/tikz/parameter-selection-figure.tex", width = 6, height = 2)
+criteoPlot = ggline(criteoData, 'Time', 'value', ylab = "MSE", xlab = '(c) Criteo',
+                     shape = '-1', linetype ='Adaptation', size =2, color = "Adaptation", ggtheme = theme_pubclean(base_size = baseSize)) + 
+  scale_x_continuous(breaks = criteoBreaks, labels= criteoLabels)
+criteoPlot = ggpar(criteoPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) +
+  theme(legend.title = element_text(size = 0), 
+        legend.key.width = unit(1.2,'cm'),
+        legend.key.height = unit(0.4,'cm'), 
+        plot.margin = unit(c(0,1,0,0), "lines"), 
+        axis.title.y = element_text(margin = margin(r=-1)),
+        axis.text.x = element_text(margin = margin(t=-1)))
+
+param_selection_plot = ggarrange(urlPlot, taxiPlot, criteoPlot,  nrow = 1, ncol = 3, common.legend = TRUE)
+tikz(file = "../images/experiment-results/tikz/parameter-selection-figure.tex", width = 6, height = 2)
 param_selection_plot
 dev.off()
