@@ -61,7 +61,7 @@ However, for very large datasets, SGD has to perform many iterations in order to
 To decrease the running time, large datasets can be distributed among multiple nodes, where each node will compute the gradients on a subset of the data in parallel.
 After the initial computation of the gradients, they are all sent to one node where the final gradients are computed.
 
-\subsection{Proactive Training}
+\subsection{Proactive Training}\label{proactive-training}
 We use the iterative nature of SGD in the design of our continuous training process.
 After the initial model is deployed, new iterations of SGD can be performed on a combination of the existing and new data.
 Once the gradients are computed, we update the deployed model.

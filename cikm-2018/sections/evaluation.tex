@@ -13,13 +13,17 @@ Then, we deploy the pipelines using the different deployment approaches.
 We design three pipelines for all the experiments.\\
 \textit{URL pipeline. } The URL pipeline consists of 5 components: input parser, missing value imputer, standard scaler, feature hasher, and an SVM model.
 We use the URL pipeline to process the URL dataset for classifying URLs, gathered over a 120 days period, into malicious and legitimate groups \cite{ma2009identifying}.\\
+To evaluate the SVM model, we compute the misclassification rate on unseen data.
 \textit{Criteo Pipeline.} 
 The Criteo pipeline consists of 5 components: input parser, missing value imputer, standard scaler, feature hasher, and a Logistic Regression model.
 The Criteo pipeline processes the Terabyte Criteo click log dataset and predicts the clickthrough rate (CTR) for each data point \cite{criteo-log}.\\
+We use Mean Squared Error (MSE) to capture the error rate of the Logistic Regression model.
 \textit{Taxi Pipeline.}
 The Taxi pipeline consists of 4 components: input parser, feature extractor, anomaly detector, standard scaler, and a Linear Regression model.
 The Taxi pipeline process the Newyork taxi trip dataset and predicts the trip duration of every taxi ride \cite{newyork-taxi}. The Taxi pipeline is more complex than Criteo and URL pipelines. We designed the pipeline based on the top solutions of the top scorers of the New York City Taxi Trip Duration Kaggle competition\footnote{https://www.kaggle.com/c/nyc-taxi-trip-duration/}. The input parser computes the actual trip duration by first extracting the pickup and drop off time fields from the input records and calculating the difference (in seconds) between the two values.
 The feature extractor computes the haversine distance\footnote{https://en.wikipedia.org/wiki/Haversine\_formula}, the bearing\footnote{https://en.wikipedia.org/wiki/Bearing\_(navigation)}, the hour of the day, and the day of the week from the input records. Finally, the anomaly detector filters the trips that are longer than 22 hours, smaller than 10 seconds, or the trips that have a total distance of zero (the car never moved). 
+To evaluate the model, we use the Root Mean Squared Logarithmic Error (RMSLE).
+RMSLE is also the chosen error metric for the NYC taxi data science competition.
 
 \textbf{Deployment Environment. }
 We deploy the URL pipeline on a single laptop running a macOS with 2,2 GHz intel Core i7 and 16 GB of RAM and the Criteo and the Taxi pipelines on a cluster of 21 machines (intel Xeon 2.4 GHz 16 cores, 28 of dedicated RAM per node).
@@ -51,6 +55,7 @@ Therefore, each periodical training uses the existing parameters such as the sta
 
 \textbf{Model Quality. }
 Figure \ref{deployment-quality-figure} shows the quality of different deployment methods for each pipeline. 
+To capture the quality, we perform prequential evaluation [citation] and report the cumulative error rate over time.
 For the URL pipeline, the periodical deployment approach initiates a full retraining every 10 days.
 Both continuous and periodical deployment approaches result in lower misclassification rate than the online deployment approach.
 During the first 60 days, the continuous deployment results in slightly lower misclassification rate than the periodical approach.
@@ -83,14 +88,24 @@ The overhead of data processing and the model retraining contributes to the larg
 \end{figure}
 
 \subsection{EX2: System Tuning}
-In this experiment, we investigate the effect of different parameters on the quality of the models after deployment (answering the second question).
+In this experiment, we investigate the effect of different parameters on the quality of the models after deployment.
+First, we leverage the well-established hyperparameter tuning technique in the machine learning literature to tune the parameters of proactive training.
+Proactive training is an extension of the batch stochastic gradient decent to the deployment phase.
+As a result, we expect the set of hyperparameters fwith best performance during the initial training also performs the best during the deployment phase.
+Next, we investigate the effect of different sampling techniques on the quality of the deployed model.
 
 \textbf{Optimization algorithm parameters. }
-Stochastic gradient descent is heavily dependent on the choice of learning rate, learning rate adaptation technique, and regularization parameter (called hyperparameters). 
-To find the best hyperparameters, we perform a grid search and for each configuration train over the initial model and evaluate model over the second day.
-We then show that using the configuration that yields the lowest generalization error during the initial training will also result in the best set of hyperparameters for our continuous training approach.
+Stochastic gradient descent is heavily dependent on the choice of learning rate, learning rate adaptation technique, and regularization parameter.
+To find the best set of hyperparameters, we perform a grid search.
+For each dataset, we divide the initial data into a training and evaluation set.
+For each configuration, we train a model using the training set and evaluate the quality using the evaluation set.
 
-Table \ref{hyper-param-table} shows the result of performing hyperparameter tuning.
+Table \ref{hyper-param-table} and \ref{hyper-param-figure} show the result of performing hyperparameter tuning for every pipeline.
+We make the deployment figure more readable, we avoid displaying the result of every possible combination of hyperparemters and only show the quality of the best configuration for each learning rate adaptation technique during the deployment.
+In the URL pipeline, ADAM with learning rate of $0.01$ and regularization parameter $0.001$ yields the model with the lowest misclassification rate during the initial training phase.
+As described in Section \ref{proactive-training}, proactive training is an extension of the stochastic gradient descent to the deployment phase.
+From Figure \ref{hyper-param-figure}, we observe that the performance of every deployed model with a specific hyperparameter configuration follows the same order as the initial training.
+
 \begin{table*}[!h]
 \centering
 \begin{adjustbox}{max width=\textwidth}
@@ -100,9 +115,6 @@ Table \ref{hyper-param-table} shows the result of performing hyperparameter tuni
 \label{hyper-param-table}
 \end{table*}
 
-Figure \ref{hyper-param-figure} shows the quality of deployed pipelines trained using the best set of hyperparameters. 
-For each learning rate adaptation technique, we pick the learning rate and regularization parameter that yields the lowest generalization error.
-
 \begin{figure}[!h]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/parameter-selection-figure}}
@@ -110,8 +122,17 @@ For each learning rate adaptation technique, we pick the learning rate and regul
 \label{hyper-param-figure}
 \end{figure}
 
-\textbf{Sampling Methods. }
-Figure \ref{sampling-method-figure} shows the effect of different sampling methods on the quality.
+\textbf{Sampling Methods.}
+The proactive training also depends on the choice of sampling method.
+Each instance of the proactive training updates the deployed model using the provide sample.
+Therefore, the quality of the model after an update is directly related to the quality of the data inside the sample.
+Figure \ref{sampling-method-figure} shows the effect of different sampling methods on the quality of the model during the deployment phase.
+Weighted sampling approach (time-based sampling) achieves the highest quality for all the pipelines.
+Every dataset is gathered throughout certain period of time.
+Therefore, it is possible that the underlying characteristics of the data gradually changes over time.
+A time-based sampling approach is more likely to select the recently seen items for the proactive training.
+As a result, the deployed model is mostly influenced by the more recent items and performs better on the incoming prediction requests.
+
 \begin{figure}[!h]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/sampling-mode-figure}}
@@ -119,37 +140,41 @@ Figure \ref{sampling-method-figure} shows the effect of different sampling metho
 \label{sampling-method-figure}
 \end{figure}
 
-\textbf{Scheduling Policy. }
-In this section, we analyze the scheduling policy of our deployment platform.
-In our prototype, we simulated 2 days of continuous training of Criteo data using Apache Spark.
-Since the streaming component of Apache Spark requires a fixed interval for executing mini batches, we analyze the effect of our scheduling policy analytically.
-
-Figure \ref{fig:scheduling-policy-time} shows the actual execution time of every proactive training throughout the simulation.
-The execution time of the proactive training ranges from $23$ to $53$ seconds.
-In order for the scheduler component to effectively schedule proactive training, it requires the prediction latency, \hl{prediction throughput} \todo[inline]{Is it rate or throughput? Clipper uses the latter}, and a user-defined slack parameter.
-In our estimation, we use a slack parameter of $10$.
-We estimate the throughput and latency based on the time it takes for the deployment platform to predict the labels of the evaluation dataset.
-The evaluation dataset contains 2 million data points.
-The deployment platform is queried using the evaluation dataset every minute and requires $15$ seconds to return the predictions in the worst case scenario (when the evaluation dataset is stored on disk). 
-This amounts to a latency of $7 * 10 ^ {(-6)}$ seconds (7.5 micro seconds) and a throughput of $34,000$ requests per second.
-
-Based on above parameters, the scheduler computes the scheduling intervals for every execution of the proactive training.
-
-\begin{figure}[h!]
-\centering
-\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-scheduling-experiment.eps}
-\caption{Analysis of scheduling policy}
-\label{fig:scheduling-policy-time}
-\vspace{2mm}
-\end{figure}
-
-Using the slack parameter, we can guide the scheduler to increase or decrease the scheduling intervals of the proactive training.
-The slack parameter allows for the deployment platform to accommodate surges in the incoming prediction requests and new training data.
-In scenarios where sudden surges are expected (e.g., online stores), we recommend a large slack parameter (recommended value is $10$). \todo[inline]{No exp. validate this}
+%\textbf{Scheduling Policy. }
+%In this section, we analyze the scheduling policy of our deployment platform.
+%In our prototype, we simulated 2 days of continuous training of Criteo data using Apache Spark.
+%Since the streaming component of Apache Spark requires a fixed interval for executing mini batches, we analyze the effect of our scheduling policy analytically.
+%
+%Figure \ref{fig:scheduling-policy-time} shows the actual execution time of every proactive training throughout the simulation.
+%The execution time of the proactive training ranges from $23$ to $53$ seconds.
+%In order for the scheduler component to effectively schedule proactive training, it requires the prediction latency, \hl{prediction throughput} \todo[inline]{Is it rate or throughput? Clipper uses the latter}, and a user-defined slack parameter.
+%In our estimation, we use a slack parameter of $10$.
+%We estimate the throughput and latency based on the time it takes for the deployment platform to predict the labels of the evaluation dataset.
+%The evaluation dataset contains 2 million data points.
+%The deployment platform is queried using the evaluation dataset every minute and requires $15$ seconds to return the predictions in the worst case scenario (when the evaluation dataset is stored on disk). 
+%This amounts to a latency of $7 * 10 ^ {(-6)}$ seconds (7.5 micro seconds) and a throughput of $34,000$ requests per second.
+%
+%Based on above parameters, the scheduler computes the scheduling intervals for every execution of the proactive training.
+%
+%\begin{figure}[h!]
+%\centering
+%\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-scheduling-experiment.eps}
+%\caption{Analysis of scheduling policy}
+%\label{fig:scheduling-policy-time}
+%\vspace{2mm}
+%\end{figure}
+%
+%Using the slack parameter, we can guide the scheduler to increase or decrease the scheduling intervals of the proactive training.
+%The slack parameter allows for the deployment platform to accommodate surges in the incoming prediction requests and new training data.
+%In scenarios where sudden surges are expected (e.g., online stores), we recommend a large slack parameter (recommended value is $10$). \todo[inline]{No exp. validate this}
 
 \subsection{EX3: Optimizations Effects}
-In this experiment, we analyze the effects of the two optimizations, live statistics analysis and materialization of preprocess features, on the total training time.
+In this experiment, we analyze the effects of the optimizations, live statistics analysis and materialization of features, on the total deployment time.
 Figure \ref{optimization-effect} shows the effect of optimizations on total training time.
+By materializing the features, new instances of the proactive training have access directly to the preprocessed data.
+As a result, proactive training directly computes the gradient and updates the deployed model.
+Our optimizations have reduced the continuous training time by 50\%.
+\hl{I will update Figure} \ref{optimization-effect} \hl{and show the time for every component of the pipeline and how the optimizations helped in reducing the time.}
 \begin{figure}[h!]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/optimization-time-experiment}}
@@ -159,6 +184,8 @@ Figure \ref{optimization-effect} shows the effect of optimizations on total trai
 
 \subsection{Discussion} \label{subsec:discussion}
 \textbf{Quality-Time Trade-off}
+Continuous deployment approach can reduce the end-to-end deployment time by 1 order of magnitude.
+Figure \ref{quality-vs-time} shows the trade-off between the quality and total training time for the different deployment approaches.
 
 \begin{figure}[!h]
 \centering
@@ -167,10 +194,14 @@ Figure \ref{optimization-effect} shows the effect of optimizations on total trai
 \label{quality-vs-time}
 \end{figure}
 
-\textbf{Effect of Warmstarting}
 
-\textbf{Effect of periodical Deployment in real deployment scenarios}
-
-
+\textbf{Side effect of periodical deployment}
+In our experiments, incoming predictions where paused until the end of a periodical training.
+However, in real-world scenarios, prediction queries arrive constantly arrive at the system.
+Therefore, prediction queries are answer by the model before the periodical training was initiated. 
+Moreover, during the periodical training, the model cannot be updated using online learning algorithm as well.
+As a result, the performance of the model while a new model is being trained does not improve.
+The average for the proactive training is very small (200 ms for URL, \hl{nyc and criteo}).
+Therefore, predictions queries are always answered by an up-to-date model and online learning is not paused in the continuous deployment.
 
 
