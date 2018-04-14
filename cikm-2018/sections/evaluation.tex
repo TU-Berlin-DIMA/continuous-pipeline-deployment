@@ -26,18 +26,35 @@ To evaluate the model, we use the Root Mean Squared Logarithmic Error (RMSLE).
 RMSLE is also the chosen error metric for the NYC taxi data science competition.
 
 \textbf{Deployment Environment. }
-We deploy the URL pipeline on a single laptop running a macOS with 2,2 GHz intel Core i7 and 16 GB of RAM and the Criteo and the Taxi pipelines on a cluster of 21 machines (intel Xeon 2.4 GHz 16 cores, 28 of dedicated RAM per node).
+We deploy the URL pipeline on a single laptop running a macOS with 2,2 GHz intel Core i7 and 16 GB of RAM and the Criteo and the Taxi pipelines on a cluster of 21 machines (intel Xeon 2.4 GHz 16 cores, 28 GB of dedicated RAM per node).
 Both environments are using Apache Spark 2.2.0 as their execution engine.
 
 \textbf{Deployment Process. }
-For both the URL and the Criteo pipeline, we first trained a model on the first day of the data.
+Table \ref{dataset-description} describes the details of the datasets and our deployment process.
+For both the URL and the Criteo pipeline, we first train a model on the first day of the data.
 For the Taxi pipeline, we train a model using the data from the month of January 2015.
-We then deploy the model (and the pipeline) and use the rest of the data for reporting the prediction quality and further training.
-The URL and the Criteo datasets do not have timestamps, therefore we divide every day into micro batches of roughly 1 minute of data. 
-Each micro batch is sequentially sent to the deployment environment where first they are used for reporting the quality and then used for training model.
+We then deploy the models (and the pipeline).
+We use the remaining data for sending prediction queries and further training of the deployed models.
+The URL and the Criteo datasets do not have timestamps, therefore we divide every day into micro batches of 1 minute of data. 
+We send each micro batch to the deployment environment where first they are used for reporting the quality and then for training model.
 The NYC taxi dataset includes timestamps. 
 In our experiments, each micro batch contains one hour of the data. 
-The micro batches are sent in order (from 2015-Feb-01  00:00 to 2016-Dec-31 24:00) to the deployment platform.
+The micro batches are sent in order (from 2015-Feb-01  00:00 to 2016-Dec-31 24:00, a 2 year period) to the deployment platform.
+
+\begin{table}[h!]
+\centering
+\begin{tabular}{lrll}
+\hline
+\textbf{Dataset}  & \textbf{\# instances} & \textbf{Initial training} & \textbf{Deployment phase} \\
+\hline
+URL             & 2.3 M           & Day 1 (100K)              & Day 2-120 (2 M)           \\
+Taxi            & XX B              & Jan15 (X M)               & Feb15 to Dec16 (XX B)     \\
+Criteo          & XX B            & Day 1 (XX M)              & Day 2-12 (XX B)        \\
+\hline
+\end{tabular}
+\caption{Description of Datasets and Deployment process}  
+\label{dataset-description}
+\end{table}
 
 
 \subsection{EX1: Deployment Modes}
@@ -58,9 +75,9 @@ Figure \ref{deployment-quality-figure} shows the quality of different deployment
 To capture the quality, we perform prequential evaluation [citation] and report the cumulative error rate over time.
 For the URL pipeline, the periodical deployment approach initiates a full retraining every 10 days.
 Both continuous and periodical deployment approaches result in lower misclassification rate than the online deployment approach.
-During the first 60 days, the continuous deployment results in slightly lower misclassification rate than the periodical approach.
+During the first 60 days, the continuous deployment results in a slightly lower misclassification rate than the periodical approach.
 After the 6th periodical training (day 60), the misclassification rate of the periodical deployment decreases slightly more rapidly than that of the continuous deployment. 
-At the end of the deployment (day 120), the misclassification rate of the periodical deployment approach is 0.03\% smaller than the URL model deployed using the continuous deployment approach.
+At the end of the deployment process (day 120), the misclassification rate of the periodical deployment approach is 0.03\% smaller than the URL model deployed using the continuous deployment approach.
 \begin{figure}[h!]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/deployment-quality-experiment}}
@@ -72,13 +89,12 @@ At the end of the deployment (day 120), the misclassification rate of the period
 Figure \ref{deployment-time-figure} shows the end-to-end  time for each deployment approach.
 The end-to-end time consists of the data preprocessing and feature engineering time, the model training time, and the prediction time. 
 We include the baseline deployment approach, as it only includes the prediction time.
-For the URL pipeline, the end-to-end time for the online deployment approach is 29 minutes as it only scans each data point once (around 2.4 million data items).  
+For the URL pipeline, the end-to-end time for the online deployment approach is 29 minutes as it only scans each data point once (around 2.4 million scans).  
 The proactive training of the continuous deployment approach makes over 45 million scans.
 However, the end-to-end time of the continuous deployment approach is only two times larger than the online deployment approach. 
 Because of the live data analysis and the feature materialization optimization, a large part of the data processing time is avoided.
 The periodical deployment approach time is around 800 minutes, an order of magnitude large than the continuous deployment. 
 The overhead of data processing and the model retraining contributes to the large end-to-end deployment time.
-
 
 \begin{figure}[h!]
 \centering
@@ -91,7 +107,7 @@ The overhead of data processing and the model retraining contributes to the larg
 In this experiment, we investigate the effect of different parameters on the quality of the models after deployment.
 First, we leverage the well-established hyperparameter tuning technique in the machine learning literature to tune the parameters of proactive training.
 Proactive training is an extension of the batch stochastic gradient decent to the deployment phase.
-As a result, we expect the set of hyperparameters fwith best performance during the initial training also performs the best during the deployment phase.
+As a result, we expect the set of hyperparameters with best performance during the initial training also performs the best during the deployment phase.
 Next, we investigate the effect of different sampling techniques on the quality of the deployed model.
 
 \textbf{Optimization algorithm parameters. }
@@ -101,8 +117,8 @@ For each dataset, we divide the initial data into a training and evaluation set.
 For each configuration, we train a model using the training set and evaluate the quality using the evaluation set.
 
 Table \ref{hyper-param-table} and \ref{hyper-param-figure} show the result of performing hyperparameter tuning for every pipeline.
-We make the deployment figure more readable, we avoid displaying the result of every possible combination of hyperparemters and only show the quality of the best configuration for each learning rate adaptation technique during the deployment.
-In the URL pipeline, ADAM with learning rate of $0.01$ and regularization parameter $0.001$ yields the model with the lowest misclassification rate during the initial training phase.
+We make the deployment figure more readable, we avoid displaying the result of every possible combination of hyperparameters and only show the quality of the best configuration for each learning rate adaptation technique during the deployment.
+In the URL pipeline, ADAM with the learning rate $0.01$ and the regularization parameter $0.001$ yields the model with the lowest misclassification rate during the initial training phase.
 As described in Section \ref{proactive-training}, proactive training is an extension of the stochastic gradient descent to the deployment phase.
 From Figure \ref{hyper-param-figure}, we observe that the performance of every deployed model with a specific hyperparameter configuration follows the same order as the initial training.
 
@@ -111,7 +127,7 @@ From Figure \ref{hyper-param-figure}, we observe that the performance of every d
 \begin{adjustbox}{max width=\textwidth}
 \input{../images/experiment-results/tikz/parameter-selection-table}
 \end{adjustbox}
-\caption{Result of hyperparameter tuning during initial training}
+\caption{Hyperparameter tuning during initial training (bold numbers show the best result for dataset/adaptation method)}
 \label{hyper-param-table}
 \end{table*}
 
@@ -123,20 +139,20 @@ From Figure \ref{hyper-param-figure}, we observe that the performance of every d
 \end{figure}
 
 \textbf{Sampling Methods.}
-The proactive training also depends on the choice of sampling method.
-Each instance of the proactive training updates the deployed model using the provide sample.
+The proactive training is also affected by the choice of the sampling method.
+Each instance of the proactive training updates the deployed model using the provided sample.
 Therefore, the quality of the model after an update is directly related to the quality of the data inside the sample.
 Figure \ref{sampling-method-figure} shows the effect of different sampling methods on the quality of the model during the deployment phase.
-Weighted sampling approach (time-based sampling) achieves the highest quality for all the pipelines.
-Every dataset is gathered throughout certain period of time.
+Weighted sampling approach (time-based sampling) achieves the highest quality for all the model.
+Every dataset is gathered throughout a long period of time.
 Therefore, it is possible that the underlying characteristics of the data gradually changes over time.
-A time-based sampling approach is more likely to select the recently seen items for the proactive training.
-As a result, the deployed model is mostly influenced by the more recent items and performs better on the incoming prediction requests.
+A time-based sampling approach is more likely to select the recent items for the proactive training.
+As a result, the deployed model is influenced by the more recent items and performs better on the incoming prediction requests.
 
 \begin{figure}[!h]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/sampling-mode-figure}}
-\caption{Effect different sampling methods on quality}
+\caption{Effect of different sampling methods on quality}
 \label{sampling-method-figure}
 \end{figure}
 
@@ -169,11 +185,11 @@ As a result, the deployed model is mostly influenced by the more recent items an
 %In scenarios where sudden surges are expected (e.g., online stores), we recommend a large slack parameter (recommended value is $10$). \todo[inline]{No exp. validate this}
 
 \subsection{EX3: Optimizations Effects}
-In this experiment, we analyze the effects of the optimizations, live statistics analysis and materialization of features, on the total deployment time.
+In this experiment, we analyze the effects of the optimizations, live statistics analysis and materialization of features, on the end-to-end deployment time.
 Figure \ref{optimization-effect} shows the effect of optimizations on total training time.
 By materializing the features, new instances of the proactive training have access directly to the preprocessed data.
 As a result, proactive training directly computes the gradient and updates the deployed model.
-Our optimizations have reduced the continuous training time by 50\%.
+For the URL pipeline, our optimizations have reduced the continuous training time by 50\%.
 \hl{I will update Figure} \ref{optimization-effect} \hl{and show the time for every component of the pipeline and how the optimizations helped in reducing the time.}
 \begin{figure}[h!]
 \centering
@@ -185,7 +201,11 @@ Our optimizations have reduced the continuous training time by 50\%.
 \subsection{Discussion} \label{subsec:discussion}
 \textbf{Quality-Time Trade-off}
 Continuous deployment approach can reduce the end-to-end deployment time by 1 order of magnitude.
+However, continuous deployment approach may reduce the quality.
 Figure \ref{quality-vs-time} shows the trade-off between the quality and total training time for the different deployment approaches.
+For the URL pipeline, by using the continuous deployment approach we are able to reduce the reduce the end-to-end deployment time by 750 minutes, a 15 fold improvement.
+Whereas the misclassification rate is only increased 0.03 \%, a decrease of 0.015 fold.
+% NYC and Criteo analysis
 
 \begin{figure}[!h]
 \centering
@@ -198,10 +218,14 @@ Figure \ref{quality-vs-time} shows the trade-off between the quality and total t
 \textbf{Side effect of periodical deployment}
 In our experiments, incoming predictions where paused until the end of a periodical training.
 However, in real-world scenarios, prediction queries arrive constantly arrive at the system.
-Therefore, prediction queries are answer by the model before the periodical training was initiated. 
+Therefore, prediction queries are answered by the model before the periodical training was initiated. 
 Moreover, during the periodical training, the model cannot be updated using online learning algorithm as well.
 As a result, the performance of the model while a new model is being trained does not improve.
-The average for the proactive training is very small (200 ms for URL, \hl{nyc and criteo}).
+The average training time for the proactive training is very small (200 ms for the URL pipeline \hl{nyc and criteo}).
 Therefore, predictions queries are always answered by an up-to-date model and online learning is not paused in the continuous deployment.
+
+
+To sum up, our continuous deployment approach for some datasets may result in a small reduction in the quality.
+However, the decrease in the total end-to-end deployment time overshadows the loss of the quality as many real-world deployment scenarios require up-to-date models as new data, such as users and ads in the ads prediction use case and new city regions in the taxi travel time prediction use case, becomes available.
 
 
