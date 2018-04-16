@@ -23,17 +23,18 @@ urlDataProcessing <- function(){
   }
   maxLength = nrow(periodical)
   df = data.frame(Time = 1:nrow(periodical), 
-                  online = append(online$mc,maxLength), 
-                  continuous =  append(continuous$mc,maxLength),
+                  Continuous =  continuous$mc,
+                  Periodical = periodical$mc,
+                  Online = online$mc
                   #baseline = baseline$mc,
-                  periodical = append(periodical$mc,  maxLength))
+                  )
   
   DAY_DURATION = 500
   df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 1), ]
-  df$online = df$online * 100
-  df$continuous = df$continuous * 100
+  df$Online = df$Online * 100
+  df$Continuous = df$Continuous * 100
   #df$baseline = df$baseline * 100
-  df$periodical = df$periodical * 100
+  df$Periodical = df$Periodical * 100
   ml = melt(df, id.vars = 'Time', variable_name ='Deployment')
   return(ml)
 }

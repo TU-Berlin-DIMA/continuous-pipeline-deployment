@@ -35,7 +35,7 @@ rows = c(1,2,3)
 urlPlot = ggbarplot(urlData[rows,], x = 'Deployment', y = 'Time',  ylab = 'Time (m)', xlab = "(a) URL",
           width = 1.0, size = 1.0,
           color = 'Deployment', fill = 'Deployment',
-          order = c('Periodical','Online','Continuous'),
+          order = c('Continuous','Periodical','Online'),
           ggtheme = theme_pubclean(base_size = baseSize)) + 
   geom_hline(aes(yintercept=criteoData[4,]$Time, linetype = 'Baseline'), size = 2) + rremove('x.ticks') + rremove('x.text') +
   theme(legend.key.width = unit(1.5,'cm'),
@@ -51,7 +51,7 @@ urlPlot = ggpar(urlPlot, font.y=c(fontLabelSize), font.x=c(fontLabelSize+2)) + r
 taxiPlot = ggbarplot(taxiData[rows,], x = 'Deployment', y = 'Time',  ylab = 'Time (m)', xlab = "(b) Taxi",
                      width = 1.0, size = 1.0,
                      color = 'Deployment', fill = 'Deployment',
-                     order = c('Periodical','Online','Continuous'),
+                     order = c('Continuous','Periodical','Online'),
                      #yscale="log10",
                      ggtheme = theme_pubclean(base_size = baseSize)) + 
   geom_hline(aes(yintercept=criteoData[4,]$Time, linetype = 'Baseline') , size = 2) + rremove('x.ticks') + rremove('x.text') +
@@ -68,7 +68,7 @@ taxiPlot = ggpar(taxiPlot, font.y=c(fontLabelSize), font.x=c(fontLabelSize+2)) +
 criteoPlot = ggbarplot(criteoData[rows,], x = 'Deployment', y = 'Time',  ylab = 'Time (m)', xlab = "(c) Criteo",
                        width = 1.0, size = 1.0,
                        color = 'Deployment', fill = 'Deployment',
-                       order = c('Periodical','Online','Continuous'),
+                       order = c('Continuous','Periodical','Online'),
                        #yscale="log10",
                        ggtheme = theme_pubclean(base_size = baseSize)) + 
   geom_hline(aes(yintercept=criteoData[4,]$Time, linetype = 'Baseline') , size = 2) + rremove('x.ticks') + rremove('x.text') +

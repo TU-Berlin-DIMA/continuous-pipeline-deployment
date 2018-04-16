@@ -19,15 +19,15 @@ urlDataProcessing <- function(){
   maxLength = nrow(uniform)
   
   df = data.frame(Time = 1:nrow(uniform),
-                  weighted = weighted$mc,
-                  window = window$mc, 
-                  uniform = uniform$mc)
+                  Timebased = weighted$mc,
+                  Windowbased = window$mc, 
+                  Uniform = uniform$mc)
   
   DAY_DURATION = 100
   df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 200), ]
-  df$weighted = df$weighted * 100
-  df$window = df$window * 100
-  df$uniform = df$uniform * 100
+  df$Timebased = df$Timebased * 100
+  df$Windowbased = df$Windowbased * 100
+  df$Uniform = df$Uniform * 100
   ml = melt(df, id.vars = 'Time', variable_name ='Sampling')
   return (ml)
 }

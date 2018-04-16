@@ -22,9 +22,10 @@ urlDataProcessing <- function(){
   pTime = read.csv('url-reputation/deployment-modes-quality-time/periodical-warm-time', header = FALSE, col.names = c('time'))$time / scale
   
   
-  df = data.frame(Time = c(oTime, cTime,pTime),
-                  MC = c(oMC, cMC, pMC),
-                  Deployment = c('online','continuous','periodical'))
+  df = data.frame(Time = c(cTime, pTime,oTime),
+                  MC = c(cMC, pMC, oMC),
+                  Deployment = factor(c('Continuous', 'Periodical','Online'), levels = c('Continuous', 'Periodical','Online')))
+  
   
   return(df)
 }

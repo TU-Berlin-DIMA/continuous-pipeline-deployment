@@ -25,13 +25,13 @@ urlDataProcessing <- function(){
     return (c(vec,rep(NA, maxLength - length(vec))))
   }
   maxLength = nrow(adam)
-  df = data.frame(Time = 1:nrow(adam), adam = adam$mc, rmsprop = rmsprop$mc, adadelta = adadelta$mc, momentum = momentum$mc)
+  df = data.frame(Time = 1:nrow(adam), Adam = adam$mc, Rmsprop = rmsprop$mc, Adadelta = adadelta$mc, Momentum = momentum$mc)
   DAY_DURATION = 100
   df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 200), ]
-  df$adam = df$adam * 100
-  df$rmsprop = df$rmsprop * 100
-  df$adadelta = df$adadelta * 100
-  df$momentum = df$momentum * 100
+  df$Adam = df$Adam * 100
+  df$Rmsprop = df$Rmsprop * 100
+  df$Adadelta = df$Adadelta * 100
+  df$Momentum = df$Momentum * 100
   ml = melt(df, id.vars = 'Time', variable_name ='Adaptation')
   return (ml)
 }
