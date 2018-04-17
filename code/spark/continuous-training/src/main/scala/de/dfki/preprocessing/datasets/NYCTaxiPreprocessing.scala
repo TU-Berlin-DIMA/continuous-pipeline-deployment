@@ -16,7 +16,7 @@ object NYCTaxiPreprocessing {
 
   def main(args: Array[String]): Unit = {
     val parser = new CommandLineParser(args).parse()
-    val conf = new SparkConf().setAppName("URL Data")
+    val conf = new SparkConf().setAppName("NYC Taxi Data Preprocessing")
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
     val spark = new SparkContext(conf)
@@ -52,5 +52,4 @@ object NYCTaxiPreprocessing {
     groupedRDD.repartition($"day").write.partitionBy("day").text(outputPath)
   }
 
-//  def getName(year: Int, month: Int) = f"yellow_tripdata_$year-$month%02d.csv"
 }
