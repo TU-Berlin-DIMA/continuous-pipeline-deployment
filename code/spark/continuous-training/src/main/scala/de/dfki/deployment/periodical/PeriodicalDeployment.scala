@@ -66,7 +66,7 @@ class PeriodicalDeployment(val history: String,
         copyPipeline = copyPipeline.newPipeline()
         copyPipeline.model.setMiniBatchFraction(initialMiniBatch)
         copyPipeline.model.setConvergenceTol(initialConvergenceTol)
-        val data = streamingContext.sparkContext.union(processedRDD).repartition(streamingContext.sparkContext.defaultParallelism)
+        val data = streamingContext.sparkContext.union(processedRDD)
         copyPipeline.updateTransformTrain(data, initialNumIterations)
         copyPipeline.model.setMiniBatchFraction(1.0)
         copyPipeline.model.setNumIterations(1)

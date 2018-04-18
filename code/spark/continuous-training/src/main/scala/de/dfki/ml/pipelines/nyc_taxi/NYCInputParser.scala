@@ -56,19 +56,23 @@ class NYCInputParser(delim: String = ",") extends Component[String, NYCTaxiRawTy
     //    }
     input.mapPartitions { iter =>
       val FORMAT = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
-      iter.map {
+      iter.flatMap {
         line =>
           //print(line)
           val raws = line.split(delim)
-          val vendorID = raws(0).toDouble
-          val puTimestamp = FORMAT.parse(raws(1))
-          val doTimestamp = FORMAT.parse(raws(2))
-          val passengerCount = raws(3).toDouble
-          val (puLon, puLat) = (raws(5).toDouble, raws(6).toDouble)
-          val (doLon, doLat) = (raws(9).toDouble, raws(10).toDouble)
-          val tripDuration = (doTimestamp.getTime - puTimestamp.getTime) / 1000
-          NYCTaxiRawType(tripDuration, vendorID, passengerCount, puLat, puLon,
-            doLat, doLon, puTimestamp)
+          try {
+            val vendorID = raws(0).toDouble
+            val puTimestamp = FORMAT.parse(raws(1))
+            val doTimestamp = FORMAT.parse(raws(2))
+            val passengerCount = raws(3).toDouble
+            val (puLon, puLat) = (raws(5).toDouble, raws(6).toDouble)
+            val (doLon, doLat) = (raws(9).toDouble, raws(10).toDouble)
+            val tripDuration = (doTimestamp.getTime - puTimestamp.getTime) / 1000
+            Array[NYCTaxiRawType](NYCTaxiRawType(tripDuration, vendorID, passengerCount, puLat, puLon,
+              doLat, doLon, puTimestamp))
+          } catch {
+            case e: Exception => Array[NYCTaxiRawType]()
+          }
       }
     }
   }

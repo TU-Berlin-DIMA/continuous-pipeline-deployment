@@ -1,7 +1,7 @@
 package de.dfki.experiments
 
 import de.dfki.core.sampling._
-import de.dfki.deployment.continuous.ContinuousDeploymentNoOptimization
+import de.dfki.deployment.continuous.ContinuousDeploymentWithOptimizations
 import de.dfki.experiments.profiles.URLProfile
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.{Seconds, StreamingContext}
@@ -12,7 +12,7 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
 object SamplingModes extends Experiment {
 
   override val defaultProfile = new URLProfile {
-    override val RESULT_PATH = "../../../experiment-results/url-reputation/sampling-modes"
+    override val RESULT_PATH = "Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/sampling-modes"
     override val INITIAL_PIPELINE = "data/url-reputation/pipelines/best/adam"
     override val DAYS = "1,10"
   }
@@ -28,7 +28,7 @@ object SamplingModes extends Experiment {
     // continuously trained with a uniform sample of the historical data
     val uniformPipeline = getPipeline(ssc.sparkContext, params)
 
-    new ContinuousDeploymentNoOptimization(history = params.inputPath,
+    new ContinuousDeploymentWithOptimizations(history = params.inputPath,
       streamBase = params.streamPath,
       evaluation = s"${params.evaluationPath}",
       resultPath = s"${params.resultPath}",
@@ -39,7 +39,7 @@ object SamplingModes extends Experiment {
     // continuously trained with a window based sample of the historical data
     val windowBased = getPipeline(ssc.sparkContext, params)
 
-    new ContinuousDeploymentNoOptimization(history = params.inputPath,
+    new ContinuousDeploymentWithOptimizations(history = params.inputPath,
       streamBase = params.streamPath,
       evaluation = s"${params.evaluationPath}",
       resultPath = s"${params.resultPath}",
@@ -50,7 +50,7 @@ object SamplingModes extends Experiment {
     // continuously trained with a time based sample of the historical data
     val timeBasedFix = getPipeline(ssc.sparkContext, params)
 
-    new ContinuousDeploymentNoOptimization(history = params.inputPath,
+    new ContinuousDeploymentWithOptimizations(history = params.inputPath,
       streamBase = params.streamPath,
       evaluation = s"${params.evaluationPath}",
       resultPath = s"${params.resultPath}",

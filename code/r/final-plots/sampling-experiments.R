@@ -23,8 +23,8 @@ urlDataProcessing <- function(){
                   Windowbased = window$mc, 
                   Uniform = uniform$mc)
   
-  DAY_DURATION = 100
-  df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 200), ]
+  DAY_DURATION = 500
+  df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 1), ]
   df$Timebased = df$Timebased * 100
   df$Windowbased = df$Windowbased * 100
   df$Uniform = df$Uniform * 100

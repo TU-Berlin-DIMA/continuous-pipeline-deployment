@@ -67,8 +67,7 @@ class ContinuousDeploymentNoOptimization(val history: String,
       if (time % slack == 0) {
         val historicalSample = provideHistoricalSample(processedRDD)
         if (historicalSample.nonEmpty) {
-          val cached = streamingContext.sparkContext.union(historicalSample)
-            .repartition(streamingContext.sparkContext.defaultParallelism).cache()
+          val cached = streamingContext.sparkContext.union(historicalSample).cache()
           cached.count()
           val trainingData = pipeline.transform(cached)
           trainingData.cache()

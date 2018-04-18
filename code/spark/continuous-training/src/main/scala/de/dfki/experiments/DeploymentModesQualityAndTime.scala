@@ -110,17 +110,4 @@ object DeploymentModesQualityAndTime extends Experiment {
 
 
   }
-
-  def getPipeline(spark: SparkContext, delimiter: String, numFeatures: Int, numIterations: Int, data: RDD[String]) = {
-    val pipeline = new CriteoPipeline(spark,
-      delim = delimiter,
-      updater = new SquaredL2UpdaterWithAdam(),
-      miniBatchFraction = 0.1,
-      numIterations = numIterations,
-      numCategories = numFeatures)
-    pipeline.updateTransformTrain(data)
-    pipeline
-  }
-
-
 }

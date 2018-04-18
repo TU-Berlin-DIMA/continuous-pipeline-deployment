@@ -14,7 +14,7 @@ object URLRepPreprocessing {
 
   def main(args: Array[String]): Unit = {
     val parser = new CommandLineParser(args).parse()
-    val conf = new SparkConf().setAppName("URL Data")
+    val conf = new SparkConf().setAppName("URL Data Preprocessing")
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
     val sc = new SparkContext(conf)
@@ -30,11 +30,11 @@ object URLRepPreprocessing {
         sc.textFile(s"$inputPath/Day0.svm")
     }
 
-    data.saveAsTextFile(s"$outputPath/initial-training/day_0")
+    data.saveAsTextFile(s"$outputPath/initial-training/day=0")
 
     for (i <- 1 to 120) {
       val data = sc.textFile(s"$inputPath/Day$i.svm")
-      data.repartition(fileCount).saveAsTextFile(s"$outputPath/stream/day_$i")
+      data.repartition(fileCount).saveAsTextFile(s"$outputPath/stream/day=$i")
     }
   }
 

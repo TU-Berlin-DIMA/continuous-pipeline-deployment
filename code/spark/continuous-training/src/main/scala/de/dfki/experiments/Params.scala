@@ -22,6 +22,7 @@ case class Params(inputPath: String = "",
                   convergenceTol: Double = 1E-6,
                   miniBatch: Double = 0.1,
                   var stepSize: Double = 0.1,
-                  var updater: Updater = new SquaredL2UpdaterWithAdam()) {
+                  var updater: Updater = new SquaredL2UpdaterWithAdam(),
+                  var batchEvaluationSet: String = "") {
 
 }

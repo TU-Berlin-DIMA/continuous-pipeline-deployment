@@ -44,11 +44,13 @@ object TrainPipeline {
     val data = spark.textFile(inputPath)
 
     var pipeline = new CriteoPipeline(spark,
-      delim = delimiter,
-      updater = new SquaredL2UpdaterWithAdam(),
-      miniBatchFraction = 0.1,
       stepSize = stepSize,
       numIterations = increment,
+      regParam = 0.001,
+      convergenceTol = 1E-6,
+      miniBatchFraction = 0.1,
+      updater = new SquaredL2UpdaterWithAdam(),
+      delim = delimiter,
       numCategories = numFeatures)
 
     val transformed = pipeline.updateAndTransform(data)

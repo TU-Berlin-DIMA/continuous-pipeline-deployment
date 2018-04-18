@@ -15,14 +15,14 @@ import org.apache.spark.{SparkConf, SparkContext}
   * @author behrouz
   */
 class CriteoPipeline(@transient var spark: SparkContext,
-                     val delim: String = "\t",
-                     val stepSize: Double = 0.001,
-                     val numIterations: Int = 500,
-                     val regParam: Double = 0.0,
-                     val convergenceTol: Double = 1E-6,
-                     val miniBatchFraction: Double = 1.0,
-                     val updater: Updater = new SquaredL2UpdaterWithAdam(),
-                     val numCategories: Int = 300000) extends Pipeline {
+                     val stepSize: Double,
+                     val numIterations: Int,
+                     val regParam: Double,
+                     val convergenceTol: Double,
+                     val miniBatchFraction: Double,
+                     val updater: Updater,
+                     val delim: String,
+                     val numCategories: Int) extends Pipeline {
 
   val fileReader = new InputParser(delim)
   val missingValueImputer = new MissingValueImputer()
@@ -115,12 +115,13 @@ class CriteoPipeline(@transient var spark: SparkContext,
   override def newPipeline() = {
     val newUpdater = Updater.getUpdater(updater.name)
     new CriteoPipeline(spark = spark,
-      delim = delim,
       stepSize = stepSize,
       numIterations = numIterations,
       regParam = regParam,
+      convergenceTol = convergenceTol,
       miniBatchFraction = miniBatchFraction,
       updater = newUpdater,
+      delim = delim,
       numCategories = numCategories)
   }
 
@@ -133,7 +134,7 @@ class CriteoPipeline(@transient var spark: SparkContext,
 
 // example use case of criteo pipeline
 object CriteoPipeline {
-  val INPUT_PATH = "data/criteo-full/experiments/initial-training/day_0"
+  val INPUT_PATH = "data/criteo-full/experiments/initial-training/day=0"
   val TEST_PATH = "data/criteo-full/raw/6"
 
   def main(args: Array[String]): Unit = {
@@ -146,7 +147,15 @@ object CriteoPipeline {
     conf.setMaster(masterURL)
 
     val spark = new SparkContext(conf)
-    val criteoPipeline = new CriteoPipeline(spark, delim = ",", numIterations = 1)
+    val criteoPipeline = new CriteoPipeline(spark,
+      stepSize = 0.001,
+      numIterations = 1,
+      regParam = 0.001,
+      convergenceTol = 1E-6,
+      miniBatchFraction = 0.1,
+      updater = new SquaredL2UpdaterWithAdam(),
+      delim = ",",
+      numCategories = 3000)
     val rawTraining = spark.textFile("data/criteo-full/experiments/initial-training/0")
     criteoPipeline.updateTransformTrain(rawTraining)
 

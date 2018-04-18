@@ -3,8 +3,8 @@ package de.dfki.experiments.profiles
 /**
   * @author behrouz
   */
-object CriteoLocalProfile extends Profile{
-  override val INPUT_PATH = "data/criteo-full/experiments/initial-training/day_0"
+class CriteoLocalProfile extends Profile{
+  override val INPUT_PATH = "data/criteo-full/experiments/initial-training/day0"
   override val STREAM_PATH = "data/criteo-full/experiments/stream"
   override val EVALUATION_PATH = "prequential"
   override val RESULT_PATH = "../../../experiment-results/criteo-full/quality/local"

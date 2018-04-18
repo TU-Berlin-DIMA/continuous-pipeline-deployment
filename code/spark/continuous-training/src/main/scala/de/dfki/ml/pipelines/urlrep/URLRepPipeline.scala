@@ -16,13 +16,13 @@ import org.apache.spark.{SparkConf, SparkContext}
   * @author behrouz
   */
 class URLRepPipeline(@transient var spark: SparkContext,
-                     val stepSize: Double = 0.001,
-                     val numIterations: Int = 500,
-                     val regParam: Double = 0.0,
-                     val convergenceTol: Double = 1E-6,
-                     val miniBatchFraction: Double = 1.0,
-                     val updater: Updater = new SquaredL2UpdaterWithAdam(),
-                     val numCategories: Int = 300000) extends Pipeline {
+                     val stepSize: Double,
+                     val numIterations: Int,
+                     val regParam: Double,
+                     val convergenceTol: Double,
+                     val miniBatchFraction: Double,
+                     val updater: Updater,
+                     val numCategories: Int) extends Pipeline {
   val fileReader = new URLRepSVMParser()
   val missingValueImputer = new URLRepMissingValueImputer()
   var standardScaler = new URLRepStandardScaler()
@@ -122,6 +122,7 @@ class URLRepPipeline(@transient var spark: SparkContext,
       stepSize = stepSize,
       numIterations = numIterations,
       regParam = regParam,
+      convergenceTol = convergenceTol,
       miniBatchFraction = miniBatchFraction,
       updater = newUpdater,
       numCategories = numCategories)
@@ -135,8 +136,8 @@ class URLRepPipeline(@transient var spark: SparkContext,
 }
 
 object URLRepPipeline {
-  val INPUT_PATH = "data/url-reputation/processed/initial-training/day_0"
-  val TEST_PATH = "data/url-reputation/processed/stream/day_1"
+  val INPUT_PATH = "data/url-reputation/processed/initial-training/day=0"
+  val TEST_PATH = "data/url-reputation/processed/stream/day=1"
 
   def main(args: Array[String]): Unit = {
     val parser = new CommandLineParser(args).parse()

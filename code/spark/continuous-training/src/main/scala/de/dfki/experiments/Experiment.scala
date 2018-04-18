@@ -7,6 +7,7 @@ import de.dfki.experiments.profiles.Profile
 import de.dfki.ml.optimization.updater.{SquaredL2UpdaterWithAdam, Updater}
 import de.dfki.ml.pipelines.Pipeline
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
+import de.dfki.ml.pipelines.nyc_taxi.NYCTaxiPipeline
 import de.dfki.ml.pipelines.urlrep.URLRepPipeline
 import de.dfki.utils.CommandLineParser
 import org.apache.log4j.Logger
@@ -34,26 +35,28 @@ abstract class Experiment {
 
   def getParams(args: Array[String], profile: Profile): Params = {
     val parser = new CommandLineParser(args).parse()
-    val inputPath = parser.get("input", profile.INPUT_PATH)
-    val streamPath = parser.get("stream", profile.STREAM_PATH)
-    val evaluationPath = parser.get("evaluation", profile.EVALUATION_PATH)
-    val resultPath = parser.get("result", profile.RESULT_PATH)
-    val delimiter = parser.get("delimiter", profile.DELIMITER)
-    val numFeatures = parser.getInteger("features", profile.NUM_FEATURES)
-    val numIterations = parser.getInteger("iterations", profile.NUM_ITERATIONS)
-    val slack = parser.getInteger("slack", profile.SLACK)
-    val regParam = parser.getDouble("reg-param", profile.REG_PARAM)
-    val pipelineLocation = parser.get("pipeline", profile.INITIAL_PIPELINE)
-    val pipelineName = parser.get("pipeline_name", profile.PIPELINE_NAME)
+    val profileFromArgs = Profile.getProfile(parser.get("profile"), profile)
+    val inputPath = parser.get("input", profileFromArgs.INPUT_PATH)
+    val streamPath = parser.get("stream", profileFromArgs.STREAM_PATH)
+    val evaluationPath = parser.get("evaluation", profileFromArgs.EVALUATION_PATH)
+    val resultPath = parser.get("result", profileFromArgs.RESULT_PATH)
+    val delimiter = parser.get("delimiter", profileFromArgs.DELIMITER)
+    val numFeatures = parser.getInteger("features", profileFromArgs.NUM_FEATURES)
+    val numIterations = parser.getInteger("iterations", profileFromArgs.NUM_ITERATIONS)
+    val slack = parser.getInteger("slack", profileFromArgs.SLACK)
+    val regParam = parser.getDouble("reg-param", profileFromArgs.REG_PARAM)
+    val pipelineLocation = parser.get("pipeline", profileFromArgs.INITIAL_PIPELINE)
+    val pipelineName = parser.get("pipeline_name", profileFromArgs.PIPELINE_NAME)
     // format first_day,last_day
-    val streamingDays = parser.get("days", profile.DAYS).split(",").map(_.toInt)
+    val streamingDays = parser.get("days", profileFromArgs.DAYS).split(",").map(_.toInt)
     val days = Array.range(streamingDays(0), streamingDays(1) + 1)
-    val dayDuration = parser.getInteger("day_duration", profile.DAY_DURATION)
-    val sampleSize = parser.getInteger("sample_size", profile.SAMPLE_SIZE)
-    val convergenceTol = parser.getDouble("convergence_tol", profile.CONVERGENCE_TOL)
-    val updater = Updater.getUpdater(parser.get("updater", profile.UPDATER))
-    val stepSize = parser.getDouble("step_size", profile.STEP_SIZE)
-    val miniBatch = parser.getDouble("mini_batch", profile.MINI_BATCH)
+    val dayDuration = parser.getInteger("day-duration", profileFromArgs.DAY_DURATION)
+    val sampleSize = parser.getInteger("sample-size", profileFromArgs.SAMPLE_SIZE)
+    val convergenceTol = parser.getDouble("convergence-tol", profileFromArgs.CONVERGENCE_TOL)
+    val updater = Updater.getUpdater(parser.get("updater", profileFromArgs.UPDATER))
+    val stepSize = parser.getDouble("step-size", profileFromArgs.STEP_SIZE)
+    val miniBatch = parser.getDouble("mini-batch", profileFromArgs.MINI_BATCH)
+    val batchEvaluationSet = parser.get("eval-set", profileFromArgs.BATCH_EVALUATION)
 
     Params(inputPath = inputPath,
       streamPath = streamPath,
@@ -72,7 +75,8 @@ abstract class Experiment {
       convergenceTol = convergenceTol,
       updater = updater,
       stepSize = stepSize,
-      miniBatch = miniBatch)
+      miniBatch = miniBatch,
+      batchEvaluationSet = batchEvaluationSet)
   }
 
   def getPipeline(spark: SparkContext, params: Params): Pipeline = {
@@ -81,32 +85,49 @@ abstract class Experiment {
         CriteoPipeline.loadFromDisk(params.initialPipeline, spark)
       } else if (params.pipelineName == "url-rep") {
         URLRepPipeline.loadFromDisk(params.initialPipeline, spark)
-      } else {
+      } else if (params.pipelineName == "taxi") {
+        NYCTaxiPipeline.loadFromDisk(params.initialPipeline, spark)
+      }
+      else {
         throw new IllegalArgumentException(s"Pipeline ${params.pipelineName} has not been constructed!!!")
       }
     } else {
-      val data = spark.textFile(params.inputPath).repartition(spark.defaultParallelism)
+      val data = spark.textFile(params.inputPath)
       if (params.pipelineName == "criteo") {
         val pipeline = new CriteoPipeline(spark,
-          delim = params.delimiter,
-          updater = new SquaredL2UpdaterWithAdam(),
-          miniBatchFraction = params.miniBatch,
+          stepSize = params.stepSize,
           numIterations = params.numIterations,
-          numCategories = params.numFeatures,
-          regParam = params.regParam)
+          regParam = params.regParam,
+          convergenceTol = params.convergenceTol,
+          miniBatchFraction = params.miniBatch,
+          updater = new SquaredL2UpdaterWithAdam(),
+          delim = params.delimiter,
+          numCategories = params.numFeatures)
         pipeline.updateTransformTrain(data, params.numIterations)
         CriteoPipeline.saveToDisk(pipeline, params.initialPipeline)
         pipeline
       } else if (params.pipelineName == "url-rep") {
         val pipeline = new URLRepPipeline(spark,
-          updater = params.updater,
-          miniBatchFraction = params.miniBatch,
+          stepSize = params.stepSize,
           numIterations = params.numIterations,
-          numCategories = params.numFeatures,
           regParam = params.regParam,
-          convergenceTol = params.convergenceTol)
+          convergenceTol = params.convergenceTol,
+          miniBatchFraction = params.miniBatch,
+          updater = params.updater,
+          numCategories = params.numFeatures)
         pipeline.updateTransformTrain(data, params.numIterations)
         URLRepPipeline.saveToDisk(pipeline, params.initialPipeline)
+        pipeline
+      } else if (params.pipelineName == "taxi") {
+        val pipeline = new NYCTaxiPipeline(spark,
+          stepSize = params.stepSize,
+          numIterations = params.numIterations,
+          regParam = params.regParam,
+          convergenceTol = params.convergenceTol,
+          miniBatchFraction = params.miniBatch,
+          updater = params.updater)
+        pipeline.updateTransformTrain(data, params.numIterations)
+        NYCTaxiPipeline.saveToDisk(pipeline, params.initialPipeline)
         pipeline
       } else {
         throw new IllegalArgumentException(s"Pipeline ${params.pipelineName} has not been constructed!!!")

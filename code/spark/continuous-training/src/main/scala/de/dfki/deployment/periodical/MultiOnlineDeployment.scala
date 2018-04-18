@@ -79,7 +79,7 @@ class MultiOnlineDeployment(val history: String,
       copyPipeline.setSparkContext(copyContext.sparkContext)
       copyPipeline.model.setMiniBatchFraction(initialMiniBatch)
       copyPipeline.model.setConvergenceTol(initialConvergenceTol)
-      val rdd = copyContext.sparkContext.textFile(path = nextBatch.mkString(",")).repartition(copyContext.sparkContext.defaultParallelism)
+      val rdd = copyContext.sparkContext.textFile(path = nextBatch.mkString(","))
       copyPipeline.updateTransformTrain(rdd, initialNumIterations)
       copyPipeline.model.setMiniBatchFraction(1.0)
       copyPipeline.model.setNumIterations(1)

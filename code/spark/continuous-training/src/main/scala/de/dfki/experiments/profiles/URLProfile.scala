@@ -4,7 +4,7 @@ package de.dfki.experiments.profiles
   * @author behrouz
   */
 class URLProfile extends Profile {
-  val INPUT_PATH = "data/url-reputation/processed/initial-training/day_0"
+  val INPUT_PATH = "data/url-reputation/processed/initial-training"
   val STREAM_PATH = "data/url-reputation/processed/stream"
   val EVALUATION_PATH = "prequential"
   val RESULT_PATH = "../../../experiment-results/url-reputation/sampling"
@@ -26,5 +26,6 @@ class URLProfile extends Profile {
   override val PROFILE_NAME = "url"
   override val STEP_SIZE = 0.01
   override val MINI_BATCH = 1.0
+  override val BATCH_EVALUATION = "data/url-reputation/processed/batch-evaluation"
 }
 

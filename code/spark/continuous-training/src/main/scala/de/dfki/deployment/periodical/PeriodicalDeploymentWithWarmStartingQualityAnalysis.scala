@@ -64,7 +64,7 @@ class PeriodicalDeploymentWithWarmStartingQualityAnalysis(val history: String,
         // start of a new day
         pipeline.model.setMiniBatchFraction(initialMiniBatch)
         pipeline.model.setConvergenceTol(initialConvergenceTol)
-        val data = streamingContext.sparkContext.union(processedRDD).repartition(streamingContext.sparkContext.defaultParallelism)
+        val data = streamingContext.sparkContext.union(processedRDD)
         pipeline.updateTransformTrain(data, initialNumIterations)
         pipeline.model.setMiniBatchFraction(1.0)
         pipeline.model.setNumIterations(1)

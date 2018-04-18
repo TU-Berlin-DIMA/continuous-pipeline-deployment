@@ -6,9 +6,10 @@ library(ggpubr)
 
 
 ## Read data for the batch training
-#hyperParams = read.csv('url-reputation/param-selection/training', header = FALSE, col.names = c('updater','reg','tp','fp','tn','fn','iter'))
-#hyperParams$mc = (hyperParams$fp + hyperParams$fn) / (hyperParams$fp + hyperParams$fn + hyperParams$tp + hyperParams$tn)
-#results = data.frame(hyperParams[,c("updater","reg","mc","iter")])
+hyperParams = read.csv('url-reputation/param-selection/training', header = FALSE, col.names = c('updater','reg','tp','fp','tn','fn'))
+hyperParams$mc = (hyperParams$fp + hyperParams$fn) / (hyperParams$fp + hyperParams$fn + hyperParams$tp + hyperParams$tn)
+results = data.frame(hyperParams[,c("updater","reg","mc")])
+results
 #write.table(results, file = '../../images/experiment-results/tikz/ps-table.csv')
 
 ## Streaming data
@@ -26,8 +27,8 @@ urlDataProcessing <- function(){
   }
   maxLength = nrow(adam)
   df = data.frame(Time = 1:nrow(adam), Adam = adam$mc, Rmsprop = rmsprop$mc, Adadelta = adadelta$mc, Momentum = momentum$mc)
-  DAY_DURATION = 100
-  df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 200), ]
+  DAY_DURATION = 500
+  df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 100), ]
   df$Adam = df$Adam * 100
   df$Rmsprop = df$Rmsprop * 100
   df$Adadelta = df$Adadelta * 100

@@ -1,8 +1,9 @@
 package de.dfki.experiments
 
+import java.io.{File, FileWriter}
+
 import de.dfki.experiments.profiles.URLProfile
 import de.dfki.ml.optimization.updater._
-import de.dfki.utils.CommandLineParser
 import org.apache.spark.SparkConf
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 
@@ -14,13 +15,15 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
   */
 object ParameterSelection extends Experiment {
   val UPDATERS: List[Updater] = List(
-    new SquaredL2UpdaterWithAdam())
+    new SquaredL2UpdaterWithAdam(),
+    new SquaredL2UpdaterWithAdaDelta(),
+    new SquaredL2UpdaterWithMomentum(),
+    new SquaredL2UpdaterWithRMSProp())
 
-  val REGULARIZATIONS: List[Double] = List(0.001)
+  val REGULARIZATIONS: List[Double] = List(0.01, 0.001, 0.0001)
 
-  val STEP_SIZES: List[Double] = List(0.01)
+  val STEP_SIZES: List[Double] = List(0.01, 0.001, 0.0001)
 
-  val BATCH_EVALUATION = "data/url-reputation/processed/stream/day_1"
 
   override val defaultProfile = new URLProfile {
     override val RESULT_PATH = "../../../experiment-results/url-reputation/param-selection"
@@ -33,17 +36,13 @@ object ParameterSelection extends Experiment {
 
   def main(args: Array[String]): Unit = {
     val params = getParams(args, defaultProfile)
-    val conf = new SparkConf().setAppName("Learning Rate Selection Criteo")
+    val conf = new SparkConf().setAppName("Hyperparameter Tuning")
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
 
     val ssc = new StreamingContext(conf, Seconds(1))
-
-    // parser for extra parameters
-    val parser = new CommandLineParser(args).parse()
-    val evalSet = parser.get("eval-set", BATCH_EVALUATION)
-    val evaluationSet = ssc.sparkContext.textFile(evalSet)
     val rootPipelines = params.initialPipeline
+    val evalSet = ssc.sparkContext.textFile(params.batchEvaluationSet)
 
     // hyper parameter evaluation for batch training
     for (u <- UPDATERS) {
@@ -54,17 +53,16 @@ object ParameterSelection extends Experiment {
           params.stepSize = s
           params.initialPipeline = s"$rootPipelines/${u.name}-$s-$r"
           val pipeline = getPipeline(ssc.sparkContext, params)
-          val matrix = pipeline.score(evaluationSet)
-          println(s"${matrix.score()}")
-          //val file = new File(s"${params.resultPath}/training")
-          //file.getParentFile.mkdirs()
-          //val fw = new FileWriter(file, true)
-//          try {
-//            fw.write(s"${u.name}(${params.stepSize}),$r,${matrix.rawScore()},${pipeline.getConvergedAfter}\n")
-//          }
-//          finally {
-//            fw.close()
-//          }
+          val score = pipeline.score(evalSet)
+          val file = new File(s"${params.resultPath}/training")
+          file.getParentFile.mkdirs()
+          val fw = new FileWriter(file, true)
+          try {
+            fw.write(s"${u.name}(${params.stepSize}),$r,${score.rawScore()}\n")
+          }
+          finally {
+            fw.close()
+          }
         }
       }
     }

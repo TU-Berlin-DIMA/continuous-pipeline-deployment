@@ -13,49 +13,58 @@ Then, we deploy the pipelines using different deployment approaches.
 We design three pipelines for all the experiments.
 
 \textit{URL pipeline. } The URL pipeline consists of 5 components: input parser, missing value imputer, standard scaler, feature hasher, and an SVM model.
-We use the URL pipeline to process the URL dataset for classifying URLs, gathered over a 120 days period, into malicious and legitimate groups \cite{ma2009identifying}.\\
-To evaluate the SVM model, we compute the misclassification rate on unseen data.
+We use the URL pipeline to process the URL dataset for classifying URLs, gathered over a 121 days period, into malicious and legitimate groups \cite{ma2009identifying}.\\
+To evaluate the SVM model, we compute the misclassification rate on the unseen data.
 
 \textit{Criteo Pipeline.} 
 The Criteo pipeline consists of 5 components: input parser, missing value imputer, standard scaler, feature hasher, and a Logistic Regression model.
 The Criteo pipeline processes the Terabyte Criteo click log dataset and predicts the clickthrough rate (CTR) for each data point \cite{criteo-log}.\\
-We use Mean Squared Error (MSE) to capture the error rate of the Logistic Regression model.
+We use the Mean Squared Error (MSE) to capture the error rate of the Logistic Regression model.
 
 \textit{Taxi Pipeline.}
-The Taxi pipeline consists of 4 components: input parser, feature extractor, anomaly detector, standard scaler, and a Linear Regression model.
-The Taxi pipeline process the Newyork taxi trip dataset and predicts the trip duration of every taxi ride \cite{newyork-taxi}. The Taxi pipeline is more complex than Criteo and URL pipelines. We designed the pipeline based on the top solutions of the top scorers of the New York City Taxi Trip Duration Kaggle competition\footnote{https://www.kaggle.com/c/nyc-taxi-trip-duration/}. The input parser computes the actual trip duration by first extracting the pickup and drop off time fields from the input records and calculating the difference (in seconds) between the two values.
-The feature extractor computes the haversine distance\footnote{https://en.wikipedia.org/wiki/Haversine\_formula}, the bearing\footnote{https://en.wikipedia.org/wiki/Bearing\_(navigation)}, the hour of the day, and the day of the week from the input records. Finally, the anomaly detector filters the trips that are longer than 22 hours, smaller than 10 seconds, or the trips that have a total distance of zero (the car never moved). 
-To evaluate the model, we use the Root Mean Squared Logarithmic Error (RMSLE).
-RMSLE is also the chosen error metric for the NYC taxi data science competition.
+The Taxi pipeline consists of 5 components: input parser, feature extractor, anomaly detector, standard scaler, and a Linear Regression model.
+The Taxi pipeline processes the Newyork taxi trip dataset and predicts the trip duration of every taxi ride \cite{newyork-taxi}. 
+The Taxi pipeline is more complex than the Criteo and the URL pipelines. 
+We designed the pipeline based on the solutions of the top scorers of the New York City Taxi Trip Duration Kaggle competition\footnote{https://www.kaggle.com/c/nyc-taxi-trip-duration/}. 
+The input parser computes the actual trip duration by first extracting the pickup and drop off time fields from the input records and calculating the difference (in seconds) between the two values.
+The feature extractor computes the haversine distance\footnote{https://en.wikipedia.org/wiki/Haversine\_formula}, the bearing\footnote{https://en.wikipedia.org/wiki/Bearing\_(navigation)}, the hour of the day, and the day of the week from the input records. 
+Finally, the anomaly detector filters the trips that are longer than 22 hours, smaller than 10 seconds, or the trips that have a total distance of zero (the car never moved).
+To evaluate the model, we use the Root Mean Squared Logarithmic Error (RMSLE) measure.
+RMSLE is also the chosen error metric for the NYC taxi Kaggle competition.
 
 \textbf{Deployment Environment. }
+\todo[inline]{include the url result from the cluster}
 We deploy the URL pipeline on a single laptop running a macOS with 2,2 GHz intel Core i7 and 16 GB of RAM and the Criteo and the Taxi pipelines on a cluster of 21 machines (intel Xeon 2.4 GHz 16 cores, 28 GB of dedicated RAM per node).
 Both environments are using Apache Spark 2.2.0 as their execution engine.
 
 \textbf{Deployment Process. }
 Table \ref{dataset-description} describes the details of the datasets, the amount of data for the initial training, and the amount of data for prediction requests and further training after deployment. 
-For both the URL and the Criteo pipeline, we first train a model on the first day of the data.
-For the Taxi pipeline, we train a model using the data from the month of January 2015.
-We then deploy the models (and the pipeline).
+For both the URL and the Criteo pipeline, we first train a model on the first day of the data (day 0).
+For the Taxi pipeline, we train a model using the data from January 2015.
+We then deploy the models (and the pipelines).
 We use the remaining data for sending prediction queries and further training of the deployed models.
-The URL and the Criteo datasets do not have timestamps, therefore we divide every day into micro batches of 1 minute of data. 
-We send each micro batch to the deployment environment where first they are used for reporting the quality and then for training model.
+\todo[inline]{prequential citation}
+Using the prediction queries, we compute the cumulative prequential error rate over time to evaluate the performance of each model during the deployment [citation].
+The URL and the Criteo datasets do not have timestamps, therefore, we divide every day of the data into micro-batches of 1 minute.
+The total number of micro-batches for the URL and the Criteo datasets are 12,000 and XX, respectively.
+We send each micro-batch to the deployment platform where first they are used for prequential evaluation and then for training the model.
 The NYC taxi dataset includes timestamps. 
-In our experiments, each micro batch contains one hour of the data. 
+In our experiments, each micro-batch of the NYC taxi dataset contains one hour of the data. 
 The micro batches are sent in order (from 2015-Feb-01  00:00 to 2016-Dec-31 24:00, a 2 year period) to the deployment platform.
 
+\todo[inline]{numbers for taxi and criteo}
 \begin{table}[h!]
 \centering
 \begin{tabular}{lrll}
 \hline
-\textbf{Dataset}  & \textbf{\# instances} & \textbf{Initial training} & \textbf{Deployment phase} \\
+\textbf{Dataset}  & \textbf{\# instances} & \textbf{Initial} & \textbf{Deployment} \\
 \hline
-URL             & 2.3 M           & Day 1 (100K)              & Day 2-120 (2 M)           \\
-Taxi            & XX B              & Jan15 (X M)               & Feb15 to Dec16 (XX B)     \\
-Criteo          & XX B            & Day 1 (XX M)              & Day 2-12 (XX B)        \\
+URL (121 days)            & 2.3 M           & Day 0             & Day 1-120          \\
+Taxi   (2 years)         & XX B              & Jan15             & Feb15 to Dec16    \\
+Criteo  (11 days)        & XX B            & Day 0           & Day 1-10       \\
 \hline
 \end{tabular}
-\caption{Description of Datasets}  
+\caption{Description of Datasets. The \textbf{Initial} column indicates the amount of data used during the initial model training and the \textbf{deployment} column indicates the amount of data used for both prequential evaluation and further model training}  
 \label{dataset-description}
 \end{table}
 
@@ -74,10 +83,9 @@ In order to improve the performance of the periodical deployment, we utilize the
 Therefore, each periodical training uses the existing parameters such as the statistics (e.g. standard scaler), model weights, and learning rate adaptation parameters (e.g. the average of past gradients used in Adadelta, Adam, and Rmsprop) when training new models.
 
 \textbf{Model Quality. }
-Figure \ref{deployment-quality-figure} shows the quality of different deployment methods for each pipeline. 
-To capture the quality, we perform prequential evaluation [citation] and report the cumulative error rate over time.
+Figure \ref{deployment-quality-figure} shows the cumulative error rate over time for the different deployment approaches.
 For the URL pipeline, the periodical deployment approach initiates a full retraining every 10 days.
-Both continuous and periodical deployment approaches result in lower misclassification rate than the online deployment approach.
+Both continuous and periodical deployment approaches result in lower misclassification rates than the online deployment approach.
 During the first 60 days, the continuous deployment results in a slightly lower misclassification rate than the periodical approach.
 After the 6th periodical training (day 60), the misclassification rate of the periodical deployment decreases slightly more rapidly than that of the continuous deployment. 
 At the end of the deployment process (day 120), the misclassification rate of the periodical deployment approach is 0.03\% smaller than the URL model deployed using the continuous deployment approach.
@@ -107,6 +115,15 @@ The overhead of data processing and the model retraining contributes to the larg
 \end{figure}
 
 \subsection{EX2: System Tuning}
+\begin{table*}[t]
+\centering
+\begin{adjustbox}{max width=\textwidth}
+\input{../images/experiment-results/tikz/parameter-selection-table}
+\end{adjustbox}
+\caption{Hyperparameter tuning during initial training (bold numbers show the best result for dataset/adaptation method)}
+\label{hyper-param-table}
+\end{table*}
+
 In this experiment, we investigate the effect of different parameters on the quality of the models after deployment.
 First, we leverage the well-established hyperparameter tuning technique in the machine learning literature to tune the parameters of proactive training.
 Proactive training is an extension of the batch stochastic gradient decent to the deployment phase.
@@ -126,15 +143,6 @@ In the URL pipeline, Adam with the learning rate $0.01$ and the regularization p
 As described in Section \ref{proactive-training}, proactive training is an extension of the stochastic gradient descent to the deployment phase.
 Figure \ref{hyper-param-figure} shows the performance of every configuration during the deployment phase is similar to the performance during the initial training.
 For the URL pipeline, Adam has the best performance, followed by Rmsprop, Adadelta, and Momentum.
-
-\begin{table*}[!h]
-\centering
-\begin{adjustbox}{max width=\textwidth}
-\input{../images/experiment-results/tikz/parameter-selection-table}
-\end{adjustbox}
-\caption{Hyperparameter tuning during initial training (bold numbers show the best result for dataset/adaptation method)}
-\label{hyper-param-table}
-\end{table*}
 
 \begin{figure}[!h]
 \centering
@@ -205,7 +213,7 @@ For the URL pipeline, our optimizations have reduced the continuous training tim
 \end{figure}
 
 \subsection{Discussion} \label{subsec:discussion}
-\textbf{Quality-Time Trade-off}
+\textbf{Quality-Time Trade-off.}
 Continuous deployment approach can reduce the end-to-end deployment time by 1 order of magnitude.
 However, continuous deployment approach may reduce the quality.
 Figure \ref{quality-vs-time} shows the trade-off between the average model quality over time and the total training time for the different deployment approaches.

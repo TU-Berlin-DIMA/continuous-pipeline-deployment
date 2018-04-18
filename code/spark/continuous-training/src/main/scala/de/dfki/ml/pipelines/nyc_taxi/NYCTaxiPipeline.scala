@@ -15,12 +15,12 @@ import org.apache.spark.{SparkConf, SparkContext}
   * @author behrouz
   */
 class NYCTaxiPipeline(@transient var spark: SparkContext,
-                      val stepSize: Double = 0.001,
-                      val numIterations: Int = 500,
-                      val regParam: Double = 0.0,
-                      val convergenceTol: Double = 1E-6,
-                      val miniBatchFraction: Double = 1.0,
-                      val updater: Updater = new SquaredL2UpdaterWithAdam()) extends Pipeline {
+                      val stepSize: Double,
+                      val numIterations: Int,
+                      val regParam: Double,
+                      val convergenceTol: Double,
+                      val miniBatchFraction: Double,
+                      val updater: Updater) extends Pipeline {
   val fileReader = new NYCInputParser()
   val featureExtractor = new NYCFeatureExtractor()
   val anomalyDetector = new NYCAnomalyDetector()
@@ -104,7 +104,7 @@ class NYCTaxiPipeline(@transient var spark: SparkContext,
       updater = newUpdater)
   }
 
-  override def name() = "nyc_taxi"
+  override def name() = "taxi"
 }
 
 object NYCTaxiPipeline {

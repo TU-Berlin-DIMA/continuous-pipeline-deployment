@@ -22,14 +22,17 @@ abstract class Profile {
   val MINI_BATCH: Double = 0.1
   val STEP_SIZE: Double = 0.0001
   val UPDATER: String = "adam"
+  val BATCH_EVALUATION: String = ""
 
   val PROFILE_NAME: String
 }
 
 object Profile {
-  val availableProfiles: List[Profile] = List(new CriteoClusterProfile(), new URLProfile())
+  val availableProfiles: List[Profile] = List(new CriteoClusterProfile(), new URLProfile(), new TaxiClusterProfile(), new CriteoLocalProfile(),
+  new TaxiLocalProfile())
 
-  def getProfile(name: String): Profile = {
-    availableProfiles.filter(_.PROFILE_NAME == name).head
+  def getProfile(name: String, default: Profile): Profile = {
+    val profile = availableProfiles.filter(_.PROFILE_NAME == name)
+    if (profile.isEmpty) default else profile.head
   }
 }

@@ -207,14 +207,19 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](_ssc: StreamingCont
     val directoryPath = new Path(directory)
     val fs = directoryPath.getFileSystem(context.sparkContext.hadoopConfiguration)
     val directoryFilter = new PathFilter {
-      override def accept(path: Path): Boolean = fs.getFileStatus(path).isDirectory
+      override def accept(path: Path): Boolean = fs.exists(path) && fs.getFileStatus(path).isDirectory
     }
 
     val pathFilter = new PathFilter {
-      override def accept(path: Path): Boolean = filter(path)
+      override def accept(path: Path): Boolean = fs.exists(path) && filter(path)
     }
     val directories = days.flatMap { d =>
-      fs.globStatus(new Path(s"$directory/day_$d"), directoryFilter).map(_.getPath)
+      val g = fs.globStatus(new Path(s"$directory/day=$d"), directoryFilter)
+      if (g != null)
+        g.map(_.getPath)
+      else {
+        Array[Path]()
+      }
     }
 
     val allFiles = directories
