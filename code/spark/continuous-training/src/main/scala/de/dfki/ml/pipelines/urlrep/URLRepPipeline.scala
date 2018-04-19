@@ -133,6 +133,12 @@ class URLRepPipeline(@transient var spark: SparkContext,
   override def score(data: RDD[String]): Score = {
     ConfusionMatrix.fromRDD(predict(data))
   }
+
+  override def toString = {
+    s"Pipeline(${name()}, Updater(${updater.name}), " +
+      s"Step($stepSize), Reg($regParam)," +
+      s"Convergence($convergenceTol), MiniBatch($miniBatchFraction)"
+  }
 }
 
 object URLRepPipeline {

@@ -105,6 +105,12 @@ class NYCTaxiPipeline(@transient var spark: SparkContext,
   }
 
   override def name() = "taxi"
+
+  override def toString = {
+    s"Pipeline(${name()}, Updater(${updater.name}), " +
+      s"Step($stepSize), Reg($regParam)," +
+      s"Convergence($convergenceTol), MiniBatch($miniBatchFraction)"
+  }
 }
 
 object NYCTaxiPipeline {

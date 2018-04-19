@@ -20,7 +20,7 @@ abstract class Profile {
   val REG_PARAM: Double = 0.001
   val CONVERGENCE_TOL: Double = 1E-6
   val MINI_BATCH: Double = 0.1
-  val STEP_SIZE: Double = 0.0001
+  val STEP_SIZE: Double = 0.001
   val UPDATER: String = "adam"
   val BATCH_EVALUATION: String = ""
 

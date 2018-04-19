@@ -130,6 +130,12 @@ class CriteoPipeline(@transient var spark: SparkContext,
   override def score(data: RDD[String]): Score = {
     LogisticLoss.fromRDD(predict(data))
   }
+
+  override def toString = {
+    s"Pipeline(${name()}, Updater(${updater.name}), " +
+      s"Step($stepSize), Reg($regParam)," +
+      s"Convergence($convergenceTol), MiniBatch($miniBatchFraction)"
+  }
 }
 
 // example use case of criteo pipeline

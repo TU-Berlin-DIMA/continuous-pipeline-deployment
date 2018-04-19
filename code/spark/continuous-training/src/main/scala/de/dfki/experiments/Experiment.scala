@@ -103,6 +103,7 @@ abstract class Experiment {
           updater = new SquaredL2UpdaterWithAdam(),
           delim = params.delimiter,
           numCategories = params.numFeatures)
+        logger.info(s"Training the pipeline: ${pipeline.toString}")
         pipeline.updateTransformTrain(data, params.numIterations)
         CriteoPipeline.saveToDisk(pipeline, params.initialPipeline)
         pipeline

@@ -5,12 +5,24 @@ library(tikzDevice)
 library(ggpubr)
 
 
-## Read data for the batch training
-hyperParams = read.csv('url-reputation/param-selection/training', header = FALSE, col.names = c('updater','reg','tp','fp','tn','fn'))
-hyperParams$mc = (hyperParams$fp + hyperParams$fn) / (hyperParams$fp + hyperParams$fn + hyperParams$tp + hyperParams$tn)
-results = data.frame(hyperParams[,c("updater","reg","mc")])
-results
-#write.table(results, file = '../../images/experiment-results/tikz/ps-table.csv')
+urlHyperProcessing <- function (){
+  hyperParams = read.csv('url-reputation/param-selection/training', header = FALSE, col.names = c('updater','reg','tp','fp','tn','fn'))
+  hyperParams$mc = (hyperParams$fp + hyperParams$fn) / (hyperParams$fp + hyperParams$fn + hyperParams$tp + hyperParams$tn)
+  results = data.frame(hyperParams[,c("updater","reg","mc")])
+}
+
+taxiProcessing <- function (){
+  hyperParams = read.csv('nyc-taxi/param-selection/training', header = FALSE, col.names = c('updater','reg','ssl','count'))
+  hyperParams$rmsle = sqrt(hyperParams$ssl/hyperParams$count)
+  results = data.frame(hyperParams[,c("updater","reg","rmsle")])
+}
+
+urlTable = urlHyperProcessing()
+write.table(urlTable, file = '../images/experiment-results/tikz/ps-url-table.csv')
+
+taxiTable = taxiProcessing()
+write.table(taxiTable, file = '../images/experiment-results/tikz/ps-taxi-table.csv')
+
 
 ## Streaming data
 urlDataProcessing <- function(){
@@ -20,19 +32,21 @@ urlDataProcessing <- function(){
   rmsprop$mc = (rmsprop$fp + rmsprop$fn) / (rmsprop$fp + rmsprop$fn + rmsprop$tp + rmsprop$tn)
   adadelta = cumsum(read.csv('url-reputation/param-selection/adadelta/confusion_matrix-time_based-100', header = FALSE, col.names = c('tp','fp','tn','fn')))
   adadelta$mc = (adadelta$fp + adadelta$fn) / (adadelta$fp + adadelta$fn + adadelta$tp + adadelta$tn)
-  momentum = cumsum(read.csv('url-reputation/param-selection/momentum/confusion_matrix-time_based-100', header = FALSE, col.names = c('tp','fp','tn','fn')))
-  momentum$mc = (momentum$fp + momentum$fn) / (momentum$fp + momentum$fn + momentum$tp + momentum$tn)
+
   append <- function(vec, maxLength){
     return (c(vec,rep(NA, maxLength - length(vec))))
   }
   maxLength = nrow(adam)
-  df = data.frame(Time = 1:nrow(adam), Adam = adam$mc, Rmsprop = rmsprop$mc, Adadelta = adadelta$mc, Momentum = momentum$mc)
+  df = data.frame(Time = 1:nrow(adam), 
+                  Adam = adam$mc, 
+                  Rmsprop = append(rmsprop$mc,maxLength),
+                  Adadelta = append(adadelta$mc,maxLength))
+                  #Momentum = append(momentum$mc,maxLength))
   DAY_DURATION = 500
   df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 100), ]
   df$Adam = df$Adam * 100
   df$Rmsprop = df$Rmsprop * 100
   df$Adadelta = df$Adadelta * 100
-  df$Momentum = df$Momentum * 100
   ml = melt(df, id.vars = 'Time', variable_name ='Adaptation')
   return (ml)
 }
@@ -47,16 +61,16 @@ taxiDataProcessing <- function(){
 
 
 urlData = urlDataProcessing()
-urlBreaks = c(100, 1000)
-urlLabels = c("day1","day10")
+urlBreaks = c(100, 1500,3000)
+urlLabels = c("day1","day15","day30")
 
 taxiData = urlDataProcessing()
-taxiBreaks = c(100,1000)
-taxiLabels = c("Feb15", "Apr15")
+taxiBreaks = c(100,1500,3000)
+taxiLabels = c("Feb15", "Mar15", "Apr15")
 
 criteoData = urlDataProcessing()
-criteoBreaks = c(100,1000)
-criteoLabels = c("day1", "day5")
+criteoBreaks = c(100,1500,3000)
+criteoLabels = c("day1", "day3","day6")
 
 fontLabelSize = 14
 baseSize = 20
@@ -72,6 +86,7 @@ urlPlot = ggpar(urlPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) +
         plot.margin = unit(c(0,1.2,0,0), "lines"), 
         axis.title.y = element_text(margin = margin(r=-1)),
         axis.text.x = element_text(margin = margin(t=-1)))
+
 
 taxiPlot = ggline(taxiData, 'Time', 'value', ylab = "RMSLE", xlab = '(b) Taxi',
                    shape = '-1', linetype ='Adaptation',size = 2, color = "Adaptation", ggtheme = theme_pubclean(base_size = baseSize)) + 

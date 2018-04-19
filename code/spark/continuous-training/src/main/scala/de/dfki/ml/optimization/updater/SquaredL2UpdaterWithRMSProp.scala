@@ -12,7 +12,7 @@ class SquaredL2UpdaterWithRMSProp(gamma: Double = 0.9) extends Updater {
 
   var gradientsSquared: BV[Double] = _
 
-  val eps = 1E-6
+  val eps = 1E-8
 
   var iterCounter = 1
 

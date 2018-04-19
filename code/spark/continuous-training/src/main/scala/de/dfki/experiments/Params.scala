@@ -20,9 +20,31 @@ case class Params(inputPath: String = "",
                   pipelineName: String = "url-rep",
                   var regParam: Double = 0.001,
                   convergenceTol: Double = 1E-6,
-                  miniBatch: Double = 0.1,
+                  var miniBatch: Double = 0.1,
                   var stepSize: Double = 0.1,
                   var updater: Updater = new SquaredL2UpdaterWithAdam(),
                   var batchEvaluationSet: String = "") {
+
+  def copy(): Params = {
+    Params(inputPath = inputPath,
+      streamPath = streamPath,
+      evaluationPath = evaluationPath,
+      resultPath = resultPath,
+      initialPipeline = initialPipeline,
+      delimiter = delimiter,
+      numFeatures = numFeatures,
+      numIterations = numIterations,
+      slack = slack,
+      days = days,
+      sampleSize = sampleSize,
+      dayDuration = dayDuration,
+      pipelineName = pipelineName,
+      regParam = regParam,
+      convergenceTol = convergenceTol,
+      miniBatch = miniBatch,
+      stepSize = stepSize,
+      updater = updater,
+      batchEvaluationSet = batchEvaluationSet)
+  }
 
 }

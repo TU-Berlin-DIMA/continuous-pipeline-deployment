@@ -17,12 +17,9 @@ object ParameterSelection extends Experiment {
   val UPDATERS: List[Updater] = List(
     new SquaredL2UpdaterWithAdam(),
     new SquaredL2UpdaterWithAdaDelta(),
-    new SquaredL2UpdaterWithMomentum(),
     new SquaredL2UpdaterWithRMSProp())
 
   val REGULARIZATIONS: List[Double] = List(0.01, 0.001, 0.0001)
-
-  val STEP_SIZES: List[Double] = List(0.01, 0.001, 0.0001)
 
 
   override val defaultProfile = new URLProfile {
@@ -31,7 +28,8 @@ object ParameterSelection extends Experiment {
     override val NUM_FEATURES = 3000
     override val CONVERGENCE_TOL = 1E-7
     override val NUM_ITERATIONS = 10000
-    override val DAYS = "1,10"
+    override val DAYS = "1,30"
+    override val MINI_BATCH = 0.1
   }
 
   def main(args: Array[String]): Unit = {
@@ -47,31 +45,28 @@ object ParameterSelection extends Experiment {
     // hyper parameter evaluation for batch training
     for (u <- UPDATERS) {
       for (r <- REGULARIZATIONS) {
-        for (s <- if (u.name == "adadelta") List(0.001) else STEP_SIZES) {
-          params.updater = u
-          params.regParam = r
-          params.stepSize = s
-          params.initialPipeline = s"$rootPipelines/${u.name}-$s-$r"
-          val pipeline = getPipeline(ssc.sparkContext, params)
-          val score = pipeline.score(evalSet)
-          val file = new File(s"${params.resultPath}/training")
-          file.getParentFile.mkdirs()
-          val fw = new FileWriter(file, true)
-          try {
-            fw.write(s"${u.name}(${params.stepSize}),$r,${score.rawScore()}\n")
-          }
-          finally {
-            fw.close()
-          }
+        params.updater = u
+        params.regParam = r
+        params.initialPipeline = s"$rootPipelines/${u.name}-0.01-$r"
+        val pipeline = getPipeline(ssc.sparkContext, params)
+        val score = pipeline.score(evalSet)
+        val file = new File(s"${params.resultPath}/training")
+        file.getParentFile.mkdirs()
+        val fw = new FileWriter(file, true)
+        try {
+          fw.write(s"${u.name}(${params.miniBatch}),$r,${score.rawScore()}\n")
+        }
+        finally {
+          fw.close()
         }
       }
     }
     // hyper parameter evaluation for deployment
     //    for (u <- UPDATERS) {
     //      params.updater = u
-    //      val deploymentParams = URLBestStochastic(params)
+    //      val deploymentParams = URLBestFixed(params)
     //      val pipeline = getPipeline(ssc.sparkContext, deploymentParams)
-    //      new ContinuousDeploymentQualityAnalysis(history = params.inputPath,
+    //      new ContinuousDeploymentWithOptimizations(history = deploymentParams.inputPath,
     //        streamBase = deploymentParams.streamPath,
     //        evaluation = s"${deploymentParams.evaluationPath}",
     //        resultPath = s"${deploymentParams.resultPath}",
@@ -79,124 +74,6 @@ object ParameterSelection extends Experiment {
     //        slack = params.slack,
     //        sampler = new TimeBasedSampler(size = deploymentParams.sampleSize)).deploy(ssc, pipeline)
     //    }
-  }
-
-  /**
-    * manually prepared function, it contains the best pipeline found
-    * for every learning rate adaptation technique
-    *
-    * @param params name of the learning rate adaptation technique
-    * @return
-    */
-  def URLBestPipelines1000Iteration(params: Params): Params = {
-    //  adam(0.01) 1e-03 0.02840 1000
-    //  rmsprop(0.001) 1e-03 0.02745 1000
-    //  adadelta(0.001) 1e-04 0.02685 1000
-    //  momentum(0.01) 1e-03 0.03530 1000
-    val copiedParams = params
-    params.updater.name match {
-      case "adadelta" =>
-        copiedParams.updater = new SquaredL2UpdaterWithAdaDelta()
-        copiedParams.regParam = 0.0001
-        copiedParams.resultPath = s"${defaultProfile.RESULT_PATH}/adadelta"
-        copiedParams.initialPipeline = s"${defaultProfile.INITIAL_PIPELINE}/adadelta-best"
-        copiedParams
-      case "adam" =>
-        copiedParams.updater = new SquaredL2UpdaterWithAdam()
-        copiedParams.stepSize = 0.01
-        copiedParams.regParam = 0.001
-        copiedParams.resultPath = s"${defaultProfile.RESULT_PATH}/adam"
-        copiedParams.initialPipeline = s"${defaultProfile.INITIAL_PIPELINE}/adam-best"
-        copiedParams
-      case "rmsprop" =>
-        copiedParams.updater = new SquaredL2UpdaterWithRMSProp()
-        copiedParams.stepSize = 0.001
-        copiedParams.regParam = 0.001
-        copiedParams.resultPath = s"${defaultProfile.RESULT_PATH}/rmsprop"
-        copiedParams.initialPipeline = s"${defaultProfile.INITIAL_PIPELINE}/rmsprop-best"
-        copiedParams
-      case "momentum" =>
-        copiedParams.updater = new SquaredL2UpdaterWithMomentum()
-        copiedParams.stepSize = 0.01
-        copiedParams.regParam = 0.001
-        copiedParams.resultPath = s"${defaultProfile.RESULT_PATH}/momentum"
-        copiedParams.initialPipeline = s"${defaultProfile.INITIAL_PIPELINE}/momentum-best"
-        copiedParams
-    }
-  }
-
-  def URLBestPipelinesConvergence(params: Params): Params = {
-    //  adam(1.0E-4) 1e-03 0.02725  1190
-    //  rmsprop(0.001) 1e-03 0.02730  2030
-    //  adadelta(0.001) 1e-03 0.02695 10000
-    //  momentum(0.01) 1e-03 0.03530 1000
-    val copiedParams = params
-    params.updater.name match {
-      case "adadelta" =>
-        copiedParams.updater = new SquaredL2UpdaterWithAdaDelta()
-        copiedParams.regParam = 0.001
-        copiedParams.resultPath = s"${defaultProfile.RESULT_PATH}/adadelta"
-        copiedParams.initialPipeline = s"${defaultProfile.INITIAL_PIPELINE}/adadelta-best"
-        copiedParams
-      case "adam" =>
-        copiedParams.updater = new SquaredL2UpdaterWithAdam()
-        copiedParams.stepSize = 0.0001
-        copiedParams.regParam = 0.001
-        copiedParams.resultPath = s"${defaultProfile.RESULT_PATH}/adam"
-        copiedParams.initialPipeline = s"${defaultProfile.INITIAL_PIPELINE}/adam-best"
-        copiedParams
-      case "rmsprop" =>
-        copiedParams.updater = new SquaredL2UpdaterWithRMSProp()
-        copiedParams.stepSize = 0.001
-        copiedParams.regParam = 0.001
-        copiedParams.resultPath = s"${defaultProfile.RESULT_PATH}/rmsprop"
-        copiedParams.initialPipeline = s"${defaultProfile.INITIAL_PIPELINE}/rmsprop-best"
-        copiedParams
-      case "momentum" =>
-        copiedParams.updater = new SquaredL2UpdaterWithMomentum()
-        copiedParams.stepSize = 0.01
-        copiedParams.regParam = 0.001
-        copiedParams.resultPath = s"${defaultProfile.RESULT_PATH}/momentum"
-        copiedParams.initialPipeline = s"${defaultProfile.INITIAL_PIPELINE}/momentum-best"
-        copiedParams
-    }
-  }
-
-  def URLBest300000Features(params: Params): Params = {
-    //  adam(0.001) 0.001 0.02595  3190
-    //  rmsprop(1.0E-4) 0.001 0.02555 20000
-    //  adadelta(0.001) 0.001 0.02655 20000
-    //  momentum(0.01) 1e-03 0.03530 1000
-    val copiedParams = params
-    params.updater.name match {
-      case "adadelta" =>
-        copiedParams.updater = new SquaredL2UpdaterWithAdaDelta()
-        copiedParams.regParam = 0.001
-        copiedParams.resultPath = s"${defaultProfile.RESULT_PATH}/adadelta"
-        copiedParams.initialPipeline = s"${defaultProfile.INITIAL_PIPELINE}/best/adadelta"
-        copiedParams
-      case "adam" =>
-        copiedParams.updater = new SquaredL2UpdaterWithAdam()
-        copiedParams.stepSize = 0.001
-        copiedParams.regParam = 0.001
-        copiedParams.resultPath = s"${defaultProfile.RESULT_PATH}/adam"
-        copiedParams.initialPipeline = s"${defaultProfile.INITIAL_PIPELINE}/best/adam"
-        copiedParams
-      case "rmsprop" =>
-        copiedParams.updater = new SquaredL2UpdaterWithRMSProp()
-        copiedParams.stepSize = 0.0001
-        copiedParams.regParam = 0.001
-        copiedParams.resultPath = s"${defaultProfile.RESULT_PATH}/rmsprop"
-        copiedParams.initialPipeline = s"${defaultProfile.INITIAL_PIPELINE}/best/rmsprop"
-        copiedParams
-      case "momentum" =>
-        copiedParams.updater = new SquaredL2UpdaterWithMomentum()
-        copiedParams.stepSize = 0.01
-        copiedParams.regParam = 0.001
-        copiedParams.resultPath = s"${defaultProfile.RESULT_PATH}/momentum"
-        copiedParams.initialPipeline = s"${defaultProfile.INITIAL_PIPELINE}/best/momentum"
-        copiedParams
-    }
   }
 
   def URLBestStochastic(params: Params): Params = {
@@ -232,6 +109,45 @@ object ParameterSelection extends Experiment {
         copiedParams.regParam = 0.0001
         copiedParams.resultPath = s"${defaultProfile.RESULT_PATH}/momentum"
         copiedParams.initialPipeline = s"${defaultProfile.INITIAL_PIPELINE}/best/momentum"
+        copiedParams
+    }
+  }
+
+  def URLBestFixed(params: Params): Params = {
+    //  "adam(0.001)" 0.001 0.027
+    //  "adadelta(0.001)" 0.001 0.02745
+    //  "rmsprop(1.0E-4)" 1e-04 0.02715 rmsprop(0.001) 1e-03 0.02700
+    //  "momentum(0.01)" 1e-04 0.0267
+    val copiedParams = params.copy()
+    val rootPipelines = copiedParams.initialPipeline
+    val baseResultPath = copiedParams.resultPath
+    copiedParams.updater.name match {
+      case "adadelta" =>
+        copiedParams.updater = new SquaredL2UpdaterWithAdaDelta()
+        copiedParams.regParam = 0.001
+        copiedParams.resultPath = s"$baseResultPath/adadelta"
+        copiedParams.initialPipeline = s"$rootPipelines/adadelta-0.001-0.001"
+        copiedParams
+      case "adam" =>
+        copiedParams.updater = new SquaredL2UpdaterWithAdam()
+        copiedParams.stepSize = 0.001
+        copiedParams.regParam = 0.001
+        copiedParams.resultPath = s"$baseResultPath/adam"
+        copiedParams.initialPipeline = s"$rootPipelines/adam-0.001-0.001"
+        copiedParams
+      case "rmsprop" =>
+        copiedParams.updater = new SquaredL2UpdaterWithRMSProp()
+        copiedParams.stepSize = 0.001
+        copiedParams.regParam = 0.001
+        copiedParams.resultPath = s"$baseResultPath/rmsprop"
+        copiedParams.initialPipeline = s"$rootPipelines/rmsprop-0.001--4"
+        copiedParams
+      case "momentum" =>
+        copiedParams.updater = new SquaredL2UpdaterWithMomentum()
+        copiedParams.stepSize = 0.01
+        copiedParams.regParam = 1e-04
+        copiedParams.resultPath = s"$baseResultPath/momentum"
+        copiedParams.initialPipeline = s"$rootPipelines/momentum-0.01-1.0E-4"
         copiedParams
     }
   }

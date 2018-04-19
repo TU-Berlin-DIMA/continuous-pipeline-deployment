@@ -8,7 +8,7 @@ import org.apache.spark.mllib.linalg.Vector
 /**
   * @author behrouz
   */
-class SquaredL2UpdaterWithAdaDelta(var gamma: Double = 0.9) extends Updater {
+class SquaredL2UpdaterWithAdaDelta(var gamma: Double = 0.95) extends Updater {
 
   var gradientsSquared: BV[Double] = _
   var deltasSquared: BV[Double] = _

@@ -24,7 +24,7 @@ class URLProfile extends Profile {
   override val CONVERGENCE_TOL = 1E-7
 
   override val PROFILE_NAME = "url"
-  override val STEP_SIZE = 0.01
+  override val STEP_SIZE = 0.001
   override val MINI_BATCH = 1.0
   override val BATCH_EVALUATION = "data/url-reputation/processed/batch-evaluation"
 }

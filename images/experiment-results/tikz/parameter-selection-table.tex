@@ -1,23 +1,13 @@
-\begin{tabular}{llrclrclrcl}
+\begin{tabular}{lrclrclrcl}
 \hline
-& \multicolumn{1}{c}{} & \multicolumn{3}{c}{\textbf{URL}}  & \multicolumn{3}{c}{\textbf{Taxi}} & \multicolumn{3}{c}{\textbf{Criteo}} \\ \cmidrule(lr){3-5} \cmidrule(lr){6-8} \cmidrule(lr){9-11} 
-\textbf{Adaptation} & \multicolumn{1}{l}{\backslashbox{{\footnotesize lr}}{{\footnotesize reg}}}          
+& \multicolumn{3}{c}{\textbf{URL}}  & \multicolumn{3}{c}{\textbf{Taxi}} & \multicolumn{3}{c}{\textbf{Criteo}} \\
+ \cmidrule(lr){2-4} \cmidrule(lr){5-7} \cmidrule(lr){8-10} 
+\textbf{Adaptation}          
  & \multicolumn{1}{r}{1E-2} & \multicolumn{1}{c}{1E-3} & \multicolumn{1}{l@{\hskip 0.3in}}{1E-4} 
  & \multicolumn{1}{r}{1E-2} & \multicolumn{1}{c}{1E-3} & \multicolumn{1}{l@{\hskip 0.3in}}{1E-4} 
  & \multicolumn{1}{r}{1E-2} & \multicolumn{1}{c}{1E-3} & \multicolumn{1}{l}{1E-4} \\
 \hline
-\multirow{3}{*}{Adam} 
-   & 1E-2 & 0.0305 & \textbf{0.0268} & 0.0352 & 1.0000 & 1.0000 & 1.0000 &  1.0000 & 1.0000 & 1.0000 \\
-   & 1E-3 &  0.0305 & 0.0271 & 0.0342 & 1.0000 & 1.0000 & 1.0000 &  1.0000 & 10000 & 1.0000  \\
-   & 1E-4 & 0.0307 & 0.0273 & 0.0357 & 1.0000 & 1.0000 & 1.0000 &  1.0000 & 1.0000 & 1.0000 \\ \\ 
-\multirow{3}{*}{RMSProp}  
-   & 1E-2 & 0.0301 & 0.0271  & 0.0328 & 1.0000 & 1.0000 & 1.0000 &  1.0000 & 1.0000 & 1.0000 \\
-   & 1E-3 & 0.0296 & \textbf{0.0270} & 0.0296 & 1.0000 & 1.0000 & 1.0000 &  1.0000 & 1.0000 & 1.0000\\
-   & 1E-4 & 0.0297 & 0.0270 & 0.0327 & 1.0000 & 1.0000 & 1.0000 &  1.0000 & 1.0000 & 1.0000\\ \\
-\multirow{3}{*}{Momentum} 
-   & 1E-2 & 0.0307 & 0.03125 & \textbf{0.0299} & 1.0000 & 1.0000 & 1.0000 &  1.0000 & 1.0000 & 1.0000 \\
-   & 1E-3 & 0.0306 & 0.03085 & 0.0318 & 1.0000 & 1.0000 & 1.0000 &  1.0000 & 1.0000 & 1.0000 \\
-   & 1E-4 & 0.0307 & 0.03005  & 0.03    & 1.0000 & 1.0000 & 10000 &  1.0000 & 1.0000 & 1.0000  \\ \\
-Adadelta 
-& ---- & 0.0303 & \textbf{0.0269} & 0.0333 & 1.0000 & 1.0000 & 1.0000 &  1.0000 & 1.0000 & 1.0000 \\ \hline         
+Adam & & \textbf{0.0266} & 0.0352 & 0.330 & 0.329 				& 0.330 &  1.0000 & 1.0000 & 1.0000 \\
+RMSProp & & \textbf{0.0269} 				& 0.0328 & \textbf{0.328} 	& 0.329 & 0.332 &  1.0000 & 1.0000 & 1.0000 \\
+ Adadelta &  &  \textbf{0.2705} & & \textbf{0.329}	 & 0.3293 & 0.3296 &  1.0000 & 1.0000 & 1.0000 \\ \hline         
 \end{tabular}
