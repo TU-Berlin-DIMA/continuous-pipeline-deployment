@@ -9,7 +9,7 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
 
 /**
   * Hyperparameter tuning
-  * train a maximum of 1000 iterations models with lowest generalization error are considered as candidates
+  * train a maximum of 10000 iterations models with lowest generalization error are considered as candidates
   *
   * @author behrouz
   */

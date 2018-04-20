@@ -217,21 +217,21 @@ For the URL pipeline, our optimizations have reduced the continuous training tim
 
 \subsection{Discussion} \label{subsec:discussion}
 Continuous deployment approach can reduce the end-to-end deployment time by 1 order of magnitude.However, continuous deployment approach may reduce the quality.
-Figure \ref{quality-vs-time} shows the ratio of increase in quality and end-to-end deployment time when compared with the baseline deployment approach (where no model training is performed).
-The X-axis represents the baseline classifier (0 increase in the quality).
-The values on the Y-axis represents the goodness of a deployment approach, where a value of 1 shows a perfect model that has an error rate of 0 and has the same end-to-end deployment time as the baseline approach.
+To understand the trade-off between quality and the training time, we define a performance indicator ($PI$) as:\\
+\begin{center}
+$PI(t) = \dfrac{err_b(t) - err(t)}{cost(t) - cost_b(t)} * 100$
+\end{center}
+where $err(t)$ and $cost(t)$ are the cumulative error rate and the cumulative deployment cost (training time + prediction time) at a time $t$ and  $err_b(t)$ and $cost_b(t)$ are the error rate and the total deployment cost of the baseline deployment approach(only prediction time).
+Figure \ref{quality-vs-time} shows the value of $PI$ over time for the continuous and periodical deployment approach.
 For the periodical deployment approach, the quality of the models is slightly higher than the continuous deployment approach.
-However, due to the extremely long training time, the ratio of quality and end-to-end time is almost close to 0.
-On the other hand, the continuous deployment approach guarantees high-quality models using a smaller training time (up to 1 order of magnitude) resulting in a higher quality/time ratio.
-
-%For the URL pipeline, by using the continuous deployment approach we are able to reduce the end-to-end deployment time by 750 minutes, a 15 fold improvement.
-%Whereas the misclassification rate is only increased 0.03 \%, a decrease of 0.015 fold.
-% NYC and Criteo analysis
+However, due to the extremely long training time, the cumulative cost of the deployment is increasing exponentially with every periodical training.
+As a result, the value of $PI$ for the periodical deployment approach decreases as further training (cost of deployment) does not justify the decrease in error rate.
+On the other hand, the continuous deployment approach guarantees high-quality models with only a linear increase in the cumulative deployment cost ( the training time for every proactive training is constant) which results in a slow increase the value of $PI$ over time. 
 
 \begin{figure}[!h]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/quality-vs-time}}
-\caption{Trade-off between model quality and total training time. Each point represent the increase in quality-time over the baseline classifier (x-axis) and a perfect classifier (error rate of 0 with same training time as the baseline classifer)}
+\caption{Trade-off between model quality and total training time. The $PI$ for baseline is always 0 (no increase in quality over the baseline). A $PI$ of close to 100\% indicates an Oracle deployment approach where the deployed model has an error rate of 0 and deployment cost of similar to the baseline.}
 \label{quality-vs-time}
 \end{figure}
 
