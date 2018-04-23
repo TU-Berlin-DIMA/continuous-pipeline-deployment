@@ -8,7 +8,7 @@ class URLProfile extends Profile {
   val STREAM_PATH = "data/url-reputation/processed/stream"
   val EVALUATION_PATH = "prequential"
   val RESULT_PATH = "../../../experiment-results/url-reputation/sampling"
-  val INITIAL_PIPELINE = "data/url-reputation/pipelines/best/adam"
+  val INITIAL_PIPELINE = "data/url-reputation/pipelines/best/adam-0.001"
   override val DELIMITER = ","
   // val NUM_FEATURES = 3231961
   val NUM_FEATURES = 3000

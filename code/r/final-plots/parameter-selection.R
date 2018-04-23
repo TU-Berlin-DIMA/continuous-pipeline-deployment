@@ -26,37 +26,54 @@ write.table(taxiTable, file = '../images/experiment-results/tikz/ps-taxi-table.c
 
 ## Streaming data
 urlDataProcessing <- function(){
-  adam = cumsum(read.csv('url-reputation/param-selection/adam/confusion_matrix-time_based-100', header = FALSE, col.names = c('tp','fp','tn','fn')))
-  adam$mc = (adam$fp + adam$fn) / (adam$fp + adam$fn + adam$tp + adam$tn)
-  rmsprop = cumsum(read.csv('url-reputation/param-selection/rmsprop/confusion_matrix-time_based-100', header = FALSE, col.names = c('tp','fp','tn','fn')))
-  rmsprop$mc = (rmsprop$fp + rmsprop$fn) / (rmsprop$fp + rmsprop$fn + rmsprop$tp + rmsprop$tn)
-  adadelta = cumsum(read.csv('url-reputation/param-selection/adadelta/confusion_matrix-time_based-100', header = FALSE, col.names = c('tp','fp','tn','fn')))
-  adadelta$mc = (adadelta$fp + adadelta$fn) / (adadelta$fp + adadelta$fn + adadelta$tp + adadelta$tn)
-
-  append <- function(vec, maxLength){
-    return (c(vec,rep(NA, maxLength - length(vec))))
+  getMisclassification <-function(loc){
+    confusionMatrix = cumsum(read.csv(loc, header = FALSE, col.names = c('tp','fp','tn','fn')))
+    return((confusionMatrix$fp + confusionMatrix$fn) / (confusionMatrix$fp + confusionMatrix$fn + confusionMatrix$tp + confusionMatrix$tn))
   }
-  maxLength = nrow(adam)
-  df = data.frame(Time = 1:nrow(adam), 
-                  Adam = adam$mc, 
-                  Rmsprop = append(rmsprop$mc,maxLength),
-                  Adadelta = append(adadelta$mc,maxLength))
-                  #Momentum = append(momentum$mc,maxLength))
+  Adam = getMisclassification('url-reputation/param-selection/adam-0.001/confusion_matrix-time_based-100')
+  Rmsprop = getMisclassification('url-reputation/param-selection/rmsprop-0.001/confusion_matrix-time_based-100')
+  Adadelta = getMisclassification('url-reputation/param-selection/adadelta-0.001/confusion_matrix-time_based-100')
+  
+  df = data.frame(Time = 1:length(Adam), Adam, Rmsprop, Adadelta)
   DAY_DURATION = 500
   df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 100), ]
-  df$Adam = df$Adam * 100
-  df$Rmsprop = df$Rmsprop * 100
-  df$Adadelta = df$Adadelta * 100
+  df[,-1] = df[,-1] * 100
   ml = melt(df, id.vars = 'Time', variable_name ='Adaptation')
   return (ml)
 }
 
 criteoDataProcessing <- function(){
+  getMisclassification <-function(loc){
+    confusionMatrix = cumsum(read.csv(loc, header = FALSE, col.names = c('tp','fp','tn','fn')))
+    return((confusionMatrix$fp + confusionMatrix$fn) / (confusionMatrix$fp + confusionMatrix$fn + confusionMatrix$tp + confusionMatrix$tn))
+  }
+  Adam = getMisclassification('url-reputation/param-selection/adam-0.001/confusion_matrix-time_based-100')
+  Rmsprop = getMisclassification('url-reputation/param-selection/rmsprop-0.001/confusion_matrix-time_based-100')
+  Adadelta = getMisclassification('url-reputation/param-selection/adadelta-0.001/confusion_matrix-time_based-100')
   
+  df = data.frame(Time = 1:length(Adam), Adam, Rmsprop, Adadelta)
+  DAY_DURATION = 500
+  df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 100), ]
+  df[,-1] = df[,-1] * 100
+  df[,c(2,3,4)] = 0
+  ml = melt(df, id.vars = 'Time', variable_name ='Adaptation')
+  return (ml)
 }
 
 taxiDataProcessing <- function(){
+  getRMSLE <-function(loc){
+    rmsle = cumsum(read.csv(loc, header = FALSE, col.names = c('ssl','count')))
+    return(sqrt(rmsle$ssl/rmsle$count))
+  }
+  Adam = getRMSLE('nyc-taxi/param-selection/adam-0.001-0.001/rmsle-time_based-720')
+  #Rmsprop = getMisclassification('url-reputation/param-selection/rmsprop-0.001/confusion_matrix-time_based-100')
+  #Adadelta = getMisclassification('url-reputation/param-selection/adadelta-0.001/confusion_matrix-time_based-100')
   
+  df = data.frame(Time = 1:length(Adam), Adam)
+  DAY_DURATION = 100
+  df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 60), ]
+  ml = melt(df, id.vars = 'Time', variable_name ='Adaptation')
+  return (ml)
 }
 
 
@@ -64,11 +81,11 @@ urlData = urlDataProcessing()
 urlBreaks = c(100, 1500,3000)
 urlLabels = c("day1","day15","day30")
 
-taxiData = urlDataProcessing()
-taxiBreaks = c(100,1500,3000)
-taxiLabels = c("Feb15", "Mar15", "Apr15")
+taxiData = taxiDataProcessing()
+taxiBreaks = c(50,2100)
+taxiLabels = c("Feb15", "Apr15")
 
-criteoData = urlDataProcessing()
+criteoData = criteoDataProcessing()
 criteoBreaks = c(100,1500,3000)
 criteoLabels = c("day1", "day3","day6")
 
@@ -87,7 +104,6 @@ urlPlot = ggpar(urlPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) +
         axis.title.y = element_text(margin = margin(r=-1)),
         axis.text.x = element_text(margin = margin(t=-1)))
 
-
 taxiPlot = ggline(taxiData, 'Time', 'value', ylab = "RMSLE", xlab = '(b) Taxi',
                    shape = '-1', linetype ='Adaptation',size = 2, color = "Adaptation", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = taxiBreaks, labels = taxiLabels)
@@ -100,7 +116,8 @@ taxiPlot = ggpar(taxiPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize))+
         axis.text.x = element_text(margin = margin(t=-1)))
 
 criteoPlot = ggline(criteoData, 'Time', 'value', ylab = "MSE", xlab = '(c) Criteo',
-                     shape = '-1', linetype ='Adaptation', size =2, color = "Adaptation", ggtheme = theme_pubclean(base_size = baseSize)) + 
+                     shape = '-1', linetype ='Adaptation', size =2, color = "Adaptation", ggtheme = theme_pubclean(base_size = baseSize),
+                    ylim=c(min(urlData$value), max(urlData$value))) + 
   scale_x_continuous(breaks = criteoBreaks, labels= criteoLabels)
 criteoPlot = ggpar(criteoPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) +
   theme(legend.title = element_text(size = 0), 
@@ -111,6 +128,7 @@ criteoPlot = ggpar(criteoPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize
         axis.text.x = element_text(margin = margin(t=-1)))
 
 param_selection_plot = ggarrange(urlPlot, taxiPlot, criteoPlot,  nrow = 1, ncol = 3, common.legend = TRUE)
+
 tikz(file = "../images/experiment-results/tikz/parameter-selection-figure.tex", width = 6, height = 2)
 param_selection_plot
 dev.off()

@@ -2,6 +2,8 @@ package de.dfki.experiments
 
 import java.io.{File, FileWriter}
 
+import de.dfki.core.sampling.TimeBasedSampler
+import de.dfki.deployment.continuous.ContinuousDeploymentWithOptimizations
 import de.dfki.experiments.profiles.URLProfile
 import de.dfki.ml.optimization.updater._
 import org.apache.spark.SparkConf
@@ -14,12 +16,12 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
   * @author behrouz
   */
 object ParameterSelection extends Experiment {
-  val UPDATERS: List[Updater] = List(
-    new SquaredL2UpdaterWithAdam(),
-    new SquaredL2UpdaterWithAdaDelta(),
-    new SquaredL2UpdaterWithRMSProp())
 
   val REGULARIZATIONS: List[Double] = List(0.01, 0.001, 0.0001)
+  val UPDATERS: List[Updater] = List(
+    new SquaredL2UpdaterWithAdam(),
+    new SquaredL2UpdaterWithRMSProp(),
+    new SquaredL2UpdaterWithAdaDelta())
 
 
   override val defaultProfile = new URLProfile {
@@ -41,20 +43,21 @@ object ParameterSelection extends Experiment {
     val ssc = new StreamingContext(conf, Seconds(1))
     val rootPipelines = params.initialPipeline
     val evalSet = ssc.sparkContext.textFile(params.batchEvaluationSet)
+    val rootResult = params.resultPath
 
     // hyper parameter evaluation for batch training
     for (u <- UPDATERS) {
       for (r <- REGULARIZATIONS) {
         params.updater = u
         params.regParam = r
-        params.initialPipeline = s"$rootPipelines/${u.name}-0.01-$r"
+        params.initialPipeline = s"$rootPipelines/${params.updater.name}-$r"
         val pipeline = getPipeline(ssc.sparkContext, params)
         val score = pipeline.score(evalSet)
-        val file = new File(s"${params.resultPath}/training")
+        val file = new File(s"$rootResult/training")
         file.getParentFile.mkdirs()
         val fw = new FileWriter(file, true)
         try {
-          fw.write(s"${u.name}(${params.miniBatch}),$r,${score.rawScore()}\n")
+          fw.write(s"${params.updater.name},$r,${score.rawScore()}\n")
         }
         finally {
           fw.close()
@@ -62,18 +65,23 @@ object ParameterSelection extends Experiment {
       }
     }
     // hyper parameter evaluation for deployment
-    //    for (u <- UPDATERS) {
-    //      params.updater = u
-    //      val deploymentParams = URLBestFixed(params)
-    //      val pipeline = getPipeline(ssc.sparkContext, deploymentParams)
-    //      new ContinuousDeploymentWithOptimizations(history = deploymentParams.inputPath,
-    //        streamBase = deploymentParams.streamPath,
-    //        evaluation = s"${deploymentParams.evaluationPath}",
-    //        resultPath = s"${deploymentParams.resultPath}",
-    //        daysToProcess = deploymentParams.days,
-    //        slack = params.slack,
-    //        sampler = new TimeBasedSampler(size = deploymentParams.sampleSize)).deploy(ssc, pipeline)
-    //    }
+    for (u <- UPDATERS) {
+      for (r <- REGULARIZATIONS) {
+        params.updater = u
+        params.regParam = r
+        params.initialPipeline = s"$rootPipelines/${params.updater.name}-$r"
+        params.resultPath = s"$rootResult/${params.updater.name}-$r"
+
+        val pipeline = getPipeline(ssc.sparkContext, params)
+        new ContinuousDeploymentWithOptimizations(history = params.inputPath,
+          streamBase = params.streamPath,
+          evaluation = s"${params.evaluationPath}",
+          resultPath = s"${params.resultPath}",
+          daysToProcess = params.days,
+          slack = params.slack,
+          sampler = new TimeBasedSampler(size = params.sampleSize)).deploy(ssc, pipeline)
+      }
+    }
   }
 
   def URLBestStochastic(params: Params): Params = {

@@ -1,4 +1,4 @@
-setwd("~/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/")
+setwd("~/Documents/work/phd-papers/continuous-training/experiment-results/")
 library(ggplot2)
 library(reshape)
 library(tikzDevice)
@@ -7,26 +7,54 @@ library(ggpubr)
 
 
 urlDataProcessing <- function(){
-  
-  continuousNo = read.csv('optimization-effect/continuous-no-optimization-time', header = FALSE, col.names = c('time'))
-  
-  continuousYes = read.csv('optimization-effect/continuous-full-optimization-time', header = FALSE, col.names = c('time'))
-  
+  continuousNo = read.csv('url-reputation/optimization-effect/continuous-no-optimization-time', header = FALSE, col.names = c('time'))
+  continuousYes = read.csv('url-reputation/optimization-effect/continuous-full-optimization-time', header = FALSE, col.names = c('time'))
+  df = data.frame(Deployment = c('Default','Optimized'), 
+                  Time = c(continuousNo$time, continuousYes$time))
+  scale = 1000 * 60
+  df$Time = df$Time / scale
+  return (df)
+}
 
+taxiDataProcessing<- function(){
+  continuousNo = read.csv('url-reputation/optimization-effect/continuous-no-optimization-time', header = FALSE, col.names = c('time'))
+  continuousYes = read.csv('url-reputation/optimization-effect/continuous-full-optimization-time', header = FALSE, col.names = c('time'))
+  
+  
   df = data.frame(Deployment = c('Default','Optimized'), 
                   Time = c(continuousNo$time, continuousYes$time))
   
   scale = 1000 * 60
   df$Time = df$Time / scale
   
+  df$Time = 0
+  
   return (df)
 }
 
+criteoDataProcessing <- function(){
+  continuousNo = read.csv('url-reputation/optimization-effect/continuous-no-optimization-time', header = FALSE, col.names = c('time'))
+  
+  continuousYes = read.csv('url-reputation/optimization-effect/continuous-full-optimization-time', header = FALSE, col.names = c('time'))
+  
+  
+  df = data.frame(Deployment = c('Default','Optimized'), 
+                  Time = c(continuousNo$time, continuousYes$time))
+  
+  scale = 1000 * 60
+  df$Time = df$Time / scale
+  
+  df$Time = 0
+  
+  return (df)
+}
 fontLabelSize = 14
 baseSize = 20
+
 urlData = urlDataProcessing()
-criteoData = urlDataProcessing()
-taxiData = urlDataProcessing()
+taxiData = taxiDataProcessing()
+criteoData = criteoDataProcessing()
+
 urlPlot = ggbarplot(urlData, x = 'Deployment', y = 'Time',  ylab = 'Time (m)', xlab = "(a) URL",
                     width = 1.0, size = 1.0,
                     color = 'Deployment', fill = 'Deployment',
@@ -45,7 +73,8 @@ taxiPlot = ggbarplot(taxiData, x = 'Deployment', y = 'Time',  ylab = 'Time (m)',
                      width = 1.0, size = 1.0,
                      color = 'Deployment', fill = 'Deployment',
                      order = c('Optimized', 'Default'),
-                     ggtheme = theme_pubclean(base_size = baseSize)) + rremove('x.ticks') + rremove('x.text') +
+                     ggtheme = theme_pubclean(base_size = baseSize),
+                     ylim = c(0,max(urlData$Time))) + rremove('x.ticks') + rremove('x.text') +
   theme(legend.key.width = unit(1.5,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         legend.title = element_text(size = 0),
@@ -59,7 +88,8 @@ criteoPlot = ggbarplot(criteoData, x = 'Deployment', y = 'Time',  ylab = 'Time (
                        width = 1.0, size = 1.0,
                        color = 'Deployment', fill = 'Deployment',
                        order = c('Optimized', 'Default'),
-                       ggtheme = theme_pubclean(base_size = baseSize))+ rremove('x.ticks') + rremove('x.text') +
+                       ggtheme = theme_pubclean(base_size = baseSize),
+                       ylim = c(0,max(urlData$Time)))+ rremove('x.ticks') + rremove('x.text') +
   theme(legend.key.width = unit(1.5,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         legend.title = element_text(size = 0),
@@ -72,7 +102,7 @@ criteoPlot = ggpar(criteoPlot, font.y=c(fontLabelSize), font.x=c(fontLabelSize+2
 
 optimization_effects = ggarrange(urlPlot, taxiPlot, criteoPlot, nrow = 1, ncol = 3, common.legend = TRUE)
 
-tikz(file = "../../images/experiment-results/tikz/optimization-time-experiment.tex", width = 6, height = 2)
+tikz(file = "../images/experiment-results/tikz/optimization-time-experiment.tex", width = 6, height = 2)
 optimization_effects 
 dev.off()
 

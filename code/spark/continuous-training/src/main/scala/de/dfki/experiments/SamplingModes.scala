@@ -13,8 +13,8 @@ object SamplingModes extends Experiment {
 
   override val defaultProfile = new URLProfile {
     override val RESULT_PATH = "Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/sampling-modes"
-    override val INITIAL_PIPELINE = "data/url-reputation/pipelines/best/adam"
-    override val DAYS = "1,10"
+    override val INITIAL_PIPELINE = "data/url-reputation/pipelines/best/adam-0.001"
+    override val DAYS = "1,30"
   }
 
   def main(args: Array[String]): Unit = {
@@ -34,7 +34,7 @@ object SamplingModes extends Experiment {
       resultPath = s"${params.resultPath}",
       daysToProcess = params.days,
       slack = params.slack,
-      sampler = new UniformSampler(size = params.dayDuration)).deploy(ssc, uniformPipeline)
+      sampler = new UniformSampler(size = params.sampleSize)).deploy(ssc, uniformPipeline)
 
     // continuously trained with a window based sample of the historical data
     val windowBased = getPipeline(ssc.sparkContext, params)
@@ -45,7 +45,7 @@ object SamplingModes extends Experiment {
       resultPath = s"${params.resultPath}",
       daysToProcess = params.days,
       slack = params.slack,
-      sampler = new WindowBasedSampler(size = params.dayDuration, window = params.dayDuration * 10)).deploy(ssc, windowBased)
+      sampler = new WindowBasedSampler(size = params.sampleSize, window = params.dayDuration * 10)).deploy(ssc, windowBased)
 
     // continuously trained with a time based sample of the historical data
     val timeBasedFix = getPipeline(ssc.sparkContext, params)
@@ -56,6 +56,6 @@ object SamplingModes extends Experiment {
       resultPath = s"${params.resultPath}",
       daysToProcess = params.days,
       slack = params.slack,
-      sampler = new TimeBasedSampler(size = params.dayDuration)).deploy(ssc, timeBasedFix)
+      sampler = new TimeBasedSampler(size = params.sampleSize)).deploy(ssc, timeBasedFix)
   }
 }
