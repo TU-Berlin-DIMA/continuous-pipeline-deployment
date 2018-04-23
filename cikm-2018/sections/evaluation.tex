@@ -132,17 +132,17 @@ Next, we investigate the effect of different sampling techniques on the quality 
 \textbf{Proactive Training Parameters. }
 Stochastic gradient descent is heavily dependent on the choice of learning rate and the regularization parameter.
 To find the best set of hyperparameters for the initial training, we perform a grid search.
-Instead of using constant learning rate, we use advanced learning rate adaptation techniques (Adam, Adadelta, and RMSPROP).
+Instead of using a constant learning rate, we use advanced learning rate adaptation techniques (Adam, Adadelta, and RMSPROP).
 Therefore, during our hyperparameter search process, instead of trying different learning rate values, we search for the best adaptation technique for every dataset.
 For each dataset, we divide the initial data (from Table \ref{dataset-description}) into a training and evaluation set.
 For each configuration, we first train a model using the training set and then evaluate the model using the evaluation set.
 Table \ref{hyper-param-table} shows the result of hyperparameter tuning for every pipeline.
-In the URL pipeline, Adam with the learning rate $0.01$ and the regularization parameter $0.001$ yields the model with the lowest misclassification rate during the initial training phase.
+In the URL pipeline, Adam with the regularization parameter $0.001$ yields the model with the lowest misclassification rate during the initial training phase.
 \todo[inline]{results of taxi and criteo hyperparameter tuning come here}
 Figre \ref{hyper-param-figure} shows the results of the different hyperparameter configuration on models during the deployment.
 To make the deployment figure more readable, we avoid displaying the result of every possible combination of hyperparameters and only show the result of the best configuration for each learning rate adaptation technique.
 After the initial training, for every configuration, we deploy the model and use 10 \% of the remaining data to evaluate the model after deployment.
-For the URL pipeline, Adam with learning rate $0.01$ and the regularization parameter $0.001$ has the best performance, followed by Rmsprop and Adadelta.
+For the URL pipeline, Adam with the regularization parameter $0.001$ also has the best performance during the deployment, followed by Adadelta and Rmsprop.
 \todo[inline]{Taxi and Criteo}
 This experiment confirms that the hyperparameter configuration that performs the best during the initial stochastic gradient descent training also performs the best for the proactive training.
 
@@ -223,6 +223,7 @@ For the URL pipeline, our optimizations have reduced the continuous training tim
 \subsection{Discussion} \label{subsec:discussion}
 Continuous deployment approach can reduce the end-to-end deployment time by 1 order of magnitude.
 However, it may reduce the quality as well.
+\todo[inline]{The formula is a bit complicated now, but we should be able to replace the nominator and denominator by $relative\_err(t)$ and $relative\_cost(t)$. First I'd like to know your opinion on whether this is the best way to show the trade-off between quality and time}
 To understand the trade-off between quality and the training time, we define a performance indicator ($PI$) as:\\
 \begin{center}
 $PI(t) = \dfrac{\dfrac{err_b(t) - err(t)}{err_b(t)}}{\dfrac{cost(t) - cost_b(t)}{cost_b(t)}+ 1}   * 100$
