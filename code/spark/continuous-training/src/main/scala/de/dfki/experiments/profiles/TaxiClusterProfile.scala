@@ -16,6 +16,7 @@ class TaxiClusterProfile extends Profile {
   override val DAYS = "32,731"
   override val SAMPLE_SIZE = 720
   override val DAY_DURATION = 720
+  override val NUM_PARTITIONS = 176
   override val PIPELINE_NAME = "taxi"
   override val PROFILE_NAME = "taxi-cluster"
   override val BATCH_EVALUATION: String = "hdfs://cloud-11:44000/user/behrouz/nyc-taxi/experiments/processed/batch-evaluation"

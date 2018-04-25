@@ -23,6 +23,7 @@ class URLProfile extends Profile {
   override val REG_PARAM = 0.001
   override val SAMPLE_SIZE = 100
   override val CONVERGENCE_TOL = 1E-7
+  override val NUM_PARTITIONS = 8
 
   override val PROFILE_NAME = "url"
   override val STEP_SIZE = 0.001

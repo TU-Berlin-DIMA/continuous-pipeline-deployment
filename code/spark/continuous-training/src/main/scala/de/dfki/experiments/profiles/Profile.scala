@@ -24,13 +24,14 @@ abstract class Profile {
   val STEP_SIZE: Double = 0.001
   val UPDATER: String = "adam"
   val BATCH_EVALUATION: String = ""
+  val NUM_PARTITIONS: Int = 8
 
   val PROFILE_NAME: String
 }
 
 object Profile {
   val availableProfiles: List[Profile] = List(new CriteoClusterProfile(), new URLProfile(), new TaxiClusterProfile(), new CriteoLocalProfile(),
-  new TaxiLocalProfile())
+    new TaxiLocalProfile())
 
   def getProfile(name: String, default: Profile): Profile = {
     val profile = availableProfiles.filter(_.PROFILE_NAME == name)
