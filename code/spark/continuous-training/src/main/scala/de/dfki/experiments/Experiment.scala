@@ -38,6 +38,7 @@ abstract class Experiment {
     val profileFromArgs = Profile.getProfile(parser.get("profile"), profile)
     val inputPath = parser.get("input", profileFromArgs.INPUT_PATH)
     val streamPath = parser.get("stream", profileFromArgs.STREAM_PATH)
+    val materializedPath = parser.get("stream", profileFromArgs.MATERIALIZED_PATH)
     val evaluationPath = parser.get("evaluation", profileFromArgs.EVALUATION_PATH)
     val resultPath = parser.get("result", profileFromArgs.RESULT_PATH)
     val delimiter = parser.get("delimiter", profileFromArgs.DELIMITER)
@@ -60,6 +61,7 @@ abstract class Experiment {
 
     Params(inputPath = inputPath,
       streamPath = streamPath,
+      materializedPath = materializedPath,
       evaluationPath = evaluationPath,
       resultPath = resultPath,
       initialPipeline = pipelineLocation,

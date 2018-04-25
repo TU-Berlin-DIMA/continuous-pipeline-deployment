@@ -142,8 +142,8 @@ class URLRepPipeline(@transient var spark: SparkContext,
 }
 
 object URLRepPipeline {
-  val INPUT_PATH = "data/url-reputation/processed/initial-training/day=0"
-  val TEST_PATH = "data/url-reputation/processed/stream/day=1"
+  val INPUT_PATH = "data/url-reputation/processed/initial-training/"
+  val TEST_PATH = "data/url-reputation/processed/stream/day=45"
 
   def main(args: Array[String]): Unit = {
     val parser = new CommandLineParser(args).parse()
@@ -165,7 +165,7 @@ object URLRepPipeline {
       numCategories = 30000,
       convergenceTol = 1E-6)
 
-    val rawTraining = spark.textFile(inputPath)
+    val rawTraining = spark.textFile(testPath)
     urlRepPipeline.updateTransformTrain(rawTraining, 10000)
 
 

@@ -25,18 +25,21 @@ class OnlineDeployment(val streamBase: String,
 
 
     while (!streamingSource.allFileProcessed()) {
-
+      val start = System.currentTimeMillis()
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
       rdd.setName(s"Stream $time")
       rdd.cache()
 
       if (evaluation == "prequential") {
         // perform evaluation
-        evaluateStream(pipeline, rdd, resultPath, "online-no-scaling")
+        evaluateStream(pipeline, rdd, resultPath, "online")
       }
       pipeline.updateTransformTrain(rdd)
       rdd.unpersist()
       time += 1
+      val end = System.currentTimeMillis()
+      val elapsed = end - start
+      storeElapsedTime(elapsed, resultPath, "online")
     }
   }
 }

@@ -7,6 +7,7 @@ import de.dfki.ml.pipelines.Pipeline
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.spark.mllib.regression.LabeledPoint
+import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.StreamingContext
@@ -20,6 +21,7 @@ import scala.collection.mutable.ListBuffer
   */
 class ContinuousDeploymentWithOptimizations(val history: String,
                                             val streamBase: String,
+                                            val materializeBase: String,
                                             val evaluation: String = "prequential",
                                             val resultPath: String,
                                             val daysToProcess: Array[Int],
@@ -36,8 +38,13 @@ class ContinuousDeploymentWithOptimizations(val history: String,
 
     val streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](streamingContext, streamBase, days = daysToProcess)
 
-    var processedRDD: ListBuffer[RDD[LabeledPoint]] = new ListBuffer[RDD[LabeledPoint]]()
-    processedRDD += pipeline.transform(data)
+    //var processedRDD: ListBuffer[RDD[LabeledPoint]] = new ListBuffer[RDD[LabeledPoint]]()
+    val pData = pipeline.transform(data)
+    //processedRDD += pData
+    pData.saveAsTextFile(s"$materializeBase/history/")
+    var materilizedFiles: ListBuffer[String] = new ListBuffer[String]()
+    materilizedFiles += s"$materializeBase/history/"
+
 
     pipeline.model.setMiniBatchFraction(1.0)
     pipeline.model.setNumIterations(1)
@@ -45,27 +52,43 @@ class ContinuousDeploymentWithOptimizations(val history: String,
 
     var time = 1
     while (!streamingSource.allFileProcessed()) {
+      val start = System.currentTimeMillis()
+      val fileName = streamingSource.getNextFileName.get
+      val day = fileName.indexOf("day")
+      val path = fileName.substring(day, fileName.length)
+      val matFolder = s"$materializeBase/$path"
+
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
       if (evaluation == "prequential") {
         // perform evaluation
-        evaluateStream(pipeline, rdd, resultPath, s"${sampler.name}")
+        evaluateStream(pipeline, rdd, resultPath, s"continuous-with-optimization-${sampler.name}")
       }
       // update and transform using the pipeline and cache the materialized data
-      val pRDD = pipeline.updateAndTransform(rdd).persist(StorageLevel.MEMORY_AND_DISK)
+      val pRDD = pipeline.updateAndTransform(rdd).setName(s"RDD_$time").persist(StorageLevel.MEMORY_ONLY)
 
       pipeline.train(pRDD)
 
+      pRDD.saveAsTextFile(matFolder)
+      materilizedFiles += matFolder
+      pRDD.unpersist()
 
       if (time % slack == 0) {
-        val historicalSample = provideHistoricalSample(processedRDD)
-        if (historicalSample.nonEmpty) {
-          val transformed = streamingContext.sparkContext.union(historicalSample).cache()
+        val indices = sampler.sampleIndices(materilizedFiles.indices.toList)
+
+        //val historicalSample = provideHistoricalSample(processedRDD)
+        if (indices.nonEmpty) {
+          val transformed = MLUtils
+            .loadLabeledPoints(streamingContext.sparkContext, indices.map(materilizedFiles).mkString(",")).persist(StorageLevel.MEMORY_ONLY)
           pipeline.train(transformed)
-          transformed.unpersist(true  )
+          transformed.unpersist()
         }
       }
-      processedRDD += pRDD
+     // processedRDD += pRDD
       time += 1
+      val end = System.currentTimeMillis()
+      val elapsed = end - start
+      storeElapsedTime(elapsed, resultPath, s"continuous-with-optimization-${sampler.name}")
+
     }
   }
 }

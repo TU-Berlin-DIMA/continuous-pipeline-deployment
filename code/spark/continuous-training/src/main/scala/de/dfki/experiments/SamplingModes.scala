@@ -30,6 +30,7 @@ object SamplingModes extends Experiment {
 
     new ContinuousDeploymentWithOptimizations(history = params.inputPath,
       streamBase = params.streamPath,
+      materializeBase = params.materializedPath,
       evaluation = s"${params.evaluationPath}",
       resultPath = s"${params.resultPath}",
       daysToProcess = params.days,
@@ -41,6 +42,7 @@ object SamplingModes extends Experiment {
 
     new ContinuousDeploymentWithOptimizations(history = params.inputPath,
       streamBase = params.streamPath,
+      materializeBase = params.materializedPath,
       evaluation = s"${params.evaluationPath}",
       resultPath = s"${params.resultPath}",
       daysToProcess = params.days,
@@ -52,6 +54,7 @@ object SamplingModes extends Experiment {
 
     new ContinuousDeploymentWithOptimizations(history = params.inputPath,
       streamBase = params.streamPath,
+      materializeBase = params.materializedPath,
       evaluation = s"${params.evaluationPath}",
       resultPath = s"${params.resultPath}",
       daysToProcess = params.days,

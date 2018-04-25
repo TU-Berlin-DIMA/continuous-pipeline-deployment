@@ -18,8 +18,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 object DeploymentModesQualityAndTime extends Experiment {
 
   override val defaultProfile = new URLProfile {
-    override val RESULT_PATH = "../../../experiment-results/url-reputation/deployment-modes-quality-time"
-    override val INITIAL_PIPELINE = "data/url-reputation/pipelines/best/adam"
+    override val RESULT_PATH = "/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/deployment-modes"
   }
 
   def main(args: Array[String]): Unit = {
@@ -32,70 +31,59 @@ object DeploymentModesQualityAndTime extends Experiment {
     //
     var ssc = new StreamingContext(conf, Seconds(1))
     //
-    // online only training
-    var start = System.currentTimeMillis()
-    val onlinePipeline = getPipeline(ssc.sparkContext, params)
-    new OnlineDeployment(
-      streamBase = params.streamPath,
-      evaluation = s"${params.evaluationPath}",
-      resultPath = s"${params.resultPath}",
-      daysToProcess = params.days).deploy(ssc, onlinePipeline)
-    var end = System.currentTimeMillis()
-    storeTime(end - start, s"${params.resultPath}", "online-time")
-
-    ssc.stop(stopSparkContext = true, stopGracefully = true)
-    ssc = new StreamingContext(conf, Seconds(1))
+    //    // online only training
+    //    val onlinePipeline = getPipeline(ssc.sparkContext, params)
+    //    new OnlineDeployment(
+    //      streamBase = params.streamPath,
+    //      evaluation = s"${params.evaluationPath}",
+    //      resultPath = s"${params.resultPath}",
+    //      daysToProcess = params.days).deploy(ssc, onlinePipeline)
     //
-    //    // continuously train with full optimization set
-    start = System.currentTimeMillis()
+    //    ssc.stop(stopSparkContext = true, stopGracefully = true)
+    //    ssc = new StreamingContext(conf, Seconds(1))
+
+    // continuously train with full optimization set
     val continuousPipelineWithOptimization = getPipeline(ssc.sparkContext, params)
     new ContinuousDeploymentWithOptimizations(history = params.inputPath,
       streamBase = params.streamPath,
+      materializeBase = params.materializedPath,
       evaluation = s"${params.evaluationPath}",
       resultPath = s"${params.resultPath}",
       daysToProcess = params.days,
       slack = params.slack,
       sampler = new TimeBasedSampler(size = params.sampleSize)).deploy(ssc, continuousPipelineWithOptimization)
-    end = System.currentTimeMillis()
-    storeTime(end - start, s"${params.resultPath}", "continuous-with-optimization-time")
 
 
     ssc.stop(stopSparkContext = true, stopGracefully = true)
     ssc = new StreamingContext(conf, Seconds(1))
 
     // baseline with no online learning
-    start = System.currentTimeMillis()
     val baselinePipeline = getPipeline(ssc.sparkContext, params)
     new BaselineDeployment(streamBase = params.streamPath,
       evaluation = s"${params.evaluationPath}",
       resultPath = s"${params.resultPath}",
       daysToProcess = params.days
     ).deploy(ssc, baselinePipeline)
-    end = System.currentTimeMillis()
-    storeTime(end - start, s"${params.resultPath}", "baseline-time")
+
 
     ssc.stop(stopSparkContext = true, stopGracefully = true)
     ssc = new StreamingContext(conf, Seconds(1))
 
     // periodical with online learning
-    start = System.currentTimeMillis()
-    val periodicalPipeline = getPipeline(ssc.sparkContext, params)
-    new MultiOnlineDeployment(history = params.inputPath,
-      streamBase = params.streamPath,
-      evaluation = s"${params.evaluationPath}",
-      resultPath = s"${params.resultPath}",
-      daysToProcess = params.days,
-      frequency = params.dayDuration * 10,
-      sparkConf = conf
-    ).deploy(ssc, periodicalPipeline)
-    end = System.currentTimeMillis()
-    storeTime(end - start, s"${params.resultPath}", "periodical-time")
+    //    val periodicalPipeline = getPipeline(ssc.sparkContext, params)
+    //    new MultiOnlineDeployment(history = params.inputPath,
+    //      streamBase = params.streamPath,
+    //      evaluation = s"${params.evaluationPath}",
+    //      resultPath = s"${params.resultPath}",
+    //      daysToProcess = params.days,
+    //      frequency = params.dayDuration * 10,
+    //      sparkConf = conf
+    //    ).deploy(ssc, periodicalPipeline)
+    //
+    //    ssc.stop(stopSparkContext = true, stopGracefully = true)
+    //    ssc = new StreamingContext(conf, Seconds(1))
 
-    ssc.stop(stopSparkContext = true, stopGracefully = true)
-    ssc = new StreamingContext(conf, Seconds(1))
 
-    // periodical with online learning
-    start = System.currentTimeMillis()
     val periodicalPipelineWarm = getPipeline(ssc.sparkContext, params)
     new MultiOnlineWithWarmStartingDeployment(history = params.inputPath,
       streamBase = params.streamPath,
@@ -105,9 +93,5 @@ object DeploymentModesQualityAndTime extends Experiment {
       frequency = params.dayDuration * 10,
       sparkConf = conf
     ).deploy(ssc, periodicalPipelineWarm)
-    end = System.currentTimeMillis()
-    storeTime(end - start, s"${params.resultPath}", "periodical-warm-time")
-
-
   }
 }

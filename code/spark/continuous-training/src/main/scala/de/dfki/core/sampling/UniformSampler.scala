@@ -13,7 +13,7 @@ class UniformSampler(size: Int = 100) extends Sampler {
     */
   override def sampleIndices(indices: List[Int]) = {
     val sampleSize = math.min(indices.size, size)
-    logger.info(s"Total rdds = ${indices.size}, Sample size = $sampleSize")
+    //logger.info(s"Total rdds = ${indices.size}, Sample size = $sampleSize")
     Random.shuffle(indices).take(sampleSize)
   }
 

@@ -199,6 +199,14 @@ class BatchFileInputDStream[K, V, F <: NewInputFormat[K, V]](_ssc: StreamingCont
     }
   }
 
+  def getNextFileName: Option[String] = {
+    if (!allFileProcessed()) {
+      Option(files(lastProcessedFileIndex))
+    } else {
+      None
+    }
+  }
+
   def allFileProcessed(): Boolean = {
     lastProcessedFileIndex >= files.length
   }

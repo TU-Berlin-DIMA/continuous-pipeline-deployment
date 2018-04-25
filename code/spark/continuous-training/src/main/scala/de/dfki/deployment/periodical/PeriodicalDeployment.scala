@@ -48,14 +48,15 @@ class PeriodicalDeployment(val history: String,
     var time = 1
     if (evaluation != "prequential") {
       // initial evaluation of the pipeline right after deployment for non prequential based method
-      evaluateStream(copyPipeline, testData, resultPath, "periodical")
+      evaluateStream(copyPipeline, testData, resultPath, "periodical-no-warmstarting-old")
     }
     while (!streamingSource.allFileProcessed()) {
+      val start = System.currentTimeMillis()
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
 
       if (evaluation == "prequential") {
         // perform evaluation
-        evaluateStream(copyPipeline, rdd, resultPath, "periodical")
+        evaluateStream(copyPipeline, rdd, resultPath, "periodical-no-warmstarting-old")
       }
       copyPipeline.updateTransformTrain(rdd)
 
@@ -73,6 +74,9 @@ class PeriodicalDeployment(val history: String,
         copyPipeline.model.setConvergenceTol(0.0)
       }
       time += 1
+      val end = System.currentTimeMillis()
+      val elapsed = end - start
+      storeElapsedTime(elapsed, resultPath, "periodical-no-warmstarting-old")
     }
   }
 

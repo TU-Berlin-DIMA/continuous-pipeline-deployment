@@ -32,8 +32,18 @@ abstract class Deployment(val slack: Int = 0,
     storeLogisticLoss(score, resultPath, postfix)
   }
 
+  def storeElapsedTime(time: Long, resultPath: String, postfix: String) = {
+    val file = new File(s"$resultPath/$postfix/time")
+    file.getParentFile.mkdirs()
+    val fw = new FileWriter(file, true)
+    try {
+      fw.write(s"$time\n")
+    }
+    finally fw.close()
+  }
+
   val storeLogisticLoss = (score: Score, resultPath: String, postfix: String) => {
-    val file = new File(s"$resultPath/${score.scoreType()}-$postfix")
+    val file = new File(s"$resultPath/$postfix/${score.scoreType()}")
     file.getParentFile.mkdirs()
     val fw = new FileWriter(file, true)
     try {

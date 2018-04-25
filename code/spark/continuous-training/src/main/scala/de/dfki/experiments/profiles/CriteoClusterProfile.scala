@@ -6,6 +6,7 @@ package de.dfki.experiments.profiles
 class CriteoClusterProfile extends Profile{
   override val INPUT_PATH = "hdfs://cloud-11:44000/user/behrouz/criteo/experiments/initial-training/day=0"
   override val STREAM_PATH = "hdfs://cloud-11:44000/user/behrouz/criteo/experiments/stream"
+  override val MATERIALIZED_PATH = "hdfs://cloud-11:44000/user/behrouz/criteo/experiments/materialized"
   override val EVALUATION_PATH = "prequential"
   override val RESULT_PATH = "/share/hadoop/behrouz/experiments/criteo-full/sampling"
   override val INITIAL_PIPELINE = "/share/hadoop/behrouz/experiments/criteo-full/sampling-mode-prequential/pipelines/init_500"

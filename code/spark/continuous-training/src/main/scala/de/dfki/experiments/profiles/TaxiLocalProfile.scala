@@ -6,6 +6,7 @@ package de.dfki.experiments.profiles
 class TaxiLocalProfile extends Profile {
   override val INPUT_PATH = "data/nyc-taxi/processed/initial-training"
   override val STREAM_PATH = "data/nyc-taxi/processed/stream"
+  override val MATERIALIZED_PATH = "data/nyc-taxi/processed/materialized"
   override val EVALUATION_PATH = "prequential"
   override val RESULT_PATH = "/share/hadoop/behrouz/experiments/nyx-taxi/results/param-selection"
   override val INITIAL_PIPELINE = "/share/hadoop/behrouz/experiments/nyx-taxi/pipelines/best/adam"

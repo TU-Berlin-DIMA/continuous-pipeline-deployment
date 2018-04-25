@@ -5,10 +5,11 @@ package de.dfki.experiments.profiles
   */
 class URLProfile extends Profile {
   val INPUT_PATH = "data/url-reputation/processed/initial-training"
-  val STREAM_PATH = "data/url-reputation/processed/stream"
+  val STREAM_PATH = "/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/url-reputation/processed/stream"
+  val MATERIALIZED_PATH = "/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/url-reputation/processed/materialized"
   val EVALUATION_PATH = "prequential"
   val RESULT_PATH = "../../../experiment-results/url-reputation/sampling"
-  val INITIAL_PIPELINE = "data/url-reputation/pipelines/best/adam-0.001"
+  val INITIAL_PIPELINE = "/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/pipelines/best/adam-0.001"
   override val DELIMITER = ","
   // val NUM_FEATURES = 3231961
   val NUM_FEATURES = 3000

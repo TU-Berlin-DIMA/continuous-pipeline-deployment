@@ -40,17 +40,21 @@ class MultiOnlineWithWarmStartingDeployment(val history: String,
       var time = 1
       // code block for deployment between two periodical trainings
       while (time <= frequency) {
+        val innerStart = System.currentTimeMillis()
         val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
 
         if (evaluation == "prequential") {
           // perform evaluation
-          evaluateStream(pipeline, rdd, resultPath, "periodical-warm")
+          evaluateStream(pipeline, rdd, resultPath, "periodical-with-warmstarting")
         }
 
         pipeline.updateTransformTrain(rdd)
         time += 1
+        val innerEnd = System.currentTimeMillis()
+        val innerElapsed = innerEnd - innerStart
+        storeElapsedTime(innerElapsed, resultPath, "periodical-with-warmstarting")
       }
-
+      val outerStart = System.currentTimeMillis()
       logger.info(s"Initiating a new offline training")
       val lastProcessed = streamingSource.getLastIndex
       val nextBatch = history :: ALLFILES.slice(0, lastProcessed).toList
@@ -69,6 +73,9 @@ class MultiOnlineWithWarmStartingDeployment(val history: String,
       pipeline.model.setConvergenceTol(0.0)
       streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](copyContext, streamBase, days = daysToProcess)
       streamingSource.setLastIndex(lastProcessed)
+      val outerEnd = System.currentTimeMillis()
+      val outerElapsed = outerEnd - outerStart
+      storeElapsedTime(outerElapsed, resultPath, "periodical-with-warmstarting")
     }
   }
 }

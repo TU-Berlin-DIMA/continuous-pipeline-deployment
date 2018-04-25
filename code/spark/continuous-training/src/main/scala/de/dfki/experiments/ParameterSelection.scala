@@ -75,8 +75,9 @@ object ParameterSelection extends Experiment {
         val pipeline = getPipeline(ssc.sparkContext, params)
         new ContinuousDeploymentWithOptimizations(history = params.inputPath,
           streamBase = params.streamPath,
-          evaluation = s"${params.evaluationPath}",
-          resultPath = s"${params.resultPath}",
+          materializeBase = params.materializedPath,
+          evaluation = params.evaluationPath,
+          resultPath = params.resultPath,
           daysToProcess = params.days,
           slack = params.slack,
           sampler = new TimeBasedSampler(size = params.sampleSize)).deploy(ssc, pipeline)

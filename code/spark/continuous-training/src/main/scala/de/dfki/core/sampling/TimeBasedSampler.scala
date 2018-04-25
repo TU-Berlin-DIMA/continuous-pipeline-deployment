@@ -14,7 +14,7 @@ class TimeBasedSampler(size: Int = 100) extends Sampler {
     */
   override def sampleIndices(indices: List[Int]) = {
     val sampleSize = math.min(indices.size, size)
-    logger.info(s"Total rdds = ${indices.size}, Sample size = $sampleSize")
+    //logger.info(s"Total rdds = ${indices.size}, Sample size = $sampleSize")
     val s = indices.sum.toDouble
     // indices starts from zero, we must increment them by one
     val weights = indices.map(_ + 1).map(i => i / s).toArray

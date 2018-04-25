@@ -6,6 +6,7 @@ package de.dfki.experiments.profiles
 class TaxiClusterProfile extends Profile {
   override val INPUT_PATH = "hdfs://cloud-11:44000/user/behrouz/nyc-taxi/experiments/processed/initial-training"
   override val STREAM_PATH = "hdfs://cloud-11:44000/user/behrouz/nyc-taxi/experiments/processed/stream"
+  override val MATERIALIZED_PATH = "hdfs://cloud-11:44000/user/behrouz/nyc-taxi/experiments/processed/materialized"
   override val EVALUATION_PATH = "prequential"
   override val RESULT_PATH = "/share/hadoop/behrouz/experiments/nyc-taxi/results/param-selection"
   override val INITIAL_PIPELINE = "/share/hadoop/behrouz/experiments/nyc-taxi/pipelines/best/adam"

@@ -6,6 +6,7 @@ package de.dfki.experiments.profiles
 abstract class Profile {
   val INPUT_PATH: String
   val STREAM_PATH: String
+  val MATERIALIZED_PATH: String
   val EVALUATION_PATH: String
   val RESULT_PATH: String
   val INITIAL_PIPELINE: String

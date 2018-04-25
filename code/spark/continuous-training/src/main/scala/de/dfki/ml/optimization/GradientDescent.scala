@@ -156,7 +156,6 @@ object GradientDescent {
 
 
     val numFeatures = initialWeights.size
-    logger.info(s"Readjusting the weight size to $numFeatures")
     gradient.setNumFeatures(numFeatures)
     // Initialize weights as a column vector
     var weights = if (!fitIntercept) {
@@ -177,9 +176,6 @@ object GradientDescent {
       * if it's L2 updater; for L1 updater, the same logic is followed.
       */
     //var regVal = updater.compute(weights, Vectors.zeros(weights.size), 0, 1, regParam)._2
-
-
-    logger.info(s"Dataset storage level: ${data.getStorageLevel.toString()}")
 
     var converged = false
     var prevLoss = Double.MaxValue
@@ -229,7 +225,7 @@ object GradientDescent {
       i += 1
     }
 
-    logger.info(s"converged after ${i - 1} iterations")
+    //logger.info(s"converged after ${i - 1} iterations")
     (weights, i - 1)
   }
 

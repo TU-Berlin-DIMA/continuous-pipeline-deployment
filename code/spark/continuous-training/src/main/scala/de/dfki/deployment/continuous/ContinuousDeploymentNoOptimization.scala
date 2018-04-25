@@ -51,12 +51,13 @@ class ContinuousDeploymentNoOptimization(val history: String,
 
     if (evaluation != "prequential") {
       // initial evaluation of the pipeline right after deployment for non prequential based method
-      evaluateStream(pipeline, testData, resultPath, sampler.name)
+      evaluateStream(pipeline, testData, resultPath, s"continuous-no-optimization-${sampler.name}")
     }
     while (!streamingSource.allFileProcessed()) {
+      val start = System.currentTimeMillis()
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
       rdd.setName(s"Stream $time")
-      rdd.persist(StorageLevel.MEMORY_AND_DISK)
+      rdd.persist(StorageLevel.MEMORY_ONLY)
 
       if (evaluation == "prequential") {
         // perform evaluation
@@ -75,7 +76,7 @@ class ContinuousDeploymentNoOptimization(val history: String,
           trainingData.unpersist(blocking = true)
           if (evaluation != "prequential") {
             // if evaluation method is not prequential, only perform evaluation after a training step
-            evaluateStream(pipeline, testData, resultPath, sampler.name)
+            evaluateStream(pipeline, testData, resultPath, s"continuous-no-optimization-${sampler.name}")
           }
         } else {
           logger.warn(s"Sample in iteration $time is empty")
@@ -83,6 +84,9 @@ class ContinuousDeploymentNoOptimization(val history: String,
       }
       processedRDD += rdd
       time += 1
+      val end = System.currentTimeMillis()
+      val elapsed = end - start
+      storeElapsedTime(elapsed, resultPath, s"continuous-no-optimization-${sampler.name}")
     }
   }
 }

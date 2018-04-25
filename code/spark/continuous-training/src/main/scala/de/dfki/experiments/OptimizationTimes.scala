@@ -46,6 +46,7 @@ object OptimizationTimes extends Experiment {
     val continuousPipelineWithOptimization = getPipeline(ssc.sparkContext, params)
     new ContinuousDeploymentWithOptimizations(history = params.inputPath,
       streamBase = params.streamPath,
+      materializeBase =params.materializedPath,
       evaluation = s"${params.evaluationPath}",
       resultPath = s"${params.resultPath}",
       daysToProcess = params.days,

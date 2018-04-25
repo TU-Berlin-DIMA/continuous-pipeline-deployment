@@ -51,24 +51,28 @@ class MultiOnlineDeployment(val history: String,
     val ALLFILES = streamingSource.files
     if (evaluation != "prequential") {
       // initial evaluation of the pipeline right after deployment for non prequential based method
-      evaluateStream(copyPipeline, testData, resultPath, "periodical")
+      evaluateStream(copyPipeline, testData, resultPath, "periodical-no-warmstarting")
     }
     while (!streamingSource.allFileProcessed()) {
       var time = 1
       // code block for deployment between two periodical trainings
       while (time <= frequency) {
+        val innerStart = System.currentTimeMillis()
         val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
 
         if (evaluation == "prequential") {
           // perform evaluation
-          evaluateStream(copyPipeline, rdd, resultPath, "periodical")
+          evaluateStream(copyPipeline, rdd, resultPath, "periodical-no-warmstarting")
         } else {
-          evaluateStream(copyPipeline, testData, resultPath, "periodical")
+          evaluateStream(copyPipeline, testData, resultPath, "periodical-no-warmstarting")
         }
         copyPipeline.updateTransformTrain(rdd)
         time += 1
+        val innerEnd = System.currentTimeMillis()
+        val innerElapsed = innerEnd - innerStart
+        storeElapsedTime(innerElapsed, resultPath, "periodical-no-warmstarting")
       }
-
+      val outerStart = System.currentTimeMillis()
       logger.info(s"Initiating a new offline training")
       val lastProcessed = streamingSource.getLastIndex
       val nextBatch = history :: ALLFILES.slice(0, lastProcessed).toList
@@ -86,6 +90,9 @@ class MultiOnlineDeployment(val history: String,
       copyPipeline.model.setConvergenceTol(0.0)
       streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](copyContext, streamBase, days = daysToProcess)
       streamingSource.setLastIndex(lastProcessed)
+      val outerEnd = System.currentTimeMillis()
+      val outerElapsed = outerEnd - outerStart
+      storeElapsedTime(outerElapsed, resultPath, "periodical-no-warmstarting")
     }
   }
 }
