@@ -16,7 +16,7 @@ class BaselineDeployment(val streamBase: String,
                          val daysToProcess: Array[Int]) extends Deployment {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
-    val start = System.currentTimeMillis()
+
     val testData = streamingContext
       .sparkContext
       .textFile(evaluation)
@@ -32,7 +32,7 @@ class BaselineDeployment(val streamBase: String,
     }
 
     while (!streamingSource.allFileProcessed()) {
-
+      val start = System.currentTimeMillis()
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
       if (evaluation == "prequential") {
         // perform evaluation
@@ -41,6 +41,9 @@ class BaselineDeployment(val streamBase: String,
         evaluateStream(pipeline, testData, resultPath, "baseline")
       }
       time += 1
+      val end = System.currentTimeMillis()
+      val elapsed = end - start
+      storeElapsedTime(elapsed, resultPath, "baseline")
     }
   }
 }

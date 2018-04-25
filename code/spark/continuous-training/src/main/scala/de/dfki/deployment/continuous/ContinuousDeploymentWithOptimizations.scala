@@ -7,7 +7,6 @@ import de.dfki.ml.pipelines.Pipeline
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
 import org.apache.spark.mllib.regression.LabeledPoint
-import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.StreamingContext
@@ -38,13 +37,9 @@ class ContinuousDeploymentWithOptimizations(val history: String,
 
     val streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](streamingContext, streamBase, days = daysToProcess)
 
-    //var processedRDD: ListBuffer[RDD[LabeledPoint]] = new ListBuffer[RDD[LabeledPoint]]()
+    var processedRDD: ListBuffer[RDD[LabeledPoint]] = new ListBuffer[RDD[LabeledPoint]]()
     val pData = pipeline.transform(data)
-    //processedRDD += pData
-    pData.saveAsTextFile(s"$materializeBase/history/")
-    var materilizedFiles: ListBuffer[String] = new ListBuffer[String]()
-    materilizedFiles += s"$materializeBase/history/"
-
+    processedRDD += pData
 
     pipeline.model.setMiniBatchFraction(1.0)
     pipeline.model.setNumIterations(1)
@@ -56,7 +51,6 @@ class ContinuousDeploymentWithOptimizations(val history: String,
       val fileName = streamingSource.getNextFileName.get
       val day = fileName.indexOf("day")
       val path = fileName.substring(day, fileName.length)
-      val matFolder = s"$materializeBase/$path"
 
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
       if (evaluation == "prequential") {
@@ -68,22 +62,16 @@ class ContinuousDeploymentWithOptimizations(val history: String,
 
       pipeline.train(pRDD)
 
-      pRDD.saveAsTextFile(matFolder)
-      materilizedFiles += matFolder
-      pRDD.unpersist()
-
       if (time % slack == 0) {
-        val indices = sampler.sampleIndices(materilizedFiles.indices.toList)
-
-        //val historicalSample = provideHistoricalSample(processedRDD)
-        if (indices.nonEmpty) {
-          val transformed = MLUtils
-            .loadLabeledPoints(streamingContext.sparkContext, indices.map(materilizedFiles).mkString(",")).persist(StorageLevel.MEMORY_ONLY)
+        val historicalSample = provideHistoricalSample(processedRDD)
+        if (historicalSample.nonEmpty) {
+          val transformed = streamingContext.sparkContext.union(historicalSample)
           pipeline.train(transformed)
-          transformed.unpersist()
+        } else {
+          logger.warn(s"Sample in iteration $time is empty")
         }
       }
-     // processedRDD += pRDD
+      processedRDD += pRDD
       time += 1
       val end = System.currentTimeMillis()
       val elapsed = end - start

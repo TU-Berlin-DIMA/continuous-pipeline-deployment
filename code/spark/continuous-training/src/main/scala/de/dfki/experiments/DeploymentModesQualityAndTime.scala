@@ -69,20 +69,6 @@ object DeploymentModesQualityAndTime extends Experiment {
     ssc.stop(stopSparkContext = true, stopGracefully = true)
     ssc = new StreamingContext(conf, Seconds(1))
 
-    // periodical with online learning
-    //    val periodicalPipeline = getPipeline(ssc.sparkContext, params)
-    //    new MultiOnlineDeployment(history = params.inputPath,
-    //      streamBase = params.streamPath,
-    //      evaluation = s"${params.evaluationPath}",
-    //      resultPath = s"${params.resultPath}",
-    //      daysToProcess = params.days,
-    //      frequency = params.dayDuration * 10,
-    //      sparkConf = conf
-    //    ).deploy(ssc, periodicalPipeline)
-    //
-    //    ssc.stop(stopSparkContext = true, stopGracefully = true)
-    //    ssc = new StreamingContext(conf, Seconds(1))
-
 
     val periodicalPipelineWarm = getPipeline(ssc.sparkContext, params)
     new MultiOnlineWithWarmStartingDeployment(history = params.inputPath,
