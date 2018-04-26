@@ -5,4 +5,4 @@ cp /home/behrouz/jar/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar 
 #cluster
 /share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.experiments.ParameterSelection --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "pipeline=/share/hadoop/behrouz/experiments/nyc-taxi/pipelines/hyperparameter-tuning" "iterations=5000" "mini-batch=0.1" "result=/share/hadoop/behrouz/experiments/nyc-taxi/results/param-selection" "profile=taxi-cluster" "days=32,120"
 
-scp -r behrouz@cloud-11.dima.tu-berlin.de:/share/hadoop/behrouz/experiments/nyc-taxi/results/param-selection/* /Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/nyc-taxi/param-selection
+scp -r behrouz@cloud-11.dima.tu-berlin.de:/share/hadoop/behrouz/experiments/nyc-taxi/results/param-selection/ /Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/nyc-taxi/param-selection
