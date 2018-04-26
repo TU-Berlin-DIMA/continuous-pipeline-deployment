@@ -18,10 +18,10 @@ taxiProcessing <- function (){
 }
 
 urlTable = urlHyperProcessing()
-write.table(urlTable, file = '../images/experiment-results/tikz/ps-url-table.csv')
+#write.table(urlTable, file = '../images/experiment-results/tikz/ps-url-table.csv')
 
 taxiTable = taxiProcessing()
-write.table(taxiTable, file = '../images/experiment-results/tikz/ps-taxi-table.csv')
+#write.table(taxiTable, file = '../images/experiment-results/tikz/ps-taxi-table.csv')
 
 
 ## Streaming data
@@ -65,13 +65,13 @@ taxiDataProcessing <- function(){
     rmsle = cumsum(read.csv(loc, header = FALSE, col.names = c('ssl','count')))
     return(sqrt(rmsle$ssl/rmsle$count))
   }
-  Adam = getRMSLE('nyc-taxi/param-selection/adam-0.001-0.001/rmsle-time_based-720')
-  #Rmsprop = getMisclassification('url-reputation/param-selection/rmsprop-0.001/confusion_matrix-time_based-100')
-  #Adadelta = getMisclassification('url-reputation/param-selection/adadelta-0.001/confusion_matrix-time_based-100')
+  Adam = getRMSLE('nyc-taxi/param-selection/adam-1.0E-4/continuous-with-optimization-time_based-720/rmsle')
+  Rmsprop = getRMSLE('nyc-taxi/param-selection/rmsprop-1.0E-4/continuous-with-optimization-time_based-720/rmsle')
+  Adadelta = getRMSLE('nyc-taxi/param-selection/adadelta-1.0E-4/continuous-with-optimization-time_based-720/rmsle')
   
-  df = data.frame(Time = 1:length(Adam), Adam)
-  DAY_DURATION = 100
-  df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 60), ]
+  df = data.frame(Time = 1:length(Adam), Adam, Rmsprop, Adadelta)
+  DAY_DURATION = 250
+  df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 50), ]
   ml = melt(df, id.vars = 'Time', variable_name ='Adaptation')
   return (ml)
 }
@@ -82,7 +82,7 @@ urlBreaks = c(100, 1500,3000)
 urlLabels = c("day1","day15","day30")
 
 taxiData = taxiDataProcessing()
-taxiBreaks = c(50,2100)
+taxiBreaks = c(50,2000)
 taxiLabels = c("Feb15", "Apr15")
 
 criteoData = criteoDataProcessing()
@@ -112,7 +112,7 @@ taxiPlot = ggpar(taxiPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize))+
         legend.key.width = unit(1.2,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         plot.margin = unit(c(0,1.5,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-1)),
+        axis.text.y = element_text(margin = margin(l = -10)),
         axis.text.x = element_text(margin = margin(t=-1)))
 
 criteoPlot = ggline(criteoData, 'Time', 'value', ylab = "MSE", xlab = '(c) Criteo',

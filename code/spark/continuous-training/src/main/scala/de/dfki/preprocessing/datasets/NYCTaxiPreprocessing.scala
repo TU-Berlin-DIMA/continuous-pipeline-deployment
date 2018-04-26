@@ -46,7 +46,7 @@ object NYCTaxiPreprocessing {
               val date = row.split(",")(1)
               val parsedDate = INPUT_FORMAT.parse(date)
               cal.setTime(parsedDate)
-              val hour = cal.get(Calendar.HOUR_OF_DAY)
+              val hour = "%04d".format(cal.get(Calendar.HOUR_OF_DAY))
               val day = if (cal.get(Calendar.YEAR) > 2015)
                 DAYS_IN_2015 + cal.get(Calendar.DAY_OF_YEAR)
               else
@@ -54,7 +54,7 @@ object NYCTaxiPreprocessing {
               Array((day, hour, row))
             } catch {
               case ex: java.text.ParseException => {
-                Array[(Int, Int, String)]()
+                Array[(Int, String, String)]()
               }
             }
         }

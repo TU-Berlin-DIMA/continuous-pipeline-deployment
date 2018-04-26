@@ -9,7 +9,7 @@ class TaxiClusterProfile extends Profile {
   override val MATERIALIZED_PATH = "hdfs://cloud-11:44000/user/behrouz/nyc-taxi/experiments/processed/materialized"
   override val EVALUATION_PATH = "prequential"
   override val RESULT_PATH = "/share/hadoop/behrouz/experiments/nyc-taxi/results/param-selection"
-  override val INITIAL_PIPELINE = "/share/hadoop/behrouz/experiments/nyc-taxi/pipelines/best/adam"
+  override val INITIAL_PIPELINE = "/share/hadoop/behrouz/experiments/nyc-taxi/pipelines/best/adam-1.0E-4"
   override val NUM_FEATURES = 0
   override val NUM_ITERATIONS: Int = 5000
   override val SLACK = 120
