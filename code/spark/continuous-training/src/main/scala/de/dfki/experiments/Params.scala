@@ -25,7 +25,8 @@ case class Params(inputPath: String = "",
                   var stepSize: Double = 0.1,
                   var updater: Updater = new SquaredL2UpdaterWithAdam(),
                   var batchEvaluationSet: String = "",
-                  var numPartitions: Int) {
+                  var numPartitions: Int,
+                  var trainingFrequency: Int) {
 
   def copy(): Params = {
     Params(inputPath = inputPath,
@@ -47,7 +48,8 @@ case class Params(inputPath: String = "",
       stepSize = stepSize,
       updater = updater,
       batchEvaluationSet = batchEvaluationSet,
-      numPartitions = numPartitions)
+      numPartitions = numPartitions,
+      trainingFrequency = trainingFrequency)
   }
 
 }

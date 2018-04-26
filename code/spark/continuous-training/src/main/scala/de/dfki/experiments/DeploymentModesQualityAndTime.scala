@@ -20,6 +20,7 @@ object DeploymentModesQualityAndTime extends Experiment {
   override val defaultProfile = new URLProfile {
     override val RESULT_PATH = "/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/deployment-modes"
   }
+
   def main(args: Array[String]): Unit = {
 
     val params = getParams(args, defaultProfile)
@@ -66,10 +67,10 @@ object DeploymentModesQualityAndTime extends Experiment {
     val periodicalPipelineWarm = getPipeline(ssc.sparkContext, params)
     new MultiOnlineWithWarmStartingDeployment(history = params.inputPath,
       streamBase = params.streamPath,
-      evaluation = s"${params.evaluationPath}",
-      resultPath = s"${params.resultPath}",
+      evaluation = params.evaluationPath,
+      resultPath = params.resultPath,
       daysToProcess = params.days,
-      frequency = params.dayDuration * 10,
+      frequency = params.trainingFrequency,
       numPartitions = params.numPartitions,
       sparkConf = conf
     ).deploy(ssc, periodicalPipelineWarm)

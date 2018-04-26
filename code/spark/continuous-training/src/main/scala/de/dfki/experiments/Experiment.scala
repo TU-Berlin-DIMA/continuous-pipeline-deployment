@@ -59,6 +59,7 @@ abstract class Experiment {
     val miniBatch = parser.getDouble("mini-batch", profileFromArgs.MINI_BATCH)
     val batchEvaluationSet = parser.get("eval-set", profileFromArgs.BATCH_EVALUATION)
     val numPartitions = parser.getInteger("partitions", profileFromArgs.NUM_PARTITIONS)
+    val trainingFrequency = parser.getInteger("training-frequency", profileFromArgs.TRAINING_FREQUENCY)
 
     Params(inputPath = inputPath,
       streamPath = streamPath,
@@ -80,7 +81,8 @@ abstract class Experiment {
       stepSize = stepSize,
       miniBatch = miniBatch,
       batchEvaluationSet = batchEvaluationSet,
-      numPartitions = numPartitions)
+      numPartitions = numPartitions,
+      trainingFrequency = trainingFrequency)
   }
 
   def getPipeline(spark: SparkContext, params: Params): Pipeline = {

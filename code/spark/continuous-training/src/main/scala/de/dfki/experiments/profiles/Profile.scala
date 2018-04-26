@@ -25,6 +25,7 @@ abstract class Profile {
   val UPDATER: String = "adam"
   val BATCH_EVALUATION: String = ""
   val NUM_PARTITIONS: Int = 8
+  val TRAINING_FREQUENCY: Int
 
   val PROFILE_NAME: String
 }

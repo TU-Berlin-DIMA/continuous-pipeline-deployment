@@ -19,6 +19,5 @@ class TaxiLocalProfile extends Profile {
   override val PIPELINE_NAME = "taxi"
   override val PROFILE_NAME = "taxi-local"
   override val BATCH_EVALUATION: String = "data/nyc-taxi/processed/batch-evaluation"
-
-
+  override val TRAINING_FREQUENCY = 720
 }

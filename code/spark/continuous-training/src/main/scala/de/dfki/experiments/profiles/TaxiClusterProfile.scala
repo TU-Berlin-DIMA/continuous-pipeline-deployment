@@ -12,7 +12,7 @@ class TaxiClusterProfile extends Profile {
   override val INITIAL_PIPELINE = "/share/hadoop/behrouz/experiments/nyc-taxi/pipelines/best/adam-1.0E-4"
   override val NUM_FEATURES = 0
   override val NUM_ITERATIONS: Int = 5000
-  override val SLACK = 120
+  override val SLACK = 24
   override val DAYS = "32,731"
   override val SAMPLE_SIZE = 720
   override val DAY_DURATION = 720
@@ -20,4 +20,5 @@ class TaxiClusterProfile extends Profile {
   override val PIPELINE_NAME = "taxi"
   override val PROFILE_NAME = "taxi-cluster"
   override val BATCH_EVALUATION: String = "hdfs://cloud-11:44000/user/behrouz/nyc-taxi/experiments/processed/batch-evaluation"
+  override val TRAINING_FREQUENCY = 720
 }

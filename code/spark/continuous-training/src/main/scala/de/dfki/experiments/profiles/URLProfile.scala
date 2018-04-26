@@ -29,5 +29,6 @@ class URLProfile extends Profile {
   override val STEP_SIZE = 0.001
   override val MINI_BATCH = 1.0
   override val BATCH_EVALUATION = "data/url-reputation/processed/batch-evaluation"
+  override val TRAINING_FREQUENCY = 1000
 }
 
