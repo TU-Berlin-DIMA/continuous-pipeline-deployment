@@ -3,6 +3,7 @@ library(ggplot2)
 library(reshape)
 library(tikzDevice)
 library(ggpubr)
+source('../code/r/final-plots/functions.r')
 
 
 urlHyperProcessing <- function (){
@@ -26,10 +27,6 @@ taxiTable = taxiProcessing()
 
 ## Streaming data
 urlDataProcessing <- function(){
-  getMisclassification <-function(loc){
-    confusionMatrix = cumsum(read.csv(loc, header = FALSE, col.names = c('tp','fp','tn','fn')))
-    return((confusionMatrix$fp + confusionMatrix$fn) / (confusionMatrix$fp + confusionMatrix$fn + confusionMatrix$tp + confusionMatrix$tn))
-  }
   Adam = getMisclassification('url-reputation/param-selection/adam-0.001/confusion_matrix-time_based-100')
   Rmsprop = getMisclassification('url-reputation/param-selection/rmsprop-0.001/confusion_matrix-time_based-100')
   Adadelta = getMisclassification('url-reputation/param-selection/adadelta-0.001/confusion_matrix-time_based-100')
@@ -61,10 +58,6 @@ criteoDataProcessing <- function(){
 }
 
 taxiDataProcessing <- function(){
-  getRMSLE <-function(loc){
-    rmsle = cumsum(read.csv(loc, header = FALSE, col.names = c('ssl','count')))
-    return(sqrt(rmsle$ssl/rmsle$count))
-  }
   Adam = getRMSLE('nyc-taxi/param-selection/adam-1.0E-4/continuous-with-optimization-time_based-720/rmsle')
   Rmsprop = getRMSLE('nyc-taxi/param-selection/rmsprop-1.0E-4/continuous-with-optimization-time_based-720/rmsle')
   Adadelta = getRMSLE('nyc-taxi/param-selection/adadelta-1.0E-4/continuous-with-optimization-time_based-720/rmsle')
@@ -101,7 +94,7 @@ urlPlot = ggpar(urlPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) +
         legend.key.width = unit(1.2,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         plot.margin = unit(c(0,1.2,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-1)),
+        axis.title.y = element_text(margin = margin(r=-5)),
         axis.text.x = element_text(margin = margin(t=-1)))
 
 taxiPlot = ggline(taxiData, 'Time', 'value', ylab = "RMSLE", xlab = '(b) Taxi',
@@ -112,7 +105,7 @@ taxiPlot = ggpar(taxiPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize))+
         legend.key.width = unit(1.2,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         plot.margin = unit(c(0,1.5,0,0), "lines"), 
-        axis.text.y = element_text(margin = margin(l = -10)),
+        axis.title.y = element_text(margin = margin(r=-5)),
         axis.text.x = element_text(margin = margin(t=-1)))
 
 criteoPlot = ggline(criteoData, 'Time', 'value', ylab = "MSE", xlab = '(c) Criteo',

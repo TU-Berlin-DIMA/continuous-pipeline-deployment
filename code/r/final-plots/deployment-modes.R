@@ -3,29 +3,19 @@ library(ggplot2)
 library(reshape)
 library(tikzDevice)
 library(ggpubr)
-
+source('../code/r/final-plots/functions.r')
 
 urlDataProcessing <- function(){
-  online = cumsum(read.csv('url-reputation/deployment-modes-quality-time/confusion_matrix-online', header = FALSE, col.names = c('tp','fp','tn','fn')))
-  online$mc = (online$fp + online$fn) / (online$fp + online$fn + online$tp + online$tn)
-  
-  continuous = cumsum(read.csv('url-reputation/deployment-modes-quality-time/confusion_matrix-time_based-100-with-optimization', header = FALSE, col.names = c('tp','fp','tn','fn')))
-  continuous$mc = (continuous$fp + continuous$fn) / (continuous$fp + continuous$fn + continuous$tp + continuous$tn)
-  
-  baseline = cumsum(read.csv('url-reputation/deployment-modes-quality-time/confusion_matrix-baseline', header = FALSE, col.names = c('tp','fp','tn','fn')))
-  baseline$mc = (baseline$fp + baseline$fn) / (baseline$fp + baseline$fn + baseline$tp + baseline$tn)
-  
-  periodical = cumsum(read.csv('url-reputation/deployment-modes-quality-time/confusion_matrix-periodical-warm', header = FALSE, col.names = c('tp','fp','tn','fn')))
-  periodical$mc = (periodical$fp + periodical$fn) / (periodical$fp + periodical$fn + periodical$tp + periodical$tn)
-  
+  Online = getMisclassification('url-reputation/deployment-modes-quality-time/confusion_matrix-online')
+  Continuous = getMisclassification('url-reputation/deployment-modes-quality-time/confusion_matrix-time_based-100-with-optimization')
+  Baseline = getMisclassification('url-reputation/deployment-modes-quality-time/confusion_matrix-baseline')
+  periodical = getMisclassification('url-reputation/deployment-modes-quality-time/confusion_matrix-periodical-warm')
+ 
   append <- function(vec, maxLength){
     return (c(vec,rep(NA, maxLength - length(vec))))
   }
-  maxLength = nrow(periodical)
-  df = data.frame(Time = 1:nrow(periodical), 
-                  Continuous =  continuous$mc,
-                  Periodical = periodical$mc,
-                  Online = online$mc)
+  maxLength = length(periodical)
+  df = data.frame(Time = 1:length(Periodical), Continuous, Periodical, Online)
   
   DAY_DURATION = 500
   df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 1), ]
@@ -37,69 +27,40 @@ urlDataProcessing <- function(){
 }
 
 criteoDataProcessing <- function(){
-  online = cumsum(read.csv('url-reputation/deployment-modes-quality-time/confusion_matrix-online', header = FALSE, col.names = c('tp','fp','tn','fn')))
-  online$mc = (online$fp + online$fn) / (online$fp + online$fn + online$tp + online$tn)
-  
-  continuous = cumsum(read.csv('url-reputation/deployment-modes-quality-time/confusion_matrix-time_based-100-with-optimization', header = FALSE, col.names = c('tp','fp','tn','fn')))
-  continuous$mc = (continuous$fp + continuous$fn) / (continuous$fp + continuous$fn + continuous$tp + continuous$tn)
-  
-  baseline = cumsum(read.csv('url-reputation/deployment-modes-quality-time/confusion_matrix-baseline', header = FALSE, col.names = c('tp','fp','tn','fn')))
-  baseline$mc = (baseline$fp + baseline$fn) / (baseline$fp + baseline$fn + baseline$tp + baseline$tn)
-  
-  periodical = cumsum(read.csv('url-reputation/deployment-modes-quality-time/confusion_matrix-periodical-warm', header = FALSE, col.names = c('tp','fp','tn','fn')))
-  periodical$mc = (periodical$fp + periodical$fn) / (periodical$fp + periodical$fn + periodical$tp + periodical$tn)
+  Online = getMisclassification('url-reputation/deployment-modes-quality-time/confusion_matrix-online')
+  Continuous = getMisclassification('url-reputation/deployment-modes-quality-time/confusion_matrix-time_based-100-with-optimization')
+  Baseline = getMisclassification('url-reputation/deployment-modes-quality-time/confusion_matrix-baseline')
+  periodical = getMisclassification('url-reputation/deployment-modes-quality-time/confusion_matrix-periodical-warm')
   
   append <- function(vec, maxLength){
     return (c(vec,rep(NA, maxLength - length(vec))))
   }
-  maxLength = nrow(periodical)
-  df = data.frame(Time = 1:nrow(periodical), 
-                  Continuous =  continuous$mc,
-                  Periodical = periodical$mc,
-                  Online = online$mc)
+  maxLength = length(periodical)
+  df = data.frame(Time = 1:length(Periodical), Continuous, Periodical, Online)
+  
   DAY_DURATION = 500
   df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 1), ]
   df$Online = df$Online * 100
   df$Continuous = df$Continuous * 100
-  #df$baseline = df$baseline * 100
   df$Periodical = df$Periodical * 100
-  df[,c(2,3,4)] = 0
+  df[,-1] = 0
   ml = melt(df, id.vars = 'Time', variable_name ='Deployment')
   return(ml)
-  
 }
 
 taxiDataProcessing <- function(){
-  online = cumsum(read.csv('url-reputation/deployment-modes-quality-time/confusion_matrix-online', header = FALSE, col.names = c('tp','fp','tn','fn')))
-  online$mc = (online$fp + online$fn) / (online$fp + online$fn + online$tp + online$tn)
+  Online = getRMSLE('nyc-taxi/deployment-modes/online/rmsle')
+  Continuous = getRMSLE('nyc-taxi/deployment-modes/continuous-with-optimization-time_based-720/rmsle')
+  #Baseline = getRMSLE('nyc-taxi/deployment-modes/continuous-with-optimization-time_based-720/rmsle')
+  #periodical = getRMSLE('nyc-taxi/deployment-modes/continuous-with-optimization-time_based-720/rmsle')
+
+  maxLength = length(Online)
+  df = data.frame(Time = 1:length(Online), append(Continuous,maxLength), Online)
   
-  continuous = cumsum(read.csv('url-reputation/deployment-modes-quality-time/confusion_matrix-time_based-100-with-optimization', header = FALSE, col.names = c('tp','fp','tn','fn')))
-  continuous$mc = (continuous$fp + continuous$fn) / (continuous$fp + continuous$fn + continuous$tp + continuous$tn)
-  
-  baseline = cumsum(read.csv('url-reputation/deployment-modes-quality-time/confusion_matrix-baseline', header = FALSE, col.names = c('tp','fp','tn','fn')))
-  baseline$mc = (baseline$fp + baseline$fn) / (baseline$fp + baseline$fn + baseline$tp + baseline$tn)
-  
-  periodical = cumsum(read.csv('url-reputation/deployment-modes-quality-time/confusion_matrix-periodical-warm', header = FALSE, col.names = c('tp','fp','tn','fn')))
-  periodical$mc = (periodical$fp + periodical$fn) / (periodical$fp + periodical$fn + periodical$tp + periodical$tn)
-  
-  append <- function(vec, maxLength){
-    return (c(vec,rep(NA, maxLength - length(vec))))
-  }
-  maxLength = nrow(periodical)
-  df = data.frame(Time = 1:nrow(periodical), 
-                  Continuous =  continuous$mc,
-                  Periodical = periodical$mc,
-                  Online = online$mc)
   DAY_DURATION = 500
   df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 1), ]
-  df$Online = df$Online * 100
-  df$Continuous = df$Continuous * 100
-  #df$baseline = df$baseline * 100
-  df$Periodical = df$Periodical * 100
-  df[,c(2,3,4)] = 0
   ml = melt(df, id.vars = 'Time', variable_name ='Deployment')
   return(ml)
-  
 }
 
 
@@ -108,8 +69,8 @@ urlBreaks = c(1,3000, 6000 ,9000, 12000)
 urlLabels = c("day1","day30", "day60", "day90","day120")
 
 taxiData = taxiDataProcessing()
-taxiBreaks = c(1,3000, 6000 ,9000, 12000)
-taxiLabels = c("Feb15","Jul15", "Jan16", "Jul16", "Dec16")
+taxiBreaks = c(1,4000, 8000, 12000)
+taxiLabels = c("Feb15","Jul15", "Jan16", "June16")
 
 criteoData = criteoDataProcessing()
 criteoBreaks = c(1,3000, 6000 ,9000, 12000)
@@ -133,8 +94,7 @@ urlPlot = ggpar(urlPlot, legend = "top", legend.title = "", font.x = c(fontLabel
         axis.text.x = element_text(margin = margin(t=-1)))
 
 taxiPlot = ggline(taxiData, 'Time', 'value', ylab = "RMSLE", xlab = '(b) Taxi',
-                  shape = '-1',size =1, linetype ='Deployment',color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize),
-                  ylim = c(min(urlData$value), max(urlData$value))) + 
+                  shape = '-1',size =1, linetype ='Deployment',color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = taxiBreaks, labels= taxiLabels) + rremove('legend')
 taxiPlot = ggpar(taxiPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) + 
   theme(legend.title = element_text(size = 0), 
