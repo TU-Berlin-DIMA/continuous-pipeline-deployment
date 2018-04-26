@@ -50,37 +50,27 @@ criteoDataProcessing <- function(){
 
 taxiDataProcessing <- function(){
   Online = getRMSLE('nyc-taxi/deployment-modes/online/rmsle')
-  Continuous = getRMSLE('nyc-taxi/deployment-modes/continuous-with-optimization-time_based-720/rmsle')
+  Continuous = getRMSLE('nyc-taxi/deployment-modes/continuous-with-optimization-time_based-360/rmsle')
   #Baseline = getRMSLE('nyc-taxi/deployment-modes/continuous-with-optimization-time_based-720/rmsle')
   #periodical = getRMSLE('nyc-taxi/deployment-modes/continuous-with-optimization-time_based-720/rmsle')
 
   maxLength = length(Online)
   df = data.frame(Time = 1:length(Online), append(Continuous,maxLength), Online)
   
-  DAY_DURATION = 500
+  DAY_DURATION = 100
   df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 1), ]
   ml = melt(df, id.vars = 'Time', variable_name ='Deployment')
   return(ml)
 }
 
+fontLabelSize = 10
+baseSize = 14
+
+####### URL PLOT ##########
 
 urlData = urlDataProcessing()
 urlBreaks = c(1,3000, 6000 ,9000, 12000)
 urlLabels = c("day1","day30", "day60", "day90","day120")
-
-taxiData = taxiDataProcessing()
-taxiBreaks = c(1,4000, 8000, 12000)
-taxiLabels = c("Feb15","Jul15", "Jan16", "June16")
-
-criteoData = criteoDataProcessing()
-criteoBreaks = c(1,3000, 6000 ,9000, 12000)
-criteoLabels = c("day1","day3", "day6", "day9","day12")
-
-
-
-fontLabelSize = 10
-baseSize = 14
-
 
 urlPlot = ggline(urlData, 'Time', 'value', ylab = "Misclassification (\\%)", xlab = '(a) URL',
                   shape = '-1', size = 1, linetype ='Deployment', color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
@@ -93,6 +83,11 @@ urlPlot = ggpar(urlPlot, legend = "top", legend.title = "", font.x = c(fontLabel
         axis.title.y = element_text(margin = margin(r=-1)),
         axis.text.x = element_text(margin = margin(t=-1)))
 
+####### TAXI PLOT ##########
+taxiData = taxiDataProcessing()
+taxiBreaks = c(1,4000, 8000, 12000)
+taxiLabels = c("Feb15","Jul15", "Jan16", "June16")
+
 taxiPlot = ggline(taxiData, 'Time', 'value', ylab = "RMSLE", xlab = '(b) Taxi',
                   shape = '-1',size =1, linetype ='Deployment',color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = taxiBreaks, labels= taxiLabels) + rremove('legend')
@@ -103,6 +98,11 @@ taxiPlot = ggpar(taxiPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) +
         plot.margin = unit(c(0,1.5,0,0), "lines"), 
         axis.title.y = element_text(margin = margin(r=-1)),
         axis.text.x = element_text(margin = margin(t=-1)))
+
+####### CRITEO PLOT ##########
+criteoData = criteoDataProcessing()
+criteoBreaks = c(1,3000, 6000 ,9000, 12000)
+criteoLabels = c("day1","day3", "day6", "day9","day12")
 
 criteoPlot = ggline(criteoData, 'Time', 'value', ylab = "MSE", xlab = '(c) Criteo',
                      shape = '-1',size =1, linetype ='Deployment',color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize),
