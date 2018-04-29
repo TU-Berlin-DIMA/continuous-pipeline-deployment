@@ -32,6 +32,6 @@ object RMSLE {
   }
 
   private def computeLogisticLoss(label: Double, prediction: Double): Double = {
-    pow(log(prediction + 1) - log(label), 2)
+    pow(log(prediction + 1) - log(label + 1), 2)
   }
 }

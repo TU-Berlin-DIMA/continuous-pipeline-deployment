@@ -1,6 +1,7 @@
 package de.dfki.ml.pipelines.nyc_taxi
 
 import java.io._
+import java.nio.file.{Files, Paths}
 
 import de.dfki.ml.evaluation.RMSLE
 import de.dfki.ml.optimization.updater.{SquaredL2UpdaterWithAdam, Updater}
@@ -115,30 +116,41 @@ class NYCTaxiPipeline(@transient var spark: SparkContext,
 
 object NYCTaxiPipeline {
   val INPUT_PATH = "data/nyc-taxi/raw/yellow_tripdata_2015-01.csv"
-  val TEST_PATH = "data/nyc-taxi/raw/yellow_tripdata_2015-02.csv"
+
+  //val TEST_PATH = "data/nyc-taxi/raw/yellow_tripdata_2015-02.csv" // jan = 0.09628878042094745
+
+  val TEST_PATH = "data/nyc-taxi/raw/yellow_tripdata_2016-06.csv" // jan = 0.10198806182634726
+
+  val PIPELINE = "/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/nyc-taxi-local/pipelines/test/temp"
 
   def main(args: Array[String]): Unit = {
     val parser = new CommandLineParser(args).parse()
     val inputPath = parser.get("input-path", INPUT_PATH)
     val testPath = parser.get("test-path", TEST_PATH)
+    val pipeline = parser.get("pipeline", PIPELINE)
 
-    val conf = new SparkConf().setAppName("URL Rep Pipeline Processing")
+    val conf = new SparkConf().setAppName("Taxi Pipeline Processing")
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
     val spark = new SparkContext(conf)
 
-    val nycTaxiPipeline = new NYCTaxiPipeline(spark = spark,
-      stepSize = 0.01,
-      numIterations = 10000,
-      regParam = 0.001,
-      convergenceTol = 1E-9,
-      miniBatchFraction = 1,
-      updater = new SquaredL2UpdaterWithAdam())
 
-    val rawTraining = spark.textFile(inputPath)
-    nycTaxiPipeline.updateTransformTrain(rawTraining, 2000)
-    //saveToDisk(nycTaxiPipeline, "data/nyc-taxi/pipelines/test")
-   // val nycTaxiPipeline = loadFromDisk("data/nyc-taxi/pipelines/test", spark)
+    val nycTaxiPipeline = if (Files.exists(Paths.get(pipeline))) {
+      loadFromDisk(pipeline, spark)
+    } else {
+      val pi = new NYCTaxiPipeline(spark = spark,
+        stepSize = 0.001,
+        numIterations = 5000,
+        regParam = 0.0001,
+        convergenceTol = 1E-6,
+        miniBatchFraction = 0.1,
+        updater = new SquaredL2UpdaterWithAdam())
+      val rawTraining = spark.textFile(inputPath)
+      pi.updateTransformTrain(rawTraining, iterations = 5000)
+      saveToDisk(pi, pipeline)
+      pi
+    }
+
 
     val rawTest = spark.textFile(testPath)
 

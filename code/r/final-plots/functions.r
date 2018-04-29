@@ -4,7 +4,7 @@ getMisclassification <-function(loc){
 }
 
 getRMSLE <-function(loc){
-  rmsle = cumsum(read.csv(loc, header = FALSE, col.names = c('ssl','count')))
+  rmsle = read.csv(loc, header = FALSE, col.names = c('ssl','count'))
   return(sqrt(rmsle$ssl/rmsle$count))
 }
 

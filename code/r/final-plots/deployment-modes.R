@@ -51,11 +51,11 @@ criteoDataProcessing <- function(){
 taxiDataProcessing <- function(){
   Online = getRMSLE('nyc-taxi/deployment-modes/online/rmsle')
   Continuous = getRMSLE('nyc-taxi/deployment-modes/continuous-with-optimization-time_based-360/rmsle')
-  #Baseline = getRMSLE('nyc-taxi/deployment-modes/continuous-with-optimization-time_based-720/rmsle')
-  #periodical = getRMSLE('nyc-taxi/deployment-modes/continuous-with-optimization-time_based-720/rmsle')
+  Baseline = getRMSLE('nyc-taxi/deployment-modes/baseline/rmsle')
+  Periodical = getRMSLE('nyc-taxi/deployment-modes/periodical-with-warmstarting/rmsle')
 
   maxLength = length(Online)
-  df = data.frame(Time = 1:length(Online), append(Continuous,maxLength), Online)
+  df = data.frame(Time = 1:length(Online),Continuous, Online, Periodical, Baseline )
   
   DAY_DURATION = 100
   df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 1), ]
@@ -85,12 +85,12 @@ urlPlot = ggpar(urlPlot, legend = "top", legend.title = "", font.x = c(fontLabel
 
 ####### TAXI PLOT ##########
 taxiData = taxiDataProcessing()
-taxiBreaks = c(1,4000, 8000, 12000)
+taxiBreaks = c(1,4000, 8000, 12300)
 taxiLabels = c("Feb15","Jul15", "Jan16", "June16")
 
 taxiPlot = ggline(taxiData, 'Time', 'value', ylab = "RMSLE", xlab = '(b) Taxi',
                   shape = '-1',size =1, linetype ='Deployment',color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
-  scale_x_continuous(breaks = taxiBreaks, labels= taxiLabels) + rremove('legend')
+  scale_x_continuous(breaks = taxiBreaks, labels= taxiLabels)
 taxiPlot = ggpar(taxiPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) + 
   theme(legend.title = element_text(size = 0), 
         legend.key.width = unit(1.2,'cm'),
@@ -98,6 +98,7 @@ taxiPlot = ggpar(taxiPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) +
         plot.margin = unit(c(0,1.5,0,0), "lines"), 
         axis.title.y = element_text(margin = margin(r=-1)),
         axis.text.x = element_text(margin = margin(t=-1)))
+taxiPlot
 
 ####### CRITEO PLOT ##########
 criteoData = criteoDataProcessing()
