@@ -53,12 +53,14 @@ taxiDataProcessing <- function(){
   Continuous = getRMSLE('nyc-taxi/deployment-modes/continuous-with-optimization-time_based-360/rmsle')
   Baseline = getRMSLE('nyc-taxi/deployment-modes/baseline/rmsle')
   Periodical = getRMSLE('nyc-taxi/deployment-modes/periodical-with-warmstarting/rmsle')
-
+  append <- function(vec, maxLength){
+    return (c(vec,rep(NA, maxLength - length(vec))))
+  }
   maxLength = length(Online)
   df = data.frame(Time = 1:length(Online),Continuous, Online, Periodical, Baseline )
   
-  DAY_DURATION = 100
-  df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 1), ]
+  DAY_DURATION = 500
+  df = df[((df$Time %% DAY_DURATION == 0)), ]
   ml = melt(df, id.vars = 'Time', variable_name ='Deployment')
   return(ml)
 }
