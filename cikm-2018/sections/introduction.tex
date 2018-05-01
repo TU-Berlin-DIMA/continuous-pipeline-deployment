@@ -9,9 +9,11 @@ To fully utilize the model, it has to be deployed into an environment where it c
 After the model is deployed, new training data may become available.
 Online learning methods are utilized to further train the deployed model.
 Online learning can adapt the model to the new training data and provide an up-to-date model.
-However, unless the online learning method is highly tuned to the specific use case, it cannot guarantee the same level of quality as offline batch training since updates based on individual data points may introduce model instability \cite{ma2009identifying, macmahan2013}. 
+However, updating a model based on the individual data points may introduce instability.
+Therefore, to guarantee the same level of quality as the offline batch training, online learning has to be highly tuned to the specific use case \cite{ma2009identifying, macmahan2013}.
 One common method to alleviate the problem of low model quality is to perform periodical offline batch retraining over the existing and newly available data.
-In many real-world use cases, training datasets are very large which may require hours of data preprocessing and training to result in a new model.
+One of the challenges in many real-world use cases is the size of the training datasets.
+Typically, training datasets are extremely large which require hours of data preprocessing and training to result in a new model.
 Therefore, it is not feasible to train a new model frequently.
 This results in a trade-off between the model training cost and the model quality.
 
@@ -25,7 +27,7 @@ In many cases, the amount of training data is very large, thus training a new pi
 
 During the retraining, prediction queries are answered by the old model and new training data are accumulated.
 For large datasets, by the time the retraining is finished, enough data is accumulated to prompt for a new periodical retraining.
-As a result, in the current deployment platforms, the deployed models are constantly out of date which decreases the quality of the model.
+As a result, in the current deployment platforms, the deployed models are constantly stale which decreases the quality of the model.
 
 %% Use case
 \begin{figure}[h!]
@@ -41,7 +43,7 @@ Then in the deployment step, the model and the pipeline are deployed into the de
 To perform inference, the deployment platform directs the incoming prediction queries through the preprocessing steps.
 Using the preprocessed features, the model makes a prediction.
 During the online update phase, the deployment platform directs the data through the preprocessing steps of the pipeline and then, using an online training algorithm, the platform updates the model.
-Finally, the deployment platform accommodates periodical retraining of the pipeline by either automatically initiating a batch training or allowing a user to train and redeploy a new model to the deployment platform.
+Finally, the deployment platform accommodates periodical retraining of the pipeline by either automatically initiating a batch training or prompting users to train and redeploy a new model to the deployment platform.
 Typically, during the periodical retraining, the deployment platform disables the online updating of the model.
 
 Several real-world use cases follow the workflow described in Figure \ref{fig:motivational-example}.
@@ -61,6 +63,7 @@ Therefore, a flexible deployment platform should meet the model quality requirem
 We propose a deployment platform that continuously updates the model using a combination of the historical and incoming training data.
 Similar to existing deployment platforms, our platform also utilizes online learning methods to update the model based on the incoming training data.
 However, instead of periodical retraining, our deployment platform performs regular updates to the model based on samples of the historical data.
+\todo[inline]{Alireza: Better to name them in this sentence. }
 Our deployment platform offers two key optimizations.
 
 \textit{Proactive training.}
@@ -71,6 +74,8 @@ Unlike periodical retraining, each proactive training is very fast (similar to o
 Our experiments show that proactive training of the model achieves a lower error rate over time and requires fewer resources when compared to the periodical retraining.
 
 \textit{Online Statistics Computation and Feature Materialization.}
+\todo[inline]{Alireza: This sentence here seems not totally related to online statistics. Is not Adagrad used during proactive training? You could start this section by saying: before updating the model using proactive training, ... 
+Behrouz: Adagrad can be used for online and proactive, the original paper is about online and stochastic gradient computation and that's why I used it here as an examle.}
 Our deployment platform employs advanced online learning methods (such as Adagrad \cite{duchi2011adaptive}) to update the model in real-time.
 Before the model is updated, the pipeline has to process the incoming training data.
 First, the pipeline computes the necessary statistics required by each component (such as feature mean and feature standard deviation for scaling the data).
@@ -80,6 +85,7 @@ By reusing the computed statistics and the materialized features during the proa
 
 % Our contributions
 In summary, our contributions are:
+\todo[inline]{Alireza: One could see this (the first contribution) as a higher level version of the second contribution. Is that the case ? Behrouz: True, but the first contribution is mostly about the platform itself that allows a pipeline to deployed, prediction queries to be send to the pipeline and model, and the model quality to be measured ... }
 \begin{itemize}
 \item A platform for continuously training deployed machine learning models and pipelines that adapts to the changes in the incoming data.
 \item Proactive training of the deployed models and pipelines that frequently updates the model in-place using a combination of the historical and the incoming data which guarantees high-quality models.
