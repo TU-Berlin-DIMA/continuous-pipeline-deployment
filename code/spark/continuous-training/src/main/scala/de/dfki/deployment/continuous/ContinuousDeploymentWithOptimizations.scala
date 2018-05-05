@@ -48,9 +48,6 @@ class ContinuousDeploymentWithOptimizations(val history: String,
     var time = 1
     while (!streamingSource.allFileProcessed()) {
       val start = System.currentTimeMillis()
-      val fileName = streamingSource.getNextFileName.get
-      val day = fileName.indexOf("day")
-      val path = fileName.substring(day, fileName.length)
 
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
       if (evaluation == "prequential") {

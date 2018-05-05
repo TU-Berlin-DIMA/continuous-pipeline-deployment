@@ -50,7 +50,7 @@ criteoDataProcessing <- function(){
 
 taxiDataProcessing <- function(){
   Online = getRMSLE('nyc-taxi/deployment-modes/online/rmsle')
-  Continuous = getRMSLE('nyc-taxi/deployment-modes/continuous-with-optimization-time_based-360/rmsle')
+  Continuous = getRMSLE('nyc-taxi/deployment-modes/continuous-with-optimization-time_based-720/rmsle')
   Baseline = getRMSLE('nyc-taxi/deployment-modes/baseline/rmsle')
   Periodical = getRMSLE('nyc-taxi/deployment-modes/periodical-with-warmstarting/rmsle')
   append <- function(vec, maxLength){
@@ -69,7 +69,6 @@ fontLabelSize = 10
 baseSize = 14
 
 ####### URL PLOT ##########
-
 urlData = urlDataProcessing()
 urlBreaks = c(1,3000, 6000 ,9000, 12000)
 urlLabels = c("day1","day30", "day60", "day90","day120")
@@ -100,7 +99,6 @@ taxiPlot = ggpar(taxiPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) +
         plot.margin = unit(c(0,1.5,0,0), "lines"), 
         axis.title.y = element_text(margin = margin(r=-1)),
         axis.text.x = element_text(margin = margin(t=-1)))
-taxiPlot
 
 ####### CRITEO PLOT ##########
 criteoData = criteoDataProcessing()

@@ -24,7 +24,6 @@ class ContinuousDeploymentNoOptimization(val history: String,
                                          sampler: Sampler) extends Deployment(slack, sampler) {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
-    val start = System.currentTimeMillis()
     // create rdd of the initial data that the pipeline was trained with
     val data = streamingContext.sparkContext
       .textFile(history)
@@ -61,7 +60,7 @@ class ContinuousDeploymentNoOptimization(val history: String,
 
       if (evaluation == "prequential") {
         // perform evaluation
-        evaluateStream(pipeline, rdd, resultPath, sampler.name)
+        evaluateStream(pipeline, rdd, resultPath, s"continuous-no-optimization-${sampler.name}")
       }
       pipeline.updateTransformTrain(rdd)
 
