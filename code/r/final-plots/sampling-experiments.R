@@ -3,23 +3,17 @@ library(ggplot2)
 library(reshape)
 library(tikzDevice)
 library(ggpubr)
-
+source('../code/r/final-plots/functions.r')
 
 urlDataProcessing <- function(){
-  getMisclassification <-function(loc){
-    confusionMatrix = cumsum(read.csv(loc, header = FALSE, col.names = c('tp','fp','tn','fn')))
-    return((confusionMatrix$fp + confusionMatrix$fn) / (confusionMatrix$fp + confusionMatrix$fn + confusionMatrix$tp + confusionMatrix$tn))
-  }
   timeBased = getMisclassification('url-reputation/sampling-modes/confusion_matrix-time_based-100')
   windowBased = getMisclassification('url-reputation/sampling-modes/confusion_matrix-window(1000)-100')
   uniform = getMisclassification('url-reputation/sampling-modes/confusion_matrix-uniform-100')
-  
   
   append <- function(vec, maxLength){
     return (c(vec,rep(NA, maxLength - length(vec))))
   }
   maxLength = length(uniform)
-  
   df = data.frame(Time = 1:length(uniform),
                   Timebased = append(timeBased,maxLength),
                   Windowbased = windowBased, 
@@ -35,10 +29,6 @@ urlDataProcessing <- function(){
 }
 
 criteoDataProcessing <- function(){
-  getMisclassification <-function(loc){
-    confusionMatrix = cumsum(read.csv(loc, header = FALSE, col.names = c('tp','fp','tn','fn')))
-    return((confusionMatrix$fp + confusionMatrix$fn) / (confusionMatrix$fp + confusionMatrix$fn + confusionMatrix$tp + confusionMatrix$tn))
-  }
   timeBased = getMisclassification('url-reputation/sampling-modes/confusion_matrix-time_based-100')
   windowBased = getMisclassification('url-reputation/sampling-modes/confusion_matrix-window(1000)-100')
   uniform = getMisclassification('url-reputation/sampling-modes/confusion_matrix-uniform-100')
@@ -66,10 +56,6 @@ criteoDataProcessing <- function(){
 }
 
 taxiDataProcessing <- function(){
-  getMisclassification <-function(loc){
-    confusionMatrix = cumsum(read.csv(loc, header = FALSE, col.names = c('tp','fp','tn','fn')))
-    return((confusionMatrix$fp + confusionMatrix$fn) / (confusionMatrix$fp + confusionMatrix$fn + confusionMatrix$tp + confusionMatrix$tn))
-  }
   timeBased = getMisclassification('url-reputation/sampling-modes/confusion_matrix-time_based-100')
   windowBased = getMisclassification('url-reputation/sampling-modes/confusion_matrix-window(1000)-100')
   uniform = getMisclassification('url-reputation/sampling-modes/confusion_matrix-uniform-100')
@@ -96,21 +82,13 @@ taxiDataProcessing <- function(){
   return (ml)
 }
 
-urlData = urlDataProcessing()
-urlBreaks = c(100, 1500,3000)
-urlLabels = c("day1","day15","day30")
-
-taxiData = taxiDataProcessing()
-taxiBreaks = c(100,1500,3000)
-taxiLabels = c("Feb15", "Mar15", "Apr15")
-
-criteoData = criteoDataProcessing()
-criteoBreaks = c(100,1500,3000)
-criteoLabels = c("day1", "day3","day6")
-
 fontLabelSize = 14
 baseSize = 20
 
+####### URL PLOT ##########
+urlData = urlDataProcessing()
+urlBreaks = c(100, 1500,3000)
+urlLabels = c("day1","day15","day30")
 urlPlot = ggline(urlData, 'Time', 'value', ylab = "Misclassification\\%", xlab = '(a) URL',
                  shape = '-1', linetype ='Sampling', size =2, color = "Sampling", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = urlBreaks, labels= urlLabels)
@@ -122,6 +100,10 @@ urlPlot = ggpar(urlPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) +
         axis.title.y = element_text(margin = margin(r=-1)),
         axis.text.x = element_text(margin = margin(t=-1)))
 
+####### TAXI PLOT ##########
+taxiData = taxiDataProcessing()
+taxiBreaks = c(100,1500,3000)
+taxiLabels = c("Feb15", "Mar15", "Apr15")
 taxiPlot = ggline(taxiData, 'Time', 'value', ylab = "RMSLE", xlab = '(b) Taxi',
                   shape = '-1', linetype ='Sampling',size = 2, color = "Sampling", ggtheme = theme_pubclean(base_size = baseSize),
                   ylim=c(min(urlData$value), max(urlData$value))) + 
@@ -134,6 +116,10 @@ taxiPlot = ggpar(taxiPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize))+
         axis.title.y = element_text(margin = margin(r=-1)),
         axis.text.x = element_text(margin = margin(t=-1)))
 
+####### CRITEO PLOT ##########
+criteoData = criteoDataProcessing()
+criteoBreaks = c(100,1500,3000)
+criteoLabels = c("day1", "day3","day6")
 criteoPlot = ggline(criteoData, 'Time', 'value', ylab = "MSE", xlab = '(c) Criteo',
                     shape = '-1', linetype ='Sampling', size =2, color = "Sampling", ggtheme = theme_pubclean(base_size = baseSize),
                     ylim=c(min(urlData$value), max(urlData$value))) + 

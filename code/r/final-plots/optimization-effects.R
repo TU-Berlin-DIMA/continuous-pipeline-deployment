@@ -19,8 +19,6 @@ urlDataProcessing <- function(){
 taxiDataProcessing<- function(){
   continuousNo = read.csv('url-reputation/optimization-effect/continuous-no-optimization-time', header = FALSE, col.names = c('time'))
   continuousYes = read.csv('url-reputation/optimization-effect/continuous-full-optimization-time', header = FALSE, col.names = c('time'))
-  
-  
   df = data.frame(Deployment = c('Default','Optimized'), 
                   Time = c(continuousNo$time, continuousYes$time))
   
@@ -48,13 +46,12 @@ criteoDataProcessing <- function(){
   
   return (df)
 }
+
 fontLabelSize = 14
 baseSize = 20
 
+####### URL PLOT ##########
 urlData = urlDataProcessing()
-taxiData = taxiDataProcessing()
-criteoData = criteoDataProcessing()
-
 urlPlot = ggbarplot(urlData, x = 'Deployment', y = 'Time',  ylab = 'Time (m)', xlab = "(a) URL",
                     width = 1.0, size = 1.0,
                     color = 'Deployment', fill = 'Deployment',
@@ -69,6 +66,8 @@ urlPlot = ggbarplot(urlData, x = 'Deployment', y = 'Time',  ylab = 'Time (m)', x
         legend.spacing.x = unit(-0.5, "cm"))
 urlPlot = ggpar(urlPlot, font.y=c(fontLabelSize), font.x=c(fontLabelSize+2)) + rremove('x.ticks') + rremove('x.text') + rremove("legend")
 
+####### TAXI PLOT ##########
+taxiData = taxiDataProcessing()
 taxiPlot = ggbarplot(taxiData, x = 'Deployment', y = 'Time',  ylab = 'Time (m)', xlab = "(b) Taxi",
                      width = 1.0, size = 1.0,
                      color = 'Deployment', fill = 'Deployment',
@@ -84,6 +83,8 @@ taxiPlot = ggbarplot(taxiData, x = 'Deployment', y = 'Time',  ylab = 'Time (m)',
         legend.spacing.x = unit(-0.5, "cm")) 
 taxiPlot = ggpar(taxiPlot, font.y=c(fontLabelSize), font.x=c(fontLabelSize+2)) + rremove('x.ticks') + rremove('x.text')
 
+####### CRITEO PLOT ##########
+criteoData = criteoDataProcessing()
 criteoPlot = ggbarplot(criteoData, x = 'Deployment', y = 'Time',  ylab = 'Time (m)', xlab = "(c) Criteo",
                        width = 1.0, size = 1.0,
                        color = 'Deployment', fill = 'Deployment',

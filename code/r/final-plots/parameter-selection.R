@@ -69,23 +69,13 @@ taxiDataProcessing <- function(){
   return (ml)
 }
 
-
-urlData = urlDataProcessing()
-urlBreaks = c(100, 1500,3000)
-urlLabels = c("day1","day15","day30")
-
-taxiData = taxiDataProcessing()
-taxiBreaks = c(50,2000)
-taxiLabels = c("Feb15", "Apr15")
-
-criteoData = criteoDataProcessing()
-criteoBreaks = c(100,1500,3000)
-criteoLabels = c("day1", "day3","day6")
-
 fontLabelSize = 14
 baseSize = 20
 
-
+####### URL PLOT ##########
+urlData = urlDataProcessing()
+urlBreaks = c(100, 1500,3000)
+urlLabels = c("day1","day15","day30")
 urlPlot = ggline(urlData, 'Time', 'value', ylab = "Misclassification\\%", xlab = '(a) URL',
                   shape = '-1', linetype ='Adaptation', size =2, color = "Adaptation", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = urlBreaks, labels= urlLabels)
@@ -97,6 +87,10 @@ urlPlot = ggpar(urlPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) +
         axis.title.y = element_text(margin = margin(r=-5)),
         axis.text.x = element_text(margin = margin(t=-1)))
 
+####### TAXI PLOT ##########
+taxiData = taxiDataProcessing()
+taxiBreaks = c(50,2000)
+taxiLabels = c("Feb15", "Apr15")
 taxiPlot = ggline(taxiData, 'Time', 'value', ylab = "RMSLE", xlab = '(b) Taxi',
                    shape = '-1', linetype ='Adaptation',size = 2, color = "Adaptation", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = taxiBreaks, labels = taxiLabels)
@@ -108,6 +102,10 @@ taxiPlot = ggpar(taxiPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize))+
         axis.title.y = element_text(margin = margin(r=-5)),
         axis.text.x = element_text(margin = margin(t=-1)))
 
+####### CRITEO PLOT ##########
+criteoData = criteoDataProcessing()
+criteoBreaks = c(100,1500,3000)
+criteoLabels = c("day1", "day3","day6")
 criteoPlot = ggline(criteoData, 'Time', 'value', ylab = "MSE", xlab = '(c) Criteo',
                      shape = '-1', linetype ='Adaptation', size =2, color = "Adaptation", ggtheme = theme_pubclean(base_size = baseSize),
                     ylim=c(min(urlData$value), max(urlData$value))) + 
