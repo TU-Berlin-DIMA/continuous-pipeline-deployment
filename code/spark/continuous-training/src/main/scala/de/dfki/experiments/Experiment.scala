@@ -87,6 +87,7 @@ abstract class Experiment {
 
   def getPipeline(spark: SparkContext, params: Params): Pipeline = {
     if (Files.exists(Paths.get(params.initialPipeline))) {
+      logger.info(s"loading pipeline from: ${params.initialPipeline}")
       if (params.pipelineName == "criteo") {
         CriteoPipeline.loadFromDisk(params.initialPipeline, spark)
       } else if (params.pipelineName == "url-rep") {
