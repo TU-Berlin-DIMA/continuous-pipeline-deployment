@@ -17,15 +17,13 @@ urlDataProcessing <- function(){
 }
 
 taxiDataProcessing<- function(){
-  continuousNo = read.csv('url-reputation/optimization-effect/continuous-no-optimization-time', header = FALSE, col.names = c('time'))
-  continuousYes = read.csv('url-reputation/optimization-effect/continuous-full-optimization-time', header = FALSE, col.names = c('time'))
+  continuousNo = sum(read.csv('nyc-taxi/optimization-effect/continuous-no-optimization-time_based-720/time', header = FALSE, col.names = c('time')))
+  continuousYes = sum(read.csv('nyc-taxi/optimization-effect/continuous-with-optimization-time_based-720/time', header = FALSE, col.names = c('time')))
   df = data.frame(Deployment = c('Default','Optimized'), 
-                  Time = c(continuousNo$time, continuousYes$time))
+                  Time = c(continuousNo, continuousYes))
   
   scale = 1000 * 60
   df$Time = df$Time / scale
-  
-  df$Time = 0
   
   return (df)
 }
@@ -72,8 +70,7 @@ taxiPlot = ggbarplot(taxiData, x = 'Deployment', y = 'Time',  ylab = 'Time (m)',
                      width = 1.0, size = 1.0,
                      color = 'Deployment', fill = 'Deployment',
                      order = c('Optimized', 'Default'),
-                     ggtheme = theme_pubclean(base_size = baseSize),
-                     ylim = c(0,max(urlData$Time))) + rremove('x.ticks') + rremove('x.text') +
+                     ggtheme = theme_pubclean(base_size = baseSize)) + rremove('x.ticks') + rremove('x.text') +
   theme(legend.key.width = unit(1.5,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         legend.title = element_text(size = 0),

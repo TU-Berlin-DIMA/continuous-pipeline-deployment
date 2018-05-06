@@ -67,12 +67,8 @@ class ContinuousDeploymentNoOptimization(val history: String,
       if (time % slack == 0) {
         val historicalSample = provideHistoricalSample(processedRDD)
         if (historicalSample.nonEmpty) {
-          val cached = streamingContext.sparkContext.union(historicalSample).cache()
-          cached.count()
-          val trainingData = pipeline.transform(cached)
-          trainingData.cache()
-          pipeline.train(trainingData)
-          trainingData.unpersist(blocking = true)
+          val trainingData = streamingContext.sparkContext.union(historicalSample)
+          pipeline.updateTransformTrain(trainingData)
           if (evaluation != "prequential") {
             // if evaluation method is not prequential, only perform evaluation after a training step
             evaluateStream(pipeline, testData, resultPath, s"continuous-no-optimization-${sampler.name}")
