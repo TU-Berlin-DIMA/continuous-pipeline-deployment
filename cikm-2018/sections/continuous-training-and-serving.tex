@@ -10,13 +10,13 @@ Finally, we describe how our continuous training approach improves the efficienc
 
 \subsection{Stochastic Gradient Descent} \label{sgd}
 \textit{Stochastic Gradient Descent (SGD)} is an optimization strategy utilized by many machine learning algorithms for training a model.
-SGD is an iterative optimization technique where in each iteration, a sample of the data is used to make updates to the model.
+SGD is an iterative optimization technique where in every iteration, one data point or a sample of the data points is utilized to update the model.
 SGD is suitable for large datasets as it does not require scanning the entire data in every iteration \cite{bottou2010large}.
 SGD is used in different machine learning tasks such as classification \cite{zhang2004solving, macmahan2013}, clustering \cite{bottou1995convergence}, and matrix factorization \cite{koren2009matrix,  funk2006netflix}.
 It is also widely used in neural networks for training the networks on large datasets \cite{dean2012large}.
 Prominent applications of SGD in neural networks are the work of Google Deepmind team that managed to train neural networks that defeat humans in the game of Go \cite{silver2016mastering} and mastering Atari games \cite{mnih2013playing}.
 
-In our example application, a logistic regression model is trained using the SGD optimization method \cite{macmahan2013}.
+In Section \ref{introduction}, we described how a logistic regression model is utilized to predict the click through rate of different ads.
 In logistic regression, the goal is to find the weight vector ($w$) that maximizes the conditional likelihood of labels ($y$) based on the given data ($x$) in the training dataset:
 
 \begin{center}
@@ -24,7 +24,7 @@ $w^* = \argmin_w ln(\prod_{i=1}^{N} P(y^i | x^i, w))$
 \end{center}
 
 where $N$ is the size of the training dataset.
-To use SGD to find the optimal $w$, we start from initial random weights and in each step make small updates based on the gradient of the loss function:
+To utilize SGD for finding the optimal $w$, we start from initial random weights and in each we update the weights based on the gradient of the loss function:
 
 \begin{center}
 ${w}^{t+1} = {w}^t + \eta \sum_{i \in S} x^i (y^i - \hat{P}(Y^i = 1 | x^i w))$
@@ -62,71 +62,66 @@ To decrease the running time, large datasets can be distributed among multiple n
 After the initial computation of the gradients, they are all sent to one node where the final gradients are computed.
 
 \subsection{Proactive Training} \label{proactive-training}
-We use the iterative nature of SGD in the design of our continuous training process.
-After the initial model is deployed, new iterations of SGD can be performed on a combination of the existing and new data.
-Once the gradients are computed, we update the deployed model.
-However, the two parameters of SGD (learning rate and sample size) play an important role.
+Proactive training replaces the periodical offline retraining of the deployed model.
+We use the iterative nature of SGD in the design of the proactive training.
+The input to each iteration of SGD is the current weights of the model, one or more data points, and an objective function.
+In proactive training, we execute iterations of SGD on the deployed model.
+The deployment platform, first samples the historical data, then transforms the data using the deployed pipeline.
+Next, the proactive trainer uses the resulting data to compute the gradient of the objective function and finally update the deployed model.
+
+The two parameters of SGD (learning rate and sample size) play an important role in proactive training.
 They have to be tuned to increase the efficiency of the training.
 Choosing  a very small sample size may result in inaccurate updates and as a result, degrade the quality of the deployed model.
 On the other hand, a very large sample size leads to a lengthy training process and less frequent model updates.
 Similarly, learning rate should be adapted accordingly.
-We view proactive training as an extension of the offline batch training.
 Therefore, the process of choosing the best sample size and learning rate adaptation technique is similar to static training.
 Different hyperparameter tuning techniques are proposed for finding the best set of hyperparameters.
 Most common and simplest approaches are grid search and random search \cite{bergstra2012random}.
 We use a grid search over the initial training data to find the best hyperparameters (in our system, learning rate adaptation technique and sample size).
 Once the initial model is trained and deployed, the same set of parameters are used for the proactive training.
+In Section \ref{evaluation}, we show that simple hyperparameter tuning methods result in the best set of parameters for the proactive training.
+We also show that training a deployed model using the proactive training method results in a similar error rate to the periodical retraining while using fewer resources.
 
-\textit{Scheduling rate.}
-An extra parameter of proactive training is the scheduling rate.
-In offline training, iterations of SGD are executed one after the other until convergence.
-In proactive training, the scheduling rate defines the frequency of SGD iteration execution.
-The scheduling rate plays an important role as it directly affects the freshness of the deployed model.
-However, a high scheduling rate results in many frequent SGD iterations which incur an overhead on the deployment system as it is using a lot of resources.
-A small scheduling rate also affects the model freshness.
-To increase the efficiency of the system a scheduler component is designed that is tasked with scheduling new iterations of SGD.
-Similar to learning rate tuning, we use an adaptive approach to adjust the scheduling rate.
-We describe a method for tuning the scheduling rate based on the rate of the incoming training data.
-The scheduling rate is increased as the rate of the incoming training data increases and vice versa.
-This helps in adapting the model to the new training data.
+\textit{Model Stability}
+To ensure that proactive training does not degrade the quality of the model, a model evaluator is used to assess the quality of the model.
+The proactive trainer uses the latest deployed model as an initial starting point and updates the model based on the training data.
+The evaluator assesses the quality of the model using an evaluation dataset or the prequential evaluation method \cite{dawid1984present}.
+If the quality of the model has degraded, the update is discard and the model is logged.
+This is to avoid over training the deployed model in proactive training.
+
+%\todo[inline]{I'm going to remove scheduling rate and just run proactive training when the sample buffer is full}
+%\textit{Scheduling rate.}
+%\hl{An extra parameter of proactive training is the scheduling rate.
+%In offline training, iterations of SGD are executed one after the other until convergence.
+%In proactive training, the scheduling rate defines the frequency of SGD iteration execution.
+%The scheduling rate plays an important role as it directly affects the freshness of the deployed model.
+%However, a high scheduling rate results in many frequent SGD iterations which incur an overhead on the deployment system as it is using a lot of resources.
+%A small scheduling rate also affects the model freshness.
+%To increase the efficiency of the system a scheduler component is designed that is tasked with scheduling new iterations of SGD.
+%Similar to learning rate tuning, we use an adaptive approach to adjust the scheduling rate.
+%We describe a method for tuning the scheduling rate based on the rate of the incoming training data.
+%The scheduling rate is increased as the rate of the incoming training data increases and vice versa.
+%This helps in adapting the model to the new training data.}
 
 \subsection{Online Statistics Computation and Feature Materialization}
-Before training the machine learning model, the training dataset has to be processed by the pipeline.
-Different components of the pipeline require statistics over the dataset to be calculated before they process the data.
+Before updating the deployed model using the proactive training, the data has to be processed by the pipeline.
+Some components of the machine learning pipeline ,such as standard scaler or one-hot encoder, require statistics over the dataset to be calculated before they process the data.
 Computing these statistics require scans of the data.
-In our deployment platform, we provide a mechanism for online computation and update of the statistics required for different components of the pipeline.
-In our prototype, we implemented a standard scaler, a missing value imputer, and a one-hot encoder.
-The above components require the mean, the standard deviation, and for the one-hot encoder, the hash table of the unique categorical parameters in every feature column.
-Our deployment platform also accommodates custom pipeline components.
-When new training data arrives at the system, the platform directs the data to the corresponding component so they update their underlying statistics and data structures.
-Computing the required statistics online reduces the model training time as computing these statistics offline is time-consuming.
-Every pipeline component needs to transform the data when it is updating its statistics.
-The component then passes the transformed data to the next component.
-Once every pipeline component updates their statistics, the resulting transformed data is ready for model training.
-We provide an optional feature that allows materialization and storage of the transformed data on disk.
-As a result, during the next SGD iterations, the system skips the preprocessing steps of the pipelines and directly accesses the transformed data to train the model.
-Storing the transformed data significantly reduces the model training time.
+In our deployment platform, we utilize online training as well as proactive training.
+During the online update of the deployed model, we compute all the necessary statistics for every component.
+Computing the required statistics online eliminates the need to recompute the statistics for proactive training.
+
+Moreover, during the online learning, the incoming data are transformed to a set of features before updating the model.
+Given enough storage space, our deployment platform caches these preprocessed features.
+Therefore, while performing the proactive training, instead of sampling from the raw historical data, the deployment platform samples the features directly from the cache.
+Caching the features completely eliminates the data preprocessing part of the pipeline during the proactive training and significantly reduces the total time.
 
 \textit{Dynamic model size.}
-Depending on the type of the pipeline components, the size of the final model may need to be adjusted during the serving of the model.
-For example, one-hot encoding and \hl{data bucketization} both may generate new features after processing new training data.
+Depending on the type of the pipeline components, the size of the deployed model may need to be adjusted during the online or proactive training.
+For example, one-hot encoding and data bucketization, both may generate new features after processing new training data.
 After every statistics update, we analyze the changes made in the pipeline.
 If any of the changes result in an increase in the model size, we dynamically adjust the model size in the next proactive training. 
 
-\subsection{Model Stability}
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{../images/model-evaluation.pdf}
-\caption{Model Evaluation}
-\label{fig:model-evaluation}
-\end{figure}
-
-To ensure that SGD iterations do not degrade the quality of the model, a model evaluator is used to assess the quality of the model.
-Figure \ref{fig:model-evaluation} shows the process of model evaluation.
-Every iteration of the SGD, uses the latest deployed model as an initial starting point and updates the model based on the training data.
-The evaluator assesses the quality of the model using an evaluation dataset.
-If the quality of the model has degraded, the update is discard and the model is logged.
-The engineers or administrators of the system can study the log in order to investigate any potential issues with machine learning pipeline or the incoming training data.
 
 \subsection{Improved Deployment Process}
 \begin{figure}[t]
