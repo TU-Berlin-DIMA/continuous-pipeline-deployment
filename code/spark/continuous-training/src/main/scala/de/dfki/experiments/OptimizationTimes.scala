@@ -23,7 +23,6 @@ object OptimizationTimes extends Experiment {
 
     val ssc = new StreamingContext(conf, Seconds(1))
     // Continuous deployment without any optimizations
-    var start = System.currentTimeMillis()
     val continuousPipeline = getPipeline(ssc.sparkContext, params)
     new ContinuousDeploymentNoOptimization(history = params.inputPath,
       streamBase = params.streamPath,
