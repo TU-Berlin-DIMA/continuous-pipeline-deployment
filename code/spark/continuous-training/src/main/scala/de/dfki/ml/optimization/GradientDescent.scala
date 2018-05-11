@@ -217,7 +217,7 @@ object GradientDescent {
           converged = isConverged(previousWeights.get,
             currentWeights.get,
             convergenceTol)
-          logger.info(s"Model not converged after $i iterations")
+          logger.info(s"Model with regparam $regParam not converged after $i iterations")
         }
       }
 

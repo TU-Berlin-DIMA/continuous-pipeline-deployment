@@ -13,18 +13,18 @@ import org.apache.spark.rdd.RDD
 class LogisticRegressionWithSGD(stepSize: Double,
                                 numIterations: Int,
                                 regParam: Double,
-                                miniBatchFraction: Double,
                                 convergenceTol: Double,
+                                miniBatchFraction: Double,
                                 fitIntercept: Boolean,
                                 updater: Updater)
   extends StochasticGradientDescent[LogisticRegressionModel](
-    stepSize,
-    numIterations,
-    regParam,
-    miniBatchFraction,
-    convergenceTol,
-    fitIntercept,
-    updater) with Serializable {
+    stepSize = stepSize,
+    numIterations = numIterations,
+    regParam = regParam,
+    convergenceTol = convergenceTol,
+    miniBatchFraction = miniBatchFraction,
+    fitIntercept = fitIntercept,
+    updater = updater) with Serializable {
 
   def this() = this(1.0, 100, 0.1, 1.0, 1E-6, true, new SquaredL2Updater)
 

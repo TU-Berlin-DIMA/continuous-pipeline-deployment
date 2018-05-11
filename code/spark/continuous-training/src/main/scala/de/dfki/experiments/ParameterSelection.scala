@@ -25,11 +25,11 @@ object ParameterSelection extends Experiment {
 
 
   override val defaultProfile = new URLProfile {
-    override val RESULT_PATH = "../../../experiment-results/url-reputation/param-selection"
-    override val INITIAL_PIPELINE = "data/url-reputation/pipelines/param-selection"
+    override val RESULT_PATH = "../../../experiment-results/url-reputation/param-selection-temp"
+    override val INITIAL_PIPELINE = "data/url-reputation/pipelines/param-selection-temp"
     override val NUM_FEATURES = 3000
     override val CONVERGENCE_TOL = 1E-7
-    override val NUM_ITERATIONS = 10000
+    override val NUM_ITERATIONS = 100
     override val DAYS = "1,30"
     override val MINI_BATCH = 0.1
   }

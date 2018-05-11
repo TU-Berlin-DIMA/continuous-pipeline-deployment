@@ -4,7 +4,7 @@ import java.io.{File, FileWriter}
 import java.nio.file.{Files, Paths}
 
 import de.dfki.experiments.profiles.Profile
-import de.dfki.ml.optimization.updater.{SquaredL2UpdaterWithAdam, Updater}
+import de.dfki.ml.optimization.updater.Updater
 import de.dfki.ml.pipelines.Pipeline
 import de.dfki.ml.pipelines.criteo.CriteoPipeline
 import de.dfki.ml.pipelines.nyc_taxi.NYCTaxiPipeline
@@ -107,7 +107,7 @@ abstract class Experiment {
           regParam = params.regParam,
           convergenceTol = params.convergenceTol,
           miniBatchFraction = params.miniBatch,
-          updater = new SquaredL2UpdaterWithAdam(),
+          updater = params.updater,
           delim = params.delimiter,
           numCategories = params.numFeatures)
         logger.info(s"Training the pipeline: ${pipeline.toString}")
@@ -123,6 +123,7 @@ abstract class Experiment {
           miniBatchFraction = params.miniBatch,
           updater = params.updater,
           numCategories = params.numFeatures)
+        logger.info(s"Training the pipeline: ${pipeline.toString}")
         pipeline.updateTransformTrain(data, params.numIterations)
         URLRepPipeline.saveToDisk(pipeline, params.initialPipeline)
         pipeline
@@ -134,6 +135,7 @@ abstract class Experiment {
           convergenceTol = params.convergenceTol,
           miniBatchFraction = params.miniBatch,
           updater = params.updater)
+        logger.info(s"Training the pipeline: ${pipeline.toString}")
         pipeline.updateTransformTrain(data, params.numIterations)
         NYCTaxiPipeline.saveToDisk(pipeline, params.initialPipeline)
         pipeline

@@ -3,7 +3,7 @@ package de.dfki.experiments.profiles
 /**
   * @author behrouz
   */
-class CriteoClusterProfile extends Profile{
+class CriteoClusterProfile extends Profile {
   override val INPUT_PATH = "hdfs://cloud-11:44000/user/behrouz/criteo/experiments/initial-training/day=0"
   override val STREAM_PATH = "hdfs://cloud-11:44000/user/behrouz/criteo/experiments/stream"
   override val MATERIALIZED_PATH = "hdfs://cloud-11:44000/user/behrouz/criteo/experiments/materialized"
@@ -22,7 +22,8 @@ class CriteoClusterProfile extends Profile{
   override val REG_PARAM = 0.01
   override val PROFILE_NAME = "criteo-cluster"
   override val CONVERGENCE_TOL = 1E-6
-  override val STEP_SIZE =  0.001
+  override val STEP_SIZE = 0.001
   override val MINI_BATCH = 0.1
   override val TRAINING_FREQUENCY = 1440
+  override val UPDATER: String = "adam"
 }

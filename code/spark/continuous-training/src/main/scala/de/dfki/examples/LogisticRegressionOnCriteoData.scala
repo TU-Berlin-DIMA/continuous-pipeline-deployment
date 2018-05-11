@@ -98,7 +98,13 @@ object LogisticRegressionOnCriteoData {
             for (reg <- regParams) {
 
 
-              val algorithm = new LogisticRegressionWithSGD(ss, it, reg, miniBatchFraction, updater)
+              val algorithm = new LogisticRegressionWithSGD(stepSize = ss,
+                numIterations = it,
+                regParam = reg,
+                convergenceTol = 1E-6,
+                miniBatchFraction = miniBatchFraction,
+                fitIntercept = true,
+                updater = updater)
               algorithm.optimizer.setConvergenceTol(0.0)
               val model = algorithm.run(training)
              // val weights = algorithm.optimizer.unStandardize(model.weights)
