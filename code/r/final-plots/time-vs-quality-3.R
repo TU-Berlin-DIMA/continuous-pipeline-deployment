@@ -49,7 +49,6 @@ urlTimeProcessing <- function(){
                   Continuous = continuousTime,
                   Periodical = periodicalTime,
                   Online = onlineTime)
-                 # Baseline = baselineTime)
   DAY_DURATION = 500
   df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 1), ]
   ml = melt(df, id.vars = 'Time', variable_name ='Deployment')

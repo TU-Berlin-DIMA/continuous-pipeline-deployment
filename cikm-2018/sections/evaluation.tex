@@ -83,7 +83,7 @@ In order to improve the performance of the periodical deployment, we utilize the
 In warmstarting, each periodical training uses the existing parameters such as the pipeline statistics (e.g, standard scaler), model weights, and learning rate adaptation parameters (e.g, the average of past gradients used in Adadelta, Adam, and Rmsprop) when training new models.
 
 \textbf{Model Quality. }
-Figure \ref{deployment-quality-figure} shows the cumulative error rate over time for the different deployment approaches.
+Figure \ref{deployment-quality-figure} shows the cumulative error rate and cumulative deployment cost over time for the different deployment approaches.
 For the URL pipeline, the periodical deployment approach initiates a full retraining every 10 days.
 Both the continuous and the periodical deployment approaches result in lower misclassification rates than the online deployment approach.
 During the first 60 days, the continuous deployment results in a slightly lower misclassification rate than the periodical approach.
@@ -96,23 +96,16 @@ At the end of the deployment process (day 120), the misclassification rate of th
 \label{deployment-quality-figure}
 \end{figure*}
 
-\textbf{Total Training Time. }
-Figure \ref{deployment-time-figure} shows the end-to-end  time for each deployment approach.
-The end-to-end time consists of the data preprocessing and feature engineering time, the model training time, and the prediction time. 
-We include the baseline deployment approach, as it only includes the prediction time.
-For the URL pipeline, the end-to-end time for the online deployment approach is 29 minutes as it only scans each data point once (around 2.4 million scans).  
-The proactive training of the continuous deployment approach makes over 45 million scans.
-However, the end-to-end time of the continuous deployment approach is only two times larger than the online deployment approach. 
+The deployment cost is defined as the total time spent in data preprocessing, model training, and performing prediction.
+In Figure \ref{deployment-quality-figure}, we report the cumulative cost over time for every deployment approach.
+For the URL pipeline, the total cost is around 29 minutes as it only scans each data point once (around 2.3 million scans).  
+The proactive training of the continuous deployment approach scans over 45 million data points.
+However, the total cost at the end of the deployment is only two times larger than the online deployment approach (around 57 minutes).  
 Because of the live data analysis and the feature materialization optimization, a large part of the data processing time is avoided.
-The periodical deployment approach time is around 800 minutes, an order of magnitude large than the continuous deployment. 
-The overhead of data processing and the model retraining contributes to the large end-to-end deployment time.
-\todo[inline]{Tilmann: You should keep the same order in all experiments and yours should be last and best. }
-\begin{figure}[h!]
-\centering
-\resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/deployment-time-experiment}}
-\caption{End-to-end deployment time for different deployment approaches}
-\label{deployment-time-figure}
-\end{figure}
+For the periodical deployment approach, the cumulative deployment cost starts similar to the online deployment approach.
+However, after every periodical training, the deployment cost substantially increases.
+At the end of the deployment process, the total cost for the periodical deployment approach is around 800 minutes, 13 times more than the total cost of the continuous deployment approach.
+The overhead of repeated data preprocessing and the model retraining contributes to the very large deployment cost of the periodical deployment approach.
 
 \subsection{EX2: System Tuning}
 \todo[inline]{Tilmann: What exactly do you wan to show with this? Seems to me that you could summarize the result rather than showing the full experiment since you are just trying out different existing algorithms...}
@@ -240,7 +233,7 @@ Figure \ref{quality-vs-time} shows the value of $PI$ over time for the continuou
 For the periodical deployment approach, the quality of the models is slightly higher than the continuous deployment approach.
 However, due to the extremely long training time, the cumulative cost of the deployment is increasing exponentially with every periodical training (as the size of the historical data doubles for every training).
 As a result, the value of $PI$ for the periodical deployment approach decreases as further training (cost of deployment) does not justify the decrease in error rate.
-On the other hand, the continuous deployment approac\emph{•}h guarantees high-quality models with only a linear increase in the cumulative deployment cost (the training time for every proactive training is constant) which results in a slow increase in the value of $PI$ over time. 
+On the other hand, the continuous deployment approach guarantees high-quality models with only a linear increase in the cumulative deployment cost (the training time for every proactive training is constant) which results in a slow increase in the value of $PI$ over time. 
 
 \begin{figure}[!h]
 \centering
