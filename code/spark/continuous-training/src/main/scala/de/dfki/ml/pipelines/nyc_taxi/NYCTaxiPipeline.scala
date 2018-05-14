@@ -121,7 +121,7 @@ object NYCTaxiPipeline {
 
   val TEST_PATH = "data/nyc-taxi/raw/yellow_tripdata_2016-06.csv" // jan = 0.10198806182634726
 
-  val PIPELINE = "/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/nyc-taxi-local/pipelines/test/temp"
+  val PIPELINE = "/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/nyc-taxi-local/pipelines/test/adam-0.0001"
 
   def main(args: Array[String]): Unit = {
     val parser = new CommandLineParser(args).parse()

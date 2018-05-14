@@ -19,7 +19,8 @@ To evaluate the SVM model, we compute the misclassification rate on the unseen d
 \textit{Criteo Pipeline.} 
 The Criteo pipeline consists of 5 components: input parser, missing value imputer, standard scaler, feature hasher, and a Logistic Regression model.
 The Criteo pipeline processes the Terabyte Criteo click log dataset and predicts the clickthrough rate (CTR) for each data point \cite{criteo-log}.\\
-We use the Mean Squared Error (MSE) to capture the error rate of the Logistic Regression model.
+To evaluate the model, we use Logarithmic Loss, a common evaluation metric for CTR prediction models\footnote{https://www.kaggle.com/c/criteo-display-ad-challenge}.
+
 
 \textit{Taxi Pipeline.}
 The Taxi pipeline consists of 5 components: input parser, feature extractor, anomaly detector, standard scaler, and a Linear Regression model.

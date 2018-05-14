@@ -8,7 +8,7 @@ getRMSLE <-function(loc){
   return(sqrt(rmsle$ssl/rmsle$count))
 }
 
-getLogisticLoss <-function(loc){
+getLogarithmicLoss <-function(loc){
   ls = cumsum(read.csv(loc, header = FALSE, col.names = c('loss','count')))
   return(ls$loss/ls$count)
 }

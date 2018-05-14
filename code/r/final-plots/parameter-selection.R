@@ -13,7 +13,7 @@ urlHyperProcessing <- function (){
 }
 
 taxiProcessing <- function (){
-  hyperParams = read.csv('nyc-taxi/param-selection/training', header = FALSE, col.names = c('updater','reg','ssl','count'))
+  hyperParams = read.csv('nyc-taxi/param-selection-old/training', header = FALSE, col.names = c('updater','reg','ssl','count'))
   hyperParams$rmsle = sqrt(hyperParams$ssl/hyperParams$count)
   results = data.frame(hyperParams[,c("updater","reg","rmsle")])
 }

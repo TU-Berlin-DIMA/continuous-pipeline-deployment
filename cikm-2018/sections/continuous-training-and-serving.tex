@@ -1,8 +1,8 @@
 \section{Continuous Training and Serving} \label{continuous-training-serving}
 To continuously train the deployed model, we rely on computing partial updates based on the current parameters of the model and a combination of the incoming and existing data.
 To compute the partial updates, we utilize Stochastic Gradient Descent (SGD) \cite{zhang2004solving}.
-SGD algorithm has several parameters and in order to work effectively, they have to be tuned.
-In this section, we first describe the details of SGD and its parameters and our approach in tuning these parameters for our platform.
+SGD has several parameters and in order to work effectively, they have to be tuned.
+In this section, we first describe the details of SGD and its parameters and discuss the effect of the parameters on our deployment platform.
 Then we describe how we take advantage of the properties of SGD to implement our proactive training, online statistics computation, and feature materialization.
 Another important aspect of any deployment platform is the ability to monitor the quality of the deployed model.
 We present our method for evaluating the quality of the deployed model and how we guarantee high-quality models.
@@ -20,14 +20,14 @@ In Section \ref{introduction}, we described how a logistic regression model is u
 In logistic regression, the goal is to find the weight vector ($w$) that maximizes the conditional likelihood of labels ($y$) based on the given data ($x$) in the training dataset:
 
 \begin{center}
-$w^* = \argmin_w ln(\prod_{i=1}^{N} P(y^i | x^i, w))$
+$$w^* = \argmax_w \sum_{i=1}^{N} ln(P(y^i | x^i, w))$$
 \end{center}
 
 where $N$ is the size of the training dataset.
 To utilize SGD for finding the optimal $w$, we start from initial random weights and in each we update the weights based on the gradient of the loss function:
 
 \begin{center}
-${w}^{t+1} = {w}^t + \eta \sum_{i \in S} x^i (y^i - \hat{P}(Y^i = 1 | x^i w))$
+$${w}^{t+1} = {w}^t + \eta \sum_{i \in S} x^i (y^i - \hat{P}(Y^i = 1 | x^i w))$$
 \end{center}
 
 where $\eta$ is the learning rate parameter and $S$ is the random sample in the current iteration.
@@ -63,6 +63,9 @@ After the initial computation of the gradients, they are all sent to one node wh
 
 \subsection{Proactive Training} \label{proactive-training}
 Proactive training replaces the periodical offline retraining of the deployed model.
+In periodical training, the deployment platform is reactive and retrains a new model when the quality drops below a user defined threshold or a large amount of training data becomes available.
+In proactive training, we constantly train the deployed model using the incoming and existing historical data.
+
 We use the iterative nature of SGD in the design of the proactive training.
 The input to each iteration of SGD is the current weights of the model, one or more data points, and an objective function.
 In proactive training, we execute iterations of SGD on the deployed model.
@@ -74,20 +77,26 @@ They have to be tuned to increase the efficiency of the training.
 Choosing  a very small sample size may result in inaccurate updates and as a result, degrade the quality of the deployed model.
 On the other hand, a very large sample size leads to a lengthy training process and less frequent model updates.
 Similarly, learning rate should be adapted accordingly.
-Therefore, the process of choosing the best sample size and learning rate adaptation technique is similar to static training.
+The process of choosing the best sample size and learning rate adaptation technique is similar to static training.
 Different hyperparameter tuning techniques are proposed for finding the best set of hyperparameters.
 Most common and simplest approaches are grid search and random search \cite{bergstra2012random}.
 We use a grid search over the initial training data to find the best hyperparameters (in our system, learning rate adaptation technique and sample size).
 Once the initial model is trained and deployed, the same set of parameters are used for the proactive training.
+In deployment platforms, it is also possible that the distribution of the data changes overtime.
 In Section \ref{evaluation}, we show that simple hyperparameter tuning methods result in the best set of parameters for the proactive training.
-We also show that training a deployed model using the proactive training method results in a similar error rate to the periodical retraining while using fewer resources.
+We also show that training a deployed model using the proactive training method results in a similar (or lower) error rate to the periodical retraining while using fewer resources.
 
-\textit{Model Stability}
-To ensure that proactive training does not degrade the quality of the model, a model evaluator is used to assess the quality of the model.
-The proactive trainer uses the latest deployed model as an initial starting point and updates the model based on the training data.
-The evaluator assesses the quality of the model using an evaluation dataset or the prequential evaluation method \cite{dawid1984present}.
-If the quality of the model has degraded, the update is discard and the model is logged.
-This is to avoid over training the deployed model in proactive training.
+The deployment platform should always adapt the deployed model to the more recent data items.
+As a result, when sampling the historical data, one has to consider the effect of the sample on the deployed model.
+A time-based sampling approach of the historical data emphasizes the more recent data points and better adopts the deployed model to the changes in the data distribution.
+In Section \ref{evaluation}, we evaluate the performance of the deployed model using different sampling techniques (time-based, uniform, and window-based).
+
+%\textit{Model Stability}
+%To ensure that proactive training does not degrade the quality of the model, a model evaluator is used to assess the quality of the model.
+%The proactive trainer uses the latest deployed model as an initial starting point and updates the model based on the training data.
+%The evaluator assesses the quality of the model using an evaluation dataset or the prequential evaluation method \cite{dawid1984present}.
+%If the quality of the model has degraded, the update is discard and the model is logged.
+%This is to avoid over training the deployed model in proactive training.
 
 %\todo[inline]{I'm going to remove scheduling rate and just run proactive training when the sample buffer is full}
 %\textit{Scheduling rate.}
@@ -105,16 +114,16 @@ This is to avoid over training the deployed model in proactive training.
 
 \subsection{Online Statistics Computation and Feature Materialization}
 Before updating the deployed model using the proactive training, the data has to be processed by the pipeline.
-Some components of the machine learning pipeline ,such as standard scaler or one-hot encoder, require statistics over the dataset to be calculated before they process the data.
+Some components of the machine learning pipeline, such as the standard scaler or the one-hot encoder, require statistics over the dataset to be calculated before they process the data.
 Computing these statistics require scans of the data.
 In our deployment platform, we utilize online training as well as proactive training.
 During the online update of the deployed model, we compute all the necessary statistics for every component.
 Computing the required statistics online eliminates the need to recompute the statistics for proactive training.
 
-Moreover, during the online learning, the incoming data are transformed to a set of features before updating the model.
-Given enough storage space, our deployment platform caches these preprocessed features.
+Moreover, during the online learning, the deployed pipeline transforms the incoming data to a set of features before updating the model.
+Given enough storage space, our deployment platform first assigns timestamps and then caches these preprocessed features.
 Therefore, while performing the proactive training, instead of sampling from the raw historical data, the deployment platform samples the features directly from the cache.
-Caching the features completely eliminates the data preprocessing part of the pipeline during the proactive training and significantly reduces the total time.
+Caching the features completely eliminates the data preprocessing part of the pipeline during the proactive training and significantly reduces the total training time for the proactive training.
 
 \textit{Dynamic model size.}
 Depending on the type of the pipeline components, the size of the deployed model may need to be adjusted during the online or proactive training.
