@@ -136,6 +136,10 @@ class CriteoPipeline(@transient var spark: SparkContext,
       s"Step($stepSize), Reg($regParam)," +
       s"Convergence($convergenceTol), MiniBatch($miniBatchFraction)"
   }
+
+  override def setSparkContext(sc: SparkContext) = {
+    this.spark = sc
+  }
 }
 
 // example use case of criteo pipeline

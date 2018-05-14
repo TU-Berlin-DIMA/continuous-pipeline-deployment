@@ -18,12 +18,20 @@ taxiProcessing <- function (){
   results = data.frame(hyperParams[,c("updater","reg","rmsle")])
 }
 
+criteoProcessing <- function (){
+  hyperParams = read.csv('criteo/param-selection/training', header = FALSE, col.names = c('updater','reg','loss','count'))
+  hyperParams$ll = sqrt(hyperParams$loss/hyperParams$count)
+  results = data.frame(hyperParams[,c("updater","reg","ll")])
+}
+
 urlTable = urlHyperProcessing()
 #write.table(urlTable, file = '../images/experiment-results/tikz/ps-url-table.csv')
 
 taxiTable = taxiProcessing()
 #write.table(taxiTable, file = '../images/experiment-results/tikz/ps-taxi-table.csv')
 
+criteoTable = criteoProcessing()
+#write.table(criteoTable, file = '../images/experiment-results/tikz/ps-criteo-table.csv')
 
 ## Streaming data
 urlDataProcessing <- function(){

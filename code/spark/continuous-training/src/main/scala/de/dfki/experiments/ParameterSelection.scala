@@ -17,7 +17,7 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
   */
 object ParameterSelection extends Experiment {
 
-  val REGULARIZATIONS: List[Double] = List(0.01, 0.001, 0.0001)
+  val REGULARIZATIONS: List[Double] = List(0.0001)
   val UPDATERS: List[Updater] = List(
     new SquaredL2UpdaterWithAdam(),
     new SquaredL2UpdaterWithRMSProp(),

@@ -11,7 +11,7 @@ import org.apache.spark.streaming.dstream.DStream
   */
 trait Pipeline extends Serializable {
 
-  def setSparkContext(sc: SparkContext): Unit = {}
+  def setSparkContext(sc: SparkContext): Unit
 
   val model: Model
 

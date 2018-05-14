@@ -31,6 +31,7 @@ class ContinuousDeploymentWithOptimizations(val history: String,
     // create rdd of the initial data that the pipeline was trained with
     val data = streamingContext.sparkContext
       .textFile(history)
+      .sample(false, 0.01)
       .setName("Historical data")
       .cache()
     data.count()
@@ -49,7 +50,8 @@ class ContinuousDeploymentWithOptimizations(val history: String,
     while (!streamingSource.allFileProcessed()) {
       val start = System.currentTimeMillis()
 
-      val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
+      val rdd = streamingSource.generateNextRDD().get.map(_._2.toString).persist(StorageLevel.MEMORY_ONLY)
+      rdd.count()
       if (evaluation == "prequential") {
         // perform evaluation
         evaluateStream(pipeline, rdd, resultPath, s"continuous-with-optimization-${sampler.name}")
@@ -58,12 +60,15 @@ class ContinuousDeploymentWithOptimizations(val history: String,
       val pRDD = pipeline.updateAndTransform(rdd).setName(s"RDD_$time").persist(StorageLevel.MEMORY_ONLY)
 
       pipeline.train(pRDD)
+      rdd.unpersist()
 
       if (time % slack == 0) {
         val historicalSample = provideHistoricalSample(processedRDD)
         if (historicalSample.nonEmpty) {
-          val transformed = streamingContext.sparkContext.union(historicalSample)
+          val transformed = streamingContext.sparkContext.union(historicalSample).persist(StorageLevel.MEMORY_ONLY)
+          transformed.count()
           pipeline.train(transformed)
+          transformed.unpersist()
         } else {
           logger.warn(s"Sample in iteration $time is empty")
         }
