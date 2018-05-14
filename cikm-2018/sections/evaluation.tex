@@ -89,12 +89,12 @@ Both the continuous and the periodical deployment approaches result in lower mis
 During the first 60 days, the continuous deployment results in a slightly lower misclassification rate than the periodical approach.
 After the 6th periodical training (day 60), the misclassification rate of the periodical deployment decreases slightly more rapidly than that of the continuous deployment. 
 At the end of the deployment process (day 120), the misclassification rate of the periodical deployment approach is 0.03\% smaller than the URL model deployed using the continuous deployment approach.
-\begin{figure}[h!]
+\begin{figure*}[t]
 \centering
-\resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/deployment-quality-experiment}}
-\caption{Model Quality for different deployment approaches}
+\resizebox{\textwidth}{!}{\input{../images/experiment-results/tikz/deployment-quality-and-time-experiment}}
+\caption{Model Quality and Training cost for different deployment approaches}
 \label{deployment-quality-figure}
-\end{figure}
+\end{figure*}
 
 \textbf{Total Training Time. }
 Figure \ref{deployment-time-figure} shows the end-to-end  time for each deployment approach.
