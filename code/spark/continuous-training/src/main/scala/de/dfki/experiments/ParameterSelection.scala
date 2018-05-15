@@ -80,7 +80,8 @@ object ParameterSelection extends Experiment {
           resultPath = params.resultPath,
           daysToProcess = params.days,
           slack = params.slack,
-          sampler = new TimeBasedSampler(size = params.sampleSize)).deploy(ssc, pipeline)
+          sampler = new TimeBasedSampler(size = params.sampleSize),
+          otherParams = params).deploy(ssc, pipeline)
       }
     }
   }

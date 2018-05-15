@@ -35,7 +35,8 @@ object SamplingModes extends Experiment {
       resultPath = s"${params.resultPath}",
       daysToProcess = params.days,
       slack = params.slack,
-      sampler = new UniformSampler(size = params.sampleSize)).deploy(ssc, uniformPipeline)
+      sampler = new UniformSampler(size = params.sampleSize),
+      otherParams = params).deploy(ssc, uniformPipeline)
 
     // continuously trained with a window based sample of the historical data
     val windowBased = getPipeline(ssc.sparkContext, params)
@@ -47,7 +48,8 @@ object SamplingModes extends Experiment {
       resultPath = s"${params.resultPath}",
       daysToProcess = params.days,
       slack = params.slack,
-      sampler = new WindowBasedSampler(size = params.sampleSize, window = params.dayDuration * 10)).deploy(ssc, windowBased)
+      sampler = new WindowBasedSampler(size = params.sampleSize, window = params.dayDuration * 10),
+      otherParams = params).deploy(ssc, windowBased)
 
     // continuously trained with a time based sample of the historical data
     val timeBasedFix = getPipeline(ssc.sparkContext, params)
@@ -59,6 +61,7 @@ object SamplingModes extends Experiment {
       resultPath = s"${params.resultPath}",
       daysToProcess = params.days,
       slack = params.slack,
-      sampler = new TimeBasedSampler(size = params.sampleSize)).deploy(ssc, timeBasedFix)
+      sampler = new TimeBasedSampler(size = params.sampleSize),
+      otherParams = params).deploy(ssc, timeBasedFix)
   }
 }

@@ -6,16 +6,16 @@ library(ggpubr)
 source('../code/r/final-plots/functions.r')
 
 urlDataProcessing <- function(){
-  Online = getMisclassification('url-reputation/deployment-modes-quality-time/confusion_matrix-online')
-  Continuous = getMisclassification('url-reputation/deployment-modes-quality-time/confusion_matrix-time_based-100-with-optimization')
-  Baseline = getMisclassification('url-reputation/deployment-modes-quality-time/confusion_matrix-baseline')
-  periodical = getMisclassification('url-reputation/deployment-modes-quality-time/confusion_matrix-periodical-warm')
+  Online = getMisclassification('url-reputation/deployment-modes/online/confusion_matrix')
+  Continuous = getMisclassification('url-reputation/deployment-modes/continuous-with-optimization-time_based-100/confusion_matrix')
+  Baseline = getMisclassification('url-reputation/deployment-modes/baseline/confusion_matrix')
+  Periodical = getMisclassification('url-reputation/deployment-modes/periodical-with-warmstarting/confusion_matrix')
  
   append <- function(vec, maxLength){
     return (c(vec,rep(NA, maxLength - length(vec))))
   }
-  maxLength = length(periodical)
-  df = data.frame(Time = 1:length(Periodical), Continuous, Periodical, Online)
+  maxLength = length(Online)
+  df = data.frame(Time = 1:length(Online), Continuous, Periodical = append(Periodical, maxLength) , Online)
   
   DAY_DURATION = 500
   df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 200), ]

@@ -30,6 +30,7 @@ object OptimizationTimes extends Experiment {
       resultPath = s"${params.resultPath}",
       daysToProcess = params.days,
       slack = params.slack,
-      sampler = new TimeBasedSampler(size = params.sampleSize)).deploy(ssc, continuousPipeline)
+      sampler = new TimeBasedSampler(size = params.sampleSize),
+      otherParams = params).deploy(ssc, continuousPipeline)
   }
 }

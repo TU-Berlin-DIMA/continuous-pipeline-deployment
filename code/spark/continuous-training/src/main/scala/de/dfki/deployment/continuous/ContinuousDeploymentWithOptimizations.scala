@@ -3,6 +3,7 @@ package de.dfki.deployment.continuous
 import de.dfki.core.sampling.Sampler
 import de.dfki.core.streaming.BatchFileInputDStream
 import de.dfki.deployment.Deployment
+import de.dfki.experiments.Params
 import de.dfki.ml.pipelines.Pipeline
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
@@ -25,13 +26,13 @@ class ContinuousDeploymentWithOptimizations(val history: String,
                                             val resultPath: String,
                                             val daysToProcess: Array[Int],
                                             slack: Int = 10,
-                                            sampler: Sampler) extends Deployment(slack, sampler) {
-
+                                            sampler: Sampler,
+                                            otherParams: Params) extends Deployment(slack, sampler) {
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     // create rdd of the initial data that the pipeline was trained with
     val data = streamingContext.sparkContext
       .textFile(history)
-      .sample(false, 0.01)
+      .sample(withReplacement = false, 0.01)
       .setName("Historical data")
       .cache()
     data.count()
@@ -73,6 +74,7 @@ class ContinuousDeploymentWithOptimizations(val history: String,
           logger.warn(s"Sample in iteration $time is empty")
         }
       }
+      decideToSavePipeline(pipeline, "continuous-with", otherParams, time)
       processedRDD += pRDD
       time += 1
       val end = System.currentTimeMillis()

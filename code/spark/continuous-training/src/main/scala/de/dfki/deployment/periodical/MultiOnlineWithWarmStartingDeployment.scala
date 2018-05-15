@@ -21,6 +21,7 @@ class MultiOnlineWithWarmStartingDeployment(val history: String,
                                             val numPartitions: Int,
                                             val otherParams: Params,
                                             val sparkConf: SparkConf) extends Deployment {
+
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     // create rdd of the initial data that the pipeline was trained with
     streamingContext.stop(stopSparkContext = true, stopGracefully = true)
@@ -71,6 +72,7 @@ class MultiOnlineWithWarmStartingDeployment(val history: String,
 
       val rdd = copyContext.sparkContext.textFile(path = nextBatch.mkString(",")).repartition(numPartitions)
       pipeline.updateTransformTrain(rdd, initialNumIterations)
+      writePipeline(pipeline, otherParams.pipelineName, s"${otherParams.initialPipeline}-periodical/$time")
       pipeline.model.setMiniBatchFraction(1.0)
       pipeline.model.setNumIterations(1)
       pipeline.model.setConvergenceTol(0.0)
