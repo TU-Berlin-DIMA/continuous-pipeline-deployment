@@ -4,13 +4,10 @@ import de.dfki.core.sampling.TimeBasedSampler
 import de.dfki.deployment.baseline.BaselineDeployment
 import de.dfki.deployment.continuous.ContinuousDeploymentWithOptimizations
 import de.dfki.deployment.online.OnlineDeployment
-import de.dfki.deployment.periodical.{MultiOnlineDeployment, MultiOnlineWithWarmStartingDeployment, PeriodicalDeployment}
+import de.dfki.deployment.periodical.MultiOnlineWithWarmStartingDeployment
 import de.dfki.experiments.profiles.URLProfile
-import de.dfki.ml.optimization.updater.SquaredL2UpdaterWithAdam
-import de.dfki.ml.pipelines.criteo.CriteoPipeline
-import org.apache.spark.rdd.RDD
+import org.apache.spark.SparkConf
 import org.apache.spark.streaming.{Seconds, StreamingContext}
-import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * @author behrouz

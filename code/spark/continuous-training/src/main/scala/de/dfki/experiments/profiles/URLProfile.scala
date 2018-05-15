@@ -4,7 +4,7 @@ package de.dfki.experiments.profiles
   * @author behrouz
   */
 class URLProfile extends Profile {
-  val INPUT_PATH = "data/url-reputation/processed/initial-training"
+  val INPUT_PATH = "/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/url-reputation/processed/initial-training"
   val STREAM_PATH = "/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/url-reputation/processed/stream"
   val MATERIALIZED_PATH = "/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/url-reputation/processed/materialized"
   val EVALUATION_PATH = "prequential"
@@ -28,7 +28,7 @@ class URLProfile extends Profile {
   override val PROFILE_NAME = "url"
   override val STEP_SIZE = 0.001
   override val MINI_BATCH = 1.0
-  override val BATCH_EVALUATION = "data/url-reputation/processed/batch-evaluation"
+  override val BATCH_EVALUATION = "/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/url-reputation/processed/batch-evaluation"
   override val TRAINING_FREQUENCY = 1000
 }
 

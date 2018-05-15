@@ -6,9 +6,9 @@ library(ggpubr)
 source('../code/r/final-plots/functions.r')
 
 urlDataProcessing <- function(){
-  timeBased = getMisclassification('url-reputation/sampling-modes/confusion_matrix-time_based-100')
-  windowBased = getMisclassification('url-reputation/sampling-modes/confusion_matrix-window(1000)-100')
-  uniform = getMisclassification('url-reputation/sampling-modes/confusion_matrix-uniform-100')
+  timeBased = getMisclassification('url-reputation/sampling-modes/continuous-with-optimization-time_based-100/confusion_matrix')
+  windowBased = getMisclassification('url-reputation/sampling-modes/continuous-with-optimization-window(1000)-100/confusion_matrix')
+  uniform = getMisclassification('url-reputation/sampling-modes/continuous-with-optimization-uniform-100/confusion_matrix')
   
   append <- function(vec, maxLength){
     return (c(vec,rep(NA, maxLength - length(vec))))
@@ -20,7 +20,7 @@ urlDataProcessing <- function(){
                   Uniform = uniform)
   
   DAY_DURATION = 500
-  df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 100), ]
+  df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 200), ]
 
   df[,c(2,3,4)] = df[,c(2,3,4)] * 100
   
@@ -87,7 +87,7 @@ baseSize = 20
 
 ####### URL PLOT ##########
 urlData = urlDataProcessing()
-urlBreaks = c(100, 1500,3000)
+urlBreaks = c(200, 1500,3000)
 urlLabels = c("day1","day15","day30")
 urlPlot = ggline(urlData, 'Time', 'value', ylab = "Misclassification\\%", xlab = '(a) URL',
                  shape = '-1', linetype ='Sampling', size =2, color = "Sampling", ggtheme = theme_pubclean(base_size = baseSize)) + 

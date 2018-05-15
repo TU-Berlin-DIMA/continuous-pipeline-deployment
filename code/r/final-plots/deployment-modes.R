@@ -18,7 +18,7 @@ urlDataProcessing <- function(){
   df = data.frame(Time = 1:length(Periodical), Continuous, Periodical, Online)
   
   DAY_DURATION = 500
-  df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 1), ]
+  df = df[((df$Time %% DAY_DURATION == 0) | df$Time == 200), ]
   df$Online = df$Online * 100
   df$Continuous = df$Continuous * 100
   df$Periodical = df$Periodical * 100
@@ -70,7 +70,7 @@ baseSize = 14
 
 ####### URL PLOT ##########
 urlData = urlDataProcessing()
-urlBreaks = c(1,3000, 6000 ,9000, 12000)
+urlBreaks = c(200,3000, 6000 ,9000, 12000)
 urlLabels = c("day1","day30", "day60", "day90","day120")
 
 urlPlot = ggline(urlData, 'Time', 'value', ylab = "Misclassification (\\%)", xlab = '(a) URL',
