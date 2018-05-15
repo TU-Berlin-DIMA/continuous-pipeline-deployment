@@ -17,8 +17,8 @@ urlDataProcessing <- function(){
 }
 
 taxiDataProcessing<- function(){
-  continuousNo = sum(read.csv('nyc-taxi/optimization-effect/continuous-no-optimization-time_based-720/time', header = FALSE, col.names = c('time')))
-  continuousYes = sum(read.csv('nyc-taxi/optimization-effect/continuous-with-optimization-time_based-720/time', header = FALSE, col.names = c('time')))
+  continuousNo = sum(read.csv('nyc-taxi-old/optimization-effect/continuous-no-optimization-time_based-720/time', header = FALSE, col.names = c('time')))
+  continuousYes = sum(read.csv('nyc-taxi-old/optimization-effect/continuous-with-optimization-time_based-720/time', header = FALSE, col.names = c('time')))
   df = data.frame(Deployment = c('Default','Optimized'), 
                   Time = c(continuousNo, continuousYes))
   

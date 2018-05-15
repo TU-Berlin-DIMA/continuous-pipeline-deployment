@@ -19,7 +19,7 @@ class TaxiClusterProfile extends Profile {
   override val SAMPLE_SIZE = 720
   override val DAY_DURATION = 720
   override val NUM_PARTITIONS = 320
-  override val CONVERGENCE_TOL = 1E-9
+  override val CONVERGENCE_TOL = 1E-10
   override val MINI_BATCH = 0.1
   override val STEP_SIZE = 0.001
   override val UPDATER = "rmsprop"

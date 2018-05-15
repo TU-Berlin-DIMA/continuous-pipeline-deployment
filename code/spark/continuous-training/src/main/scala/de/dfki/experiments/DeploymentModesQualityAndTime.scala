@@ -69,6 +69,7 @@ object DeploymentModesQualityAndTime extends Experiment {
       daysToProcess = params.days,
       frequency = params.trainingFrequency,
       numPartitions = params.numPartitions,
+      otherParams = params,
       sparkConf = conf
     ).deploy(ssc, periodicalPipelineWarm)
   }

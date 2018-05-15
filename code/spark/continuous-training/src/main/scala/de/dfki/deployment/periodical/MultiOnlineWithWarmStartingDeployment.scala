@@ -2,6 +2,7 @@ package de.dfki.deployment.periodical
 
 import de.dfki.core.streaming.BatchFileInputDStream
 import de.dfki.deployment.Deployment
+import de.dfki.experiments.Params
 import de.dfki.ml.pipelines.Pipeline
 import org.apache.hadoop.io.{LongWritable, Text}
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat
@@ -18,6 +19,7 @@ class MultiOnlineWithWarmStartingDeployment(val history: String,
                                             val daysToProcess: Array[Int] = Array(1, 2, 3, 4, 5),
                                             val frequency: Int = 100,
                                             val numPartitions: Int,
+                                            val otherParams: Params,
                                             val sparkConf: SparkConf) extends Deployment {
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     // create rdd of the initial data that the pipeline was trained with
@@ -25,9 +27,9 @@ class MultiOnlineWithWarmStartingDeployment(val history: String,
     var copyContext = new StreamingContext(sparkConf, Seconds(1))
     pipeline.setSparkContext(copyContext.sparkContext)
 
-    val initialNumIterations = pipeline.model.getNumIterations
-    val initialMiniBatch = 0.1
-    val initialConvergenceTol = 1E-6
+    val initialNumIterations = otherParams.numIterations
+    val initialMiniBatch = otherParams.miniBatch
+    val initialConvergenceTol = otherParams.convergenceTol
 
     pipeline.model.setMiniBatchFraction(1.0)
     pipeline.model.setNumIterations(1)

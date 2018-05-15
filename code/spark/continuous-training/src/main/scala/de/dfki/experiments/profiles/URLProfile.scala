@@ -22,7 +22,7 @@ class URLProfile extends Profile {
   override val PIPELINE_NAME = "url-rep"
   override val REG_PARAM = 0.001
   override val SAMPLE_SIZE = 100
-  override val CONVERGENCE_TOL = 1E-7
+  override val CONVERGENCE_TOL = 1E-10
   override val NUM_PARTITIONS = 8
 
   override val PROFILE_NAME = "url"
