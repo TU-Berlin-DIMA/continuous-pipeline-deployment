@@ -7,11 +7,12 @@ library(ggpubr)
 
 
 urlDataProcessing <- function(){
-  continuousNo = read.csv('url-reputation/optimization-effect/continuous-no-optimization-time', header = FALSE, col.names = c('time'))
+  scale = 1000 * 60
+  continuousNo = sum(read.csv('url-reputation/optimization-effect/continuous-with-optimization-time_based-100/time', header = FALSE, col.names = c('time')))/scale
   continuousYes = read.csv('url-reputation/optimization-effect/continuous-full-optimization-time', header = FALSE, col.names = c('time'))
   df = data.frame(Deployment = c('Default','Optimized'), 
                   Time = c(continuousNo$time, continuousYes$time))
-  scale = 1000 * 60
+
   df$Time = df$Time / scale
   return (df)
 }

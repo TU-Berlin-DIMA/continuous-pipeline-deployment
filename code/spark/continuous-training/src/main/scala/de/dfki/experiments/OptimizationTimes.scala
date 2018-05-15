@@ -21,9 +21,9 @@ object OptimizationTimes extends Experiment {
     val masterURL = conf.get("spark.master", "local[*]")
     conf.setMaster(masterURL)
 
-    val ssc = new StreamingContext(conf, Seconds(1))
+    var ssc = new StreamingContext(conf, Seconds(1))
     // Continuous deployment without any optimizations
-    val continuousPipeline = getPipeline(ssc.sparkContext, params)
+    val continuousNoPipeline = getPipeline(ssc.sparkContext, params)
     new ContinuousDeploymentNoOptimization(history = params.inputPath,
       streamBase = params.streamPath,
       evaluation = s"${params.evaluationPath}",
@@ -31,6 +31,21 @@ object OptimizationTimes extends Experiment {
       daysToProcess = params.days,
       slack = params.slack,
       sampler = new TimeBasedSampler(size = params.sampleSize),
-      otherParams = params).deploy(ssc, continuousPipeline)
+      otherParams = params).deploy(ssc, continuousNoPipeline)
+    ssc.stop(stopSparkContext = true, stopGracefully = true)
+
+    // Baseline Deployment
+    ssc = new StreamingContext(conf, Seconds(1))
+    // Continuous deployment without any optimizations
+    val continuousYesPipeline = getPipeline(ssc.sparkContext, params)
+    new ContinuousDeploymentWithOptimizations(history = params.inputPath,
+      streamBase = params.streamPath,
+      materializeBase = params.materializedPath,
+      evaluation = s"${params.evaluationPath}",
+      resultPath = s"${params.resultPath}",
+      daysToProcess = params.days,
+      slack = params.slack,
+      sampler = new TimeBasedSampler(size = params.sampleSize),
+      otherParams = params).deploy(ssc, continuousYesPipeline)
   }
 }
