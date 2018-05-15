@@ -26,6 +26,8 @@ abstract class Profile {
   val BATCH_EVALUATION: String = ""
   val NUM_PARTITIONS: Int = 8
   val TRAINING_FREQUENCY: Int
+  val FAILED_PIPELINE: String = "None"
+  val INIT_TIME: Int = 1
 
   val PROFILE_NAME: String
 }

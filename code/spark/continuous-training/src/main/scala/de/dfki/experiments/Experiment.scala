@@ -60,6 +60,8 @@ abstract class Experiment {
     val batchEvaluationSet = parser.get("eval-set", profileFromArgs.BATCH_EVALUATION)
     val numPartitions = parser.getInteger("partitions", profileFromArgs.NUM_PARTITIONS)
     val trainingFrequency = parser.getInteger("training-frequency", profileFromArgs.TRAINING_FREQUENCY)
+    val failedPipeline = parser.get("failed-pipeline", profileFromArgs.FAILED_PIPELINE)
+    val initTime = parser.getInteger("init-time", profileFromArgs.INIT_TIME)
 
     Params(inputPath = inputPath,
       streamPath = streamPath,
@@ -82,11 +84,25 @@ abstract class Experiment {
       miniBatch = miniBatch,
       batchEvaluationSet = batchEvaluationSet,
       numPartitions = numPartitions,
-      trainingFrequency = trainingFrequency)
+      trainingFrequency = trainingFrequency,
+      failedPipeline = failedPipeline,
+      initTime = initTime)
   }
 
   def getPipeline(spark: SparkContext, params: Params): Pipeline = {
-    if (Files.exists(Paths.get(params.initialPipeline))) {
+    if(params.failedPipeline != "None"){
+      logger.info(s"loading a failed pipeline from: ${params.failedPipeline}")
+      if (params.pipelineName == "criteo") {
+        CriteoPipeline.loadFromDisk(params.failedPipeline, spark)
+      } else if (params.pipelineName == "url-rep") {
+        URLRepPipeline.loadFromDisk(params.failedPipeline, spark)
+      } else if (params.pipelineName == "taxi") {
+        NYCTaxiPipeline.loadFromDisk(params.failedPipeline, spark)
+      }
+      else {
+        throw new IllegalArgumentException(s"Pipeline ${params.pipelineName} has not been constructed!!!")
+      }
+    } else if (Files.exists(Paths.get(params.initialPipeline))) {
       logger.info(s"loading pipeline from: ${params.initialPipeline}")
       if (params.pipelineName == "criteo") {
         CriteoPipeline.loadFromDisk(params.initialPipeline, spark)

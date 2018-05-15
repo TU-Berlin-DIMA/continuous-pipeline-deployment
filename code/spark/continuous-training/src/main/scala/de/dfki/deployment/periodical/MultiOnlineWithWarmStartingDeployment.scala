@@ -40,10 +40,11 @@ class MultiOnlineWithWarmStartingDeployment(val history: String,
     var streamingSource = new BatchFileInputDStream[LongWritable, Text, TextInputFormat](copyContext, streamBase, days = daysToProcess)
 
     val ALLFILES = streamingSource.files
+    var time = otherParams.initTime
     while (!streamingSource.allFileProcessed()) {
-      var time = 1
+
       // code block for deployment between two periodical trainings
-      while (time <= frequency) {
+      while (time % frequency != 0) {
         val innerStart = System.currentTimeMillis()
         val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
 

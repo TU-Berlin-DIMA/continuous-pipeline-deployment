@@ -7,7 +7,7 @@ import de.dfki.ml.optimization.updater.{SquaredL2UpdaterWithAdam, Updater}
   */
 case class Params(inputPath: String = "",
                   streamPath: String = "",
-                  materializedPath:String = "",
+                  materializedPath: String = "",
                   evaluationPath: String = "prequential",
                   var resultPath: String = "",
                   var initialPipeline: String = "",
@@ -26,7 +26,9 @@ case class Params(inputPath: String = "",
                   var updater: Updater = new SquaredL2UpdaterWithAdam(),
                   var batchEvaluationSet: String = "",
                   var numPartitions: Int,
-                  var trainingFrequency: Int) {
+                  var trainingFrequency: Int,
+                  var failedPipeline: String,
+                  var initTime: Int) {
 
   def copy(): Params = {
     Params(inputPath = inputPath,
@@ -49,7 +51,9 @@ case class Params(inputPath: String = "",
       updater = updater,
       batchEvaluationSet = batchEvaluationSet,
       numPartitions = numPartitions,
-      trainingFrequency = trainingFrequency)
+      trainingFrequency = trainingFrequency,
+      failedPipeline = failedPipeline,
+      initTime = initTime)
   }
 
 }
