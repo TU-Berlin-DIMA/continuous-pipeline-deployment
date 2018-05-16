@@ -41,10 +41,13 @@ class MultiOnlineWithWarmStartingDeployment(val history: String,
 
     val ALLFILES = streamingSource.files
     var time = otherParams.initTime
+    streamingSource.setLastIndex(time - 1)
+    var mustRetrain = true
     while (!streamingSource.allFileProcessed()) {
 
       // code block for deployment between two periodical trainings
-      while (time % frequency != 0) {
+      while (time % frequency != 0 || !mustRetrain) {
+        mustRetrain = true
         val innerStart = System.currentTimeMillis()
         val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
 
@@ -73,6 +76,7 @@ class MultiOnlineWithWarmStartingDeployment(val history: String,
 
       val rdd = copyContext.sparkContext.textFile(path = nextBatch.mkString(",")).repartition(numPartitions)
       pipeline.updateTransformTrain(rdd, initialNumIterations)
+      mustRetrain = false
       writePipeline(pipeline, otherParams.pipelineName, s"${otherParams.initialPipeline}-periodical/$time")
       pipeline.model.setMiniBatchFraction(1.0)
       pipeline.model.setNumIterations(1)

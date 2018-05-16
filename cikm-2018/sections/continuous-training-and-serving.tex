@@ -1,66 +1,8 @@
 \section{Continuous Training and Serving} \label{continuous-training-serving}
-To continuously train the deployed model, we rely on computing partial updates based on the current parameters of the model and a combination of the incoming and existing data.
-To compute the partial updates, we utilize Stochastic Gradient Descent (SGD) \cite{zhang2004solving}.
-SGD has several parameters and in order to work effectively, they have to be tuned.
-In this section, we first describe the details of SGD and its parameters and discuss the effect of the parameters on our deployment platform.
-Then we describe how we take advantage of the properties of SGD to implement our proactive training, online statistics computation, and feature materialization.
+In this section, we describe how we take advantage of the properties of SGD to implement our proactive training, online statistics computation, and feature materialization.
 Another important aspect of any deployment platform is the ability to monitor the quality of the deployed model.
 We present our method for evaluating the quality of the deployed model and how we guarantee high-quality models.
 Finally, we describe how our continuous training approach improves the efficiency of the deployment process.
-
-\subsection{Stochastic Gradient Descent} \label{sgd}
-\textit{Stochastic Gradient Descent (SGD)} is an optimization strategy utilized by many machine learning algorithms for training a model.
-SGD is an iterative optimization technique where in every iteration, one data point or a sample of the data points is utilized to update the model.
-SGD is suitable for large datasets as it does not require scanning the entire data in every iteration \cite{bottou2010large}.
-SGD is used in different machine learning tasks such as classification \cite{zhang2004solving, macmahan2013}, clustering \cite{bottou1995convergence}, and matrix factorization \cite{koren2009matrix,  funk2006netflix}.
-It is also widely used in neural networks for training the networks on large datasets \cite{dean2012large}.
-Prominent applications of SGD in neural networks are the work of Google Deepmind team that managed to train neural networks that defeat humans in the game of Go \cite{silver2016mastering} and mastering Atari games \cite{mnih2013playing}.
-
-In Section \ref{introduction}, we described how a logistic regression model is utilized to predict the click through rate of different ads.
-In logistic regression, the goal is to find the weight vector ($w$) that maximizes the conditional likelihood of labels ($y$) based on the given data ($x$) in the training dataset:
-
-\begin{center}
-$$w^* = \argmax_w \sum_{i=1}^{N} ln(P(y^i | x^i, w))$$
-\end{center}
-
-where $N$ is the size of the training dataset.
-To utilize SGD for finding the optimal $w$, we start from initial random weights and in each we update the weights based on the gradient of the loss function:
-
-\begin{center}
-$${w}^{t+1} = {w}^t + \eta \sum_{i \in S} x^i (y^i - \hat{P}(Y^i = 1 | x^i w))$$
-\end{center}
-
-where $\eta$ is the learning rate parameter and $S$ is the random sample in the current iteration.
-The algorithm continues until convergence (when the weight vector does not change after an iteration).
-
-\textbf{Learning Rate.}
-A very important parameter of stochastic gradient descent is the learning rate.
-The learning rate controls the degree of change in the weights in each iteration of SGD.
-The most basic approach of tuning the learning rate is setting it to an initial small value and after each iteration decrease the value by a small factor.
-In complex and high-dimensional problems, this simple tuning approach for the learning rate is not effective \cite{schaul2013no}. 
-Adaptive learning rate methods such as, Momentum \cite{qian1999momentum}, Adam \cite{kingma2014adam}, RMSPROP \cite{tieleman2012lecture}, and AdaDelta \cite{zeiler2012adaptive} have been proposed.
-These methods automatically adjust the learning rate value in every iteration and speed up the convergence time.
-Moreover, some of the adaptation methods perform per coordinate modification \cite{schaul2013no, tieleman2012lecture, zeiler2012adaptive}. 
-This is important because not all the parameters of the weight vector contribute the same way and some of the parameters change more rapidly during the training process.
-
-\textbf{Sample Size.}
-Another parameter of stochastic gradient descent is the sample size.
-SGD is guaranteed to converge to a solution regardless of the sample size.
-However, the sample size can greatly affect the time that is required to converge.
-Two extremes of the sample size are 1 (every iteration only considers 1 data item) and $N$ (every iteration consider the entire data set, similar to normal batch gradient descent).
-Setting the sample size to 1 increases the model update frequency, however, it also results in noisy updates.
-Therefore, more iterations are required for the model to converge.
-Using the entire data in every iteration leads to more stable updates and as a result, the number of iterations required for the model to converge is fewer.
-However, each iteration takes more time as more data has to be processed.
-The most common approach is to set the sample size to a value small enough so that each sample can be processed quickly but large enough so the updates are not noisy (called a mini-batch gradient descent).
-
-\textbf{Distributed SGD.}
-To efficiently train machine learning models on large datasets, scalable techniques have to be employed.
-SGD inherently works well with large amounts of data because it does not need to scan every data point during every iteration.
-However, for very large datasets, SGD has to perform many iterations in order to converge.
-To decrease the running time, large datasets can be distributed among multiple nodes, where each node will compute the gradients on a subset of the data in parallel.
-After the initial computation of the gradients, they are all sent to one node where the final gradients are computed.
-
 \subsection{Proactive Training} \label{proactive-training}
 Proactive training replaces the periodical offline retraining of the deployed model.
 In periodical training, the deployment platform is reactive and retrains a new model when the quality drops below a user defined threshold or a large amount of training data becomes available.
@@ -133,14 +75,31 @@ If any of the changes result in an increase in the model size, we dynamically ad
 
 
 \subsection{Improved Deployment Process}
-\begin{figure}[t]
+\begin{figure*}[t]
+\begin{subfigure}{\columnwidth}
+\centering
+\includegraphics[width=\columnwidth]{../images/generic-motivational-example-v2.pdf}
+\caption{Periodical deployment of machine learning pipelines}
+\label{fig:motivational-example}
+\end{subfigure}%
+\begin{subfigure}{\columnwidth}
 \centering
 \includegraphics[width=\columnwidth]{../images/generic-improved-example-v2.pdf}
-\caption{Improved deployment process of machine learning applications}
+\caption{Continuous deployment of machine learning applications}
 \label{fig:improved-example}
-\end{figure}
+\end{subfigure}
+\end{figure*}
 
-Figure \ref{fig:improved-example} shows how our continuous training approach improves the deployment process of machine learning applications.
+Figure \ref{fig:motivational-example} shows the process of the periodical deployment approach.
+During the initial training step, a user designs a machine learning pipeline that consists of several data and feature preprocessing steps and trains a machine learning model by utilizing a batch training algorithm.
+Then in the deployment step, the model and the pipeline are deployed into the deployment platform.
+To perform inference, the deployment platform directs the incoming prediction queries through the preprocessing steps.
+Using the preprocessed features, the model makes a prediction.
+During the online update phase, the deployment platform directs the data through the preprocessing steps of the pipeline and then, using an online training algorithm, the platform updates the model.
+Finally, the deployment platform accommodates periodical retraining of the pipeline by either automatically initiating a batch training or prompting the user to train and redeploy a new model to the deployment platform.
+During the periodical retraining, the deployment platform has to disable the online updating of the model.
+
+Figure \ref{fig:improved-example} shows how our continuous training approach improves the existing deployment approach.
 Similar to the current deployment process, a user first trains a pipeline and deploy it into the deployment platform.
 The deployment platform uses the deployed pipeline and model to answer prediction queries and update the model using the incoming training data.
 After the incoming training data are preprocessed, they are stored in a cache.

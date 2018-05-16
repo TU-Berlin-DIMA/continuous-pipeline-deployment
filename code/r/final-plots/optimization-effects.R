@@ -8,41 +8,33 @@ library(ggpubr)
 
 urlDataProcessing <- function(){
   scale = 1000 * 60
-  continuousNo = sum(read.csv('url-reputation/optimization-effect/continuous-with-optimization-time_based-100/time', header = FALSE, col.names = c('time')))/scale
-  continuousYes = read.csv('url-reputation/optimization-effect/continuous-full-optimization-time', header = FALSE, col.names = c('time'))
+  Default = sum(read.csv('url-reputation/final/optimization-effect/continuous-no-optimization-time_based-100/time', header = FALSE, col.names = c('time')))/scale
+  Optimized = sum(read.csv('url-reputation/final/optimization-effect/continuous-with-optimization-time_based-100/time', header = FALSE, col.names = c('time')))/scale
   df = data.frame(Deployment = c('Default','Optimized'), 
-                  Time = c(continuousNo$time, continuousYes$time))
+                  Time = c(Default, Optimized))
 
-  df$Time = df$Time / scale
   return (df)
 }
 
 taxiDataProcessing<- function(){
-  continuousNo = sum(read.csv('nyc-taxi-old/optimization-effect/continuous-no-optimization-time_based-720/time', header = FALSE, col.names = c('time')))
-  continuousYes = sum(read.csv('nyc-taxi-old/optimization-effect/continuous-with-optimization-time_based-720/time', header = FALSE, col.names = c('time')))
+  scale = 1000 * 60
+  continuousNo = sum(read.csv('nyc-taxi-old/optimization-effect/continuous-no-optimization-time_based-720/time', header = FALSE, col.names = c('time')))/scale
+  continuousYes = sum(read.csv('nyc-taxi-old/optimization-effect/continuous-with-optimization-time_based-720/time', header = FALSE, col.names = c('time')))/scale
   df = data.frame(Deployment = c('Default','Optimized'), 
                   Time = c(continuousNo, continuousYes))
   
-  scale = 1000 * 60
-  df$Time = df$Time / scale
   
   return (df)
 }
 
 criteoDataProcessing <- function(){
-  continuousNo = read.csv('url-reputation/optimization-effect/continuous-no-optimization-time', header = FALSE, col.names = c('time'))
-  
-  continuousYes = read.csv('url-reputation/optimization-effect/continuous-full-optimization-time', header = FALSE, col.names = c('time'))
-  
-  
-  df = data.frame(Deployment = c('Default','Optimized'), 
-                  Time = c(continuousNo$time, continuousYes$time))
-  
   scale = 1000 * 60
-  df$Time = df$Time / scale
-  
+  Default = sum(read.csv('url-reputation/final/optimization-effect/continuous-no-optimization-time_based-100/time', header = FALSE, col.names = c('time')))/scale
+  Optimized = sum(read.csv('url-reputation/final/optimization-effect/continuous-with-optimization-time_based-100/time', header = FALSE, col.names = c('time')))/scale
+  df = data.frame(Deployment = c('Default','Optimized'), 
+                  Time = c(Default, Optimized))
+
   df$Time = 0
-  
   return (df)
 }
 

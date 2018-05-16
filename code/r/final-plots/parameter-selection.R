@@ -92,7 +92,7 @@ urlPlot = ggpar(urlPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) +
 
 ####### TAXI PLOT ##########
 taxiData = taxiDataProcessing()
-taxiBreaks = c(50,2000)
+taxiBreaks = c(1,2000)
 taxiLabels = c("Feb15", "Apr15")
 taxiPlot = ggline(taxiData, 'Time', 'value', ylab = "RMSLE", xlab = '(b) Taxi',
                    shape = '-1', linetype ='Adaptation',size = 2, color = "Adaptation", ggtheme = theme_pubclean(base_size = baseSize)) + 

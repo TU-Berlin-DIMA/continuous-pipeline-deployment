@@ -6,13 +6,6 @@ The data manager and the scheduler enable the pipeline manager to perform proact
 The proactive trainer component executes iterations of SGD on the deployed model.
 The proposed design decouples the components of the platform from the execution engine, which is responsible for make the model available for receiving and answering prediction requests.
 This design enables us to switch the execution engine without requiring major changes to the deployment platform.
-\todo[inline]{This Figure can be removed}
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.8\columnwidth]{../images/system-architecture.pdf}
-\caption{System Architecture}
-\label{fig:system-architecture}
-\end{figure}
 
 \subsection{Scheduler}\label{scheduler}
 The scheduler component is responsible for scheduling a new proactive training.
@@ -38,6 +31,14 @@ $T$ is measured by the scheduler component itself while $pr$ and $pl$ are measur
 Using the formula to schedule the next proactive training, the scheduler ensures that all the prediction requests that arrived during the last proactive training and all new prediction requests are answered before a new iteration is scheduled.
 \hl{Moreover, the scheduler assumes that the entire resources of the computing cluster are being used by the proactive trainer and therefore the prediction answering component is completely blocked while the proactive training is being executed.
 By removing the above assumption, proactive training can be scheduled to execute more frequently.}\todo[inline]{Rework or remove}
+\todo[inline]{Should we remove this?}
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\columnwidth]{../images/system-architecture.pdf}
+\caption{System Architecture}
+\label{fig:system-architecture}
+\end{figure}
+
 
 \subsection{Data Manager} \label{data-manager}
 The data manager component is responsible for storage of historical data, processing the incoming training data, and providing the proactive trainer with a new batch of training data for every iteration.

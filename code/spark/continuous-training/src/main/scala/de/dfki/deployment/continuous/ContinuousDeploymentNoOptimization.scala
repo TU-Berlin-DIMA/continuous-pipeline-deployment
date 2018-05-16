@@ -57,8 +57,6 @@ class ContinuousDeploymentNoOptimization(val history: String,
     while (!streamingSource.allFileProcessed()) {
       val start = System.currentTimeMillis()
       val rdd = streamingSource.generateNextRDD().get.map(_._2.toString)
-      rdd.setName(s"Stream $time")
-      rdd.persist(StorageLevel.MEMORY_ONLY)
 
       if (evaluation == "prequential") {
         // perform evaluation

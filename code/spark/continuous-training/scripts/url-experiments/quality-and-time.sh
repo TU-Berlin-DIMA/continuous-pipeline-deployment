@@ -5,5 +5,4 @@ cp /home/behrouz/jar/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar 
 
 home: spark://MacBook-Pro-5.fritz.box:7077
 # local
-~/Documents/frameworks/spark/2.2.0/bin/spark-submit --class de.dfki.experiments.DeploymentModesQualityAndTime --master "spark://dhcp-214-56.vpn.tu-berlin.de:7077" --driver-memory 3G --executor-memory 6G /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "profile=url" "result=/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/deployment-modes"
-
+~/Documents/frameworks/spark/2.2.0/bin/spark-submit --class de.dfki.experiments.DeploymentModesQualityAndTime --master "spark://berlin-164.b.dfki.de:7077" --driver-memory 2G --executor-memory 6G /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "profile=url" "result=/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/deployment-modes"

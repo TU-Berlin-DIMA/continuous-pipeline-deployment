@@ -1,22 +1,24 @@
 \section{Introduction} \label{introduction}
 %% General Introduction
 In machine learning applications, a pipeline, a series of complex data processing steps, processes a labeled training dataset and produces a machine learning model.
-The model then has to be deployed into a deployment platform where it can answer prediction queries in real-time.
+The model then has to be deployed into a deployment platform where it answers prediction queries in real-time.
 To properly preprocess the prediction queries, typically the pipeline has to be deployed alongside the model.
 
 \todo[inline]{Goal}
-A deployment platform must be robust and accommodate many different types of machine learning models and pipelines.
+A deployment platform must be robust, i.e. it should accommodate many different types of machine learning models and pipelines.
+\todo[inline]{we should make it clear by simplicity, we mean only on the deployment part. Pipeline designing and model training are obviously complex but we assume we already have a pipeline and model.}
 Moreover, it has to be simple to tune.
 And finally, the platform must maintain the quality of the deployed model by further training the deployed model when new training data becomes available.
 
 \todo[inline]{Problem}
 %% Intro to the problem of continuous improvement
-Typically, the deployment platform utilizes online learning methods to further train the deployed model.
+Online deployment of machine learning models is one method for maintaining the quality of a deployed model.
+In online deployment approach, the deployment platform utilizes online learning methods to further train the deployed model.
 In online learning, the model is updated based on the incoming data points.
-Online learning adapt the model to the new training data and provide an up-to-date model.
-However, purely online deployment approach introduces instability, degrades the quality over time, and is not always effective.
-In some applications that online learning has proven to be effective, to guarantee the same level of quality as the offline batch training, one has to tune the online learning method to the specific use case \cite{ma2009identifying, macmahan2013}.
-Therefore, to solve the problem of low model quality, the deployment platform performs periodical offline batch retraining over the existing historical and newly available data.
+Online learning adapts the model to the new training data and provides an up-to-date model.
+However, purely online deployment approach degrades the quality over time, rendering it ineffective in many cases.
+In some applications that online learning has proven to be effective, to guarantee a high level of quality, one has to tune the online learning method to the specific use case \cite{ma2009identifying, macmahan2013}.
+Thus, effective online deployment of machine learning models cannot provide robustness and simplicity.
 
 %Figure \ref{fig:motivational-example} shows the typical process of the existing deployment platforms.
 %During the initial training step, a user designs a machine learning pipeline that consists of several data and feature preprocessing steps and trains a machine learning model by utilizing a batch training algorithm.
@@ -27,9 +29,11 @@ Therefore, to solve the problem of low model quality, the deployment platform pe
 %Finally, the deployment platform accommodates periodical retraining of the pipeline by either automatically initiating a batch training or prompting the user to train and redeploy a new model to the deployment platform.
 %During the periodical retraining, the deployment platform has to disable the online updating of the model.
 
+To solve the problem of degrading model quality, periodical deployment approach is utilized.
+In periodical deployment approach, the platform, in addition to utilizing simple online learning, periodically retrains the deployed model using the historical data.
 One of the challenges in many real-world use cases is the size of the training datasets.
 Typically, training datasets are extremely large and require hours or days of data preprocessing and training to result in a new model.
-Despite this drawback, in some applications, retraining the model is still critical, as even a small increase in the quality of the deployed model can have a large financial impact.
+Despite this drawback, in some applications, retraining the model is still critical, as even a small increase in the quality of the deployed model can have a large impact.
 For example, in the domain of ads click-through rate (CTR) prediction, even a 0.1\% accuracy improvement yields hundreds of millions of dollars in revenue \cite{ling2017model}.
 In the periodical deployment approach, while a new model is being retrained, new prediction queries and training data are still arriving at the deployment platform.
 However, the platform has to answer the prediction queries using the model before the retraining began.
@@ -40,7 +44,7 @@ As a result, the deployed model quickly becomes stale.
 An efficient deployment platform, aside from being robust and easy to tune, must be able to maintain the quality of the deployed model without incurring the high training cost of the periodical deployment approach.
  
  \todo[inline]{Solution}
-We propose a deployment platform, that completely eliminates the need for retraining, thus greatly reducing the training cost, while achieving the same level of quality that the periodical deployment approach reaches.
+We propose a deployment platform, that completely eliminates the need for retraining, thus significantly reducing the training cost, while achieving the same level of quality as the periodical deployment approach.
 Our deployment platform is also robust and accommodates many different types of machine learning models and pipelines.
 Lastly, the tuning process of our deployment approach is simple and requires minimal user interaction.
 
@@ -69,7 +73,7 @@ Our deployment platform continuously updates the model using a combination of th
 Similar to existing deployment platforms, our platform also utilizes online learning methods to update the model based on the incoming training data.
 However, instead of periodical retraining, our deployment platform performs regular updates to the model based on samples of the historical data.
 
-Our deployment platform offers two key optimizations, proactive training and online statistics computation and feature materialization. 
+Our deployment platform offers two key optimizations: proactive training and online statistics computation and feature materialization. 
 
 \textit{Proactive training.}
 Proactive training is the process of utilizing samples of the historical data to update the deployed model.
