@@ -218,6 +218,13 @@ For the URL pipeline, our optimizations have reduced the continuous training tim
 \subsection{Discussion} \label{subsec:discussion}
 \todo[inline]{Maybe I can also add the result of the scheduling experiment}
 \todo[inline]{Explain it is always possible to train the model further and may achieve better result in periodical deployment by given the same amount of time in tuning and designing a pipeline, continuous performs better.}
+\textbf{Trade off between quality and training cost}
+\begin{figure}[!h]
+\centering
+\resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/quality-vs-time}}
+\caption{Trade off between average quality of the deployed model and total cost of training}
+\label{sampling-method-figure}
+\end{figure}
 \textbf{Side effect of periodical deployment.}
 In our experiments, incoming predictions where paused until the end of a periodical training.
 However, in real-world scenarios, prediction queries arrive constantly arrive at the system.

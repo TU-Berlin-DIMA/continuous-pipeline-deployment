@@ -208,6 +208,6 @@ criteoTimePlot = ggpar(criteoTimePlot, font.x = c(fontLabelSize), font.y=c(fontL
 
 deploymentQuality = ggarrange(urlQualityPlot,urlTimePlot, taxiQualityPlot, taxiTimePlot, criteoQualityPlot, criteoTimePlot, nrow = 3, ncol = 2, common.legend = TRUE)
 
-tikz(file = "../images/experiment-results/tikz/deployment-quality-and-time-experiment.tex", width = 6, height = 3)
+tikz(file = "../images/experiment-results/tikz/deployment-quality-and-time-experiment.tex", width = 6, height = 4)
 deploymentQuality
 dev.off()
