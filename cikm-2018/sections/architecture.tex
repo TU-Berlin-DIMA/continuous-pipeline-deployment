@@ -25,13 +25,10 @@ Slack is a user-controlled parameter that provides a hint to the scheduler about
 A large slack value ($\geq10$) forces the scheduler to schedule the next proactive training in a conservative manner, allocating most of the resources of the deployment platform to the query answering component.
 A small slack value ($10 \geq S \geq 2$) enables the scheduler to schedule the next proactive training using a shorter time interval.
 As a result, the deployment platform allocates more computing resources for training the pipeline.
-A slack value of smaller than 2 is not recommended as \hl{it may: imprecise language} increase the latency of prediction answering component.
+A slack value of smaller than 2 is not recommended as it increases the latency of prediction answering component.
 
 $T$ is measured by the scheduler component itself while $pr$ and $pl$ are measured by the deployment platform.
 Using the formula to schedule the next proactive training, the scheduler ensures that all the prediction requests that arrived during the last proactive training and all new prediction requests are answered before a new iteration is scheduled.
-\hl{Moreover, the scheduler assumes that the entire resources of the computing cluster are being used by the proactive trainer and therefore the prediction answering component is completely blocked while the proactive training is being executed.
-By removing the above assumption, proactive training can be scheduled to execute more frequently.}\todo[inline]{Rework or remove}
-\todo[inline]{Should we remove this?}
 \begin{figure}[h]
 \centering
 \includegraphics[width=0.8\columnwidth]{../images/system-architecture.pdf}

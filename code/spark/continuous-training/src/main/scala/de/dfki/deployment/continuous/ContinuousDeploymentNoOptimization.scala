@@ -27,6 +27,7 @@ class ContinuousDeploymentNoOptimization(val history: String,
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     // create rdd of the initial data that the pipeline was trained with
+    // TODO: Should this be cached or not for no optimization deployment
     val data = streamingContext.sparkContext
       .textFile(history)
       .setName("Historical data")

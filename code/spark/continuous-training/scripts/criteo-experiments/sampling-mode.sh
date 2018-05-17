@@ -1,9 +1,8 @@
-#local
-~/Documents/frameworks/spark/2.2.0/bin/spark-submit --class de.dfki.experiments.SamplingModes --master "spark://MacBook-Pro-5.fritz.box:7077" --driver-memory 3g --executor-memory 5G /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-full/experiments/initial-training/day_0" "stream=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-full/experiments/stream" "result=/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/criteo-full/sampling-mode/local-prequential" "slack=5" "features=3000" "iterations=500" "sample=0.1" "pipeline=/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/criteo-full/pipelines/sampling-mode/init_500" "days=1,2,3,4,5" 
+#
 
 
-# cluster
-/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.experiments.SamplingModes --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "input=hdfs://cloud-11:44000/user/behrouz/criteo/experiments/initial-training/day_0" "stream=hdfs://cloud-11:44000/user/behrouz/criteo/experiments/stream" "result=/share/hadoop/behrouz/experiments/criteo-full/sampling-mode-prequential" "delimiter=\t" "features=3000" "evaluation=prequential" "slack=10" "iterations=500" "days=1,2,3,4,5" "sample=0.1" "day_duration=1440" "pipeline=/share/hadoop/behrouz/experiments/criteo-full/sampling-mode-prequential/pipelines/init_500"
+#Cluster
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.experiments.SamplingModes --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "result=/share/hadoop/behrouz/experiments/criteo/results/sampling-modes" "profile=criteo-cluster" "days=1,2"
 
-
-scp -r behrouz@cloud-11.dima.tu-berlin.de:/share/hadoop/behrouz/experiments/criteo-full/sampling-mode-prequential/continuous /Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/criteo-full/sampling-mode/cluster-prequential/
+# copy the results to local machine
+scp -r behrouz@cloud-11.dima.tu-berlin.de:/share/hadoop/behrouz/experiments/criteo/results/sampling-modes/ /Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/criteo/

@@ -216,44 +216,15 @@ For the URL pipeline, our optimizations have reduced the continuous training tim
 \end{figure}
 
 \subsection{Discussion} \label{subsec:discussion}
-Continuous deployment approach can reduce the end-to-end deployment time by 1 order of magnitude.
-However, it may reduce the quality as well.
-\todo[inline]{Tilmann: I feel this is a bit odd. I would rather do a simpler tradeoff calculation. Behrouz: I think we can just use a side by side figure in experiment 1, where we show the cumulative error and time for every deployment mode. }
-\todo[inline]{The formula is a bit complicated now, but we should be able to replace the nominator and denominator by $relative\_err(t)$ and $relative\_cost(t)$. First I'd like to know your opinion on whether this is the best way to show the trade-off between quality and time}
-To understand the trade-off between quality and the training time, we define a performance indicator ($PI$) as:\\
-\begin{center}
-$PI(t) = \dfrac{\dfrac{err_b(t) - err(t)}{err_b(t)}}{\dfrac{cost(t) - cost_b(t)}{cost_b(t)}+ 1}   * 100$
-\end{center}
-where $err(t)$ and $cost(t)$ are the cumulative error rate and the cumulative deployment cost (training time + prediction time) at time $t$ and  $err_b(t)$ and $cost_b(t)$ are the cumulative error rate and the cumulative deployment cost of the baseline deployment approach (which only includes the prediction time).
-The value of $PI$ falls between 0 and 100.
-The value of $PI$ for the baseline is always 0 (no increase in quality over the baseline).
-A $PI$ of 100 indicates an Oracle deployment approach where the deployed model has an error rate of 0 and deployment cost of similar to the baseline (no training of the model at all).
-Bigger values of $PI$ signal the gain in quality has surpassed the loss in the total deployment cost.
-Figure \ref{quality-vs-time} shows the value of $PI$ over time for the continuous and periodical deployment approaches.
-For the periodical deployment approach, the quality of the models is slightly higher than the continuous deployment approach.
-However, due to the extremely long training time, the cumulative cost of the deployment is increasing exponentially with every periodical training (as the size of the historical data doubles for every training).
-As a result, the value of $PI$ for the periodical deployment approach decreases as further training (cost of deployment) does not justify the decrease in error rate.
-On the other hand, the continuous deployment approach guarantees high-quality models with only a linear increase in the cumulative deployment cost (the training time for every proactive training is constant) which results in a slow increase in the value of $PI$ over time. 
-
-\begin{figure}[!h]
-\centering
-\resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/quality-vs-time}}
-\caption{Trade-off between model quality and total training time.}
-\label{quality-vs-time}
-\end{figure}
-
-
-%\textbf{Side effect of periodical deployment.}
-%In our experiments, incoming predictions where paused until the end of a periodical training.
-%However, in real-world scenarios, prediction queries arrive constantly arrive at the system.
-%Therefore, prediction queries are answered by the model before the periodical training was initiated. 
-%Moreover, during the periodical training, the model cannot be updated using online learning algorithm as well.
-%As a result, the performance of the model while a new model is being trained does not improve.
-%The average training time for the proactive training is very small (200 ms for the URL pipeline \hl{nyc and criteo}).
-%Therefore, predictions queries are always answered by an up-to-date model and online learning is not paused in the continuous deployment.
-
-
-To sum up, our continuous deployment approach for some datasets may result in a small reduction in the quality.
-However, the decrease in the total end-to-end deployment time overshadows the loss of the quality as many real-world deployment scenarios require up-to-date models as new data, such as users and ads in the ads prediction use case and new city regions in the taxi travel time prediction use case, becomes available.
+\todo[inline]{Maybe I can also add the result of the scheduling experiment}
+\todo[inline]{Explain it is always possible to train the model further and may achieve better result in periodical deployment by given the same amount of time in tuning and designing a pipeline, continuous performs better.}
+\textbf{Side effect of periodical deployment.}
+In our experiments, incoming predictions where paused until the end of a periodical training.
+However, in real-world scenarios, prediction queries arrive constantly arrive at the system.
+Therefore, prediction queries are answered by the model before the periodical training was initiated. 
+Moreover, during the periodical training, the model cannot be updated using online learning algorithm as well.
+As a result, the performance of the model while a new model is being trained does not improve.
+The average training time for the proactive training is very small (200 ms for the URL pipeline \hl{nyc and criteo}).
+Therefore, predictions queries are always answered by an up-to-date model and online learning is not paused in the continuous deployment.
 
 

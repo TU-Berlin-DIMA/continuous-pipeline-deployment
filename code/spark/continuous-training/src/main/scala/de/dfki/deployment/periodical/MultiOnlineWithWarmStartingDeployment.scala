@@ -41,6 +41,7 @@ class MultiOnlineWithWarmStartingDeployment(val history: String,
 
     val ALLFILES = streamingSource.files
     var time = otherParams.initTime
+    logger.info(s"Setting the time to $time")
     streamingSource.setLastIndex(time - 1)
     var mustRetrain = true
     while (!streamingSource.allFileProcessed()) {

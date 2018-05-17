@@ -9,7 +9,7 @@ urlQualityProcessing <- function(){
   Online = getMisclassification('url-reputation/deployment-modes/online/confusion_matrix')
   Continuous = getMisclassification('url-reputation/deployment-modes/continuous-with-optimization-time_based-100/confusion_matrix')
   Baseline = getMisclassification('url-reputation/final/deployment-modes/baseline/confusion_matrix')
-  Periodical = getMisclassification('url-reputation/deployment-modes/periodical-with-warmstarting/confusion_matrix')
+  Periodical = getMisclassification('url-reputation/final/deployment-modes/periodical-with-warmstarting/confusion_matrix')
 
   
   append <- function(vec, maxLength){
@@ -31,8 +31,8 @@ urlTimeProcessing <- function(){
   scale = 1000 * 60
   Online = cumsum(read.csv('url-reputation/final/deployment-modes/online/time', header = FALSE, col.names = c('time'))$time) / scale
   Continuous = cumsum(read.csv('url-reputation/final/deployment-modes/continuous-with-optimization-time_based-100/time', header = FALSE, col.names = c('time'))$time) / scale
-  Baseline = cumsum(read.csv('url-reputation//final/deployment-modes/baseline/time', header = FALSE, col.names = c('time'))$time) / scale
-  Periodical = cumsum(read.csv('url-reputation-old//deployment-modes/periodical-with-warmstarting/time', header = FALSE, col.names = c('time'))$time) / scale
+  Baseline = cumsum(read.csv('url-reputation/final/deployment-modes/baseline/time', header = FALSE, col.names = c('time'))$time) / scale
+  Periodical = cumsum(read.csv('url-reputation/final/deployment-modes/periodical-with-warmstarting/time', header = FALSE, col.names = c('time'))$time) / scale
   last = tail(Periodical,1)
   Periodical = Periodical[1:length(Online)]
   Periodical[length(Periodical)] = last
