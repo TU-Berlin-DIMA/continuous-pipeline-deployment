@@ -1,30 +1,35 @@
 \section{Continuous Training and Serving} \label{continuous-training-serving}
-In this section, first, we describe how by utilizing the properties of the stochastic gradient descent we implement the proactive training.
+In this section, first, we describe how we utilize the properties of the stochastic gradient descent to implement the proactive training.
 Next, we describe the details of the online statistics computation and feature materialization.
 Finally, we demonstrate how our deployment platform improves the existing deployment approaches and maintains the quality of the deployed model.
 
 \subsection{Proactive Training} \label{proactive-training}
-Proactive training replaces the periodical offline retraining of the deployed model.
-When the amount size of the dataset surpasses a predefined threshold, the platform retrains the deployed model.
-Contrary to the periodical training, on proactive training, the platform continuously train the deployed model using the incoming and existing historical data.
+Proactive training is a replacement for the periodical offline retraining of the deployed model.
+In periodical retraining, when the size of the accumulated training data surpasses a predefined threshold, the platform retrains the deployed model.
+Contrary to the periodical training, in proactive training, the platform continuously train the deployed model using the incoming and existing historical data.
 
 We take advantage of the iterative nature of SGD in the design of the proactive training.
+\todo[inline]{Alireza: Should not we mention we use mini-batch SGD ? Behrouz: I talk about the sampling separately, we can mention we are using mini batch as well but I'm not sure if that is required}
 The input to each iteration of SGD is the current weight parameters of the model, one or more data points, and an objective function.
 In proactive training, we execute iterations of SGD on the deployed model.
-To execute the proactive training, the deployment platform first samples the historical data, then transforms the data into a set of features using the deployed pipeline.
+To execute the proactive training, the deployment platform first samples the historical data.
+Then the platform transforms the data into a set of features using the deployed pipeline.
+\todo[inline]{Alireza: should not be plural ? Behrouz: I think singular makes more sense, the gradient itself is multi dimensional but the word 'gradient' should be singular. I ll google a bit to see which one's better.}
 Next, the proactive trainer utilizes the transformed features to compute the gradient of the objective function.
-\hl{Finally, the deployment platform updates the deployed model with the computed gradient.}
+Finally, the deployment platform updates the deployed model with the computed gradient.
 
 The learning rate parameter of SGD has a significant impact on the proactive training.
-To effectively train the deployed model, one has to tune the learning rate.
+To effectively update the deployed model, one has to tune the learning rate.
 Similar to the offline SGD, using a constant or decreasing value for the learning rate results in suboptimal training.
 Adaptive learning rate methods work well in a dynamic environment where the distribution of the data may change over time \cite{zeiler2012adadelta}.
 Therefore, in proactive training, instead of using simple learning rate tuning, we utilize the more advanced learning rate adaptation methods.
 The performance of learning rate adaptation techniques varies across different datasets.
 To choose the most promising adaptation technique, we rely on hyperparameter tuning during the initial model training on the historical dataset \cite{bergstra2012random}.
 After the initial training, the deployment platform utilizes the same learning rate adaptation technique for the proactive training.
-In Section \ref{evaluation}, \hl{we show that the learning rate adaptation technique that results in a model with the highest quality during the initial training has the best performance during the proactive training as well.}
+\todo[inline]{Alireza: One question which could be raised is : do you compare it with something non-adaptive? Because we use adjective "highest". In general, the satement has to be backed up with experiment. I know we discussed this before (choosing it adaptively and reason for not doing it). Now, the concern is to write it in such a way that does not raise any flag.    Behrouz: The referenced literature show that these adaptation techniques work better than vanilla one, it's true that someone can always ask about it, but just referencing the literature should be enough. Isn't it?}
+Our experiments in Section \ref{evaluation} show that selecting the adaptation technique based on initial training results in a model with the highest quality during the proactive training.
 
+\todo[inline]{Alireza: Not sure of usage of modal. Why not just saying it without adding any doubts? Behrouz: Here I wanted to say that because it has to adapt the deployed model, then one has to consider the effect the historical data sampling.}
 The proactive training must adapt the deployed model to the recent data items.
 As a result, when sampling the historical data, one has to consider the effect of the sample on the deployed model.
 A time-based sampling approach of the historical data emphasizes the more recent data points and adapts the deployed model to the changes in the data distribution.
@@ -53,12 +58,12 @@ We show that the time-based sampling results in a model with better quality.
 %This helps in adapting the model to the new training data.}
 
 \subsection{Online Statistics Computation and Feature Materialization}
-Before applying the proactive training, the deployment platform first needs to transform the data using the deployed pipeline.
+Before applying the proactive training, the deployment platform needs to transform the data using the deployed pipeline.
 Some components of the machine learning pipeline, such as the standard scaler or the one-hot encoder, require statistics over the dataset to be calculated before they process the data.
 Computing these statistics require scans of the data.
 In our deployment platform, we utilize online training as well as proactive training.
 During the online update of the deployed model, we compute all the necessary statistics for every component.
-Computing the required statistics online eliminates the need to recompute the statistics for proactive training.
+Online computation of the required statistics eliminates the need to recompute the statistics during the proactive training.
 
 Moreover, during the online learning, the deployed pipeline transforms the incoming data to a set of features before updating the model.
 Given enough storage space, our deployment platform first assigns timestamps and then caches these preprocessed features.
@@ -68,9 +73,8 @@ Caching the features eliminates the data preprocessing part of the pipeline duri
 \textit{Dynamic model size.}
 Some components of the machine learning pipeline generate new features.
 For example, one-hot encoding and data bucketization, both may generate new features after processing new training data.
-When such components exist in the deployed pipeline, the deployment platform keeps track of the number of features after the data preprocessing
+When such components exist in the deployed pipeline, the deployment platform keeps track of the number of features after the data preprocessing.
 When the pipeline generates new features, the deployment platform adjusts the size of the deployed model.
-
 
 \subsection{Improved Deployment Process}
 \begin{figure*}[t]

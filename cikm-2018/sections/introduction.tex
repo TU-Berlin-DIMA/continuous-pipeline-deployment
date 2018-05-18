@@ -4,7 +4,6 @@ In machine learning applications, a pipeline, a series of complex data processin
 The model then has to be deployed into a deployment platform where it answers prediction queries in real-time.
 To properly preprocess the prediction queries, typically the pipeline has to be deployed alongside the model.
 
-\todo[inline]{Goal}
 A deployment platform must be robust, i.e. it should accommodate many different types of machine learning models and pipelines.
 \todo[inline]{we should make it clear by simplicity, we mean only on the deployment part. Pipeline designing and model training are obviously complex but we assume we already have a pipeline and model.}
 Moreover, it has to be simple to tune.
@@ -99,6 +98,7 @@ In summary, our contributions are:
 \end{itemize}
 
 The rest of this paper is organized as follows:
+In Section \ref{background}, we describe the details of the optimization strategy we utilize for our continuous deployment platform.
 Section \ref{continuous-training-serving} describes the details of our continuous training approach.
 In Section \ref{sec:system-architecture}, we introduce the architecture of our deployment framework.
 In Section \ref{evaluation}, we evaluate the performance of our continuous deployment approach.
