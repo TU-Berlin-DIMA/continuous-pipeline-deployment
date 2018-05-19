@@ -8,11 +8,11 @@ library(ggpubr)
 
 urlDataProcessing <- function(){
   scale = 1000 * 60
-  oMC = mean(getMisclassification('url-reputation/final/deployment-modes/online/confusion_matrix'))
+  oMC = mean(getMisclassification('url-reputation/final/deployment-modes/online/confusion_matrix')) * 100
   oTime = sum(read.csv('url-reputation/final/deployment-modes/online/time', header = FALSE, col.names = c('time'))$time / scale)
-  cMC = mean(getMisclassification('url-reputation/final/deployment-modes/continuous-with-optimization-time_based-100/confusion_matrix'))
+  cMC = mean(getMisclassification('url-reputation/final/deployment-modes/continuous-with-optimization-time_based-100/confusion_matrix'))* 100
   cTime = sum(read.csv('url-reputation/final/deployment-modes/continuous-with-optimization-time_based-100/time', header = FALSE, col.names = c('time'))$time / scale)
-  pMC = mean(getMisclassification('url-reputation/final/deployment-modes/periodical-with-warmstarting/confusion_matrix'))
+  pMC = mean(getMisclassification('url-reputation/final/deployment-modes/periodical-with-warmstarting/confusion_matrix'))* 100
   pTime = sum(read.csv('url-reputation/final/deployment-modes/periodical-with-warmstarting/time', header = FALSE, col.names = c('time'))$time / scale)
   
   df = data.frame(Time = c(oTime, pTime,cTime),
@@ -46,7 +46,7 @@ urlData = urlDataProcessing()
 urlPlot = ggscatter(urlData, x = "Time", 
           y= "MC", 
           color = "Deployment", 
-          shape = "Deployment", size = 4, ylim=c(0.0223,0.0227), xlim=c(-20,1000),
+          shape = "Deployment", size = 4, ylim=c(2.23,2.27), xlim=c(-20,1000),
           ylab = 'Misclassification\\%', xlab = "Time(m)\n(a) URL",
           ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = urlBreaks) + 
