@@ -8,6 +8,6 @@ While the online training is fast, the retraining of the model is time-consuming
 
 We propose a novel approach for continuously updating the deployed models using a combination of the incoming real-time data and the historical data.
 We utilize fast sampling techniques to include the historical data in the training process, thus eliminating the need for complete retraining of deployed model.
-Moreover, we offer several optimizations such as live statistics analysis and materialization of preprocessed features to minimize the total training and data preprocessing time.
+Moreover, we offer several optimizations such as online statistics computation and materialization of preprocessed features to minimize the total training and data preprocessing time.
 In our experiments, we show that our continuous training approach updates the model more frequently while using fewer resources which results in an improvement of 1.6\% in error rate and up to 2 orders of magnitude over the state-of-the-art deployment approaches.
 \end{abstract}
