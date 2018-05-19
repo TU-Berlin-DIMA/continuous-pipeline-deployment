@@ -3,9 +3,12 @@ scp target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar behrouz@cl
 cp /home/behrouz/jar/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar /share/hadoop/behrouz/jars/
 
 
-home: spark://MacBook-Pro-5.fritz.box:7077
 # local
 ~/Documents/frameworks/spark/2.2.0/bin/spark-submit --class de.dfki.experiments.DeploymentModesQualityAndTime --master "spark://berlin-164.b.dfki.de:7077" --driver-memory 2G --executor-memory 6G /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "profile=url" "result=/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/deployment-modes"
 
 
-~/Documents/frameworks/spark/2.2.0/bin/spark-submit --class de.dfki.experiments.DeploymentModesQualityAndTime --master "spark://MacBook-Pro-5.fritz.box:7077" --driver-memory 2G --executor-memory 6G /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "profile=url" "result=/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/deployment-modes" "failed-pipeline=/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/pipelines/best/adam-0.001-periodical/8000" "init-time=8001"
+# cluster
+/share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.experiments.DeploymentModesQualityAndTime --master "spark://cloud-11.dima.tu-berlin.de:7077" /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar "result=/share/hadoop/behrouz/experiments/url/results/deployment-modes" "profile=url-cluster" 
+
+# copy the results to local machine
+scp -r behrouz@cloud-11.dima.tu-berlin.de:/share/hadoop/behrouz/experiments/nyc-taxi/results/deployment-modes/ /Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/nyc-taxi/

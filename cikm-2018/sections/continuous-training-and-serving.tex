@@ -90,21 +90,24 @@ When the pipeline generates new features, the deployment platform adjusts the si
 \caption{Continuous deployment of machine learning applications}
 \label{fig:improved-example}
 \end{subfigure}
+\caption{Machine Learning Deployment Platforms}
 \end{figure*}
 
 Figure \ref{fig:motivational-example} shows the process of the periodical deployment approach.
-During the initial training, a user designs a machine learning pipeline that consists of several data and feature preprocessing steps. After the data preprocessing step, the user trains a machine learning model by utilizing a batch training algorithm.
-During the deployment step, the user deploys the model and the pipeline into the deployment platform.
-To perform inference, the deployment platform directs the incoming prediction queries through the preprocessing steps before utilizing the model to predict the label.
+The process starts with an offline training \circled{1}.
+During the offline training, a user designs a machine learning pipeline that consists of several data and feature preprocessing steps. 
+After the data preprocessing step, the user trains a machine learning model by utilizing a batch training algorithm.
+During the deployment step, the user deploys the model and the pipeline into the deployment platform \circled{2}.
+To perform inference, the deployment platform directs the incoming prediction queries through the preprocessing steps before utilizing the model to predict the label \circled{3}.
 During the online update step, the deployment platform directs the training data through the preprocessing steps of the pipeline and then, using an online training algorithm, the platform updates the model.
-Finally, the deployment platform accommodates periodical retraining of the pipeline by either automatically initiating a batch training or prompting the user to train and redeploy a new model to the deployment platform.
+Finally, the deployment platform accommodates periodical retraining of the pipeline by either automatically triggering a batch training or prompting the user to train and redeploy a new model to the deployment platform \circled{4}.
 During the periodical retraining, the deployment platform has to disable the online updating of the model.
 
 Figure \ref{fig:improved-example} shows how our continuous training approach improves the existing deployment process.
-Similar to the current deployment process, a user first trains a pipeline and deploy it into the deployment platform.
-The deployment platform uses the deployed pipeline and model to answer prediction queries and update the model using the incoming training data.
+Similar to the current deployment process, a user first trains a pipeline \circled{1} and deploy it into the deployment platform \circled{2}.
+The deployment platform utilizes the deployed pipeline and model to answer prediction queries and update the model using the incoming training data \circled{3}.
 After transforming the incoming data into a set of features, the deployment platform caches the transformed features.
 During the proactive training, the platform samples the cached features and computes the gradient using the sample.
-Finally, the platform updates the deployed model using the gradient.
+Finally, the platform updates the deployed model using the gradient \circled{4}.
 In the new deployment approach, the platform continuously updates the pipeline and the deployed model without requiring full retraining over historical data.
 As a result, the deployment platform ensures the model is always up-to-date.

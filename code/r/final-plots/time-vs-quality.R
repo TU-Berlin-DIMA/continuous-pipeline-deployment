@@ -29,7 +29,7 @@ taxiDataProcessing <- function(){
   cMC = mean(getRMSLE('nyc-taxi/final/deployment-modes/continuous-with-optimization-time_based-720/rmsle'))
   cTime = sum(read.csv('nyc-taxi/final/deployment-modes/continuous-with-optimization-time_based-720/time', header = FALSE, col.names = c('time'))$time / scale)
   pMC = mean(getRMSLE('nyc-taxi/final/deployment-modes/periodical-with-warmstarting/rmsle'))
-  pTime = sum(read.csv('nyc-taxi/deployment-modes/periodical-with-warmstarting/time', header = FALSE, col.names = c('time'))$time / scale)
+  pTime = sum(read.csv('nyc-taxi/final/deployment-modes/periodical-with-warmstarting/time', header = FALSE, col.names = c('time'))$time / scale)
   
   df = data.frame(Time = c(oTime, pTime,cTime),
                   MC = c(oMC, pMC, cMC),
@@ -37,8 +37,8 @@ taxiDataProcessing <- function(){
   return(df)
 }
 
-fontLabelSize = 14
-baseSize = 20
+fontLabelSize = 12
+baseSize = 14
 
 ####### URL PLOT ##########
 urlBreaks = c(0, 400 ,800)
@@ -59,12 +59,12 @@ urlPlot = ggpar(urlPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize))
 
 ####### TAXI PLOT ##########
 taxiData = taxiDataProcessing()
-taxiBreaks = c(0, 500 ,1000)
+taxiBreaks = c(0 ,1000, 2000)
 taxiBreaksY = c(0.0974,0.0975, 0.0976)
 taxiPlot = ggscatter(taxiData, x = "Time", 
                     y= "MC", 
                     color = "Deployment", 
-                    shape = "Deployment", size = 4, ylim = c(0.0974,0.0976), xlim=c(0,1100),
+                    shape = "Deployment", size = 4, ylim = c(0.0974,0.0976), xlim=c(0,2000),
                     ylab = 'RMSLE', xlab = "Time(m)\n(b) Taxi",
                     ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = taxiBreaks) + 
@@ -91,8 +91,9 @@ criteoPlot = ggscatter(criteoData, x = "Time",
          axis.text.x = element_text(margin = margin(t=-1)))
 criteoPlot = ggpar(criteoPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize))
 
-qualityVsTime = ggarrange(urlPlot, taxiPlot, criteoPlot, nrow = 1, ncol = 3, common.legend = TRUE)
+#qualityVsTime = ggarrange(urlPlot, taxiPlot, criteoPlot, nrow = 1, ncol = 3, common.legend = TRUE)
+qualityVsTime = ggarrange(urlPlot, taxiPlot, nrow = 1, ncol = 2, common.legend = TRUE)
 
-tikz(file = "../images/experiment-results/tikz/quality-vs-time.tex", width = 6, height = 2)
+tikz(file = "../images/experiment-results/tikz/quality-vs-time.tex", width = 4, height = 2)
 qualityVsTime 
 dev.off()

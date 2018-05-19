@@ -87,14 +87,14 @@ taxiQualityProcessing <- function(){
   Online = getRMSLE('nyc-taxi/final/deployment-modes/online/rmsle')  
   Continuous = getRMSLE('nyc-taxi/final/deployment-modes/continuous-with-optimization-time_based-720/rmsle')
   Baseline = getRMSLE('nyc-taxi/final/deployment-modes/baseline/rmsle')
-  Periodical = getRMSLE('nyc-taxi/deployment-modes/periodical-with-warmstarting/rmsle')
+  Periodical = getRMSLE('nyc-taxi/final/deployment-modes/periodical-with-warmstarting/rmsle')
   append <- function(vec, maxLength){
     return (c(vec,rep(NA, maxLength - length(vec))))
   }
   maxLength = length(Online)
   df = data.frame(Time = 1:maxLength, Continuous, Periodical = append(Periodical, maxLength), Online)
   
-  DAY_DURATION = 1000
+  DAY_DURATION = 500
   df = df[((df$Time %% DAY_DURATION == 0)), ]
   ml = melt(df, id.vars = 'Time', variable_name ='Deployment')
   return(ml)
@@ -105,7 +105,7 @@ taxiTimeProcessing <- function(){
   Online = cumsum(read.csv('nyc-taxi/final/deployment-modes/online/time', header = FALSE, col.names = c('time'))$time) / scale
   Continuous = cumsum(read.csv('nyc-taxi/final/deployment-modes/continuous-with-optimization-time_based-720/time', header = FALSE, col.names = c('time'))$time) / scale
   Baseline = cumsum(read.csv('nyc-taxi/final/deployment-modes/baseline/time', header = FALSE, col.names = c('time'))$time) / scale
-  Periodical = cumsum(read.csv('nyc-taxi/deployment-modes/periodical-with-warmstarting/time', header = FALSE, col.names = c('time'))$time) / scale
+  Periodical = cumsum(read.csv('nyc-taxi/final/deployment-modes/periodical-with-warmstarting/time', header = FALSE, col.names = c('time'))$time) / scale
   last = tail(Periodical,1)
   Periodical = Periodical[1:length(Baseline)]
   Periodical[length(Periodical)] = last
@@ -152,8 +152,8 @@ urlTimePlot = ggpar(urlTimePlot, legend = "top", legend.title = "", font.x = c(f
 ####### TAXI PLOT ##########
 taxiQuality = taxiQualityProcessing()
 taxiTime = taxiTimeProcessing()
-taxiBreaks = c(1000,4000, 8000, 12300)
-taxiLabels = c("Mar15","Jul15", "Jan16", "June16")
+taxiBreaks = c(500,4000, 8000, 12300)
+taxiLabels = c("Feb15","Jul15", "Jan16", "June16")
 taxiQualityPlot = ggline(taxiQuality, 'Time', 'value', ylab = "RMSLE", xlab = '(b) Taxi',
                   shape = '-1',size = 1, linetype ='Deployment',color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = taxiBreaks, labels= taxiLabels) + rremove('legend')
@@ -177,8 +177,8 @@ taxiTimePlot = ggpar(taxiTimePlot, font.x = c(fontLabelSize), font.y=c(fontLabel
         axis.text.x = element_text(margin = margin(t=-1)))
 
 ####### CRITEO PLOT ##########
-criteoQuality = criteoQualityProcessing()
-criteoTime = criteoTimeProcessing()
+criteoQuality = urlQualityProcessing()
+criteoTime = urlTimeProcessing()
 criteoBreaks = c(1,3000, 6000 ,9000, 12000)
 criteoLabels = c("day1","day3", "day6", "day9","day12")
 
@@ -206,7 +206,8 @@ criteoTimePlot = ggpar(criteoTimePlot, font.x = c(fontLabelSize), font.y=c(fontL
         axis.title.y = element_text(margin = margin(r=-1)),
         axis.text.x = element_text(margin = margin(t=-1)))
 
-deploymentQuality = ggarrange(urlQualityPlot,urlTimePlot, taxiQualityPlot, taxiTimePlot, criteoQualityPlot, criteoTimePlot, nrow = 3, ncol = 2, common.legend = TRUE)
+#deploymentQuality = ggarrange(urlQualityPlot,urlTimePlot, taxiQualityPlot, taxiTimePlot, criteoQualityPlot, criteoTimePlot, nrow = 3, ncol = 2, common.legend = TRUE)
+deploymentQuality = ggarrange(urlQualityPlot,urlTimePlot, taxiQualityPlot, taxiTimePlot, nrow = 2, ncol = 2, common.legend = TRUE)
 
 tikz(file = "../images/experiment-results/tikz/deployment-quality-and-time-experiment.tex", width = 6, height = 4)
 deploymentQuality

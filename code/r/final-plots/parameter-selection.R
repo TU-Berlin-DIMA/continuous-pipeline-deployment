@@ -72,9 +72,8 @@ taxiDataProcessing <- function(){
   return (ml)
 }
 
-fontLabelSize = 14
-baseSize = 20
-
+fontLabelSize = 12
+baseSize = 14
 ####### URL PLOT ##########
 urlData = urlDataProcessing()
 urlBreaks = c(200, 1500,3000)
@@ -120,8 +119,9 @@ criteoPlot = ggpar(criteoPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize
         axis.title.y = element_text(margin = margin(r=-1)),
         axis.text.x = element_text(margin = margin(t=-1)))
 
-param_selection_plot = ggarrange(urlPlot, taxiPlot, criteoPlot,  nrow = 1, ncol = 3, common.legend = TRUE)
+#param_selection_plot = ggarrange(urlPlot, taxiPlot, criteoPlot,  nrow = 1, ncol = 3, common.legend = TRUE)
+param_selection_plot = ggarrange(urlPlot, taxiPlot,  nrow = 1, ncol = 2, common.legend = TRUE)
 
-tikz(file = "../images/experiment-results/tikz/parameter-selection-figure.tex", width = 6, height = 2)
+tikz(file = "../images/experiment-results/tikz/parameter-selection-figure.tex", width = 4, height = 2)
 param_selection_plot
 dev.off()

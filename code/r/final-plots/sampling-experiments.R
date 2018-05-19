@@ -75,8 +75,8 @@ taxiDataProcessing <- function(){
   return (ml)
 }
 
-fontLabelSize = 14
-baseSize = 20
+fontLabelSize = 12
+baseSize = 14
 
 ####### URL PLOT ##########
 urlData = urlDataProcessing()
@@ -125,8 +125,10 @@ criteoPlot = ggpar(criteoPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize
         axis.text.x = element_text(margin = margin(t=-1)))
 
 
-samplingPlot = ggarrange(urlPlot, taxiPlot,criteoPlot,  nrow = 1, ncol = 3, common.legend = TRUE)
+#samplingPlot = ggarrange(urlPlot, taxiPlot,criteoPlot,  nrow = 1, ncol = 3, common.legend = TRUE)
 
-tikz(file = "../images/experiment-results/tikz/sampling-mode-figure.tex", width = 6, height = 2)
+samplingPlot = ggarrange(urlPlot, taxiPlot,  nrow = 1, ncol = 2, common.legend = TRUE)
+
+tikz(file = "../images/experiment-results/tikz/sampling-mode-figure.tex", width = 4, height = 2)
 samplingPlot
 dev.off()

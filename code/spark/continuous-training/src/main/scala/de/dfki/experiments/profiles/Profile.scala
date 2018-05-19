@@ -34,7 +34,7 @@ abstract class Profile {
 
 object Profile {
   val availableProfiles: List[Profile] = List(new CriteoClusterProfile(), new URLProfile(), new TaxiClusterProfile(), new CriteoLocalProfile(),
-    new TaxiLocalProfile())
+    new TaxiLocalProfile(), new URLClusterProfile())
 
   def getProfile(name: String, default: Profile): Profile = {
     val profile = availableProfiles.filter(_.PROFILE_NAME == name)

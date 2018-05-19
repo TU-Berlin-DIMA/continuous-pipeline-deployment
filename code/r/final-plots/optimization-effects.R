@@ -38,8 +38,8 @@ criteoDataProcessing <- function(){
   return (df)
 }
 
-fontLabelSize = 14
-baseSize = 20
+fontLabelSize = 12
+baseSize = 14
 
 ####### URL PLOT ##########
 urlData = urlDataProcessing()
@@ -91,9 +91,11 @@ criteoPlot = ggbarplot(criteoData, x = 'Deployment', y = 'Time',  ylab = 'Time (
 criteoPlot = ggpar(criteoPlot, font.y=c(fontLabelSize), font.x=c(fontLabelSize+2)) + rremove('x.ticks') + rremove('x.text')
 
 
-optimization_effects = ggarrange(urlPlot, taxiPlot, criteoPlot, nrow = 1, ncol = 3, common.legend = TRUE)
+#optimization_effects = ggarrange(urlPlot, taxiPlot, criteoPlot, nrow = 1, ncol = 3, common.legend = TRUE)
 
-tikz(file = "../images/experiment-results/tikz/optimization-time-experiment.tex", width = 6, height = 2)
+optimization_effects = ggarrange(urlPlot, taxiPlot, nrow = 1, ncol = 2, common.legend = TRUE)
+
+tikz(file = "../images/experiment-results/tikz/optimization-time-experiment.tex", width = 4, height = 2)
 optimization_effects 
 dev.off()
 
