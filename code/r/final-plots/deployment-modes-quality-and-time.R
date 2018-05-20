@@ -137,7 +137,7 @@ urlQualityPlot = ggpar(urlQualityPlot, legend = "top", legend.title = "", font.x
         axis.title.y = element_text(margin = margin(r=-1)),
         axis.text.x = element_text(margin = margin(t=-1)))
 
-urlTimePlot = ggline(urlTime, 'Time', 'value', ylab = "Time (m)", xlab = '(a) URL',
+urlTimePlot = ggline(urlTime, 'Time', 'value', ylab = "Time (m)", xlab = '(b) URL',
                         shape = '-1', size = 1, linetype ='Deployment', color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = urlBreaks, labels= urlLabels)
 urlTimePlot = ggpar(urlTimePlot, legend = "top", legend.title = "", font.x = c(fontLabelSize), font.y=c(fontLabelSize)) + 
@@ -154,7 +154,7 @@ taxiQuality = taxiQualityProcessing()
 taxiTime = taxiTimeProcessing()
 taxiBreaks = c(500,4000, 8000, 12300)
 taxiLabels = c("Feb15","Jul15", "Jan16", "June16")
-taxiQualityPlot = ggline(taxiQuality, 'Time', 'value', ylab = "RMSLE", xlab = '(b) Taxi',
+taxiQualityPlot = ggline(taxiQuality, 'Time', 'value', ylab = "RMSLE", xlab = '(c) Taxi',
                   shape = '-1',size = 1, linetype ='Deployment',color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = taxiBreaks, labels= taxiLabels) + rremove('legend')
 taxiQualityPlot = ggpar(taxiQualityPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) + 
@@ -165,7 +165,7 @@ taxiQualityPlot = ggpar(taxiQualityPlot, font.x = c(fontLabelSize), font.y=c(fon
         axis.title.y = element_text(margin = margin(r=-1)),
         axis.text.x = element_text(margin = margin(t=-1)))
 
-taxiTimePlot = ggline(taxiTime, 'Time', 'value', ylab = "Time (m)", xlab = '(b) Taxi',
+taxiTimePlot = ggline(taxiTime, 'Time', 'value', ylab = "Time (m)", xlab = '(d) Taxi',
                          shape = '-1',size = 1, linetype ='Deployment',color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = taxiBreaks, labels= taxiLabels) + rremove('legend')
 taxiTimePlot = ggpar(taxiTimePlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) + 
