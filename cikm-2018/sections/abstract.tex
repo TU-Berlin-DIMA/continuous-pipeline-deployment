@@ -3,12 +3,12 @@ Today machine learning is entering many business and scientific applications.
 The life cycle of machine learning applications consist of data preprocessing for transforming the raw data into features, training a model using the features, and deploying the model for answering prediction queries.
 In order to guarantee accurate predictions, one has to continuously monitor and update the deployed models and pipelines. 
 Current deployment platforms update the models using online learning methods.
-When online learning alone is not adequate to guarantee the prediction accuracy, some deployment systems provide a mechanism for automatic or manual retraining of a model and deploy it back into the system.
+When online learning alone is not adequate to guarantee the prediction accuracy, some deployment systems provide a mechanism for automatic or manual retraining the model.
 While the online training is fast, the retraining of the model is time-consuming and adds extra overhead and complexity to the process of deployment.
 
-We propose a novel approach for continuously updating the deployed models using a combination of the incoming real-time data and the historical data.
+We propose a novel approach for continuously updating the deployed model using a combination of the incoming real-time data and the historical data.
 We utilize fast sampling techniques to include the historical data in the training process, thus eliminating the need for complete retraining of deployed model.
 Moreover, we offer several optimizations such as online statistics computation and materialization of preprocessed features to minimize the total training and data preprocessing time.
 In our experiments, we show that our continuous training approach updates the model more frequently while using fewer resources.
-As a result, the continuous deployment improves the error rate by 0.3\%  and reduces the total training cost 13 times over the state-of-the-art deployment approaches.
+As a result, the continuous deployment improves the error rate of the deployed model up to 0.3\%  and reduces the total training cost up to 13 times over the state-of-the-art deployment approaches.
 \end{abstract}
