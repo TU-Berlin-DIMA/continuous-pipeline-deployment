@@ -29,8 +29,7 @@ After the initial training, the deployment platform utilizes the same learning r
 \todo[inline]{Alireza: One question which could be raised is : do you compare it with something non-adaptive? Because we use adjective "highest". In general, the satement has to be backed up with experiment. I know we discussed this before (choosing it adaptively and reason for not doing it). Now, the concern is to write it in such a way that does not raise any flag.    Behrouz: The referenced literature show that these adaptation techniques work better than vanilla one, it's true that someone can always ask about it, but just referencing the literature should be enough. Isn't it?}
 Our experiments in Section \ref{evaluation} show that selecting the adaptation technique based on initial training results in a model with the highest quality during the proactive training.
 
-\todo[inline]{Alireza: Not sure of usage of modal. Why not just saying it without adding any doubts? Behrouz: Here I wanted to say that because it has to adapt the deployed model, then one has to consider the effect the historical data sampling.}
-The proactive training must adapt the deployed model to the recent data items.
+The proactive training aims to adapt the deployed model to the recent data items.
 As a result, when sampling the historical data, one has to consider the effect of the sample on the deployed model.
 A time-based sampling approach of the historical data emphasizes the more recent data points and adapts the deployed model to the changes in the data distribution.
 In Section \ref{evaluation}, we evaluate the quality of the deployed model when different sampling techniques are utilized (time-based, uniform, and window-based).

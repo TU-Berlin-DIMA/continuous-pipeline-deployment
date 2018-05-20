@@ -18,6 +18,7 @@ The static scheduling utilizes a user-defined parameter that specifies the inter
 This is a simple mechanism for use cases that require constant updates to the deployed model (for example, every minute).
 The dynamic scheduling tunes the scheduling interval based on the rate of the incoming prediction, prediction latency, and the execution time of the proactive training.
 The scheduler uses the following formula to compute the time when to execute the next proactive training:
+\todo[inline]{Explain the parameters and the reason behind them in more detail}
 \begin{center}
 $T' = S * T * pr * pl$
 \end{center}
@@ -105,6 +106,7 @@ It directly executes the SGD logic on the execution engine.
 \subsection{Execution Engine}
 The execution engine is responsible for executing the SGD and prediction answering logic.
 In our deployment platform, any data processing platform capable of processing data both in batch mode (for proactive training) and streaming mode (online learning and answering prediction queries) is a suitable execution engine.
+\todo[inline]{Move the rest to the evaluation setup}
 Apache Spark \cite{zaharia2010spark} is a distributed data processing platforms that can support both stream and batch data processing.
 It works with data in memory and on disk which speeds up the execution of the proactive training.
 

@@ -1,4 +1,5 @@
 \section{Evaluation} \label{evaluation} 
+\todo[inline]{write one sentence about the main goal: can continuous maintain the quality while reducing the training time? and then mention the three question?}
 To evaluate the performance of our deployment platform, we perform several experiments.
 The goal of the experiments is to answer the following questions:\\
 1. How does our continuous deployment approach perform in comparison to online and periodical deployment approaches with regards to model quality and training time? \\
@@ -27,7 +28,7 @@ To evaluate the model, we use the Root Mean Squared Logarithmic Error (RMSLE) me
 RMSLE is also the chosen error metric for the NYC taxi Kaggle competition.
 
 \textbf{Deployment Environment. }
-\todo[inline]{Because the URL data is small, the run time on cluster is larger because of the hdfs overhead. Should I include the results from the cluster or a single node?}
+\todo[inline]{Because the URL data is small, the run time on cluster is larger because of the hdfs overhead. Should I include the results from the cluster or a single node? In cluster total time of continuous is 7 times less than periodical, but in local it is 13 times better.}
 We deploy the URL pipeline on a single laptop running a macOS with 2,2 GHz Intel Core i7 and 16 GB of RAM and the Taxi pipeline on a cluster of 21 machines (Intel Xeon 2.4 GHz 16 cores, 28 GB of dedicated RAM per node).
 Both environments are using Apache Spark 2.2.0 as execution engine.
 
@@ -67,7 +68,7 @@ Taxi        &  30.44 GB 	& XX B              & Jan15              & Feb15 to Jun
 \subsection{EX1: Deployment Modes}
 In this experiment, we investigate the effect of our continuous deployment approach on model quality and the total training time.
 We use 3 different deployment approaches.
-\todo[inline]{If we have space, I will add the result of the static (no training after deployment) as well}
+\todo[inline]{I will mention that 'static' training resulted in the worst quality (either in discussion or in this section)}
 \begin{itemize}
 \item Online: deploy the pipeline and only use online (gradient descent) method for updating the model
 \item Periodical: deploy the pipeline and periodically train new models 
@@ -150,7 +151,7 @@ The Rmsprop adaptation technique with regularization parameter of $1E{\text -}4$
 After the initial training, for every configuration, we deploy the model and use 10 \% of the remaining data to evaluate the model after deployment.
 Figure \ref{hyper-param-figure} shows the results of the different hyperparameter configurations on the deployed model.
 To make the deployment figure more readable, we avoid displaying the result of every possible combination of hyperparameters and only show the result of the best configuration for each learning rate adaptation technique.
-For the URL dataset, similar to the initial training, Adam with regularization parameter $0.001$ results in the best model.
+For the URL dataset, similar to the initial training, Adam with regularization parameter $1E{\text -}3$ results in the best model.
 For the Taxi dataset, we observe similar behaviour to the initial training.
 Different configurations do not have a significant impact on the quality of the deployed model.
 
@@ -169,6 +170,7 @@ The choice of the sampling strategy also affects the proactive training.
 Each instance of the proactive training updates the deployed model using the provided sample.
 Therefore, the quality of the model after an update is directly related to the quality of the data inside the sample.
 We evaluate the effect of three different sampling methods, time-based, window-based, and uniform, on the quality of the deployed model.
+\todo[inline]{Exact size}
 The sample size is similar to the sample size during the initial training.
 Figure \ref{sampling-method-figure} shows the effect of different sampling strategies on the quality of the deployed model.
 For the URL dataset, time-based sampling achieves the lowest error rate for the deployed model.
