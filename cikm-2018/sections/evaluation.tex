@@ -1,7 +1,7 @@
 \section{Evaluation} \label{evaluation} 
-\todo[inline]{write one sentence about the main goal: can continuous maintain the quality while reducing the training time? and then mention the three question?}
 To evaluate the performance of our deployment platform, we perform several experiments.
-The goal of the experiments is to answer the following questions:\\
+Our main goal is to show that the continuous deployment approach maintains the quality of the deployed model while reducing the total training time.
+Specifically, we answer the following questions:\\
 1. How does our continuous deployment approach perform in comparison to online and periodical deployment approaches with regards to model quality and training time? \\
 2. What are the effects of the learning rate adaptation method, the regularization parameter, and the sampling strategy on the continuous deployment? \\
 3. What are the effects of live statistics analysis and materialization of preprocessed features on the training time?
@@ -30,7 +30,11 @@ RMSLE is also the chosen error metric for the NYC taxi Kaggle competition.
 \textbf{Deployment Environment. }
 \todo[inline]{Because the URL data is small, the run time on cluster is larger because of the hdfs overhead. Should I include the results from the cluster or a single node? In cluster total time of continuous is 7 times less than periodical, but in local it is 13 times better.}
 We deploy the URL pipeline on a single laptop running a macOS with 2,2 GHz Intel Core i7 and 16 GB of RAM and the Taxi pipeline on a cluster of 21 machines (Intel Xeon 2.4 GHz 16 cores, 28 GB of dedicated RAM per node).
-Both environments are using Apache Spark 2.2.0 as execution engine.
+In our current prototype, we are using Apache Spark as the execution engine.
+The data manager component utilizes the Hadoop Distributed File System (HDFS) for storing the historical data \cite{shvachko2010hadoop}.
+We leverage some of the components of the machine learning library in Spark to implement the proactive trainer.
+Moreover, we utilize the caching mechanism of the Apache Spark for materializing the transformed features.
+
 
 \textbf{Deployment Process. }
 Table \ref{dataset-description} describes the details of the datasets, the amount of data for the initial training, and the amount of data for prediction requests and further training after deployment. 
@@ -48,15 +52,14 @@ The NYC taxi dataset includes timestamps.
 In our experiments, each micro-batch of the NYC taxi dataset contains one hour of the data. 
 The micro-batches are sent in order of the timestamps (from 2015-Feb-01  00:00 to 2016-Jun-31 24:00, an 18 months period) to the deployment platform.
 
-\todo[inline]{number of datapoints for taxi and size of the data after pipeline processing?}
 \begin{table}[h!]
 \centering
 \begin{tabular}{lrrll}
 \hline
 \textbf{Dataset}  & \textbf{size} &\textbf{\# instances} & \textbf{Initial} & \textbf{Deployment} \\
 \hline
-URL        &  2.21 GB 	& 2.3 M  			& Day 0        	  & Day 1-120          \\
-Taxi        &  30.44 GB 	& XX B              & Jan15              & Feb15 to Jun16    \\
+URL        &  4.2 GB 	& 2.4 M  			& Day 0        	  & Day 1-120          \\
+Taxi        &  84 GB 	    & 280 M            & Jan15              & Feb15 to Jun16    \\
 %Criteo       &  & XX B            & Day 0           & Day 1-10       \\
 \hline
 \end{tabular}
@@ -68,7 +71,7 @@ Taxi        &  30.44 GB 	& XX B              & Jan15              & Feb15 to Jun
 \subsection{EX1: Deployment Modes}
 In this experiment, we investigate the effect of our continuous deployment approach on model quality and the total training time.
 We use 3 different deployment approaches.
-\todo[inline]{I will mention that 'static' training resulted in the worst quality (either in discussion or in this section)}
+\todo[inline]{Should we mention Static deployment (no training after deployment)? We cannot show the quality result since error rate is too high, and other approaches are not visible.}
 \begin{itemize}
 \item Online: deploy the pipeline and only use online (gradient descent) method for updating the model
 \item Periodical: deploy the pipeline and periodically train new models 
@@ -170,8 +173,7 @@ The choice of the sampling strategy also affects the proactive training.
 Each instance of the proactive training updates the deployed model using the provided sample.
 Therefore, the quality of the model after an update is directly related to the quality of the data inside the sample.
 We evaluate the effect of three different sampling methods, time-based, window-based, and uniform, on the quality of the deployed model.
-\todo[inline]{Exact size}
-The sample size is similar to the sample size during the initial training.
+The sample size is similar to the sample size during the initial training ($16k$ and $1M$ for URL and Taxi data, respectively).
 Figure \ref{sampling-method-figure} shows the effect of different sampling strategies on the quality of the deployed model.
 For the URL dataset, time-based sampling achieves the lowest error rate for the deployed model.
 For the URL dataset, the underlying characteristics of the data gradually change over time, as new features are added to the dataset \cite{ma2009identifying}.

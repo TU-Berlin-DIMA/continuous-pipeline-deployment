@@ -6,10 +6,11 @@ Current deployment platforms update the models using online learning methods.
 When online learning alone is not adequate to guarantee the prediction accuracy, some deployment systems provide a mechanism for automatic or manual retraining the model.
 While the online training is fast, the retraining of the model is time-consuming and adds extra overhead and complexity to the process of deployment.
 
-We propose a novel approach for continuously updating the deployed model using a combination of the incoming real-time data and the historical data.
+We propose a novel continuous deployment approach for updating the deployed model using a combination of the incoming real-time data and the historical data.
 We utilize fast sampling techniques to include the historical data in the training process, thus eliminating the need for complete retraining of deployed model.
 Moreover, we offer several optimizations such as online statistics computation and materialization of preprocessed features to minimize the total training and data preprocessing time.
-\todo[inline]{make it more explicit, two dataset two models, we improve error and reduce time}
-In our experiments, we show that our continuous training approach updates the model more frequently while using fewer resources.
-As a result, the continuous deployment improves the error rate of the deployed model up to 0.3\%  and reduces the total training cost up to 13 times over the state-of-the-art deployment approaches.
+In our experiments, we deploy two pipelines and models using different datasets.
+We show that the continuous deployment reduces the total training cost up to 13 times over the state-of-the-art deployment approaches.
+\todo[inline]{We don't want to send the message that continuous deployment is always better than periodical. That's why I add "In some cases", even though for both of the datasets we are getting a better quality.}
+In some cases, continuous deployment also improves the error rate (up to 0.3\%) over the state-of-the-art deployment approaches.
 \end{abstract}

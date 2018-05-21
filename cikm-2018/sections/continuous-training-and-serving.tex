@@ -9,12 +9,10 @@ In periodical retraining, when the size of the accumulated training data surpass
 Contrary to the periodical training, in proactive training, the platform continuously train the deployed model using the incoming and existing historical data.
 
 We take advantage of the iterative nature of SGD in the design of the proactive training.
-\todo[inline]{Alireza: Should not we mention we use mini-batch SGD ? Behrouz: I talk about the sampling separately, we can mention we are using mini batch as well but I'm not sure if that is required}
-The input to each iteration of SGD is the current weight parameters of the model, one or more data points, and an objective function.
-In proactive training, we execute iterations of SGD on the deployed model.
+The input to each iteration of SGD is the current weight parameters of the model, a sample of the data points, and an objective function.
+In proactive training, we execute iterations of mini-batch SGD on the deployed model.
 To execute the proactive training, the deployment platform first samples the historical data.
 Then the platform transforms the data into a set of features using the deployed pipeline.
-\todo[inline]{Alireza: should not be plural ? Behrouz: I think singular makes more sense, the gradient itself is multi dimensional but the word 'gradient' should be singular. I ll google a bit to see which one's better.}
 Next, the proactive trainer utilizes the transformed features to compute the gradient of the objective function.
 Finally, the deployment platform updates the deployed model with the computed gradient.
 
@@ -26,7 +24,6 @@ Therefore, in proactive training, instead of using simple learning rate tuning, 
 The performance of learning rate adaptation techniques varies across different datasets.
 To choose the most promising adaptation technique, we rely on hyperparameter tuning during the initial model training on the historical dataset \cite{bergstra2012random}.
 After the initial training, the deployment platform utilizes the same learning rate adaptation technique for the proactive training.
-\todo[inline]{Alireza: One question which could be raised is : do you compare it with something non-adaptive? Because we use adjective "highest". In general, the satement has to be backed up with experiment. I know we discussed this before (choosing it adaptively and reason for not doing it). Now, the concern is to write it in such a way that does not raise any flag.    Behrouz: The referenced literature show that these adaptation techniques work better than vanilla one, it's true that someone can always ask about it, but just referencing the literature should be enough. Isn't it?}
 Our experiments in Section \ref{evaluation} show that selecting the adaptation technique based on initial training results in a model with the highest quality during the proactive training.
 
 The proactive training aims to adapt the deployed model to the recent data items.
