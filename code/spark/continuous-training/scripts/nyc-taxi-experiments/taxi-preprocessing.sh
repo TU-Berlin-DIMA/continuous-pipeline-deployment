@@ -26,4 +26,4 @@ cp /home/behrouz/jar/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar 
 
 /share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -ls /user/behrouz/nyc-taxi/experiments/processed/stream/
 
-
+/share/hadoop/behrouz/spark/stable/bin/spark-shell --master "spark://cloud-11.dima.tu-berlin.de:7077"
