@@ -17,19 +17,18 @@ We design two pipelines for all the experiments.
 The pipeline consists of 5 components: input parser, missing value imputer, standard scaler, feature hasher, and an SVM model.
 To evaluate the SVM model, we compute the misclassification rate on the unseen data.
 
-\textit{Taxi Pipeline.} The Taxi pipeline processes the Newyork taxi trip dataset and predicts the trip duration of every taxi ride \cite{newyork-taxi}. 
+\textit{Taxi Pipeline.} The Taxi pipeline processes the New York taxi trip dataset and predicts the trip duration of every taxi ride \cite{newyork-taxi}. 
 The pipeline consists of 5 components: input parser, feature extractor, anomaly detector, standard scaler, and a Linear Regression model.
 The Taxi pipeline is more complex than the URL pipeline. 
-We design the pipeline based on the solutions of the top scorers of the New York City Taxi Trip Duration Kaggle competition\footnote{https://www.kaggle.com/c/nyc-taxi-trip-duration/}. 
+We design the pipeline based on the solutions of the top scorers of the New York City (NYC) Taxi Trip Duration Kaggle competition\footnote{https://www.kaggle.com/c/nyc-taxi-trip-duration/}. 
 The input parser computes the actual trip duration by first extracting the pickup and drop off time fields from the input records and calculating the difference (in seconds) between the two values.
 The feature extractor computes the haversine distance\footnote{https://en.wikipedia.org/wiki/Haversine\_formula}, the bearing\footnote{https://en.wikipedia.org/wiki/Bearing\_(navigation)}, the hour of the day, and the day of the week from the input records. 
 Finally, the anomaly detector filters the trips that are longer than 22 hours, smaller than 10 seconds, or the trips that have a total distance of zero (the car never moved).
 To evaluate the model, we use the Root Mean Squared Logarithmic Error (RMSLE) measure.
-RMSLE is also the chosen error metric for the NYC taxi Kaggle competition.
+RMSLE is also the chosen error metric for the NYC Taxi Trip Duration Kaggle competition.
 
 \textbf{Deployment Environment. }
-\todo[inline]{Because the URL data is small, the run time on cluster is larger because of the hdfs overhead. Should I include the results from the cluster or a single node? In cluster total time of continuous is 7 times less than periodical, but in local it is 13 times better.}
-We deploy the URL pipeline on a single laptop running a macOS with 2,2 GHz Intel Core i7 and 16 GB of RAM and the Taxi pipeline on a cluster of 21 machines (Intel Xeon 2.4 GHz 16 cores, 28 GB of dedicated RAM per node).
+We deploy the URL pipeline on a single laptop running a macOS High Sierra 10.13.4 with 2,2 GHz Intel Core i7 and 16 GB of RAM and the Taxi pipeline on a cluster of 21 machines (Intel Xeon 2.4 GHz 16 cores, 28 GB of dedicated RAM per node).
 In our current prototype, we are using Apache Spark as the execution engine.
 The data manager component utilizes the Hadoop Distributed File System (HDFS) for storing the historical data \cite{shvachko2010hadoop}.
 We leverage some of the components of the machine learning library in Spark to implement the proactive trainer.
@@ -68,10 +67,9 @@ Taxi        &  84 GB 	    & 280 M            & Jan15              & Feb15 to Jun
 \end{table}
 
 
-\subsection{EX1: Deployment Modes}
+\subsection{Experiment 1: Deployment Modes}
 In this experiment, we investigate the effect of our continuous deployment approach on model quality and the total training time.
 We use 3 different deployment approaches.
-\todo[inline]{Should we mention Static deployment (no training after deployment)? We cannot show the quality result since error rate is too high, and other approaches are not visible.}
 \begin{itemize}
 \item Online: deploy the pipeline and only use online (gradient descent) method for updating the model
 \item Periodical: deploy the pipeline and periodically train new models 
@@ -124,7 +122,7 @@ Contrary to the URL dataset, the feature size of the Taxi dataset is 11.
 Therefore, offline retraining converges faster to a solution.
 Therefore, for the Taxi dataset, the cost of the periodical deployment is 5 times larger than the continuous deployment (instead of 13 times for URL dataset). 
 
-\subsection{EX2: System Tuning}
+\subsection{Experiment 2: System Tuning}
 \begin{table*}[t]
 \centering
 \begin{adjustbox}{max width=\textwidth}
@@ -220,7 +218,7 @@ For datasets that contain concept drift, time-based sampling outperforms other s
 %The slack parameter allows for the deployment platform to accommodate surges in the incoming prediction requests and new training data.
 %In scenarios where sudden surges are expected (e.g., online stores), we recommend a large slack parameter (recommended value is $10$). \todo[inline]{No exp. validate this}
 
-\subsection{EX3: Optimizations Effects}
+\subsection{Experiment 3: Optimizations Effects}
 In this experiment, we analyze the effects of the optimizations, namely, online statistics computation and materialization of features, on the deployment cost (total data preprocessing, and model training time).
 Figure \ref{optimization-effect} shows the effect of optimizations on deployment cost.
 Online statistics computation and feature materialization eliminate the need for data preprocessing.
@@ -238,12 +236,12 @@ As a result, the reduction in the Taxi dataset is greater than the URL dataset.
 
 \subsection{Discussion} \label{subsec:discussion}
 \textbf{Trade off between quality and training cost.}
-In many of the real-world use cases, even a small improvement in the quality of a deployed model has an important impact.
+In many real-world use cases, even a small improvement in the quality of a deployed model has an important impact.
 Therefore, one can employ more complex pipelines and machine learning models to train better models.
 However, during the deployment where prediction queries and training data becomes available at a high rate, one must consider the effect of the training time.
 To ensure the model is always up-to-date, the platform must constantly update the model.
 Long retraining time has a negative impact on the prediction accuracy as deployed model quickly becomes stale.
-Figure \ref{trade-off-figure} shows the trade-off between the quality and total cost of the deployment.
+Figure \ref{trade-off-figure} shows the trade-off between the quality and the total cost of the deployment.
 
 By utilizing continuous deployment, we improve the quality by 0.05\% and 0.3\% for the Taxi and URL datasets over the periodical deployment approach.
 We also reduce the cost of the deployment 5 to 13 times when compared with periodical deployment.

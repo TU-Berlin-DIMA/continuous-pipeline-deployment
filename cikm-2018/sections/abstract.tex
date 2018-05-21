@@ -10,7 +10,5 @@ We propose a novel continuous deployment approach for updating the deployed mode
 We utilize fast sampling techniques to include the historical data in the training process, thus eliminating the need for complete retraining of deployed model.
 Moreover, we offer several optimizations such as online statistics computation and materialization of preprocessed features to minimize the total training and data preprocessing time.
 In our experiments, we deploy two pipelines and models using different datasets.
-We show that the continuous deployment reduces the total training cost up to 13 times over the state-of-the-art deployment approaches.
-\todo[inline]{We don't want to send the message that continuous deployment is always better than periodical. That's why I add "In some cases", even though for both of the datasets we are getting a better quality.}
-In some cases, continuous deployment also improves the error rate (up to 0.3\%) over the state-of-the-art deployment approaches.
+We show that the continuous deployment reduces the total training cost up to 13 times while providing the same level of quality when compared to the state-of-the-art deployment approaches.
 \end{abstract}

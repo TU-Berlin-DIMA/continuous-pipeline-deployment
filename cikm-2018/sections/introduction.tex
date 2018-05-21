@@ -88,9 +88,8 @@ By reusing the computed statistics and the materialized features during the proa
 
 % Our contributions
 In summary, our contributions are:
-\todo[inline]{Should I rename platform to framework everywhere in the paper? In the rest of the paper we are referring to our work (and periodical and online) as 'platforms'}
 \begin{itemize}
-\item A framework for continuously training deployed machine learning models and pipelines that adapts to the changes in the incoming data. The framework accommodates different types of machine learning models and pipelines. In our experiments, we design and deploy three different machine learning pipelines.
+\item A platform for continuously training deployed machine learning models and pipelines that adapts to the changes in the incoming data. The platform accommodates different types of machine learning models and pipelines. In our experiments, we design and deploy three different machine learning pipelines.
 \item Proactive training of the deployed models and pipelines that frequently updates the model in-place using a combination of the historical and the incoming data which guarantees high-quality models while completely eliminating the periodical retraining of the deployed model.
 \item Efficient pipeline processing and model training by online statistics computation and feature materialization, thus guaranteeing the availability of up-to-date models for answering prediction queries.
 \end{itemize}
@@ -98,7 +97,7 @@ In summary, our contributions are:
 The rest of this paper is organized as follows:
 In Section \ref{background}, we describe the details of the optimization strategy we utilize for our continuous deployment platform.
 Section \ref{continuous-training-serving} describes the details of our continuous training approach.
-In Section \ref{sec:system-architecture}, we introduce the architecture of our deployment framework.
+In Section \ref{sec:system-architecture}, we introduce the architecture of our deployment platform.
 In Section \ref{evaluation}, we evaluate the performance of our continuous deployment approach.
 Section \ref {related-work} discusses the related work.
 Finally, Section \ref{conclusion} presents our conclusion and the future work.
