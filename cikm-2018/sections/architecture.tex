@@ -75,22 +75,22 @@ The new dataset is merged with the existing historical data and immediately beco
 
 \subsection{Pipeline Manager} \label{pipeline-manager} 
 The pipeline manager is the main component of the platform.
-It loads the pipeline and the trained model, transforms the data into features using the pipeline, enables the execution of the proactive training, and exposes the model to answer prediction queries.
+It loads the pipeline and the trained model, transforms the data into features using the pipeline, enables the execution of the proactive training, and exposes the deployed model to answer prediction queries.
 
-During the online training, when new training data becomes available, the pipeline manager first transforms the data using the pipeline and updates the model.
-During the online training, the pipeline manager also updates and stores the statistics of the pipeline components.
+During the online training, when new training data becomes available, the pipeline manager transforms the data using the pipeline and updates the model.
+The pipeline manager also updates and stores the statistics of the pipeline components.
 If the feature materialization optimization is enabled, the pipeline manager sends the transformed features to the data manager.
 
 The scheduler component informs the pipeline manager to execute proactive training.
-Then, the pipeline manager requests the data manager to provide a sample of the historical data for the next proactive training.
+Then, the pipeline manager requests the data manager to provide it with a sample of the historical data for the next proactive training.
 The pipeline manager provides the proactive trainer with the current model parameter and the sample of the historical data.
 Once the proactive training is over, the pipeline manager receives the updated model.
 
-The data manager also forwards prediction requests to the pipeline manager.
-Similar to training data, the pipeline manager sends the prediction query through the pipeline to perform the necessary data preprocessing.
-Using the same pipeline to process both the training data and prediction query guarantees that the same set of transformations are applied to both types of data.
-As a result, the pipeline manager prevents inconsistencies between training and serving that is a common problem in machine learning model deployment \cite{baylor2017tfx}.
-After preprocessing the prediction query, the pipeline manager uses the model to make a prediction.
+The data manager also forwards the prediction queries to the pipeline manager.
+Similar to the training data, the pipeline manager sends the prediction queries through the pipeline to perform the necessary data preprocessing.
+Using the same pipeline to process both the training data and the prediction queries guarantees that the same set of transformations are applied to both types of data.
+As a result, the pipeline manager prevents inconsistencies between training and inference that is a common problem in the deployment of machine learning pipelines \cite{baylor2017tfx}.
+After preprocessing the prediction queries, the pipeline manager uses the deployed model to make predictions.
 
 \subsection{Proactive Trainer} 
 The proactive trainer is responsible for training the deployed model by executing iterations of SGD.
@@ -98,10 +98,10 @@ In the training process, the proactive trainer receives a training dataset (samp
 Then, the proactive trainer performs one iteration of SGD and returns the updated model to the pipeline manager.
 The proactive trainer utilizes advanced learning rate adaptation techniques to dynamically adjust the learning rate parameter when training the model.
 Although individual proactive training instances are independent of each other, the component must store the information required by the learning rate adaptation technique.
-Lastly, the proactive trainer is the only component that is tightly coupled with the execution engine.
-It directly executes the SGD logic on the execution engine.
+Lastly, the proactive trainer executes the SGD logic on the execution engine.
+Therefore, to switch the execution engine, the proactive trainer must provide a new implementation of the SGD logic.
 
 \subsection{Execution Engine}
-The execution engine is responsible for executing the SGD and prediction answering logic.
+The execution engine is responsible for executing the SGD and the prediction answering logic.
 In our deployment platform, any data processing platform capable of processing data both in batch mode (for proactive training) and streaming mode (online learning and answering prediction queries) is a suitable execution engine.
 Platforms such as Apache Spark \cite{zaharia2010spark}, Apache Flink \cite{carbone2015apache}, and GoogleDataFlow \cite{akidau2015dataflow} are distributed data processing platforms that support both stream and batch data processing.
