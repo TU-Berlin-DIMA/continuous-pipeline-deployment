@@ -31,12 +31,11 @@ RMSLE is also the chosen error metric for the NYC Taxi Trip Duration Kaggle comp
 We deploy the URL pipeline on a single laptop running a macOS High Sierra 10.13.4 with 2,2 GHz Intel Core i7 and 16 GB of RAM and the Taxi pipeline on a cluster of 21 machines (Intel Xeon 2.4 GHz 16 cores, 28 GB of dedicated RAM per node).
 In our current prototype, we are using Apache Spark as the execution engine.
 The data manager component utilizes the Hadoop Distributed File System (HDFS) for storing the historical data \cite{shvachko2010hadoop}.
-We leverage some of the components of the machine learning library in Spark to implement the proactive trainer.
+We leverage some of the components of the machine learning library in Spark to implement the SGD logic.
 Moreover, we utilize the caching mechanism of the Apache Spark for materializing the transformed features.
 
-
 \textbf{Experiment and Deployment Process. }
-Table \ref{dataset-description} describes the details of the datasets, the amount of data for the initial training, and the amount of data for prediction requests and further training after deployment. 
+Table \ref{dataset-description} describes the details of the datasets such as the size of the raw data for the initial training, and the amount of data for the prediction queries and further training after deployment. 
 For the URL pipeline, we first train a model on the first day of the data (day 0).
 For the Taxi pipeline, we train a model using the data from January 2015.
 For both datasets, since the entire data fits in the memory of the computing nodes, we use batch gradient descent (sampling ratio of 1.0) during the initial training.
@@ -47,13 +46,12 @@ For experiments that compare the quality of the deployed model, we utilize the p
 For experiments that capture the cost of the deployment, we measure the time the platforms spend in updating the model, performing retraining, and answering prediction queries.
 
 The URL dataset does not have timestamps. 
-Therefore, we divide every day of the data into micro-batches of 1 minute which results in a 12000 micro-batches of data.
+Therefore, we divide every day of the data into micro-batches of 1 minute which results in 12000 micro-batches.
 We sequentially send the micro-batches to the deployment platform.
 The deployment platform first uses the micro-batch for prequential evaluation and then updates the deployed model.
-The NYC taxi dataset includes timestamps. 
-In our experiments, each micro-batch of the NYC taxi dataset contains one hour of the data. 
-The micro-batches are sent in order of the timestamps (from 2015-Feb-01  00:00 to 2016-Jun-31 24:00, an 18 months period) to the deployment platform.
-
+The Taxi dataset includes timestamps. 
+In our experiments, each micro-batch of the Taxi dataset contains one hour of the data. 
+The micro-batches are sent in order of the timestamps (from 2015-Feb-01  00:00 to 2016-Jun-30 24:00, an 18 months period) to the deployment platform.
 \begin{table}[h!]
 \centering
 \begin{tabular}{lrrll}
@@ -64,21 +62,22 @@ URL        &  2.1 GB 	& 2.4 M  			& Day 0        	  & Day 1-120          \\
 Taxi        &  42 GB 	    & 280 M            & Jan15              & Feb15 to Jun16    \\
 \hline
 \end{tabular}
-\caption{Description of Datasets. The \textbf{Initial} column indicates the amount of data used during the initial model training and the \textbf{Deployment} column indicates the amount of data used for both prequential evaluation and further model training}  
+\caption{Description of Datasets. The Initial and Deployment columns indicate the amount of data used during the initial model training and the deployment phase (prediction queries and further training data)}  
 \label{dataset-description}
 \end{table}
-
 
 \subsection{Experiment 1: Deployment Modes}
 In this experiment, we investigate the effect of our continuous deployment approach on model quality and the total training time.
 We use 3 different deployment approaches.
 \begin{itemize}
-\item Online: deploy the pipeline and only use online (gradient descent) method for updating the model
-\item Periodical: deploy the pipeline and periodically train new models 
-\item Continuous: deploy the pipeline and continuously update the model using our platform
+\item Online: deploy the pipeline, then utilize online training (gradient descent with a sample size of 1 data point) method for updating the deployed model.
+\item Periodical: deploy the pipeline, then periodically retrain the deployed model.
+\item Continuous: deploy the pipeline, then continuously update the deployed model using our platform.
 \end{itemize}
 
-The periodical deployment initiates a full retraining every 10 days and every month for URL and Taxi pipeline, respectively.
+The periodical deployment initiates a full retraining every 10 days and every month for URL and Taxi pipelines, respectively.
+Since the rate of the incoming training and prediction queries are known, we use static scheduling for the proactive training.
+Based on the size of the data, our deployment platform executes the proactive training every 5 minutes and 5 hours for the URL and Taxi pipelines, respectively.
 To improve the performance of the periodical deployment, we utilize the warm starting technique, used in the TFX framework \cite{baylor2017tfx}.
 In warm starting, each periodical training uses the existing parameters such as the pipeline statistics (e.g., standard scaler), model weights, and learning rate adaptation parameters (e.g., the average of past gradients used in Adadelta, Adam, and Rmsprop) when training new models.
 
@@ -88,13 +87,13 @@ For both datasets, the continuous and the periodical deployment result in a lowe
 Online deployment visits every incoming training data point only once.
 As a result, the model updates are more prone to noise.
 This results in a higher error rate than the continuous and periodical deployment.
-In Figure \ref{deployment-quality-figure} (a), for the URL dataset, during the first 110 days of the deployment, the continuous approach has a lower error rate than the periodical.
+In Figure \ref{deployment-quality-figure} (a), during the first 110 days of the deployment, the continuous deployment has a lower error rate than the periodical deployment.
 Only after the final retraining, the periodical deployment slightly outperforms the continuous deployment.
-However, the start to the end of the deployment process, the continuous deployment improves the average error rate by 0.3\% and 1.5\% over the periodical and online deployment.
+However, from the start to the end of the deployment process, the continuous deployment improves the average error rate by 0.3\% and 1.5\% over the periodical and online deployment, respectively.
 In Figure \ref{deployment-quality-figure}  (c), for the Taxi dataset, the continuous deployment always attains a smaller error rate than the periodical deployment.
 Overall, the continuous deployment improves the error rate by 0.05\% and  0.1\% over the periodical and online deployment, respectively.
 
-When compared to the online deployment, periodical deployment slightly decreases the error rate after every training.
+When compared to the online deployment, periodical deployment slightly decreases the error rate after every retraining.
 However, between every retraining, the platform updates the model using online learning.
 This contributes to the higher error rate than the continuous deployment, where the platform continuously trains the deployed model using the historical data.
 
@@ -104,13 +103,12 @@ This contributes to the higher error rate than the continuous deployment, where 
 \caption{Model Quality and Training cost for different deployment approaches}
 \label{deployment-quality-figure}
 \end{figure*}
-
-In Figure \ref{deployment-quality-figure} (b) and (d), we report the cumulative cost over time for every deployment approach.
+In Figure \ref{deployment-quality-figure} (b) and (d), we report the cumulative cost over time for every deployment platform.
 We define the deployment cost as the total time spent in data preprocessing, model training, and performing prediction.
-For the URL dataset (Figure \ref{deployment-quality-figure} (b)), online deployment has the smallest cost (around 34 minutes) as it only scans each data point once (around 2.3 million scans).  
+For the URL dataset (Figure \ref{deployment-quality-figure} (b)), online deployment has the smallest cost (around 34 minutes) as it only scans each data point once (around 2.4 million scans).  
 The continuous deployment approach scans 45 million data points.
 However, the total cost at the end of the deployment is only two times larger than the online deployment approach (around 65 minutes).  
-Because of the online statistics computation and the feature materialization optimization, a large part of the data processing time is avoided.
+Because of the online statistics computation and the feature materialization optimizations, a large part of the data preprocessing time is avoided.
 For the periodical deployment approach, the cumulative deployment cost starts similar to the online deployment approach.
 However, after every offline retraining, the deployment cost substantially increases.
 At the end of the deployment process, the total cost for the periodical deployment is more than 850 minutes, 13 times more than the total cost of the continuous deployment approach.
@@ -118,11 +116,11 @@ Each data point in the URL dataset has more than 3 million features.
 Therefore, the convergence time for each retraining is very high.
 The high data-dimensionality and repeated data preprocessing contribute to the large deployment cost of the periodical deployment.
 
-For the Taxi dataset (Figure \ref{deployment-quality-figure} (d)), the cost of online, continuous, and periodical deployment are 250, 340, and 1600 minutes, respectively.
+For the Taxi dataset (Figure \ref{deployment-quality-figure} (d)), the cost of online, continuous, and periodical deployments are 250, 340, and 1600 minutes, respectively.
 Similar to the URL dataset, continuous deployment only adds a small overhead to the deployment cost when compared with the online deployment.
 Contrary to the URL dataset, the feature size of the Taxi dataset is 11.
 Therefore, offline retraining converges faster to a solution.
-Therefore, for the Taxi dataset, the cost of the periodical deployment is 5 times larger than the continuous deployment (instead of 13 times for URL dataset). 
+As a result, for the Taxi dataset, the cost of the periodical deployment is 5 times larger than the continuous deployment (instead of 13 times for URL dataset). 
 
 \subsection{Experiment 2: System Tuning}
 \begin{table*}[t]
@@ -130,10 +128,9 @@ Therefore, for the Taxi dataset, the cost of the periodical deployment is 5 time
 \begin{adjustbox}{max width=\textwidth}
 \input{../images/experiment-results/tikz/parameter-selection-table}
 \end{adjustbox}
-\caption{Hyperparameter tuning during initial training (bold numbers show the best result for a dataset)}
+\caption{Hyperparameter tuning during initial training (bold numbers show the best results for each adaptation techniques)}
 \label{hyper-param-table}
 \end{table*}
-
 In this experiment, we investigate the effect of different parameters on the quality of the models after deployment.
 As described in Section \ref{proactive-training}, proactive training is an extension of the stochastic gradient descent to the deployment phase.
 Therefore, we expect the set of hyperparameters with best performance during the initial training also performs the best during the deployment phase.
@@ -141,12 +138,11 @@ Therefore, we expect the set of hyperparameters with best performance during the
 \textbf{Proactive Training Parameters. }
 Stochastic gradient descent is heavily dependent on the choice of learning rate and the regularization parameter.
 To find the best set of hyperparameters for the initial training, we perform a grid search.
-We use advanced learning rate adaptation techniques (Adam, Adadelta, and RMSPROP) for both initial and proactive training.
-
+We use advanced learning rate adaptation techniques (Adam, Adadelta, and Rmsprop) for both initial and proactive training.
 For each dataset, we divide the initial data (from Table \ref{dataset-description}) into a training and evaluation set.
 For each configuration, we first train a model using the training set and then evaluate the model using the evaluation set.
-Table \ref{hyper-param-table} shows the result of hyperparameter tuning for every pipeline.
-For URL dataset, Adam with regularization parameter $1E{\text -}3$ yields the model with lowest error rate.
+Table \ref{hyper-param-table} shows the result of the hyperparameter tuning for every pipeline.
+For the URL dataset, Adam with regularization parameter $1E{\text -}3$ yields the model with the lowest error rate.
 The Taxi dataset is less complex than the URL dataset and has a smaller number of feature dimensions.
 As a result, the choice of different hyperparameter does not have a large impact on the quality of the model.
 The Rmsprop adaptation technique with regularization parameter of $1E{\text -}4$ results in a slightly better model than the other configurations.
@@ -155,16 +151,14 @@ After the initial training, for every configuration, we deploy the model and use
 Figure \ref{hyper-param-figure} shows the results of the different hyperparameter configurations on the deployed model.
 To make the deployment figure more readable, we avoid displaying the result of every possible combination of hyperparameters and only show the result of the best configuration for each learning rate adaptation technique.
 For the URL dataset, similar to the initial training, Adam with regularization parameter $1E{\text -}3$ results in the best model.
-For the Taxi dataset, we observe similar behaviour to the initial training.
-Different configurations do not have a significant impact on the quality of the deployed model.
+For the Taxi dataset, we observe a similar behavior to the initial training where different configurations do not have a significant impact on the quality of the deployed model.
 
 This experiment confirms that the effect of the hyperparameters (learning rate and regularization) during the initial and proactive training are the same.
 Therefore, we tune the parameters of the proactive training based on the result of the hyperparameter search during the initial training.
-
 \begin{figure}[!h]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/parameter-selection-figure}}
-\caption{Result of hyperparameter tuning during initial phases of deployment}
+\caption{Result of hyperparameter tuning during the deployment}
 \label{hyper-param-figure}
 \end{figure}
 
@@ -172,7 +166,7 @@ Therefore, we tune the parameters of the proactive training based on the result 
 The choice of the sampling strategy also affects the proactive training.
 Each instance of the proactive training updates the deployed model using the provided sample.
 Therefore, the quality of the model after an update is directly related to the quality of the data inside the sample.
-We evaluate the effect of three different sampling methods, time-based, window-based, and uniform, on the quality of the deployed model.
+We evaluate the effect of three different sampling strategies, namely, time-based, window-based, and uniform, on the quality of the deployed model.
 The sample size is similar to the sample size during the initial training ($16k$ and $1M$ for URL and Taxi data, respectively).
 Figure \ref{sampling-method-figure} shows the effect of different sampling strategies on the quality of the deployed model.
 For the URL dataset, time-based sampling achieves the lowest error rate for the deployed model.
@@ -192,57 +186,27 @@ For datasets that contain concept drift, time-based sampling outperforms other s
 \label{sampling-method-figure}
 \end{figure}
 
-%\textbf{Scheduling Policy. }
-%In this section, we analyze the scheduling policy of our deployment platform.
-%In our prototype, we simulated 2 days of continuous training of Criteo data using Apache Spark.
-%Since the streaming component of Apache Spark requires a fixed interval for executing mini batches, we analyze the effect of our scheduling policy analytically.
-%
-%Figure \ref{fig:scheduling-policy-time} shows the actual execution time of every proactive training throughout the simulation.
-%The execution time of the proactive training ranges from $23$ to $53$ seconds.
-%In order for the scheduler component to effectively schedule proactive training, it requires the prediction latency, \hl{prediction throughput} \todo[inline]{Is it rate or throughput? Clipper uses the latter}, and a user-defined slack parameter.
-%In our estimation, we use a slack parameter of $10$.
-%We estimate the throughput and latency based on the time it takes for the deployment platform to predict the labels of the evaluation dataset.
-%The evaluation dataset contains 2 million data points.
-%The deployment platform is queried using the evaluation dataset every minute and requires $15$ seconds to return the predictions in the worst case scenario (when the evaluation dataset is stored on disk). 
-%This amounts to a latency of $7 * 10 ^ {(-6)}$ seconds (7.5 micro seconds) and a throughput of $34,000$ requests per second.
-%
-%Based on above parameters, the scheduler computes the scheduling intervals for every execution of the proactive training.
-%
-%\begin{figure}[h!]
-%\centering
-%\includegraphics[width=\columnwidth]{../images/experiment-results/criteo-scheduling-experiment.eps}
-%\caption{Analysis of scheduling policy}
-%\label{fig:scheduling-policy-time}
-%\vspace{2mm}
-%\end{figure}
-%
-%Using the slack parameter, we can guide the scheduler to increase or decrease the scheduling intervals of the proactive training.
-%The slack parameter allows for the deployment platform to accommodate surges in the incoming prediction requests and new training data.
-%In scenarios where sudden surges are expected (e.g., online stores), we recommend a large slack parameter (recommended value is $10$). \todo[inline]{No exp. validate this}
-
 \subsection{Experiment 3: Optimizations Effects}
-In this experiment, we analyze the effects of the optimizations, namely, online statistics computation and materialization of features, on the deployment cost (total data preprocessing, and model training time).
+In this experiment, we analyze the effects of the optimizations, namely, online statistics computation and materialization of features, on the cost of the continuous deployment (total data preprocessing, and model training time).
 Figure \ref{optimization-effect} shows the effect of optimizations on deployment cost.
 Online statistics computation and feature materialization eliminate the need for data preprocessing.
 As a result, proactive training computes the gradient and updates the deployed model without the need for data preprocessing.
 Our optimizations improve the deployment cost by 70\% and 130\% for the URL and Taxi dataset, respectively.
-The Taxi pipeline is more complex and contains more components than the URL pipeline.
+The Taxi pipeline processes a larger amount of data than the URL pipeline.
 As a result, the reduction in the Taxi dataset is greater than the URL dataset.
-
 \begin{figure}[h!]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/optimization-time-experiment}}
-\caption{Effect of the optimizations on total training time in continuous deployment approach}
+\caption{Effect of the optimizations on total training time}
 \label{optimization-effect}
 \end{figure}
-
 \subsection{Discussion} \label{subsec:discussion}
 \textbf{Trade-off between quality and training cost.}
-In many real-world use cases, even a small improvement in the quality of a deployed model has an important impact.
-Therefore, one can employ more complex pipelines and machine learning models to train better models.
+In many real-world use cases, even a small improvement in the quality of the deployed model can have a significant impact  \cite{ling2017model}.
+Therefore, one can employ more complex pipelines and machine learning training algorithms to train better models.
 However, during the deployment where prediction queries and training data becomes available at a high rate, one must consider the effect of the training time.
 To ensure the model is always up-to-date, the platform must constantly update the model.
-Long retraining time has a negative impact on the prediction accuracy as deployed model quickly becomes stale.
+Long retraining time has a negative impact on the prediction accuracy as the deployed model quickly becomes stale.
 Figure \ref{trade-off-figure} shows the trade-off between the quality and the total cost of the deployment.
 By utilizing continuous deployment, we improve the quality by 0.05\% and 0.3\% for the Taxi and URL datasets over the periodical deployment approach.
 We also reduce the cost of the deployment 5 to 13 times when compared with periodical deployment.
@@ -250,7 +214,7 @@ We also reduce the cost of the deployment 5 to 13 times when compared with perio
 \begin{figure}[!h]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/quality-vs-time}}
-\caption{Trade off between average quality of the deployed model and deployment cost}
+\caption{Trade-off between quality and deployment cost}
 \label{trade-off-figure}
 \end{figure}
 
@@ -261,5 +225,3 @@ Therefore, the periodical deployment platform pauses the online update of the de
 As a result, the error rate of the deployed model may increase during the retraining process.
 However, in our continuous deployment platform, the average time for the proactive training is small (200 ms for the URL dataset and 700 ms for the Taxi dataset).
 Therefore, the continuous deployment platform always performs online model update and answers the predictions queries using an up-to-date model.
-
-
