@@ -10,8 +10,8 @@ The execution engine is responsible for executing the actual data transformation
 %This design enables us to switch the execution engine without requiring changes to the deployment platform.
 
 \subsection{Scheduler}\label{scheduler}
-The scheduler component is responsible for scheduling the proactive training.
-The scheduler communicates with pipeline manager to instruct when to execute the proactive training.
+The scheduler is responsible for scheduling the proactive training.
+The scheduler instructs the pipeline manager when to execute the proactive training.
 The scheduler accommodates two types of scheduling mechanisms, namely, \textit{static} and \textit{dynamic}.
 
 The static scheduling utilizes a user-defined parameter that specifies the interval between executions of the proactive training.
@@ -28,12 +28,11 @@ During a proactive training, a certain number of predictions queries arrive at t
 The scheduler must guarantee that the deployment platform answers all the queries before executing the next proactive training $T' > T * pr * pl$.
 A large slack value ($\geq2$) results in a larger scheduling interval, thus allocating most of the resources of the deployment platform to the query answering component.
 A small slack value ($2 \geq S \geq 1$) results in smaller scheduling intervals.
-As a result, the deployment platform allocates more computing resources for training the pipeline.
+As a result, the deployment platform allocates more resources for training the model.
 A slack value of less than 1 increases the latency of prediction query answering.
-
 The scheduler computes the value of $T$ for every proactive training.
 The deployment platform provides the scheduler with the values of $pr$ and $pl$. 
-By utilizing the formula, the scheduler ensures that the platform has enough time to answer all the existing prediction queries before scheduling the next proactive training.
+
 \begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{../images/system-architecture.pdf}
@@ -43,7 +42,7 @@ By utilizing the formula, the scheduler ensures that the platform has enough tim
 
 
 \subsection{Data Manager} \label{data-manager}
-The data manager component is responsible for storage of historical data and cached features, receiving the incoming training data, and providing the pipeline manager with samples of the historical data.
+The data manager component is responsible for storage of historical data and materialized features, receiving the incoming training data, and providing the pipeline manager with samples of the historical data.
 
 The data manager has four tasks.
 It appends the incoming training data to the historical dataset.
@@ -51,11 +50,10 @@ It forwards the incoming training data and prediction requests to the pipeline m
 After the pipeline manager transforms the data into features, the data manager stores the transformed features.
 Finally, upon the request of the pipeline manager, the data manager samples the historical data for proactive training.
 
-If the feature materialization optimization is enabled, the data manager caches the transformed features.
+If the feature materialization optimization is enabled, the data manager stores the transformed features in the cache.
 During the sampling operation, instead of sampling from the raw historical data, the data manager samples from the transformed features directly.
-
 The data manager provides three sampling approaches, namely, uniform, time-based, and window-based sampling.
-Uniform sampling provides a random sample from the entire historical data where every data point has the same probability of being sampled.
+The uniform sampling provides a random sample from the entire historical data where every data point has the same probability of being sampled.
 Time-based sampling assigns weights to every data point based on their timestamp such that recent items have a higher probability of being sampled.
 Window-based sampling is similar to the uniform sampling, but instead of sampling from the entire historical data, the data manager samples the data from a given time range. 
 In many real-world use cases (e.g., e-commerce and online advertising), the deployed model should adapt to the more recent data.
@@ -67,10 +65,10 @@ In Section \ref{evaluation}, we evaluate the quality of the deployed model when 
 We show that the time-based sampling results in a model with better quality.
 
 To increase the performance of the sampling operation, we utilize a data partitioning technique.
-Upon the arrival of new training data, the data manager assembles a partition of the data and creates an index for the partition using the timestamps of the data that resides in the partition.
+Upon the arrival of new training data, the data manager assembles a partition of the data and creates an index for the partition using the timestamps of the data inside the partition.
 As a result, during the sampling operation, the data manager can access the data for a specific interval quickly.
 To further speed up the sampling, the data manager randomly samples the partitions instead of individual data points.
-The data manager combines the sampled partitions and sends the data to the pipeline manager.
+The data manager combines the sampled partitions and sends the final data to the pipeline manager.
 
 The data manager also allows for new training datasets to be registered while the model is being served.
 The new dataset is merged with the existing historical data and immediately becomes available for proactive training.
