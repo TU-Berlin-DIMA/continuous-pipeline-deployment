@@ -9,7 +9,7 @@ In this section, we describe the details of SGD and its parameters and discuss t
 SGD is an iterative optimization technique where in every iteration, one data point or a sample of the data points is utilized to update the model.
 SGD is suitable for large datasets as it does not require scanning the entire data in every iteration \cite{bottou2010large}.
 SGD is also suitable for online learning scenarios, where new training data becomes available one at a time.
-Many different machine learning tasks such as classification \cite{zhang2004solving, macmahan2013}, clustering \cite{bottou1995convergence}, and matrix factorization \cite{koren2009matrix,  funk2006netflix}, utilize SGD in training models.
+Many different machine learning tasks such as classification \cite{zhang2004solving, macmahan2013}, clustering \cite{bottou1995convergence}, and matrix factorization \cite{koren2009matrix,  funk2006netflix} utilize SGD in training models.
 SGD is also the most common optimization strategy for training neural networks on large datasets \cite{dean2012large}.
 Prominent applications of SGD in neural networks are the work of Google Deepmind team that managed to train neural networks that defeat humans in the game of Go \cite{silver2016mastering} and mastering Atari games \cite{mnih2013playing}.
 
@@ -33,17 +33,17 @@ The algorithm continues until convergence (when the weight vector does not chang
 
 \textbf{Learning Rate.}
 An important parameter of stochastic gradient descent is the learning rate.
-The learning rate controls the degree of change in the weights, during every iteration.
+The learning rate controls the degree of change in the weights during every iteration.
 The most trivial approach for tuning the learning rate is to initialize it to a small value and after every iteration decrease the value by a small factor.
 However, in complex and high-dimensional problems, the simple tuning approach is ineffective \cite{schaul2013no}. 
 Adaptive learning rate methods such as Momentum \cite{qian1999momentum}, Adam \cite{kingma2014adam}, RMSPROP \cite{tieleman2012lecture}, and AdaDelta \cite{zeiler2012adadelta} have been proposed.
 These methods adaptively adjust the learning rate in every iteration to speed up the convergence rate.
-Moreover, some of the learning rate adaptation methods perform per coordinate modification, i.e., every parameter of the model weight vector is adjusted separately from the others \cite{schaul2013no, tieleman2012lecture, zeiler2012adadelta}. 
+Moreover, some of the learning rate adaptation methods perform per coordinate modification, i.e., every parameter of the model weight vector is adjusted separately from the others \cite{kingma2014adam, tieleman2012lecture, zeiler2012adadelta}. 
 In many high-dimensional problems, the parameters of the weight vector do not have the same level of importance, therefore each parameter must be treated differently during the training process.
 
 \textbf{Sample Size.}
 Another parameter of stochastic gradient descent is the sample size.
-Given proper learning rate tuning mechanism, SGD is guaranteed to converge to a solution regardless of the sample size.
+Given proper learning rate tuning mechanism, SGD eventually converges to a solution regardless of the sample size.
 However, the sample size can greatly affect the time that is required to converge.
 Two extremes of the sample size are 1 (every iteration considers 1 data item) and $N$ (similar to batch gradient descent, every iteration scans the entire dataset).
 Setting the sample size to 1 increases the model update frequency but results in noisy updates.
