@@ -7,7 +7,7 @@ It answers predictive queries and maintains and manages the models.
 LongView uses techniques such as query optimization and materialized view selection to increase the performance of the system.
 However, it only works with batch data and does not provide support for real-time queries. 
 As a result, it does not support continuous and online learning.
-In contrast, our system is designed to work in a dynamic environment where it answers prediction queries in real-time and continuously updates the model when required.
+In contrast, our platform is designed to work in a dynamic environment where it answers prediction queries in real-time and continuously updates the model when required.
 
 Velox is an implementation of the common machine learning deployment practice.
 Velox supports online learning and can answer prediction queries in real-time.
@@ -19,7 +19,7 @@ First, retraining discards the updates that have been applied to the model so fa
 Second, the process of retraining on the full dataset is resource intensive and time-consuming.
 Third, the platform must disable online learning during the retraining.
 Lastly, the platform only deploys the final model and does not support the deployment of the machine learning pipeline.
-Our approach differs, as it exploits the underlying properties of SGD to integrate the training process into the system's workflow.
+Our approach differs from Velox as it exploits the underlying properties of SGD to integrate the training process into the platform's workflow.
 Our platform replaces the offline retraining with proactive training.
 As a result, our deployment platform maintains the model quality with a small training cost.
 Moreover, our deployment platform deploys the machine learning pipeline alongside the model.
@@ -27,21 +27,23 @@ Moreover, our deployment platform deploys the machine learning pipeline alongsid
 Clipper is another machine learning deployment system that focuses on producing higher quality predictions by maintaining an ensemble of models.
 For every prediction query, Clipper examines the confidence of every deployed model.
 Then, it selects the deployed model with the highest confidence for answering the prediction query.
-However, it does not update the deployed models, which over time leads to outdated and stale models.
-On the other hand, our deployment method focuses on maintenance and continuous update of the deployed models.
+However, it does not update the deployed models, which over time leads to outdated models.
+On the other hand, our deployment platform focuses on maintenance and continuous update of the deployed models.
 
 TensorFlow Extended (TFX) is a platform that provides continuous training and serving of machine learning pipelines and models.
 TFX automatically stores new training data, performs analysis and validation of the data, retrain new and fresh models, and finally redeploy the new pipelines and models. 
+Moreover, TFX supports the warm starting optimization to speed up the process of training new and fresh models.
+TFX aims to simplify the process of design and training of machine learning pipelines and models, simplify the platform configuration, provide platform stability, and minimize the disruptions in the deployment platform.
+For use cases that require months to deploy new models, TFX reduces the time to production from the order of months to weeks.
 Although TFX uses the term "continuous training" to describe the deployment platform, it still periodically retrain the deployed model on the historical dataset.
-TFX targets use cases that typically require less frequent updates (such as weekly) to the model as the overhead of performing more frequent training is too high.
-TFX supports the warm starting optimization to speed up the process of training new and fresh models.
-Our proactive training is a replacement for the continuous training component of TFX.
+On the contrary, our continuous deployment platform performs more rapid updates to the deployed model.
 By exploiting the properties of SGD optimization technique, our deployment platform provides fresher models (seconds to minutes instead of several days or weeks) without increasing the overhead.
+Our proactive training component can be integrated into the TFX platform to speed up the process of pipeline and model update.
 
 Weka \cite{hall2009weka}, Apache Mahout \cite{Owen:2011:MA:2132656}, and Madlib \cite{hellerstein2012madlib} are systems that provide the necessary toolkits to train machine learning models. 
 All of these systems provide a range of training algorithms for machine learning methods. 
 However, they do not support the management and deployment of machine learning models and pipelines. 
-Our platform focuses on deployment and management of machine learning pipelines and models after the initial training.
+Our platform focuses on continuous deployment and management of machine learning pipelines and models after the initial training.
 
 MLBase \cite{kraska2013mlbase} and TuPaq \cite{sparks2015tupaq} are model management systems.
 They provide a range of training algorithms to create machine learning models and mechanism for model search as well as model management.

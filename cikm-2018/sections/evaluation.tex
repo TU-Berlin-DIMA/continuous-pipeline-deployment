@@ -35,14 +35,17 @@ We leverage some of the components of the machine learning library in Spark to i
 Moreover, we utilize the caching mechanism of the Apache Spark for materializing the transformed features.
 
 
-\textbf{Deployment Process. }
+\textbf{Experiment and Deployment Process. }
 Table \ref{dataset-description} describes the details of the datasets, the amount of data for the initial training, and the amount of data for prediction requests and further training after deployment. 
 For the URL pipeline, we first train a model on the first day of the data (day 0).
 For the Taxi pipeline, we train a model using the data from January 2015.
 For both datasets, since the entire data fits in the memory of the computing nodes, we use batch gradient descent (sampling ratio of 1.0) during the initial training.
 We then deploy the models (and the pipelines).
 We use the remaining data for sending prediction queries and further training of the deployed models.
-Using the prediction queries, we compute the cumulative prequential error rate over time to evaluate the performance of each model during the deployment \cite{dawid1984present}.
+
+For experiments that compare the quality of the deployed model, we utilize the prediction queries to compute the cumulative prequential error rate of the deployed models over time \cite{dawid1984present}.
+For experiments that capture the cost of the deployment, we measure the time the platforms spend in updating the model, performing retraining, and answering prediction queries.
+
 The URL dataset does not have timestamps. 
 Therefore, we divide every day of the data into micro-batches of 1 minute which results in a 12000 micro-batches of data.
 We sequentially send the micro-batches to the deployment platform.
@@ -57,9 +60,8 @@ The micro-batches are sent in order of the timestamps (from 2015-Feb-01  00:00 t
 \hline
 \textbf{Dataset}  & \textbf{size} &\textbf{\# instances} & \textbf{Initial} & \textbf{Deployment} \\
 \hline
-URL        &  4.2 GB 	& 2.4 M  			& Day 0        	  & Day 1-120          \\
-Taxi        &  84 GB 	    & 280 M            & Jan15              & Feb15 to Jun16    \\
-%Criteo       &  & XX B            & Day 0           & Day 1-10       \\
+URL        &  2.1 GB 	& 2.4 M  			& Day 0        	  & Day 1-120          \\
+Taxi        &  42 GB 	    & 280 M            & Jan15              & Feb15 to Jun16    \\
 \hline
 \end{tabular}
 \caption{Description of Datasets. The \textbf{Initial} column indicates the amount of data used during the initial model training and the \textbf{Deployment} column indicates the amount of data used for both prequential evaluation and further model training}  
@@ -235,14 +237,13 @@ As a result, the reduction in the Taxi dataset is greater than the URL dataset.
 \end{figure}
 
 \subsection{Discussion} \label{subsec:discussion}
-\textbf{Trade off between quality and training cost.}
+\textbf{Trade-off between quality and training cost.}
 In many real-world use cases, even a small improvement in the quality of a deployed model has an important impact.
 Therefore, one can employ more complex pipelines and machine learning models to train better models.
 However, during the deployment where prediction queries and training data becomes available at a high rate, one must consider the effect of the training time.
 To ensure the model is always up-to-date, the platform must constantly update the model.
 Long retraining time has a negative impact on the prediction accuracy as deployed model quickly becomes stale.
 Figure \ref{trade-off-figure} shows the trade-off between the quality and the total cost of the deployment.
-
 By utilizing continuous deployment, we improve the quality by 0.05\% and 0.3\% for the Taxi and URL datasets over the periodical deployment approach.
 We also reduce the cost of the deployment 5 to 13 times when compared with periodical deployment.
 
@@ -253,11 +254,12 @@ We also reduce the cost of the deployment 5 to 13 times when compared with perio
 \label{trade-off-figure}
 \end{figure}
 
-\textbf{Side effect of periodical deployment.}
-In our experiments, when the deployment platform is retraining the model, we pause the inflow of the prediction queries. 
-However, in real-world scenarios, prediction queries constantly arrive at the system.
-Therefore, deployment platform answers the prediction queries using the deployed model before the retraining began.
-As a result, the error rate of the model during the retraining increases. However, the average time for the proactive training is small (200 ms for the URL dataset and 700 ms for the Taxi dataset).
-Therefore, the deployment platform always answers the predictions queries with an up-to-date model.
+\textbf{Staleness of the model during the periodical deployment.}
+In the experiments of the periodical deployment approach, we pause the inflow of the training data and prediction queries.
+However, in real-world scenarios, the training data and the prediction queries constantly arrive at the platform.
+Therefore, the periodical deployment platform pauses the online update of the deployed model and answers the prediction queries using the currently deployed model (similar to how Velox operates \cite{crankshaw2014missing}).
+As a result, the error rate of the deployed model may increase during the retraining process.
+However, in our continuous deployment platform, the average time for the proactive training is small (200 ms for the URL dataset and 700 ms for the Taxi dataset).
+Therefore, the continuous deployment platform always performs online model update and answers the predictions queries using an up-to-date model.
 
 
