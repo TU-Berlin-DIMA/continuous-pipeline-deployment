@@ -2,17 +2,16 @@
 In this section, first, we describe how we utilize the properties of the stochastic gradient descent to implement the proactive training.
 Next, we describe the details of the online statistics computation and feature materialization.
 Finally, we demonstrate how our deployment approach improves the existing process of deployment and maintains the quality of the deployed model.
-
 \subsection{Proactive Training} \label{proactive-training}
-Proactive training is a replacement for the periodical offline retraining of the deployed model.
-In the periodical retraining, when the size of the accumulated training data surpasses a predefined threshold, the platform retrains the deployed model.
+Proactive training is a replacement for the periodical retraining of the deployed model.
+Typically, the retraining is triggered when a condition is met, e.g., the quality of the model drops below a certain value.
 Contrary to the periodical training, in proactive training, the platform continuously update the deployed model using the historical data.
 
 We take advantage of the iterative nature of SGD in the design of the proactive training.
 The input to each iteration of SGD is the current weight parameters of the model, a sample of the data points, and an objective function.
 In proactive training, we execute iterations of mini-batch SGD on the deployed model.
 To execute the proactive training, the deployment platform first samples the historical data.
-Then the platform transforms the data into a set of features using the deployed pipeline.
+Then, the platform transforms the data into a set of features using the deployed pipeline.
 Next, the proactive trainer utilizes the transformed features to compute the gradient of the objective function.
 Finally, the deployment platform updates the deployed model using the computed gradient.
 
@@ -28,17 +27,16 @@ Our experiments in Section \ref{evaluation} show that selecting the adaptation t
 
 The proactive training aims to adapt the deployed model to the recent data items.
 As a result, when sampling the historical data, one has to consider the effect of the sample on the deployed model.
-A time-based sampling approach of the historical data emphasizes the more recent data points and adapts the deployed model to the changes in the data distribution.
-In Section \ref{evaluation}, we evaluate the quality of the deployed model when different sampling techniques are utilized (time-based, uniform, and window-based).
-We show that the time-based sampling results in a model with better quality.
-
+In Section \ref{fig:system-architecture}, we explain the different sampling strategies.
+%A time-based sampling approach of the historical data emphasizes the more recent data points and adapts the deployed model to the changes in the data distribution.
+%In Section \ref{evaluation}, we evaluate the quality of the deployed model when different sampling techniques are utilized (time-based, uniform, and window-based).
+%We show that the time-based sampling results in a model with better quality.
 %\textit{Model Stability}
 %To ensure that proactive training does not degrade the quality of the model, a model evaluator is used to assess the quality of the model.
 %The proactive trainer uses the latest deployed model as an initial starting point and updates the model based on the training data.
 %The evaluator assesses the quality of the model using an evaluation dataset or the prequential evaluation method \cite{dawid1984present}.
 %If the quality of the model has degraded, the update is discard and the model is logged.
 %This is to avoid over training the deployed model in proactive training.
-
 %\todo[inline]{I'm going to remove scheduling rate and just run proactive training when the sample buffer is full}
 %\textit{Scheduling rate.}
 %\hl{An extra parameter of proactive training is the scheduling rate.
@@ -52,7 +50,6 @@ We show that the time-based sampling results in a model with better quality.
 %We describe a method for tuning the scheduling rate based on the rate of the incoming training data.
 %The scheduling rate is increased as the rate of the incoming training data increases and vice versa.
 %This helps in adapting the model to the new training data.}
-
 \subsection{Online Statistics Computation and Feature Materialization}
 Before applying the proactive training, the deployment platform needs to transform the data using the deployed pipeline.
 Some components of the machine learning pipeline, such as the standard scaler or the one-hot encoder, require statistics over the dataset to be calculated before they process the data.
@@ -71,7 +68,6 @@ Some components of the machine learning pipeline generate new features.
 For example, one-hot encoding and data bucketization, both may generate new features after processing new training data.
 When such components exist in the deployed pipeline, the deployment platform keeps track of the number of features after the data preprocessing.
 When the pipeline generates new features, the deployment platform adjusts the size of the deployed model.
-
 \subsection{Improved Deployment Process}
 \begin{figure*}[t]
 \begin{subfigure}{\columnwidth}
@@ -87,8 +83,9 @@ When the pipeline generates new features, the deployment platform adjusts the si
 \label{fig:improved-example}
 \end{subfigure}
 \caption{Machine Learning Deployment Platforms}
+\label{deployment-processes}
 \end{figure*}
-
+Figure \ref{deployment-processes} shows the differences in deployment processes of the periodical and continuous training approaches.
 Figure \ref{fig:motivational-example} shows the process of the periodical deployment approach.
 The process starts with an offline training \circled{1}.
 During the offline training, a user designs a machine learning pipeline that consists of several data and feature preprocessing steps. 

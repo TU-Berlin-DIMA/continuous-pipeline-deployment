@@ -6,14 +6,14 @@ Specifically, we answer the following questions:\\
 2. What are the effects of the learning rate adaptation method, the regularization parameter, and the sampling strategy on the continuous deployment? \\
 3. What are the effects of live statistics analysis and materialization of preprocessed features on the training time?
 
-To that end, first, we design two pipelines each processing one real-world dataset.
+To that end, we first design two pipelines each processing one real-world dataset.
 Then, we deploy the pipelines using different deployment approaches.
 
 \subsection{Setup}\label{subsec:setup}
 \textbf{Pipelines.}
 We design two pipelines for all the experiments.
 
-\textit{URL pipeline.} We use the URL pipeline processes the URL dataset for classifying URLs, gathered over a 121 days period, into malicious and legitimate groups \cite{ma2009identifying}.
+\textit{URL pipeline.} The URL pipeline processes the URL dataset for classifying URLs, gathered over a 121 days period, into malicious and legitimate groups \cite{ma2009identifying}.
 The pipeline consists of 5 components: input parser, missing value imputer, standard scaler, feature hasher, and an SVM model.
 To evaluate the SVM model, we compute the misclassification rate on the unseen data.
 

@@ -40,7 +40,7 @@ As a result, the deployed model quickly becomes stale.
 
 An efficient deployment platform, aside from being robust and easy to tune, must be able to maintain the quality of the deployed model without incurring the high training cost of the periodical deployment approach.
  
-We propose a deployment platform, that completely eliminates the need for retraining, thus significantly reducing the training cost, while achieving the same level of quality as the periodical deployment approach.
+We propose a deployment platform, that completely eliminates the need for retraining, thus significantly reducing the training cost while achieving the same level of quality as the periodical deployment approach.
 Our deployment platform is also robust and accommodates many different types of machine learning models and pipelines.
 Lastly, the tuning process of our deployment approach is simple and requires minimal user interaction.
 
@@ -77,7 +77,7 @@ The updated model is immediately ready for answering prediction queries.
 Our experiments show that proactive training reduces the training time by an order of magnitude while providing the same level of quality when compared to the periodical deployment approach.
 
 \textit{Online Statistics Computation and Feature Materialization.}
-Before updating the model using proactive training, the pipeline has to process the training data.
+Before updating the model using proactive training, the pipeline has to preprocess the training data.
 Every component of the pipeline needs to scan the data, updates the statistics (for example the mean and the standard deviation of the standard scaler component), and finally transform the data.
 Computing these statistics and transforming the data are time consuming processes.
 Aside from the proactive training, our deployment platform also employs online learning methods to update the model in real-time.

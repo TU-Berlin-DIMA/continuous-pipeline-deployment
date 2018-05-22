@@ -1,18 +1,18 @@
-\section{Continuous Deployment Platform} \label{sec:system-architecture}
-Our proposed deployment platform comprises five main components; pipeline manager, data manager, scheduler, proactive trainer, and the execution engine.
+\section{Deployment Platform} \label{sec:system-architecture}
+Our proposed deployment platform comprises of five main components: pipeline manager, data manager, scheduler, proactive trainer, and execution engine.
 Figure \ref{fig:system-architecture} gives an overview of the architecture of our platform and the interactions among its components.
 At the center of the deployment platform is the pipeline manager.
 The pipeline manager monitors the deployed pipeline and model, manages the processing of the training data and prediction queries, and enables the continuous update of the deployed model.
 The data manager and the scheduler enable the pipeline manager to perform proactive training.
 The proactive trainer component manages the execution of the iterations of SGD on the deployed model.
 The execution engine is responsible for executing the actual data transformation and model training components of the pipeline.
-The proposed design decouples the components of the platform from the execution engine.
-This design enables us to switch the execution engine without requiring changes to the deployment platform.
+%The proposed design decouples the components of the platform from the execution engine.
+%This design enables us to switch the execution engine without requiring changes to the deployment platform.
 
 \subsection{Scheduler}\label{scheduler}
 The scheduler component is responsible for scheduling the proactive training.
 The scheduler communicates with pipeline manager to instruct when to execute the proactive training.
-The scheduler accommodates two types of scheduling mechanisms, namely \textit{static} and \textit{dynamic}.
+The scheduler accommodates two types of scheduling mechanisms, namely, \textit{static} and \textit{dynamic}.
 
 The static scheduling utilizes a user-defined parameter that specifies the interval between executions of the proactive training.
 This is a simple mechanism for use cases that require constant updates to the deployed model (for example, every minute).
@@ -21,15 +21,15 @@ The scheduler uses the following formula to compute the time when to execute the
 \begin{center}
 $T' = S * T * pr * pl$
 \end{center}
-where $T'$ indicates the time in seconds when the next proactive training is scheduled to execute, $T$ is the execution time of the last proactive training, $pl$ and $pr$ are the average prediction latency and the average number of prediction requests per second.
+where $T'$ indicates the time in seconds when the next proactive training is scheduled to execute, $T$ is the execution time of the last proactive training, $pl$ is the average prediction latency, and $pr$ is the average number of prediction queries per second.
 $S$ is the slack parameter.
-Slack is a user-controlled parameter to hint the scheduler about the possibility of surges in the incoming prediction queries and training data.
-During an instance of the proactive training, a certain number of predictions queries arrive at the platform ($T * pr * pl$).
-The scheduler must guarantee that the deployment platform answers all the queries before executing the next proactive training.
-A large slack value ($\geq10$) results in a larger scheduling interval, thus allocating most of the resources of the deployment platform to the query answering component.
-A small slack value ($10 \geq S \geq 2$) results in smaller scheduling intervals.
+Slack is a user-defined parameter to hint the scheduler about the possibility of surges in the incoming prediction queries and training data.
+During a proactive training, a certain number of predictions queries arrive at the platform ($T * pr$) which requires $T * pr * pl$ seconds to be processed.
+The scheduler must guarantee that the deployment platform answers all the queries before executing the next proactive training $T' > T * pr * pl$.
+A large slack value ($\geq2$) results in a larger scheduling interval, thus allocating most of the resources of the deployment platform to the query answering component.
+A small slack value ($2 \geq S \geq 1$) results in smaller scheduling intervals.
 As a result, the deployment platform allocates more computing resources for training the pipeline.
-A slack value of less than 2 increases the latency of prediction answering component.
+A slack value of less than 1 increases the latency of prediction query answering.
 
 The scheduler computes the value of $T$ for every proactive training.
 The deployment platform provides the scheduler with the values of $pr$ and $pl$. 
@@ -43,10 +43,8 @@ By utilizing the formula, the scheduler ensures that the platform has enough tim
 
 
 \subsection{Data Manager} \label{data-manager}
-The data manager component is responsible for storage of historical data and cached features, receiving the incoming training data, and providing the proactive trainer with samples of the historical data.
+The data manager component is responsible for storage of historical data and cached features, receiving the incoming training data, and providing the pipeline manager with samples of the historical data.
 
-Historical data is typically large and may not fit in the memory or disk of a single machine. 
-The data manager handles the communication with the underlying storage unit.
 The data manager has four tasks.
 It appends the incoming training data to the historical dataset.
 It forwards the incoming training data and prediction requests to the pipeline manager for further processing.
@@ -58,14 +56,15 @@ During the sampling operation, instead of sampling from the raw historical data,
 
 The data manager provides three sampling approaches, namely, uniform, time-based, and window-based sampling.
 Uniform sampling provides a random sample from the entire historical data where every data point has the same probability of being sampled.
-Time-based sampling assigns weights to every data point based on their timestamp.
-In time-based sampling, recent items have a higher probability of being sampled.
-Window-based sampling is similar to the uniform sampling, however, instead of sampling from the entire historical data, the data manager samples the data from a given time range. 
+Time-based sampling assigns weights to every data point based on their timestamp such that recent items have a higher probability of being sampled.
+Window-based sampling is similar to the uniform sampling, but instead of sampling from the entire historical data, the data manager samples the data from a given time range. 
 In many real-world use cases (e.g., e-commerce and online advertising), the deployed model should adapt to the more recent data.
 Therefore, the time-based and window-based sampling provide more appropriate samples for the training data.
 However, in some use cases, the incoming training data is not time-dependent (e.g., image classification of objects).
 In these scenarios, window-based sampling fails to provide a non-biased sample, since it only samples from the recent data.
-In our experiments, we show that the time-based sampling satisfies the requirement of both types of use cases.
+%In our experiments, we show that the time-based sampling satisfies the requirement of both types of use cases.
+In Section \ref{evaluation}, we evaluate the quality of the deployed model when different sampling techniques are utilized.
+We show that the time-based sampling results in a model with better quality.
 
 To increase the performance of the sampling operation, we utilize a data partitioning technique.
 Upon the arrival of new training data, the data manager assembles a partition of the data and creates an index for the partition using the timestamps of the data that resides in the partition.
@@ -84,8 +83,8 @@ During the online training, when new training data becomes available, the pipeli
 During the online training, the pipeline manager also updates and stores the statistics of the pipeline components.
 If the feature materialization optimization is enabled, the pipeline manager sends the transformed features to the data manager.
 
-The scheduler component informs the pipeline to execute proactive training.
-Then, the pipeline manager requests the data manager to provide the sample of the historical data for the next proactive training.
+The scheduler component informs the pipeline manager to execute proactive training.
+Then, the pipeline manager requests the data manager to provide a sample of the historical data for the next proactive training.
 The pipeline manager provides the proactive trainer with the current model parameter and the sample of the historical data.
 Once the proactive training is over, the pipeline manager receives the updated model.
 
