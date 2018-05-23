@@ -25,7 +25,7 @@ where $T'$ indicates the time in seconds when the next proactive training is sch
 $S$ is the slack parameter.
 Slack is a user-defined parameter to hint the scheduler about the possibility of surges in the incoming prediction queries and training data.
 During a proactive training, a certain number of predictions queries arrive at the platform ($T * pr$) which requires $T * pr * pl$ seconds to be processed.
-The scheduler must guarantee that the deployment platform answers all the queries before executing the next proactive training $T' > T * pr * pl$.
+The scheduler must guarantee that the deployment platform answers all the queries before executing the next proactive training ($T' > T * pr * pl$).
 A large slack value ($\geq2$) results in a larger scheduling interval, thus allocating most of the resources of the deployment platform to the query answering component.
 A small slack value ($2 \geq S \geq 1$) results in smaller scheduling intervals.
 As a result, the deployment platform allocates more resources for training the model.
@@ -46,7 +46,7 @@ The data manager component is responsible for storage of historical data and mat
 
 The data manager has four tasks.
 It appends the incoming training data to the historical dataset.
-It forwards the incoming training data and prediction requests to the pipeline manager for further processing.
+It forwards the incoming training data and prediction queries to the pipeline manager for further processing.
 After the pipeline manager transforms the data into features, the data manager stores the transformed features.
 Finally, upon the request of the pipeline manager, the data manager samples the historical data for proactive training.
 

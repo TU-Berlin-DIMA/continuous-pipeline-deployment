@@ -36,7 +36,7 @@ An important parameter of stochastic gradient descent is the learning rate.
 The learning rate controls the degree of change in the weights during every iteration.
 The most trivial approach for tuning the learning rate is to initialize it to a small value and after every iteration decrease the value by a small factor.
 However, in complex and high-dimensional problems, the simple tuning approach is ineffective \cite{schaul2013no}. 
-Adaptive learning rate methods such as Momentum \cite{qian1999momentum}, Adam \cite{kingma2014adam}, RMSPROP \cite{tieleman2012lecture}, and AdaDelta \cite{zeiler2012adadelta} have been proposed.
+Adaptive learning rate methods such as Momentum \cite{qian1999momentum}, Adam \cite{kingma2014adam}, Rmsprop \cite{tieleman2012lecture}, and AdaDelta \cite{zeiler2012adadelta} have been proposed.
 These methods adaptively adjust the learning rate in every iteration to speed up the convergence rate.
 Moreover, some of the learning rate adaptation methods perform per coordinate modification, i.e., every parameter of the model weight vector is adjusted separately from the others \cite{kingma2014adam, tieleman2012lecture, zeiler2012adadelta}. 
 In many high-dimensional problems, the parameters of the weight vector do not have the same level of importance, therefore each parameter must be treated differently during the training process.
