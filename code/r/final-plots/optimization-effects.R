@@ -38,8 +38,16 @@ criteoDataProcessing <- function(){
   return (df)
 }
 
-fontLabelSize = 12
-baseSize = 14
+# For the paper use
+# fontLabelSize = 12
+# baseSize = 14
+# margin = -3
+
+# For presentation use
+fontLabelSize = 16
+baseSize = 18
+margin = 2
+
 
 ####### URL PLOT ##########
 urlData = urlDataProcessing()
@@ -52,10 +60,10 @@ urlPlot = ggbarplot(urlData, x = 'Deployment', y = 'Time',  ylab = 'Time (m)', x
         legend.key.height = unit(0.4,'cm'), 
         legend.title = element_text(size = 0),
         plot.margin = unit(c(0,0,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-3)), 
-        axis.title.x = element_text(margin = margin(t=-4)),
+        axis.title.y = element_text(margin = margin(r=margin)), 
+        axis.title.x = element_text(margin = margin(t=margin)),
         legend.spacing.x = unit(-0.5, "cm"))
-urlPlot = ggpar(urlPlot, font.y=c(fontLabelSize), font.x=c(fontLabelSize+2)) + rremove('x.ticks') + rremove('x.text') + rremove("legend")
+urlPlot = ggpar(urlPlot, legend.title = "", font.y=c(fontLabelSize), font.x=c(fontLabelSize+2)) + rremove('x.ticks') + rremove('x.text') + rremove("legend")
 
 ####### TAXI PLOT ##########
 taxiData = taxiDataProcessing()
@@ -68,10 +76,10 @@ taxiPlot = ggbarplot(taxiData, x = 'Deployment', y = 'Time',  ylab = 'Time (m)',
         legend.key.height = unit(0.4,'cm'), 
         legend.title = element_text(size = 0),
         plot.margin = unit(c(0,0,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-3)),
-        axis.title.x = element_text(margin = margin(t=-4)),
+        axis.title.y = element_text(margin = margin(r=margin)),
+        axis.title.x = element_text(margin = margin(t=margin)),
         legend.spacing.x = unit(-0.5, "cm")) 
-taxiPlot = ggpar(taxiPlot, font.y=c(fontLabelSize), font.x=c(fontLabelSize+2)) + rremove('x.ticks') + rremove('x.text')
+taxiPlot = ggpar(taxiPlot, legend.title = "", font.y=c(fontLabelSize), font.x=c(fontLabelSize+2)) + rremove('x.ticks') + rremove('x.text')
 
 ####### CRITEO PLOT ##########
 criteoData = criteoDataProcessing()
@@ -85,8 +93,8 @@ criteoPlot = ggbarplot(criteoData, x = 'Deployment', y = 'Time',  ylab = 'Time (
         legend.key.height = unit(0.4,'cm'), 
         legend.title = element_text(size = 0),
         plot.margin = unit(c(0,0,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-3)), 
-        axis.title.x = element_text(margin = margin(t=-4)),
+        axis.title.y = element_text(margin = margin(r=margin)), 
+        axis.title.x = element_text(margin = margin(t=margin)),
         legend.spacing.x = unit(-0.5, "cm"))
 criteoPlot = ggpar(criteoPlot, font.y=c(fontLabelSize), font.x=c(fontLabelSize+2)) + rremove('x.ticks') + rremove('x.text')
 
@@ -95,8 +103,9 @@ criteoPlot = ggpar(criteoPlot, font.y=c(fontLabelSize), font.x=c(fontLabelSize+2
 
 optimization_effects = ggarrange(urlPlot, taxiPlot, nrow = 1, ncol = 2, common.legend = TRUE)
 
-tikz(file = "../images/experiment-results/tikz/optimization-time-experiment.tex", width = 4, height = 2)
-optimization_effects 
-dev.off()
+ggsave(optimization_effects, filename = '../images/experiment-results/eps/optimization-time-experiment.eps', device = 'eps', width = 8, height = 4, units = "in")
+#tikz(file = "../images/experiment-results/tikz/optimization-time-experiment.tex", width = 4, height = 2)
+#optimization_effects 
+#dev.off()
 
 

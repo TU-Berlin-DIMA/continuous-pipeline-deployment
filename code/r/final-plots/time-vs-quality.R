@@ -37,8 +37,17 @@ taxiDataProcessing <- function(){
   return(df)
 }
 
-fontLabelSize = 12
-baseSize = 14
+# For the paper use
+# fontLabelSize = 12
+# baseSize = 14
+# margin = -1
+
+# For presentation use
+fontLabelSize = 16
+baseSize = 18
+margin = 2
+
+
 
 ####### URL PLOT ##########
 urlBreaks = c(0, 400 ,800)
@@ -47,15 +56,15 @@ urlPlot = ggscatter(urlData, x = "Time",
           y= "MC", 
           color = "Deployment", 
           shape = "Deployment", size = 4, ylim=c(2.23,2.27), xlim=c(-20,1000),
-          ylab = 'Misclassification\\%', xlab = "Time(m)\n(a) URL",
+          ylab = 'Misclassification%', xlab = "Time(m)\n(a) URL",
           ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = urlBreaks) + 
-  theme( legend.title = element_text(size = 0), 
+  theme(legend.title = element_text(size = 0), 
          plot.margin = unit(c(0,1.5,0,0), "lines"), 
-         axis.title.y = element_text(margin = margin(r=-1)),
-         axis.text.x = element_text(margin = margin(t=-1)))
+         axis.title.y = element_text(margin = margin(r=margin)),
+         axis.text.x = element_text(margin = margin(t=margin)))
 
-urlPlot = ggpar(urlPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize))
+urlPlot = ggpar(urlPlot, legend.title = "", font.x = c(fontLabelSize), font.y=c(fontLabelSize))
 
 ####### TAXI PLOT ##########
 taxiData = taxiDataProcessing()
@@ -71,9 +80,9 @@ taxiPlot = ggscatter(taxiData, x = "Time",
   scale_y_continuous(breaks = taxiBreaksY)+
   theme(legend.title = element_text(size = 0), 
         plot.margin = unit(c(0,1.5,0,0), "lines"), 
-         axis.title.y = element_text(margin = margin(r=-1)),
-         axis.text.x = element_text(margin = margin(t=-1)))
-taxiPlot = ggpar(taxiPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize))
+         axis.title.y = element_text(margin = margin(r=margin)),
+         axis.text.x = element_text(margin = margin(t=margin)))
+taxiPlot = ggpar(taxiPlot, legend.title = "", font.x = c(fontLabelSize), font.y=c(fontLabelSize))
 
 ####### CRITEO PLOT ##########
 criteoData = urlDataProcessing()
@@ -85,15 +94,16 @@ criteoPlot = ggscatter(criteoData, x = "Time",
                     ylab = 'LogLoss', xlab = "Time(m)\n(c) Criteo",
                     ggtheme = theme_pubclean(base_size = baseSize)) +
   scale_x_continuous(breaks = criteoBreaks) +
-  theme( legend.title = element_text(size = 0), 
+  theme(legend.title = element_text(size = 0), 
          plot.margin = unit(c(0,1.5,0,0), "lines"), 
-         axis.title.y = element_text(margin = margin(r=-1)),
-         axis.text.x = element_text(margin = margin(t=-1)))
-criteoPlot = ggpar(criteoPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize))
+         axis.title.y = element_text(margin = margin(r=margin)),
+         axis.text.x = element_text(margin = margin(t=margin)))
+criteoPlot = ggpar(criteoPlot, legend.title = "", font.x = c(fontLabelSize), font.y=c(fontLabelSize))
 
 #qualityVsTime = ggarrange(urlPlot, taxiPlot, criteoPlot, nrow = 1, ncol = 3, common.legend = TRUE)
 qualityVsTime = ggarrange(urlPlot, taxiPlot, nrow = 1, ncol = 2, common.legend = TRUE)
 
-tikz(file = "../images/experiment-results/tikz/quality-vs-time.tex", width = 4, height = 2)
-qualityVsTime 
-dev.off()
+ggsave(qualityVsTime, filename = '../images/experiment-results/eps/quality-vs-time.eps', device = 'eps', width = 8, height = 4, units = "in")
+#tikz(file = "../images/experiment-results/tikz/quality-vs-time.tex", width = 4, height = 2)
+#qualityVsTime 
+#dev.off()

@@ -117,8 +117,16 @@ taxiTimeProcessing <- function(){
   return(ml)
 }
 
-fontLabelSize = 8
-baseSize = 10
+# For the paper use
+#fontLabelSize = 8
+#baseSize = 10
+#margin = -1
+
+#For presentation use
+fontLabelSize = 12
+baseSize = 16
+margin = 2
+
 
 ####### URL PLOT ##########
 urlQuality = urlQualityProcessing()
@@ -126,7 +134,7 @@ urlTime = urlTimeProcessing()
 urlBreaks = c(500,3000, 6000 ,9000, 12000)
 urlLabels = c("day1","day30", "day60", "day90","day120")
 
-urlQualityPlot = ggline(urlQuality, 'Time', 'value', ylab = "Misclassification (\\%)", xlab = '(a) URL',
+urlQualityPlot = ggline(urlQuality, 'Time', 'value', ylab = "Misclassification %", xlab = '(a) URL',
                  shape = '-1', size = 1, linetype ='Deployment', color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = urlBreaks, labels= urlLabels)
 urlQualityPlot = ggpar(urlQualityPlot, legend = "top", legend.title = "", font.x = c(fontLabelSize), font.y=c(fontLabelSize)) + 
@@ -134,8 +142,8 @@ urlQualityPlot = ggpar(urlQualityPlot, legend = "top", legend.title = "", font.x
         legend.key.width = unit(1.2,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         plot.margin = unit(c(0,1.5,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-1)),
-        axis.text.x = element_text(margin = margin(t=-1)))
+        axis.title.y = element_text(margin = margin(r=margin)),
+        axis.text.x = element_text(margin = margin(t=margin)))
 
 urlTimePlot = ggline(urlTime, 'Time', 'value', ylab = "Time (m)", xlab = '(b) URL',
                         shape = '-1', size = 1, linetype ='Deployment', color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
@@ -145,8 +153,8 @@ urlTimePlot = ggpar(urlTimePlot, legend = "top", legend.title = "", font.x = c(f
         legend.key.width = unit(1.2,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         plot.margin = unit(c(0,1.5,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-1)),
-        axis.text.x = element_text(margin = margin(t=-1)))
+        axis.title.y = element_text(margin = margin(r=margin)),
+        axis.text.x = element_text(margin = margin(t=margin)))
 
 
 ####### TAXI PLOT ##########
@@ -162,8 +170,8 @@ taxiQualityPlot = ggpar(taxiQualityPlot, font.x = c(fontLabelSize), font.y=c(fon
         legend.key.width = unit(1.2,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         plot.margin = unit(c(0,1.5,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-1)),
-        axis.text.x = element_text(margin = margin(t=-1)))
+        axis.title.y = element_text(margin = margin(r=margin)),
+        axis.text.x = element_text(margin = margin(t=margin)))
 
 taxiTimePlot = ggline(taxiTime, 'Time', 'value', ylab = "Time (m)", xlab = '(d) Taxi',
                          shape = '-1',size = 1, linetype ='Deployment',color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
@@ -173,8 +181,8 @@ taxiTimePlot = ggpar(taxiTimePlot, font.x = c(fontLabelSize), font.y=c(fontLabel
         legend.key.width = unit(1.2,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         plot.margin = unit(c(0,1.5,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-1)),
-        axis.text.x = element_text(margin = margin(t=-1)))
+        axis.title.y = element_text(margin = margin(r=margin)),
+        axis.text.x = element_text(margin = margin(t=margin)))
 
 ####### CRITEO PLOT ##########
 criteoQuality = urlQualityProcessing()
@@ -191,8 +199,8 @@ criteoQualityPlot = ggpar(criteoQualityPlot, font.x = c(fontLabelSize), font.y=c
         legend.key.width = unit(1.2,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         plot.margin = unit(c(0,1.5,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-1)),
-        axis.text.x = element_text(margin = margin(t=-1)))
+        axis.title.y = element_text(margin = margin(r=margin)),
+        axis.text.x = element_text(margin = margin(t=margin)))
 
 criteoTimePlot = ggline(criteoTime, 'Time', 'value', ylab = "Time (m)", xlab = '(c) Criteo',
                         # change size = 0 when we have real data
@@ -203,12 +211,14 @@ criteoTimePlot = ggpar(criteoTimePlot, font.x = c(fontLabelSize), font.y=c(fontL
         legend.key.width = unit(1.2,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         plot.margin = unit(c(0,1.5,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-1)),
-        axis.text.x = element_text(margin = margin(t=-1)))
+        axis.title.y = element_text(margin = margin(r=margin)),
+        axis.text.x = element_text(margin = margin(t=margin)))
 
 #deploymentQuality = ggarrange(urlQualityPlot,urlTimePlot, taxiQualityPlot, taxiTimePlot, criteoQualityPlot, criteoTimePlot, nrow = 3, ncol = 2, common.legend = TRUE)
 deploymentQuality = ggarrange(urlQualityPlot,urlTimePlot, taxiQualityPlot, taxiTimePlot, nrow = 2, ncol = 2, common.legend = TRUE)
 
-tikz(file = "../images/experiment-results/tikz/deployment-quality-and-time-experiment.tex", width = 6, height = 4)
-deploymentQuality
-dev.off()
+
+ggsave(deploymentQuality, filename = '../images/experiment-results/eps/deployment-quality.eps', device = 'eps', width = 14, height = 6, units = "in")
+#tikz(file = "../images/experiment-results/tikz/deployment-quality-and-time-experiment.tex", width = 6, height = 4)
+#deploymentQuality
+#dev.off()
