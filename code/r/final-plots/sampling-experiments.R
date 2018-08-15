@@ -75,8 +75,16 @@ taxiDataProcessing <- function(){
   return (ml)
 }
 
-fontLabelSize = 12
-baseSize = 14
+# For the paper use
+# fontLabelSize = 12
+# baseSize = 14
+# margin = -1
+
+# For presentation use
+fontLabelSize = 16
+baseSize = 18
+margin = 2
+
 
 ####### URL PLOT ##########
 urlData = urlDataProcessing()
@@ -85,13 +93,13 @@ urlLabels = c("day1","day15","day30")
 urlPlot = ggline(urlData, 'Time', 'value', ylab = "Misclassification\\%", xlab = '(a) URL',
                  shape = '-1', linetype ='Sampling', size =2, color = "Sampling", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = urlBreaks, labels= urlLabels)
-urlPlot = ggpar(urlPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) +
+urlPlot = ggpar(urlPlot, legend.title = "",font.x = c(fontLabelSize), font.y=c(fontLabelSize)) +
   theme(legend.title = element_text(size = 0), 
         legend.key.width = unit(1.2,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         plot.margin = unit(c(0,1.2,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-1)),
-        axis.text.x = element_text(margin = margin(t=-1)))
+        axis.title.y = element_text(margin = margin(r=margin)),
+        axis.text.x = element_text(margin = margin(t=margin)))
 
 ####### TAXI PLOT ##########
 taxiData = taxiDataProcessing()
@@ -100,13 +108,13 @@ taxiLabels = c("Feb15", "Apr15")
 taxiPlot = ggline(taxiData, 'Time', 'value', ylab = "RMSLE", xlab = '(b) Taxi',
                   shape = '-1', linetype ='Sampling',size = 2, color = "Sampling", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = taxiBreaks, labels = taxiLabels)
-taxiPlot = ggpar(taxiPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize))+
+taxiPlot = ggpar(taxiPlot, legend.title = "",font.x = c(fontLabelSize), font.y=c(fontLabelSize))+
   theme(legend.title = element_text(size = 0), 
         legend.key.width = unit(1.2,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         plot.margin = unit(c(0,1.5,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-1)),
-        axis.text.x = element_text(margin = margin(t=-1)))
+        axis.title.y = element_text(margin = margin(r=margin)),
+        axis.text.x = element_text(margin = margin(t=margin)))
 
 ####### CRITEO PLOT ##########
 criteoData = urlData#criteoDataProcessing()
@@ -116,19 +124,19 @@ criteoPlot = ggline(criteoData, 'Time', 'value', ylab = "MSE", xlab = '(c) Crite
                     shape = '-1', linetype ='Sampling', size =0, color = "Sampling", ggtheme = theme_pubclean(base_size = baseSize),
                     ylim=c(min(urlData$value), max(urlData$value))) + 
   scale_x_continuous(breaks = criteoBreaks, labels= criteoLabels)
-criteoPlot = ggpar(criteoPlot, font.x = c(fontLabelSize), font.y=c(fontLabelSize)) +
+criteoPlot = ggpar(criteoPlot,legend.title = "", font.x = c(fontLabelSize), font.y=c(fontLabelSize)) +
   theme(legend.title = element_text(size = 0), 
         legend.key.width = unit(1.2,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         plot.margin = unit(c(0,1,0,0), "lines"), 
-        axis.title.y = element_text(margin = margin(r=-1)),
-        axis.text.x = element_text(margin = margin(t=-1)))
+        axis.title.y = element_text(margin = margin(r=margin)),
+        axis.text.x = element_text(margin = margin(t=margin)))
 
 
 #samplingPlot = ggarrange(urlPlot, taxiPlot,criteoPlot,  nrow = 1, ncol = 3, common.legend = TRUE)
 
 samplingPlot = ggarrange(urlPlot, taxiPlot,  nrow = 1, ncol = 2, common.legend = TRUE)
-
-tikz(file = "../images/experiment-results/tikz/sampling-mode-figure.tex", width = 4, height = 2)
-samplingPlot
-dev.off()
+ggsave(samplingPlot, filename = '../images/experiment-results/eps/sampling-experiments-experiment.eps', device = 'eps', width = 8, height = 4, units = "in")
+#tikz(file = "../images/experiment-results/tikz/sampling-mode-figure.tex", width = 4, height = 2)
+#samplingPlot
+#dev.off()
