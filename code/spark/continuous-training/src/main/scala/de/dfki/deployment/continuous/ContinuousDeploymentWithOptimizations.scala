@@ -41,7 +41,8 @@ class ContinuousDeploymentWithOptimizations(val history: String,
 
     var processedRDD: ListBuffer[RDD[LabeledPoint]] = new ListBuffer[RDD[LabeledPoint]]()
     val pData = pipeline.transform(data)
-    processedRDD += pData
+    // TODO: To make computation easier down the line we sample the historical data here
+    processedRDD += pData.sample(withReplacement = false, 0.1)
 
     pipeline.model.setMiniBatchFraction(1.0)
     pipeline.model.setNumIterations(1)
@@ -66,10 +67,12 @@ class ContinuousDeploymentWithOptimizations(val history: String,
       if (time % slack == 0) {
         val historicalSample = provideHistoricalSample(processedRDD)
         if (historicalSample.nonEmpty) {
-          val transformed = streamingContext.sparkContext.union(historicalSample).persist(StorageLevel.MEMORY_ONLY)
-          transformed.count()
+          // sparkcontext union preserves persistence, so we do not need to explicitly cache them again
+          //val transformed = streamingContext.sparkContext.union(historicalSample).persist(StorageLevel.MEMORY_ONLY)
+          //transformed.count()
+          val transformed = streamingContext.sparkContext.union(historicalSample)
           pipeline.train(transformed)
-          transformed.unpersist()
+          //transformed.unpersist()
         } else {
           logger.warn(s"Sample in iteration $time is empty")
         }

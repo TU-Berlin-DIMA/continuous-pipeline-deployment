@@ -19,4 +19,6 @@ class WindowBasedSampler(size: Int = 100,
   }
 
   override def name = s"window($window)-$size"
+
+  override def cache(selected_indices: List[Int]) = (List(),List())
 }

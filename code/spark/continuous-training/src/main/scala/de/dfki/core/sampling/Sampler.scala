@@ -1,7 +1,6 @@
 package de.dfki.core.sampling
 
 import org.apache.log4j.Logger
-import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable.ListBuffer
@@ -25,6 +24,12 @@ abstract class Sampler(val rate: Double = 0.1,
     */
   val HISTORICAL_DATA_INDEX = 0
 
+  /** provide logic for caching mechanism
+    *
+    * @param selected_indices indices selected for the next proactive training
+    * @return a tupe of (what_indices_to_cache, what_indices_to_uncache)
+    */
+  def cache(selected_indices: List[Int]): (List[Int], List[Int])
 
   /**
     *
@@ -71,11 +76,22 @@ abstract class Sampler(val rate: Double = 0.1,
     */
   private def select[T](processedRDD: ListBuffer[RDD[T]],
                         indices: List[Int]): List[RDD[T]] = {
-    if (indices.contains(HISTORICAL_DATA_INDEX)) {
-      // TODO: 0.1 is hard coded figure out a way to make it better
-      processedRDD.head.sample(withReplacement = false, 0.1) :: indices.map(i => processedRDD(i))
-    } else {
-      indices.map(i => processedRDD(i))
+    val (toCache, toEvict) = cache(indices)
+
+    // cache new items
+    toCache.map {
+      i =>
+        processedRDD(i).cache()
+        processedRDD(i).count()
     }
+
+    // evict
+    toEvict.map{
+      i => processedRDD(i).unpersist()
+    }
+
+
+    indices.map(i => processedRDD(i))
+
   }
 }
