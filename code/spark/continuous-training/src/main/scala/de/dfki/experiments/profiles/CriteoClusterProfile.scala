@@ -26,4 +26,5 @@ class CriteoClusterProfile extends Profile {
   override val MINI_BATCH = 0.1
   override val TRAINING_FREQUENCY = 189
   override val UPDATER: String = "adam"
+  override val ROLLING_WINDOW = 100
 }

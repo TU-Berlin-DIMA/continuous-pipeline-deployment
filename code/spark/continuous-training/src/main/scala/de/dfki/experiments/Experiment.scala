@@ -60,6 +60,7 @@ abstract class Experiment {
     val batchEvaluationSet = parser.get("eval-set", profileFromArgs.BATCH_EVALUATION)
     val numPartitions = parser.getInteger("partitions", profileFromArgs.NUM_PARTITIONS)
     val trainingFrequency = parser.getInteger("training-frequency", profileFromArgs.TRAINING_FREQUENCY)
+    val rollingWindow = parser.getInteger("rolling-window", profileFromArgs.ROLLING_WINDOW)
     val failedPipeline = parser.get("failed-pipeline", profileFromArgs.FAILED_PIPELINE)
     val initTime = parser.getInteger("init-time", profileFromArgs.INIT_TIME)
 
@@ -85,12 +86,13 @@ abstract class Experiment {
       batchEvaluationSet = batchEvaluationSet,
       numPartitions = numPartitions,
       trainingFrequency = trainingFrequency,
+      rollingWindow = rollingWindow,
       failedPipeline = failedPipeline,
       initTime = initTime)
   }
 
   def getPipeline(spark: SparkContext, params: Params): Pipeline = {
-    if(params.failedPipeline != "None"){
+    if (params.failedPipeline != "None") {
       logger.info(s"loading a failed pipeline from: ${params.failedPipeline}")
       if (params.pipelineName == "criteo") {
         CriteoPipeline.loadFromDisk(params.failedPipeline, spark)

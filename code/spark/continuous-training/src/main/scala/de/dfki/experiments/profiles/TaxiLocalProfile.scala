@@ -20,4 +20,5 @@ class TaxiLocalProfile extends Profile {
   override val PROFILE_NAME = "taxi-local"
   override val BATCH_EVALUATION: String = "/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/nyc-taxi/processed/batch-evaluation"
   override val TRAINING_FREQUENCY = 720
+  override val ROLLING_WINDOW = 720 * 3
 }

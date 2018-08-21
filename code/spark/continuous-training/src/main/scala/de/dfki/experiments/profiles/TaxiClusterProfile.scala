@@ -27,4 +27,5 @@ class TaxiClusterProfile extends Profile {
   override val PROFILE_NAME = "taxi-cluster"
   override val BATCH_EVALUATION: String = "hdfs://cloud-11:44000/user/behrouz/nyc-taxi/experiments/processed/batch-evaluation"
   override val TRAINING_FREQUENCY = 720
+  override val ROLLING_WINDOW = 720 * 3
 }

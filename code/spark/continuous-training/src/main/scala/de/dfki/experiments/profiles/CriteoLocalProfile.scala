@@ -24,4 +24,5 @@ class CriteoLocalProfile extends Profile {
   override val STEP_SIZE = 0.0001
   override val MINI_BATCH = 0.1
   override val TRAINING_FREQUENCY = 100
+  override val ROLLING_WINDOW = 100
 }

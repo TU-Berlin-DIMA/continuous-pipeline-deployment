@@ -28,6 +28,7 @@ abstract class Profile {
   val TRAINING_FREQUENCY: Int
   val FAILED_PIPELINE: String = "None"
   val INIT_TIME: Int = 1
+  val ROLLING_WINDOW: Int
 
   val PROFILE_NAME: String
 }

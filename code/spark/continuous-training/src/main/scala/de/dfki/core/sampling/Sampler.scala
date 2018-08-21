@@ -13,16 +13,10 @@ import scala.util.Random
   *
   */
 abstract class Sampler(val rate: Double = 0.1,
-                       val rand: Random = new Random(System.currentTimeMillis())) {
+                       val rand: Random = new Random(System.currentTimeMillis()),
+                       val cachingEnabled: Boolean = true) {
 
   @transient lazy val logger = Logger.getLogger(getClass.getName)
-
-  /** this is where by default the initial historical data rdd is stored.
-    * if this index is selected to be in the next random sample, the user should
-    * perform another sampling operation [[RDD.sample((withReplacement = false, rate))]] on
-    * it since the size is big
-    */
-  val HISTORICAL_DATA_INDEX = 0
 
   /** provide logic for caching mechanism
     *
@@ -76,21 +70,20 @@ abstract class Sampler(val rate: Double = 0.1,
     */
   private def select[T](processedRDD: ListBuffer[RDD[T]],
                         indices: List[Int]): List[RDD[T]] = {
-    val (toCache, toEvict) = cache(indices)
+    if (cachingEnabled) {
+      val (toCache, toEvict) = cache(indices)
+      // cache new items
+      toCache.map {
+        i =>
+          processedRDD(i).cache()
+          processedRDD(i).count()
+      }
+      // evict
+      toEvict.map {
+        i => processedRDD(i).unpersist()
+      }
 
-    // cache new items
-    toCache.map {
-      i =>
-        processedRDD(i).cache()
-        processedRDD(i).count()
     }
-
-    // evict
-    toEvict.map{
-      i => processedRDD(i).unpersist()
-    }
-
-
     indices.map(i => processedRDD(i))
 
   }

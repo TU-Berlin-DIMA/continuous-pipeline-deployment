@@ -30,5 +30,6 @@ class URLProfile extends Profile {
   override val MINI_BATCH = 1.0
   override val BATCH_EVALUATION = "/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/url-reputation/processed/batch-evaluation"
   override val TRAINING_FREQUENCY = 1000
+  override val ROLLING_WINDOW = 1000 * 3
 }
 

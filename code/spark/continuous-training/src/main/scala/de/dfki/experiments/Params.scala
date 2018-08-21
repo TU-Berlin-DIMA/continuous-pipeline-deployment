@@ -27,6 +27,7 @@ case class Params(inputPath: String = "",
                   var batchEvaluationSet: String = "",
                   var numPartitions: Int,
                   var trainingFrequency: Int,
+                  var rollingWindow: Int,
                   var failedPipeline: String,
                   var initTime: Int) {
 
@@ -52,6 +53,7 @@ case class Params(inputPath: String = "",
       batchEvaluationSet = batchEvaluationSet,
       numPartitions = numPartitions,
       trainingFrequency = trainingFrequency,
+      rollingWindow = rollingWindow,
       failedPipeline = failedPipeline,
       initTime = initTime)
   }
