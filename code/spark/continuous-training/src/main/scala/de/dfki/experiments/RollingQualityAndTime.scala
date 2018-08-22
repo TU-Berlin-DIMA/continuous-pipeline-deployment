@@ -1,6 +1,6 @@
 package de.dfki.experiments
 
-import de.dfki.core.sampling.RollingWindowProvider
+import de.dfki.core.sampling.WindowBasedSampler
 import de.dfki.deployment.continuous.ContinuousDeploymentWithOptimizations
 import de.dfki.deployment.rolling.RollingRetraining
 import de.dfki.experiments.profiles.URLProfile
@@ -33,8 +33,10 @@ object RollingQualityAndTime extends Experiment {
       resultPath = s"${params.resultPath}",
       daysToProcess = params.days,
       slack = params.slack,
-      sampler = new RollingWindowProvider(size = params.rollingWindow),
-      otherParams = params).deploy(ssc, continuousPipelineWithOptimization)
+      //sampler = new RollingWindowProvider(size = params.rollingWindow),
+      sampler = new WindowBasedSampler(size = params.sampleSize, window = params.rollingWindow),
+      otherParams = params,
+      online = params.online).deploy(ssc, continuousPipelineWithOptimization)
     ssc.stop(stopSparkContext = true, stopGracefully = true)
 
     // Periodical Deployment
@@ -49,7 +51,8 @@ object RollingQualityAndTime extends Experiment {
       rollingWindowSize = params.rollingWindow,
       numPartitions = params.numPartitions,
       otherParams = params,
-      sparkConf = conf
+      sparkConf = conf,
+      online = params.online
     ).deploy(ssc, periodicalPipelineWarm)
   }
 }

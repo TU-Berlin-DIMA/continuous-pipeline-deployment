@@ -29,7 +29,8 @@ case class Params(inputPath: String = "",
                   var trainingFrequency: Int,
                   var rollingWindow: Int,
                   var failedPipeline: String,
-                  var initTime: Int) {
+                  var initTime: Int,
+                  var online: Boolean) {
 
   def copy(): Params = {
     Params(inputPath = inputPath,
@@ -55,7 +56,8 @@ case class Params(inputPath: String = "",
       trainingFrequency = trainingFrequency,
       rollingWindow = rollingWindow,
       failedPipeline = failedPipeline,
-      initTime = initTime)
+      initTime = initTime,
+      online = online)
   }
 
 }

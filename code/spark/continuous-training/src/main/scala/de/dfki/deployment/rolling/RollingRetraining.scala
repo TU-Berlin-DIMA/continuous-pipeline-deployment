@@ -22,7 +22,8 @@ class RollingRetraining(val history: String,
                         val rollingWindowSize: Int = 10,
                         val numPartitions: Int,
                         val otherParams: Params,
-                        val sparkConf: SparkConf) extends Deployment {
+                        val sparkConf: SparkConf,
+                        online: Boolean = true) extends Deployment {
 
   val HISTORICAL_DATA_INDEX = 0
 
@@ -60,8 +61,7 @@ class RollingRetraining(val history: String,
           // perform evaluation
           evaluateStream(pipeline, rdd, resultPath, "rolling-with-warmstarting")
         }
-
-        pipeline.updateTransformTrain(rdd)
+        if (online) pipeline.updateTransformTrain(rdd)
         time += 1
         val innerEnd = System.currentTimeMillis()
         val innerElapsed = innerEnd - innerStart
@@ -73,7 +73,7 @@ class RollingRetraining(val history: String,
       val rollingWindowProvider = new RollingWindowProvider(rollingWindowSize)
       val nextIndices = rollingWindowProvider.sampleIndices((0 to lastProcessed).toList)
 
-      val nextBatch = if (nextIndices contains HISTORICAL_DATA_INDEX){
+      val nextBatch = if (nextIndices contains HISTORICAL_DATA_INDEX) {
         // index 0 is the history, if it exist in the roll we should drop the last item so we have
         // the correct number of micro batches
         // TODO: history is not always one index and therefore it is much larger than one micro-batch
@@ -84,7 +84,7 @@ class RollingRetraining(val history: String,
         nextIndices.map(i => ALLFILES(i))
       }
 
-        copyContext.stop(stopSparkContext = true, stopGracefully = true)
+      copyContext.stop(stopSparkContext = true, stopGracefully = true)
       copyContext = new StreamingContext(sparkConf, Seconds(1))
 
       // copyPipeline = copyPipeline.newPipeline()

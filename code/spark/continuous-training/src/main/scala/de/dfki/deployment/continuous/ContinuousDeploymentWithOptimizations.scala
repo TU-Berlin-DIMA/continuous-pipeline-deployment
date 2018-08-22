@@ -27,7 +27,8 @@ class ContinuousDeploymentWithOptimizations(val history: String,
                                             val daysToProcess: Array[Int],
                                             slack: Int = 10,
                                             sampler: Sampler,
-                                            otherParams: Params) extends Deployment(slack, sampler) {
+                                            otherParams: Params,
+                                            online: Boolean = true) extends Deployment(slack, sampler) {
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     // create rdd of the initial data that the pipeline was trained with
     val data = streamingContext.sparkContext
@@ -61,7 +62,8 @@ class ContinuousDeploymentWithOptimizations(val history: String,
       // update and transform using the pipeline and cache the materialized data
       val pRDD = pipeline.updateAndTransform(rdd).setName(s"RDD_$time").persist(StorageLevel.MEMORY_ONLY)
 
-      pipeline.train(pRDD)
+      if (online) pipeline.train(pRDD)
+
       rdd.unpersist()
 
       if (time % slack == 0) {

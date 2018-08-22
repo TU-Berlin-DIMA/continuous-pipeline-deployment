@@ -23,13 +23,13 @@ abstract class Profile {
   val MINI_BATCH: Double = 0.1
   val STEP_SIZE: Double = 0.001
   val UPDATER: String = "adam"
+  val ONLINE = true
   val BATCH_EVALUATION: String = ""
   val NUM_PARTITIONS: Int = 8
   val TRAINING_FREQUENCY: Int
   val FAILED_PIPELINE: String = "None"
   val INIT_TIME: Int = 1
   val ROLLING_WINDOW: Int
-
   val PROFILE_NAME: String
 }
 

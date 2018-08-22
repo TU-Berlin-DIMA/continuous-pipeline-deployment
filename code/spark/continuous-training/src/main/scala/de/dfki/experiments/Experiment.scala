@@ -63,6 +63,7 @@ abstract class Experiment {
     val rollingWindow = parser.getInteger("rolling-window", profileFromArgs.ROLLING_WINDOW)
     val failedPipeline = parser.get("failed-pipeline", profileFromArgs.FAILED_PIPELINE)
     val initTime = parser.getInteger("init-time", profileFromArgs.INIT_TIME)
+    val online = parser.getBoolean("online", profileFromArgs.ONLINE)
 
     Params(inputPath = inputPath,
       streamPath = streamPath,
@@ -88,7 +89,8 @@ abstract class Experiment {
       trainingFrequency = trainingFrequency,
       rollingWindow = rollingWindow,
       failedPipeline = failedPipeline,
-      initTime = initTime)
+      initTime = initTime,
+      online = online)
   }
 
   def getPipeline(spark: SparkContext, params: Params): Pipeline = {
