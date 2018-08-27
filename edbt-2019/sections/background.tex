@@ -64,3 +64,17 @@ To decrease the execution time, one can distribute the large dataset among multi
 During the training, each node computes a partial gradient on a subset of the data in parallel.
 After this step, all the partial gradients are combined to compute the final gradient.
 Distributed SGD significantly reduces the time for executing individual iterations, which results in a reduction in the overall training time.
+
+\subsection{Tuning Periodical Deployment}
+\hl{Two sets of hyperparameters control the performance of the periodical deployment approach.
+The first set, we call the deployment hyperparameters, consists of 2 hyperparameters, which defines how much of the historical data should be used in each retraining and how often each retraining should be performed.
+The second set of hyperparameter, called the training hyperparameters, is to tune the retraining of the model.
+In this work, we are targeting training algorithms based on the Stochastic gradient descent.
+Therefore, the hyperparameters are the learning rate and the sample size.
+
+There are several existing approaches for selecting the training hyperparameters, such as grid search, random search, and sequential model based search [REF].
+The deployment hyperparameters are typically selected to fit the specific use case.
+For example, in many of the real-world use cases, a model is retrained using the entire existing data on a daily basis.
+
+In the next sections, we show that tuning our continuous deployment approach is no more complex than tuning the periodical deployment approach.}
+

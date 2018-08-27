@@ -1,33 +1,240 @@
 \section{Continuous Training Approach} \label{continuous-training-serving}
-In this section, first, we describe how we utilize the properties of the stochastic gradient descent to implement the proactive training.
-Next, we describe the details of the online statistics computation and feature materialization.
-Finally, we demonstrate how our deployment approach improves the existing process of deployment and maintains the quality of the deployed model.
-\subsection{Proactive Training} \label{proactive-training}
-Proactive training is a replacement for the periodical retraining of the deployed model.
-Typically, the retraining is triggered when a condition is met, e.g., the quality of the model drops below a certain value.
-Contrary to the periodical training, in proactive training, the platform continuously update the deployed model using the historical data.
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{../images/continuous-training-details.pdf}
+\caption{Workflow of our continuous deployment approach. (1) The platform converts the data into small units (2) The platform utilizes the deployed pipeline to preprocess the data and transform the raw data into features and store them in the storage. (3) The platform samples the data from the storage. (4) The platform materializes the sampled data (5) Using the sampled data, the deployment platform updates the deployed model.}
+\label{fig:continuous-deployment-details}
+\end{figure*}
 
-We take advantage of the iterative nature of SGD in the design of the proactive training.
-The input to each iteration of SGD is the current weight parameters of the model, a sample of the data points, and an objective function.
-In proactive training, we execute iterations of mini-batch SGD on the deployed model.
-To execute the proactive training, the deployment platform first samples the historical data.
-Then, the platform transforms the data into a set of features using the deployed pipeline.
-Next, the proactive trainer utilizes the transformed features to compute the gradient of the objective function.
-Finally, the deployment platform updates the deployed model using the computed gradient.
+In this section, we describe the details of the continuous training approach.
+Figure \ref{fig:continuous-deployment-details} shows the workflow of our proposed continuous deployment platform.
+The platform processes the incoming training data through 5 stages:\newline
+\textbf{1. Discretizing the data: } 
+To efficiently preprocess the data and update the model, the platform transforms the data into small chunks and stores them in the storage unit. The discretizer assigns a timestamp to every chunk to indicate when the chunk is created. The timestamp acts as both a unique identifier and an indicator of the recency of the chunk.\newline
+\textbf{2. Preprocessing the data: } 
+The platform utilizes the deployed pipeline to preprocess the raw training data chunks and store the result in the storage unit.
+During the preprocessing stage, we utilize \textit{online statistics computation} to compute the required statistics for different pipeline components.
+These statistics speed up the data processing in later stages. \newline
+If the storage unit is full, the platform only stores a reference to the originating raw data chunk.
+If these data chunks are required during the later stages, the platform materializes them on-the-fly. \newline
+\textbf{3. Sampling the data: }
+A sampler unit, samples the data from the storage.
+Different sampling strategies are available to address different use-case requirements.\newline
+\textbf{4. Materializing the data: }
+Depending on the size of the storage unit, some preprocessed chunks are not materilized.
+If the sampler selects some of the unmaterialized chunks, the platform process these chunks using the deployed pipeline and provide the materialized features, through a process called \textit{dynamic materialization}.\newline
+\textbf{5. Updating the model: }
+Using the preprocessed features, the platform then updates the deployed model using a processed called \textit{proactive training}.\newline
 
-The learning rate parameter of SGD has a significant impact on the proactive training.
-To effectively update the deployed model, one has to tune the learning rate.
-Similar to the offline SGD, using a constant or decreasing value for the learning rate results in suboptimal training.
-Adaptive learning rate methods work well in a dynamic environment where the distribution of the data may change over time \cite{zeiler2012adadelta}.
-Therefore, in proactive training, instead of using simple learning rate tuning mechanisms, we utilize the more advanced learning rate adaptation methods.
-The performance of the different learning rate adaptation techniques varies across different datasets.
-To choose the most promising adaptation technique, we rely on hyperparameter tuning during the initial model training on the historical dataset \cite{bergstra2012random}.
-After the initial training, the deployment platform selects the same learning rate adaptation technique for the proactive training.
-Our experiments in Section \ref{evaluation} show that selecting the adaptation technique based on initial training results in a model with the highest quality during the proactive training.
+After the user designs and deploys the pipeline, we rely on the existing big data processing frameworks to perform the discretizatoin and preprocessing.
+The sampling strategy typically depends on the use-case.
+However, different sampling strategies have different implications for the dynamic materialization process.
+In the rest of this section, we first describe the details of the online statistics computation.
+Then we introduce the dynamic materialization approach and the effects of different sampling strategies on the materialization process.
+Finally, we describe the details proactive training method.
 
-The proactive training aims to adapt the deployed model to the recent data items.
-As a result, when sampling the historical data, one has to consider the effect of the sample on the deployed model.
-In Section \ref{sec:system-architecture}, we explain the different sampling strategies.
+\subsection{Online Statistics Computation}\label{online-statistics-computation}
+Some components of the machine learning pipeline, such as the standard scaler or the one-hot encoder, require statistics over the dataset to be calculated before they process the data.
+Computing these statistics require scans of the data.
+In our deployment platform, we utilize online training as well as proactive training.
+During the online update of the deployed model, we compute all the necessary statistics for every component.
+Every pipeline component will first read the incoming data, then it update its underlying statistics, and finally transforms and forwards the data to the next component.
+Online computation of the required statistics eliminates the need to recompute the same statistics during the proactive training.
+However, online statistics computation is only possible for certain types of pipeline components.
+The support for stateless pipeline operations (one-to-one mapping) is trivial.
+These operations require no update and they are only utilized to transform the data for the next pipeline components.
+For stateful operations, since the statistics update occurs during the online data processing, the platform can only update the statistics that can be computed incrementally.
+Many of well known data preprocessing components such as standardization and one-hot encoding require statistics that can be computed incrementally.
+However, some pipeline components require statistics that cannot be updated incrementally (such as percentile and count hash table) and they have to revisit the entire data points whenever new data becomes available.
+For such components, when possible, we can utilize probabilistic and approximate data structures (such as bloom filters or count-min sketch \cite{cormode2005improved}) to enable online updates of such components as well.
+Otherwise, we do not provide support for deployment of pipeline containing components that require a scan of the entire historical data points when new data becomes available.
+The platform can also facilitate the online statistics computation for custom pipeline components.
+\todo[inline]{Add this to system architecture}
+In Section \ref{sec:system-architecture}, we describe how users can incorporate this feature in their custom pipeline components.
+
+\subsection{Dynamic Materialization}
+In order to update the statistics of the pipeline components, each component must transform the data and passes it to the next component.
+At the end of this process, the pipeline has transformed the data chunks into feature chunks that the model will utilize during the training process.
+In our continuous training platform, we repeatedly sample the feature chunks to update the model.
+Storing the chunks as materialized features greatly reduces the processing time as the entire data preprocessing steps can be skipped.
+However, in presence of limited storage capacity, one has to consider the effect storing the materialized  features.
+
+To address the storage capacity issue, we utilize dynamic materialization.
+Each feature chunks is accompanied by a unique identifier (the creation timestamp) and a reference to the raw data chunk that it is based on.
+In dynamic materialization, when the storage limit is reached, the content of the oldest materialized feature chunks are removed from the storage and only the unique identifier and the reference to the raw data chunk is kept (similar to cache eviction).
+The next time the sampler selects one or more evicted chunks, the platform first re-materializes each chunk by applying the pipeline components to the raw data chunk.
+Figure \ref{fig:dynamic-materialization-process} shows the process of dynamic materialization in two possible scenarios.
+For both scenarios, there are a total 6 data chunks available in the storage ($t_0$ to $t_5$).
+The sampling operation selects the chunks at $t_0$, $t_2$, and $t_5$.
+In first scenario (left), the feature chunks are all materialized.
+Therefore, the platform directly utilizes them to update the model.
+In the second scenario (right), the platform has previously evicted some of the materialized feature chunks due to storage limits.
+In this scenario, the platform first re-materializes these chunks using the deployed pipeline components before updating the model.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=\columnwidth]{../images/dynamic-materialization.pdf}
+\caption{Dynamic Materialization process. (left) all feature chunks are materialized. (right) some feature chunks are evicted}
+\label{fig:dynamic-materialization-process}
+\end{figure}
+It is important to note that the continuous training platform assumes the raw data chunks are always stored and are available for re-materialization.
+If some of the raw data chunks are not available, the platform simply ignores these chunks during the sampling operation.
+This is analogous to the retraining deployment approach.
+If there is not enough space to store all the historical and incoming data, then at every retraining, the platform only utilizes the available data in the storage.
+
+\subsubsection{Storage requirement for materialized feature chunks.} 
+In order to estimate the required storage for materializing the preprocessed features, we investigate the storage complexity of different pipeline components.
+Table \ref{pipeline-component-description} shows the categories of the pipeline components and their characteristics.
+\begin{table}[h!]
+\centering
+\begin{tabular}{lll}
+\hline
+\textbf{Component type}  & \textbf{Unit of work} &\textbf{Characteristics}  \\
+\hline
+data transformation			& data point (row)       	  & filtering or        \\
+			&  	  &  one-to-one mapping        \\
+feature selection            & feature (column)             & selecting a subset of   \\
+			&  	  &   the columns        \\
+feature extraction & feature (column) & creating new columns \\
+\hline
+\end{tabular}
+\caption{Description of the pipeline component types. Unit of work: \textit{row} indicates the component operates on one or multiple rows at a time, \textit{column} indicates the component operates on one or multiple columns at a time}  
+\label{pipeline-component-description}
+\end{table}
+Assuming the size of the input data is $n$, the storage complexity of data transformation and feature selection operations are linear in terms of the input size ($O(n)$).
+This is because, these operations either have a one to one mapping (normalization) or they reduce the size of the data (anomaly filtering and feature selecting).
+The case for feature extraction is more complicated as there are different types of feature extraction operations.
+In many cases, during the extraction process, a new feature is created from the combination of one or multiple existing features, such as summation or multiplication of existing features. 
+In this case, the storage complexity is $O(n)$ as the increase in size is linear with respect to the input size.
+In some cases, feature extraction process may generate many new features from a small subset of the features.
+Prominent examples of such operations are one-hot encoding and feature hashing.
+One-hot encoding converts a column of the data with categorical values into several columns (1 column for each unique value).
+For every value in the original column, the encoded representation has the value of $1$ in the column the value represents and $0$ in all the other columns.
+Let us represent the number of the unique values in the column as $m$.
+The storage complexity of the the one-hot encoding operation is thus $O(mn)$.
+Based on the value of $m$, three scenarios can occur:
+\begin{itemize}
+\item if $m \ll n$, then the storage complexity is $O(n)$
+\item if $m \approx n$, then the storage complexity is $O(n^2)$
+\item if $m \gg n$, then the storage complexity is $\Omega (n^2)$
+\end{itemize}
+In the first two cases, we have an upper bound on the storage requirements.
+However, the last case is data-dependent and the size of the materialized features may have a polynomial growth rate with respect to the size of the original data, which may render storage of a few features chunks impossible.
+However, both one-hot encoding and feature hashing produce sparse data.
+Therefore, by utilizing sparse data representation, we can guarantee an storage complexity of $O(n)$ in all three cases.
+
+Since the storage requirement is in worst-case scenario linear with respect to the size of the raw data and the eviction policy gradually dematerializes the older feature chunks, we can safely assume size of the materialized features will not exceed the storage capacity.
+
+\subsubsection{Effects of different sampling strategies on dynamic materialization.}
+The choice of the sampling strategy affects the dynamic materialization process.
+Here, we provide an estimate of how much the dynamic materialization reduces the processing overhead for each sampling type.
+
+Assume $n$ is the total number of the chunks, $m$ is the number of chunks that are materialized, and $s$ is the number of sampled chunks, where $s < m < s$. 
+We donate the materialization utilization probably (the average ratio of the materialized feature chunks being used in the training) as $P$.
+\todo[inline]{these computations are all based on sampling with replacement. Sampling without replacement is a bit more complicated. If Alireza and Tilmann like this section, then I will add the sampling without replacement calculations.}
+
+\textbf{Random Sampling:} 
+In random sampling each chunk has the same probability of being sampled.
+Therefore, $P$ is computed as follows:
+\begin{align}
+P &= p(1\ out\ of\ m) + p(2\ out\ of\ m) + ... + p(s\ out\ of\ m) \\
+&= \dfrac{m}{n} + \biggl(\dfrac{m}{n}\biggr) ^2 + ... + \biggl(\dfrac{m}{n}\biggr) ^s \\
+& = \dfrac{m}{n}\Biggl(\dfrac{1-\biggl(\dfrac{m}{n}\biggr) ^{s+1}}{1 - \dfrac{m}{n }}\Biggr)
+\end{align}
+
+\textbf{Window-based Sampling:}
+In window based sampling, we have an extra parameter $w$ which indicates the number of chunks in the rolling window.
+There are two cases to consider in the window-based sampling.\newline
+If $w < m \Rightarrow P = 1$.
+If $w > m$ then: 	
+\begin{align}
+P &= p(1\ out\ of\ m) + p(2\ out\ of\ m) + ... + (s\ out\ of\ m) \\
+&= \dfrac{m}{w} + \biggl(\dfrac{m}{w}\biggr) ^2 + ... + \biggl(\dfrac{m}{w}\biggr) ^s \\
+& = \dfrac{m}{w}\Biggl(\dfrac{1-\biggl(\dfrac{m}{w}\biggr) ^{s+1}}{1 - \dfrac{m}{w}}\Biggr)
+\end{align}
+
+\textbf{Time-based Sampling:}
+In time-based sampling, we assign a weight to each chunk indicating how recent the data arrived at the system.
+Therefore, for the $n$ chunks, the weights are assigned using the following formula:
+$w_i = \dfrac{i}{\dfrac{n(n+1)}{2}}, \ i = 1 ... n$
+The probability of $p(1\ out\ of M )$ is computed as:
+\begin{align}
+p(1\ out\ of m ) &= w_{n-m} + w_{n-m+1}+ ... + w{n}\\
+&=\dfrac{n-m}{\dfrac{n(n+1)}{2}} + ... + \dfrac{n}{\dfrac{n(n+1)}{2}} \\
+&= \dfrac{m(2n-m)}{n(n+1)}
+\end{align}
+Therefore in the time-based sampling, the materialization utilization is:
+\begin{align}
+P &= p(1\ out\ of\ m) + p(2\ out\ of\ m) + ... + (s\ out\ of\ m) \\
+&= \dfrac{m(2n-m)}{n(n+1)} + \biggl(\dfrac{m(2n-m)}{n(n+1)}\biggr) ^2 + ... + \biggl(\dfrac{m(2n-m)}{n(n+1)}\biggr) ^s \\
+& = \dfrac{m(2n-m)}{n(n+1)}\Biggl(\dfrac{1-\biggl(\dfrac{m(2n-m)}{n(n+1)}\biggr) ^{s+1}}{1 - \dfrac{m(2n-m)}{n(n+1)}}\Biggr)
+\end{align}
+
+
+Equations (2), (5), and (11) are geometric series and following the formula of the sum of the terms in a geometric series we arrive at the final value for each sampling strategy.
+To demonstrate with a real use-case, consider an storage system of a total of 120 GB.
+We divide the data into chunks of 1 MB. 
+Let's assume $n=10000$ (100 GB), $m=2000$ (20 GB), $w=5000$, and $s=100$.
+With these values, the materialization utilization $P$ is $0.25$, $0.66$, and $0.49$ for the random, window-based and time-based sampling respectively.
+The theoretical analysis in this section provides an estimate of how much the dynamic optimization can reduce the processing overhead.
+In our experiments, we also empirically show the effect of dynamic optimization on real-world datasets.
+
+\subsection{Proactive Training}\label{proactive-training}
+Updating the model is the last step of our continuous deployment platform.
+We update the model through the proactive training process.
+Unlike, the full retraining process that is triggered by a certain event (such as a drop in the quality or certain amount of time elapsed since the last retraining), proactive training continuously updates the deployed model.
+Proactive training utilizes the mini-batch stochastic gradient descent to update the model incrementally.
+Each instance of the proactive training, is one iteration of the mini-batch SGD.
+Algorithm \ref{mini-batch-SGD} shows the pseudocode of the mini-batch SGD algorithm
+\begin{algorithm}
+\caption{mini-batch Stochastic Gradient Descent}\label{mini-batch-SGD}
+\begin{algorithmic}[1]
+\Require  $D=$ training dataset
+\Ensure $m=$ trained model
+\For {$i = 1 ... N$}
+	\State $s_i =$ sample from $D$
+	\State $g = \nabla J(s_i, m_{i-1})$
+	\State $m_i = m_{i-1} - \eta_{i-1}g$
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+Since the platform executes the proactive training in arbitrary intervals, we must ensure the iterations of the mini-batch SGD are independent of each other.
+According to the mini-batch SGD algorithm, each iteration of the SGD only requires the model parameters ($m_{i-1}$) and the learning rate parameters ($\eta_{i-1}$) of the previous iterations.
+Given these parameters, iterations of SGD are conditionally independent of each other.
+In order to execute the proactive training, the deployment platform only needs to store the model parameters (model weight vector) and the learning rate parameters (past gradient and momentum vectors for the advanced learning rate adaptation methods).
+
+By proactively updating the deployed model, the platform ensures the deployed model stays up-to-date and provides more accurate predictions.
+
+
+
+
+%\subsection{Proactive Training} \label{proactive-training}
+%Proactive training is a replacement for the periodical retraining of the deployed model.
+%Typically, the retraining is triggered when a condition is met, e.g., the quality of the model drops below a certain value.
+%Contrary to the periodical training, in proactive training, the platform continuously update the deployed model using the historical data.
+%
+%We take advantage of the iterative nature of SGD in the design of the proactive training.
+%The input to each iteration of SGD is the current weight parameters of the model, a sample of the data points, and an objective function.
+%In proactive training, we execute iterations of mini-batch SGD on the deployed model.
+%To execute the proactive training, the deployment platform first samples the historical data.
+%Then, the platform transforms the data into a set of features using the deployed pipeline.
+%Next, the proactive trainer utilizes the transformed features to compute the gradient of the objective function.
+%Finally, the deployment platform updates the deployed model using the computed gradient.
+%
+%The learning rate parameter of SGD has a significant impact on the proactive training.
+%To effectively update the deployed model, one has to tune the learning rate.
+%Similar to the offline SGD, using a constant or decreasing value for the learning rate results in suboptimal training.
+%Adaptive learning rate methods work well in a dynamic environment where the distribution of the data may change over time \cite{zeiler2012adadelta}.
+%Therefore, in proactive training, instead of using simple learning rate tuning mechanisms, we utilize the more advanced learning rate adaptation methods.
+%The performance of the different learning rate adaptation techniques varies across different datasets.
+%To choose the most promising adaptation technique, we rely on hyperparameter tuning during the initial model training on the historical dataset \cite{bergstra2012random}.
+%After the initial training, the deployment platform selects the same learning rate adaptation technique for the proactive training.
+%Our experiments in Section \ref{evaluation} show that selecting the adaptation technique based on initial training results in a model with the highest quality during the proactive training.
+%
+%The proactive training aims to adapt the deployed model to the recent data items.
+%As a result, when sampling the historical data, one has to consider the effect of the sample on the deployed model.
+%In Section \ref{sec:system-architecture}, we explain the different sampling strategies.
 %A time-based sampling approach of the historical data emphasizes the more recent data points and adapts the deployed model to the changes in the data distribution.
 %In Section \ref{evaluation}, we evaluate the quality of the deployed model when different sampling techniques are utilized (time-based, uniform, and window-based).
 %We show that the time-based sampling results in a model with better quality.
@@ -50,57 +257,57 @@ In Section \ref{sec:system-architecture}, we explain the different sampling stra
 %We describe a method for tuning the scheduling rate based on the rate of the incoming training data.
 %The scheduling rate is increased as the rate of the incoming training data increases and vice versa.
 %This helps in adapting the model to the new training data.}
-\subsection{Online Statistics Computation and Feature Materialization}
-Before applying the proactive training, the deployment platform needs to transform the data using the deployed pipeline.
-Some components of the machine learning pipeline, such as the standard scaler or the one-hot encoder, require statistics over the dataset to be calculated before they process the data.
-Computing these statistics require scans of the data.
-In our deployment platform, we utilize online training as well as proactive training.
-During the online update of the deployed model, we compute all the necessary statistics for every component.
-Online computation of the required statistics eliminates the need to recompute the same statistics during the proactive training.
+%\subsection{Online Statistics Computation and Feature Materialization}
+%Before applying the proactive training, the deployment platform needs to transform the data using the deployed pipeline.
+%Some components of the machine learning pipeline, such as the standard scaler or the one-hot encoder, require statistics over the dataset to be calculated before they process the data.
+%Computing these statistics require scans of the data.
+%In our deployment platform, we utilize online training as well as proactive training.
+%During the online update of the deployed model, we compute all the necessary statistics for every component.
+%Online computation of the required statistics eliminates the need to recompute the same statistics during the proactive training.
+%
+%Moreover, during the online learning, the deployed pipeline transforms the incoming data to a set of features before updating the model.
+%Given enough storage space, our deployment platform first assigns timestamps and then materializes the preprocessed features by storing them in a cache.
+%Therefore, while performing the proactive training, instead of sampling from the raw historical data, the deployment platform samples the features directly from the cache.
+%Materializing the features eliminates the data preprocessing part of the pipeline during the proactive training which significantly reduces the total training time for the proactive training.
 
-Moreover, during the online learning, the deployed pipeline transforms the incoming data to a set of features before updating the model.
-Given enough storage space, our deployment platform first assigns timestamps and then materializes the preprocessed features by storing them in a cache.
-Therefore, while performing the proactive training, instead of sampling from the raw historical data, the deployment platform samples the features directly from the cache.
-Materializing the features eliminates the data preprocessing part of the pipeline during the proactive training which significantly reduces the total training time for the proactive training.
-
-\textit{Dynamic model size.}
-Some components of the machine learning pipeline generate new features.
-For example, one-hot encoding and data bucketization, both may generate new features after processing new training data.
-When such components exist in the deployed pipeline, the deployment platform keeps track of the number of features after the data preprocessing.
-When the pipeline generates new features, the deployment platform adjusts the size of the deployed model.
-\subsection{Improved Deployment Process}
-\begin{figure*}[t]
-\begin{subfigure}{\columnwidth}
-\centering
-\includegraphics[width=\columnwidth]{../images/generic-motivational-example-v2.pdf}
-\caption{Periodical deployment of machine learning pipelines}
-\label{fig:motivational-example}
-\end{subfigure}%
-\begin{subfigure}{\columnwidth}
-\centering
-\includegraphics[width=\columnwidth]{../images/generic-improved-example-v2.pdf}
-\caption{Continuous deployment of machine learning applications}
-\label{fig:improved-example}
-\end{subfigure}
-\caption{Machine Learning Deployment Platforms}
-\label{deployment-processes}
-\end{figure*}
-Figure \ref{deployment-processes} shows the differences in deployment processes of the periodical and continuous training approaches.
-Figure \ref{fig:motivational-example} shows the process of the periodical deployment approach.
-The process starts with an offline training \circled{1}.
-During the offline training, a user designs a machine learning pipeline that consists of several data and feature preprocessing steps. 
-After the data preprocessing step, the user trains a machine learning model by utilizing a batch training algorithm.
-During the deployment step, the user deploys the model and the pipeline into the deployment platform \circled{2}.
-To perform inference, the deployment platform directs the incoming prediction queries through the preprocessing steps before utilizing the model to predict the label \circled{3}.
-During the online update step, the deployment platform directs the training data through the preprocessing steps of the pipeline and then, using an online training algorithm, the platform updates the model.
-Finally, the deployment platform accommodates periodical retraining of the pipeline by either automatically triggering a batch training or prompting the user to train and redeploy a new model to the deployment platform \circled{4}.
-During the periodical retraining, the deployment platform has to disable the online updating of the model.
-
-Figure \ref{fig:improved-example} shows how our continuous training approach improves the existing deployment process.
-Similar to the current deployment process, a user first trains a pipeline \circled{1} and deploy it into the deployment platform \circled{2}.
-The deployment platform utilizes the deployed pipeline and model to answer prediction queries and update the model using the incoming training data \circled{3}.
-After transforming the incoming data into a set of features, the deployment platform stores the transformed features inside a cache.
-During the proactive training, the platform samples the materialized features and computes the gradient using the sample.
-Finally, the platform updates the deployed model using the gradient \circled{4}.
-In the new deployment approach, the platform continuously updates the pipeline and the deployed model without requiring a full retraining over the historical data.
-As a result, the deployment platform ensures the model is always up-to-date.
+%\textit{Dynamic model size.}
+%Some components of the machine learning pipeline generate new features.
+%For example, one-hot encoding and data bucketization, both may generate new features after processing new training data.
+%When such components exist in the deployed pipeline, the deployment platform keeps track of the number of features after the data preprocessing.
+%When the pipeline generates new features, the deployment platform adjusts the size of the deployed model.
+%\subsection{Improved Deployment Process}
+%\begin{figure*}[t]
+%\begin{subfigure}{\columnwidth}
+%\centering
+%\includegraphics[width=\columnwidth]{../images/generic-motivational-example-v2.pdf}
+%\caption{Periodical deployment of machine learning pipelines}
+%\label{fig:motivational-example}
+%\end{subfigure}%
+%\begin{subfigure}{\columnwidth}
+%\centering
+%\includegraphics[width=\columnwidth]{../images/generic-improved-example-v2.pdf}
+%\caption{Continuous deployment of machine learning applications}
+%\label{fig:improved-example}
+%\end{subfigure}
+%\caption{Machine Learning Deployment Platforms}
+%\label{deployment-processes}
+%\end{figure*}
+%Figure \ref{deployment-processes} shows the differences in deployment processes of the periodical and continuous training approaches.
+%Figure \ref{fig:motivational-example} shows the process of the periodical deployment approach.
+%The process starts with an offline training \circled{1}.
+%During the offline training, a user designs a machine learning pipeline that consists of several data and feature preprocessing steps. 
+%After the data preprocessing step, the user trains a machine learning model by utilizing a batch training algorithm.
+%During the deployment step, the user deploys the model and the pipeline into the deployment platform \circled{2}.
+%To perform inference, the deployment platform directs the incoming prediction queries through the preprocessing steps before utilizing the model to predict the label \circled{3}.
+%During the online update step, the deployment platform directs the training data through the preprocessing steps of the pipeline and then, using an online training algorithm, the platform updates the model.
+%Finally, the deployment platform accommodates periodical retraining of the pipeline by either automatically triggering a batch training or prompting the user to train and redeploy a new model to the deployment platform \circled{4}.
+%During the periodical retraining, the deployment platform has to disable the online updating of the model.
+%
+%Figure \ref{fig:improved-example} shows how our continuous training approach improves the existing deployment process.
+%Similar to the current deployment process, a user first trains a pipeline \circled{1} and deploy it into the deployment platform \circled{2}.
+%The deployment platform utilizes the deployed pipeline and model to answer prediction queries and update the model using the incoming training data \circled{3}.
+%After transforming the incoming data into a set of features, the deployment platform stores the transformed features inside a cache.
+%During the proactive training, the platform samples the materialized features and computes the gradient using the sample.
+%Finally, the platform updates the deployed model using the gradient \circled{4}.
+%In the new deployment approach, the platform continuously updates the pipeline and the deployed model without requiring a full retraining over the historical data.
+%As a result, the deployment platform ensures the model is always up-to-date.
