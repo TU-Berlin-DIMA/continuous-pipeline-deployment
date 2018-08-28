@@ -6,27 +6,30 @@
 \label{fig:continuous-deployment-details}
 \end{figure*}
 
-In this section, we describe the details of the continuous training approach.
-Figure \ref{fig:continuous-deployment-details} shows the workflow of our proposed continuous deployment platform.
+In this section, we describe the details of our continuous training approach.
+Figure \ref{fig:continuous-deployment-details} shows the workflow of our proposed platform.
 The platform processes the incoming training data through 5 stages:\newline
 \textbf{1. Discretizing the data: } 
-To efficiently preprocess the data and update the model, the platform transforms the data into small chunks and stores them in the storage unit. The discretizer assigns a timestamp to every chunk to indicate when the chunk is created. The timestamp acts as both a unique identifier and an indicator of the recency of the chunk.\newline
+To efficiently preprocess the data and update the model, the platform transforms the data into small chunks and stores them in the storage unit. 
+The platform assigns a timestamp to every chunk indicating their creation time.
+The timestamp acts as both a unique identifier and an indicator of the recency of the chunk.\newline
 \textbf{2. Preprocessing the data: } 
-The platform utilizes the deployed pipeline to preprocess the raw training data chunks and store the result in the storage unit.
+The platform utilizes the deployed pipeline to preprocess the raw training data chunks and transform them into feature chunks.
+Then, the platform stores the feature chunks in the storage unit.
 During the preprocessing stage, we utilize \textit{online statistics computation} to compute the required statistics for different pipeline components.
-These statistics speed up the data processing in later stages. \newline
+These statistics speed up the data processing in later stages.
 If the storage unit is full, the platform only stores a reference to the originating raw data chunk.
-If these data chunks are required during the later stages, the platform materializes them on-the-fly. \newline
+If a feature chunk is required during the later stages, the platform materializes them on-the-fly. \newline
 \textbf{3. Sampling the data: }
-A sampler unit, samples the data from the storage.
+A sampler unit samples the feature chunks from the storage.
 Different sampling strategies are available to address different use-case requirements.\newline
 \textbf{4. Materializing the data: }
-Depending on the size of the storage unit, some preprocessed chunks are not materilized.
-If the sampler selects some of the unmaterialized chunks, the platform process these chunks using the deployed pipeline and provide the materialized features, through a process called \textit{dynamic materialization}.\newline
+Depending on the size of the storage unit, some preprocessed feature chunks (results of step 2) are not materialized.
+If the sampler selects these feature chunks, the platform reprocesses these feature chunks using the deployed pipeline to provide the materialized features chunks through a process called \textit{dynamic materialization}.\newline
 \textbf{5. Updating the model: }
-Using the preprocessed features, the platform then updates the deployed model using a processed called \textit{proactive training}.\newline
+By utilizing the preprocessed feature chunks, the platform updates the deployed model through a process called \textit{proactive training}.\newline
 
-After the user designs and deploys the pipeline, we rely on the existing big data processing frameworks to perform the discretizatoin and preprocessing.
+After the user designs and deploys the pipeline, we rely on the existing big data processing frameworks to perform the discretization and preprocessing.
 The sampling strategy typically depends on the use-case.
 However, different sampling strategies have different implications for the dynamic materialization process.
 In the rest of this section, we first describe the details of the online statistics computation.
@@ -34,42 +37,48 @@ Then we introduce the dynamic materialization approach and the effects of differ
 Finally, we describe the details proactive training method.
 
 \subsection{Online Statistics Computation}\label{online-statistics-computation}
-Some components of the machine learning pipeline, such as the standard scaler or the one-hot encoder, require statistics over the dataset to be calculated before they process the data.
-Computing these statistics require scans of the data.
+Some components of the machine learning pipeline, such as the standard scaler or the one-hot encoder, require some statistics of the dataset before they process the data.
+Computing these statistics requires scans of the data.
 In our deployment platform, we utilize online training as well as proactive training.
 During the online update of the deployed model, we compute all the necessary statistics for every component.
-Every pipeline component will first read the incoming data, then it update its underlying statistics, and finally transforms and forwards the data to the next component.
-Online computation of the required statistics eliminates the need to recompute the same statistics during the proactive training.
-However, online statistics computation is only possible for certain types of pipeline components.
-The support for stateless pipeline operations (one-to-one mapping) is trivial.
-These operations require no update and they are only utilized to transform the data for the next pipeline components.
+Every pipeline component first reads the incoming data.
+Then it updates its underlying statistics.
+Finally, the component transforms and forwards the data to the next component.
+Online computation of the required statistics eliminates the need to recompute the same statistics during the dynamic materialization and proactive training.
+
+Online statistics computation is only possible for certain types of pipeline components.
+The support for stateless pipeline operations is trivial.
+These operations require no update.
+They are only utilized to transform the data for the following pipeline components.
 For stateful operations, since the statistics update occurs during the online data processing, the platform can only update the statistics that can be computed incrementally.
-Many of well known data preprocessing components such as standardization and one-hot encoding require statistics that can be computed incrementally.
-However, some pipeline components require statistics that cannot be updated incrementally (such as percentile and count hash table) and they have to revisit the entire data points whenever new data becomes available.
-For such components, when possible, we can utilize probabilistic and approximate data structures (such as bloom filters or count-min sketch \cite{cormode2005improved}) to enable online updates of such components as well.
-Otherwise, we do not provide support for deployment of pipeline containing components that require a scan of the entire historical data points when new data becomes available.
+Many of the well-known data preprocessing components (such as standardization and one-hot encoding) require statistics that can be computed incrementally.
+However, some pipeline components require statistics that cannot be updated incrementally (such as percentile).
+For these types of statistics, the pipeline component has to rescan the entire data points whenever new data becomes available.
+For such components, when possible, we can utilize probabilistic and approximate data structures (such as bloom filters or count-min sketch \cite{cormode2005improved}).
+Otherwise, we do not provide support for deployment of pipelines containing components that require a scan of the entire historical data whenever new data becomes available.
+
 The platform can also facilitate the online statistics computation for custom pipeline components.
 \todo[inline]{Add this to system architecture}
-In Section \ref{sec:system-architecture}, we describe how users can incorporate this feature in their custom pipeline components.
+In Section \ref{sec:system-architecture}, we describe how users can incorporate this feature into their custom pipeline components.
 
 \subsection{Dynamic Materialization}
 In order to update the statistics of the pipeline components, each component must transform the data and passes it to the next component.
 At the end of this process, the pipeline has transformed the data chunks into feature chunks that the model will utilize during the training process.
 In our continuous training platform, we repeatedly sample the feature chunks to update the model.
-Storing the chunks as materialized features greatly reduces the processing time as the entire data preprocessing steps can be skipped.
-However, in presence of limited storage capacity, one has to consider the effect storing the materialized  features.
+Storing the chunks as materialized features greatly reduces the processing time as the entire data preprocessing steps can be skipped during the model update.
+However, in presence of a limited storage capacity, one has to consider the effect of storing the materialized feature chunks.
 
 To address the storage capacity issue, we utilize dynamic materialization.
-Each feature chunks is accompanied by a unique identifier (the creation timestamp) and a reference to the raw data chunk that it is based on.
-In dynamic materialization, when the storage limit is reached, the content of the oldest materialized feature chunks are removed from the storage and only the unique identifier and the reference to the raw data chunk is kept (similar to cache eviction).
-The next time the sampler selects one or more evicted chunks, the platform first re-materializes each chunk by applying the pipeline components to the raw data chunk.
+While creating the feature chunks, the platform assigns a unique identifier (the creation timestamp) and a reference to the raw data chunk.
+In dynamic materialization, when the size of the store feature chunks exceeds the storage capacity, the platform removes the content of the oldest materialized feature chunks from the storage and only keeps the unique identifier and the reference to the raw data chunk (similar to cache eviction).
+The next time the sampler selects one or more of the evicted feature chunks, the platform re-materializes each feature chunk from the raw data chunk by utilizing the deployed pipeline.
 Figure \ref{fig:dynamic-materialization-process} shows the process of dynamic materialization in two possible scenarios.
-For both scenarios, there are a total 6 data chunks available in the storage ($t_0$ to $t_5$).
+For both scenarios, there are a total 6 data chunks (raw and feature) available in the storage (with timestamps $t_0$ to $t_5$).
 The sampling operation selects the chunks at $t_0$, $t_2$, and $t_5$.
-In first scenario (left), the feature chunks are all materialized.
+In the first scenario (left), the feature chunks are all materialized.
 Therefore, the platform directly utilizes them to update the model.
-In the second scenario (right), the platform has previously evicted some of the materialized feature chunks due to storage limits.
-In this scenario, the platform first re-materializes these chunks using the deployed pipeline components before updating the model.
+In the second scenario (right), the platform has previously evicted some of the materialized feature chunks due to the limit on the storage capacity.
+In this scenario, the platform first re-materializes the evicted chunks using the deployed pipeline components before updating the model.
 
 \begin{figure}[h]
 \centering
@@ -78,12 +87,12 @@ In this scenario, the platform first re-materializes these chunks using the depl
 \label{fig:dynamic-materialization-process}
 \end{figure}
 It is important to note that the continuous training platform assumes the raw data chunks are always stored and are available for re-materialization.
-If some of the raw data chunks are not available, the platform simply ignores these chunks during the sampling operation.
-This is analogous to the retraining deployment approach.
-If there is not enough space to store all the historical and incoming data, then at every retraining, the platform only utilizes the available data in the storage.
+If some of the raw data chunks are not available, the platform ignores these chunks during the sampling operation.
+A similar issue arises in the periodical deployment approach.
+If there is not enough space to store all the historical and incoming data, at every retraining, the platform only utilizes the available data in the storage.
 
 \subsubsection{Storage requirement for materialized feature chunks.} 
-In order to estimate the required storage for materializing the preprocessed features, we investigate the storage complexity of different pipeline components.
+In order to estimate the storage requirement for the preprocessed feature chunks, we investigate the storage complexity of different pipeline components in terms of the input size (raw data chunks).
 Table \ref{pipeline-component-description} shows the categories of the pipeline components and their characteristics.
 \begin{table}[h!]
 \centering
@@ -102,16 +111,16 @@ feature extraction & feature (column) & creating new columns \\
 \label{pipeline-component-description}
 \end{table}
 Assuming the size of the input data is $n$, the storage complexity of data transformation and feature selection operations are linear in terms of the input size ($O(n)$).
-This is because, these operations either have a one to one mapping (normalization) or they reduce the size of the data (anomaly filtering and feature selecting).
+This is because these operations either perform a one-to-one mapping (normalization) or reduce the size of the data (anomaly filtering and feature selection).
 The case for feature extraction is more complicated as there are different types of feature extraction operations.
-In many cases, during the extraction process, a new feature is created from the combination of one or multiple existing features, such as summation or multiplication of existing features. 
-In this case, the storage complexity is $O(n)$ as the increase in size is linear with respect to the input size.
-In some cases, feature extraction process may generate many new features from a small subset of the features.
+In many cases, the feature extraction process creates a new feature by combining one or more existing features (such as summing or multiplying features together).
+In these cases, the storage complexity is $O(n)$ as the increase in size is linear with respect to the input size.
+In some cases, the feature extraction process may generate many features from a small subset of the existing features.
 Prominent examples of such operations are one-hot encoding and feature hashing.
 One-hot encoding converts a column of the data with categorical values into several columns (1 column for each unique value).
 For every value in the original column, the encoded representation has the value of $1$ in the column the value represents and $0$ in all the other columns.
-Let us represent the number of the unique values in the column as $m$.
-The storage complexity of the the one-hot encoding operation is thus $O(mn)$.
+Let us assume the number of the unique values in the column is $m$.
+Thus, the storage complexity of the one-hot encoding operation is $O(mn)$.
 Based on the value of $m$, three scenarios can occur:
 \begin{itemize}
 \item if $m \ll n$, then the storage complexity is $O(n)$
@@ -119,63 +128,67 @@ Based on the value of $m$, three scenarios can occur:
 \item if $m \gg n$, then the storage complexity is $\Omega (n^2)$
 \end{itemize}
 In the first two cases, we have an upper bound on the storage requirements.
-However, the last case is data-dependent and the size of the materialized features may have a polynomial growth rate with respect to the size of the original data, which may render storage of a few features chunks impossible.
+However, the last case is data-dependent and the size of the materialized features may have a polynomial growth rate with respect to the size of the original data, which may render storage of even a few features chunks impossible.
 However, both one-hot encoding and feature hashing produce sparse data.
-Therefore, by utilizing sparse data representation, we can guarantee an storage complexity of $O(n)$ in all three cases.
+Therefore, by utilizing sparse data representation, we can guarantee a storage complexity of $O(n)$ in all three cases.
 
-Since the storage requirement is in worst-case scenario linear with respect to the size of the raw data and the eviction policy gradually dematerializes the older feature chunks, we can safely assume size of the materialized features will not exceed the storage capacity.
+Since the storage requirement is in worst-case scenario linear with respect to the size of the raw data and the eviction policy gradually dematerializes the older feature chunks, we can safely assume the size of the materialized features will not exceed the storage capacity.
 
-\subsubsection{Effects of different sampling strategies on dynamic materialization.}
-The choice of the sampling strategy affects the dynamic materialization process.
-Here, we provide an estimate of how much the dynamic materialization reduces the processing overhead for each sampling type.
+\subsubsection{Effects of sampling strategies on the dynamic materialization.}
+The choice of the sampling strategy affects the efficiency of the dynamic materialization.
+Here, we analyze the effects of dynamic materialization in reducing the data processing overhead.
 
-Assume $n$ is the total number of the chunks, $m$ is the number of chunks that are materialized, and $s$ is the number of sampled chunks, where $s < m < s$. 
-We donate the materialization utilization probably (the average ratio of the materialized feature chunks being used in the training) as $P$.
-\todo[inline]{these computations are all based on sampling with replacement. Sampling without replacement is a bit more complicated. If Alireza and Tilmann like this section, then I will add the sampling without replacement calculations.}
+\todo[inline]{these computations are all based on sampling with replacement. Sampling without replacement is a bit more complicated. If Alireza and Tilmann like this section, then I will add the sampling without replacement calculations (replace or add them in the appendix as they will be longer).}
+We define $n$ as the total number of the feature chunks, $m$ as the number of the materialized feature chunks, and $s$ as the number of the sample size, where $s < m < n$. 
+To quantify the efficiency of the dynamic materialization, we introduce the materialization utilization rate:
+\begin{center}
+ $MU = \dfrac{E[mc]}{s}$
+\end{center}
+where $mc$ is the number of the materialized chunks.
+The materialization utilization rate indicates the ratio of the feature chunks that do not require re-materialization before updating the model (a $MU$ of $0.5$ indicates that on average half of the sampled chunks do not need to be re-materialized before updating the model).
+
+The variable $mc$ follows a binomial distribution where the success probability ($p$) is set to the probability of a sampled chunk being selected from the $m$ materialized chunks and the number of trials is set to $s$  (the sample size), i.e., $mc  \sim B(s,p)$.
+Following the binomial theorem, we have:
+\begin{center}
+$E[mc] = sp$
+\end{center}
+The materialization utilization rate can be computed as: 
+\begin{center}
+$MU = \dfrac{sp}{s} = p$
+\end{center}
+Therefore, to find $MU$, we need to compute the value of $p$ for every sampling strategy.
 
 \textbf{Random Sampling:} 
-In random sampling each chunk has the same probability of being sampled.
-Therefore, $P$ is computed as follows:
-\begin{align}
-P &= p(1\ out\ of\ m) + p(2\ out\ of\ m) + ... + p(s\ out\ of\ m) \\
-&= \dfrac{m}{n} + \biggl(\dfrac{m}{n}\biggr) ^2 + ... + \biggl(\dfrac{m}{n}\biggr) ^s \\
-& = \dfrac{m}{n}\Biggl(\dfrac{1-\biggl(\dfrac{m}{n}\biggr) ^{s+1}}{1 - \dfrac{m}{n }}\Biggr)
-\end{align}
-
+In random sampling, each feature chunk has the same probability of being sampled.
+Since there are $m$ materialized chunks and $n$ total chunks, therefore:
+\begin{center}
+$p = \dfrac{m}{n} \Rightarrow MU = \dfrac{m}{n}$ 
+\end{center}
 \textbf{Window-based Sampling:}
-In window based sampling, we have an extra parameter $w$ which indicates the number of chunks in the rolling window.
-There are two cases to consider in the window-based sampling.\newline
-If $w < m \Rightarrow P = 1$.
-If $w > m$ then: 	
-\begin{align}
-P &= p(1\ out\ of\ m) + p(2\ out\ of\ m) + ... + (s\ out\ of\ m) \\
-&= \dfrac{m}{w} + \biggl(\dfrac{m}{w}\biggr) ^2 + ... + \biggl(\dfrac{m}{w}\biggr) ^s \\
-& = \dfrac{m}{w}\Biggl(\dfrac{1-\biggl(\dfrac{m}{w}\biggr) ^{s+1}}{1 - \dfrac{m}{w}}\Biggr)
-\end{align}
-
+In window based sampling, we have an extra parameter $w$ which indicates the number of chunks in the active window.
+Since the sampling operation selects chunks from the active window, therefore:
+\begin{center}
+$p = \dfrac{m}{w} \Rightarrow MU = \dfrac{m}{w}$ 
+\end{center}
 \textbf{Time-based Sampling:}
-In time-based sampling, we assign a weight to each chunk indicating how recent the data arrived at the system.
+In time-based sampling, we assign a weight to each chunk indicating how recent the data has arrived at the system.
 Therefore, for the $n$ chunks, the weights are assigned using the following formula:
+\begin{center}
 $w_i = \dfrac{i}{\dfrac{n(n+1)}{2}}, \ i = 1 ... n$
-The probability of $p(1\ out\ of M )$ is computed as:
-\begin{align}
-p(1\ out\ of m ) &= w_{n-m} + w_{n-m+1}+ ... + w{n}\\
-&=\dfrac{n-m}{\dfrac{n(n+1)}{2}} + ... + \dfrac{n}{\dfrac{n(n+1)}{2}} \\
-&= \dfrac{m(2n-m)}{n(n+1)}
-\end{align}
-Therefore in the time-based sampling, the materialization utilization is:
-\begin{align}
-P &= p(1\ out\ of\ m) + p(2\ out\ of\ m) + ... + (s\ out\ of\ m) \\
-&= \dfrac{m(2n-m)}{n(n+1)} + \biggl(\dfrac{m(2n-m)}{n(n+1)}\biggr) ^2 + ... + \biggl(\dfrac{m(2n-m)}{n(n+1)}\biggr) ^s \\
-& = \dfrac{m(2n-m)}{n(n+1)}\Biggl(\dfrac{1-\biggl(\dfrac{m(2n-m)}{n(n+1)}\biggr) ^{s+1}}{1 - \dfrac{m(2n-m)}{n(n+1)}}\Biggr)
-\end{align}
-
-
-Equations (2), (5), and (11) are geometric series and following the formula of the sum of the terms in a geometric series we arrive at the final value for each sampling strategy.
-To demonstrate with a real use-case, consider an storage system of a total of 120 GB.
+\end{center}
+To compute the probability of success $p$, we have to sum the weights of the last $m$ chunks:
+\begin{align*}
+p &= \sum_{i=n-m+1}^{n} w_i\\
+&=w_{n-m+1} + w_{n-m+2}+ ... + w_n\\
+&=\dfrac{n-m+1}{\dfrac{n(n+1)}{2}} + ... + \dfrac{n}{\dfrac{n(n+1)}{2}} \\
+&= \dfrac{m(2n-m+1)}{n(n+1)}\\
+&\Rightarrow MU = \dfrac{m(2n-m+1)}{n(n+1)}
+\end{align*}
+\textbf{An example use-case:}
+To demonstrate with a real use-case, consider a storage system of a total of 120 GB.
 We divide the data into chunks of 1 MB. 
 Let's assume $n=10000$ (100 GB), $m=2000$ (20 GB), $w=5000$, and $s=100$.
-With these values, the materialization utilization $P$ is $0.25$, $0.66$, and $0.49$ for the random, window-based and time-based sampling respectively.
+With these values, the materialization utilization $MU$ is $0.2$, $0.4$, and $0.345$ for the random, window-based, and time-based sampling respectively.
 The theoretical analysis in this section provides an estimate of how much the dynamic optimization can reduce the processing overhead.
 In our experiments, we also empirically show the effect of dynamic optimization on real-world datasets.
 
@@ -183,9 +196,9 @@ In our experiments, we also empirically show the effect of dynamic optimization 
 Updating the model is the last step of our continuous deployment platform.
 We update the model through the proactive training process.
 Unlike, the full retraining process that is triggered by a certain event (such as a drop in the quality or certain amount of time elapsed since the last retraining), proactive training continuously updates the deployed model.
-Proactive training utilizes the mini-batch stochastic gradient descent to update the model incrementally.
-Each instance of the proactive training, is one iteration of the mini-batch SGD.
-Algorithm \ref{mini-batch-SGD} shows the pseudocode of the mini-batch SGD algorithm
+The proactive training utilizes the mini-batch stochastic gradient descent to update the model incrementally.
+Each instance of the proactive training is analogous to an iteration of the mini-batch SGD.
+Algorithm \ref{mini-batch-SGD} shows the pseudocode of the mini-batch SGD algorithm.
 \begin{algorithm}
 \caption{mini-batch Stochastic Gradient Descent}\label{mini-batch-SGD}
 \begin{algorithmic}[1]
@@ -193,20 +206,18 @@ Algorithm \ref{mini-batch-SGD} shows the pseudocode of the mini-batch SGD algori
 \Ensure $m=$ trained model
 \For {$i = 1 ... N$}
 	\State $s_i =$ sample from $D$
-	\State $g = \nabla J(s_i, m_{i-1})$
-	\State $m_i = m_{i-1} - \eta_{i-1}g$
+	\State $g = \nabla J(s_i, \textcolor{blue}{m_{i-1}})$
+	\State $m_i = \textcolor{blue}{m_{i-1}} - \textcolor{blue}{\eta_{i-1}}g$
 \EndFor
 \end{algorithmic}
 \end{algorithm}
 
-Since the platform executes the proactive training in arbitrary intervals, we must ensure the iterations of the mini-batch SGD are independent of each other.
-According to the mini-batch SGD algorithm, each iteration of the SGD only requires the model parameters ($m_{i-1}$) and the learning rate parameters ($\eta_{i-1}$) of the previous iterations.
+Since the platform executes the proactive training in arbitrary intervals, we must ensure each instance of the proactive training is independent of the previous instances.
+According to the mini-batch SGD algorithm, each iteration of the SGD only requires the model parameters ($m_{i-1}$) and the learning rate parameters ($\eta_{i-1}$) of the previous iterations (line 3 and 4).
 Given these parameters, iterations of SGD are conditionally independent of each other.
-In order to execute the proactive training, the deployment platform only needs to store the model parameters (model weight vector) and the learning rate parameters (past gradient and momentum vectors for the advanced learning rate adaptation methods).
+In order to execute the proactive training, the deployment platform only needs to store the model parameters (model weight vector) and the learning rate parameters (past gradients and momentum vectors for the advanced learning rate adaptation methods).
 
-By proactively updating the deployed model, the platform ensures the deployed model stays up-to-date and provides more accurate predictions.
-
-
+By proactively training the deployed model, the platform ensures the model stays up-to-date and provides accurate predictions.
 
 
 %\subsection{Proactive Training} \label{proactive-training}
