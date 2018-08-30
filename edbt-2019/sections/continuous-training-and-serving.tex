@@ -164,12 +164,14 @@ Since there are $m$ materialized chunks and $n$ total chunks, therefore:
 \begin{center}
 $p = \dfrac{m}{n} \Rightarrow MU = \dfrac{m}{n}$ 
 \end{center}
+
 \textbf{Window-based Sampling:}
 In window based sampling, we have an extra parameter $w$ which indicates the number of chunks in the active window.
 Since the sampling operation selects chunks from the active window, therefore:
 \begin{center}
 $p = \dfrac{m}{w} \Rightarrow MU = \dfrac{m}{w}$ 
 \end{center}
+
 \textbf{Time-based Sampling:}
 In time-based sampling, we assign a weight to each chunk indicating how recent the data has arrived at the system.
 Therefore, for the $n$ chunks, the weights are assigned using the following formula:
@@ -184,6 +186,7 @@ p &= \sum_{i=n-m+1}^{n} w_i\\
 &= \dfrac{m(2n-m+1)}{n(n+1)}\\
 &\Rightarrow MU = \dfrac{m(2n-m+1)}{n(n+1)}
 \end{align*}
+
 \textbf{An example use-case:}
 To demonstrate with a real use-case, consider a storage system of a total of 120 GB.
 We divide the data into chunks of 1 MB. 
