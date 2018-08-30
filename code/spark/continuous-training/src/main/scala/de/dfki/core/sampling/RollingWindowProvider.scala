@@ -24,15 +24,4 @@ class RollingWindowProvider(size: Int = 100) extends Sampler {
     */
   override def name = s"rolling_window-$size"
 
-  override def cache(selected_indices: List[Int]) = {
-    if (cachedIndices.isEmpty) {
-      cachedIndices = selected_indices
-      (selected_indices, List[Int]())
-    } else {
-      //val toCache = (cachedIndices.last + 1 to selected_indices.last).toList
-      val toEvict = (cachedIndices.head until selected_indices.head).toList
-      cachedIndices = selected_indices
-      (List[Int](), toEvict)
-    }
-  }
 }

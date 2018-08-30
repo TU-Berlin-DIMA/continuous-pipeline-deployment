@@ -18,13 +18,6 @@ abstract class Sampler(val rate: Double = 0.1,
 
   @transient lazy val logger = Logger.getLogger(getClass.getName)
 
-  /** provide logic for caching mechanism
-    *
-    * @param selected_indices indices selected for the next proactive training
-    * @return a tupe of (what_indices_to_cache, what_indices_to_uncache)
-    */
-  def cache(selected_indices: List[Int]): (List[Int], List[Int])
-
   /**
     *
     * @param indices original indices
@@ -70,20 +63,6 @@ abstract class Sampler(val rate: Double = 0.1,
     */
   private def select[T](processedRDD: ListBuffer[RDD[T]],
                         indices: List[Int]): List[RDD[T]] = {
-    if (cachingEnabled) {
-      val (toCache, toEvict) = cache(indices)
-      // cache new items
-      toCache.map {
-        i =>
-          processedRDD(i).cache()
-          processedRDD(i).count()
-      }
-      // evict
-      toEvict.map {
-        i => processedRDD(i).unpersist()
-      }
-
-    }
     indices.map(i => processedRDD(i))
 
   }

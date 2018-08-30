@@ -22,16 +22,4 @@ class WindowBasedSampler(size: Int = 100,
 
   override def name = s"window($window)-$size"
 
-  override def cache(selected_indices: List[Int]) = {
-    if (cachedIndices.size < window) {
-      cachedIndices = (0 to cachedIndices.size).toList
-      (List[Int](), List[Int]())
-    } else {
-      //val toCache = (cachedIndices.last + 1 to selected_indices.last).toList
-      val cacheEvictPoint = cachedIndices.last - window
-      val toEvict = (cachedIndices.head until cacheEvictPoint).toList
-      cachedIndices = (cacheEvictPoint to cachedIndices.last).toList
-      (List[Int](), toEvict)
-    }
-  }
 }

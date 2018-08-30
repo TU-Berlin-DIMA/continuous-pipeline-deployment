@@ -11,5 +11,4 @@ class ZeroSampler extends Sampler {
 
   override def name = "empty_sample"
 
-  override def cache(selected_indices: List[Int]) = (List(),List())
 }

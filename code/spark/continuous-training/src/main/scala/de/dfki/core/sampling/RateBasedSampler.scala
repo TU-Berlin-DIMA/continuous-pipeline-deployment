@@ -13,5 +13,4 @@ class RateBasedSampler(rate: Double = 0.1) extends Sampler(rate = rate) {
 
   override def name = s"rate_based-$rate"
 
-  override def cache(selected_indices: List[Int]) = (List(),List())
 }

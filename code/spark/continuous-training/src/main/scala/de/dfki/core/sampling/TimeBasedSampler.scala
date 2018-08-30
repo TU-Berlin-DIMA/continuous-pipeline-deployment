@@ -32,15 +32,4 @@ class TimeBasedSampler(size: Int = 100) extends Sampler {
     */
   override def name = s"time_based-$size"
 
-  override def cache(selected_indices: List[Int]) = {
-    if (cachedIndices.isEmpty) {
-      cachedIndices = selected_indices
-      (selected_indices, List[Int]())
-    } else {
-      val toCach = (selected_indices.toSet -- cachedIndices.toSet).toList
-      val toEvict = (cachedIndices.toSet -- selected_indices.toSet).toList
-      cachedIndices = selected_indices
-      (toCach, toEvict)
-    }
-  }
 }

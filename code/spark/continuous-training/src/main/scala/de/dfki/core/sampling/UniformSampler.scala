@@ -24,5 +24,4 @@ class UniformSampler(size: Int = 100) extends Sampler {
     */
   override def name = s"uniform-$size"
 
-  override def cache(selected_indices: List[Int]) = (List(),List())
 }
