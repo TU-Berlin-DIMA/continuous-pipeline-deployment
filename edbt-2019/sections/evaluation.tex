@@ -202,7 +202,7 @@ As a result, the reduction in the Taxi dataset is greater than the URL dataset.
 \label{optimization-effect}
 \end{figure}
 
-\subsection{Experiment 4: Dynamic Optimization}
+\subsection{Experiment 4: Dynamic Materialization}
 \todo[inline]{This experiment is a superset Experiment 3. We should replace it and combine the analysis from the experiment 'Optimization effect' and the 'Dynamic Optimization'}
 In this experiment, we analyze the effect of dynamic materialization under limited resources.
 In Section \ref{subsec:dynamic-materialization}, we provide mathematical bounds on the benefits of the dynamic optimization for different sampling strategies under limited resources.
@@ -210,6 +210,8 @@ To demonstrate the effect of the dynamic optimization empirically, we execute th
 We define the materialization rate as the ratio of the number of materialized chunks over the total number of chunks (the total number of chunks for the URL and Taxi datasets are 12,000 and xxx respectively).
 Figure \ref{fig-dynamic-materialization} shows the end-to-end deployment cost using different sampling strategies under limited resources.
 We vary the materialization ratio from 0.0 (no chunks are materialized) to 1.0 (every chunk is materialized).
+\todo[inline]{note: this experiment is executed on only 20 days of the url data (out of 120) and the numbers are not final. 
+Also, I think the increase from 0.6 to 1.0 materialization rate is because I'm running the experiment on my laptop and the Spark's master memory becomes full which slows down Spark.}
 \begin{figure}[!h]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/dynamic-materialization-experiment}}
