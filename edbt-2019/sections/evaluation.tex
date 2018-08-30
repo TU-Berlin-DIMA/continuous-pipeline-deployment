@@ -201,6 +201,31 @@ As a result, the reduction in the Taxi dataset is greater than the URL dataset.
 \caption{Effect of the optimizations on total training time}
 \label{optimization-effect}
 \end{figure}
+
+\subsection{Experiment 4: Dynamic Optimization}
+\todo[inline]{This experiment is a superset Experiment 3. We should replace it and combine the analysis from the experiment 'Optimization effect' and the 'Dynamic Optimization'}
+In this experiment, we analyze the effect of dynamic materialization under limited resources.
+In Section \ref{subsec:dynamic-materialization}, we provide mathematical bounds on the benefits of the dynamic optimization for different sampling strategies under limited resources.
+To demonstrate the effect of the dynamic optimization empirically, we execute the deployment scenario for both the URL and the Taxi dataset with different sampling strategies (i.e., time-based, uniform, and window-based) with different materialization rate.
+We define the materialization rate as the ratio of the number of materialized chunks over the total number of chunks (the total number of chunks for the URL and Taxi datasets are 12,000 and xxx respectively).
+Figure \ref{fig-dynamic-materialization} shows the end-to-end deployment cost using different sampling strategies under limited resources.
+We vary the materialization ratio from 0.0 (no chunks are materialized) to 1.0 (every chunk is materialized).
+\begin{figure}[!h]
+\centering
+\resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/dynamic-materialization-experiment}}
+\caption{Effect of the materialization ratio on deployment cost with different sampling strategies}
+\label{fig-dynamic-materialization}
+\end{figure}
+
+At materialization rate of 0.0, the platform has to rematerialize every chunk, regardless of the sampling strategy.
+At materialization rate of 1.0, the platform utilizes the chunks without any rematerialization.
+Therefore, the total deployment cost for the different sampling strategies is equal when materialization rate is 0.0 and 1.0.
+As expected, when we increase the materialization rate (more chunks are materialized), the total deployment time decreases.
+However, the decrease in the time-based and window-based sampling is larger.
+Due to the nature of the sampling strategy, time-based and window-based sampling have higher probabilities of selecting chunks from the materialized chunks.
+
+This experiment shows dynamic materialization can still decrease the total execution time, especially for the time-based and window-based sampling, in presence of limited storage resources.
+
 \subsection{Discussion} \label{subsec:discussion}
 \textbf{Trade-off between quality and training cost.}
 In many real-world use cases, even a small improvement in the quality of the deployed model can have a significant impact  \cite{ling2017model}.

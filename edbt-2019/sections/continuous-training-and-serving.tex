@@ -61,7 +61,7 @@ The platform can also facilitate the online statistics computation for custom pi
 \todo[inline]{Add this to system architecture}
 In Section \ref{sec:system-architecture}, we describe how users can incorporate this feature into their custom pipeline components.
 
-\subsection{Dynamic Materialization}
+\subsection{Dynamic Materialization}\label{subsec:dynamic-materialization}
 In order to update the statistics of the pipeline components, each component must transform the data and passes it to the next component.
 At the end of this process, the pipeline has transformed the data chunks into feature chunks that the model will utilize during the training process.
 In our continuous training platform, we repeatedly sample the feature chunks to update the model.
