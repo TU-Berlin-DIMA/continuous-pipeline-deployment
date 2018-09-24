@@ -25,4 +25,6 @@ class CriteoLocalProfile extends Profile {
   override val MINI_BATCH = 0.1
   override val TRAINING_FREQUENCY = 100
   override val ROLLING_WINDOW = 100
+  override val MATERIALIZED_WINDOW = 100
+  override val SAMPLING_STRATEGY = "time-based"
 }

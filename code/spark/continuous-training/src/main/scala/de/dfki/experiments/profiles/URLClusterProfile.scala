@@ -30,6 +30,9 @@ class URLClusterProfile extends Profile {
   override val MINI_BATCH = 1.0
   override val BATCH_EVALUATION = "hdfs://cloud-11:44000/user/behrouz/url/experiments/processed/stream/day=2"
   override val TRAINING_FREQUENCY = 1000
-  override val ROLLING_WINDOW = 1000 * 3
+  override val ROLLING_WINDOW = 6000
+  override val ONLINE = true
+  override val MATERIALIZED_WINDOW = 6000
+  override val SAMPLING_STRATEGY = "time-based"
 }
 

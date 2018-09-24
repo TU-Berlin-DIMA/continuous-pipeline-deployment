@@ -4,11 +4,11 @@ package de.dfki.experiments.profiles
   * @author behrouz
   */
 class URLProfile extends Profile {
-  val INPUT_PATH = "/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/url-reputation/processed/initial-training"
-  val STREAM_PATH = "/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/url-reputation/processed/stream"
-  val MATERIALIZED_PATH = "/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/url-reputation/processed/materialized"
-  val EVALUATION_PATH = "prequential"
-  val RESULT_PATH = "../../../experiment-results/url-reputation/sampling"
+  override val INPUT_PATH = "/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/url-reputation/processed/initial-training"
+  override val STREAM_PATH = "/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/url-reputation/processed/stream"
+  override val MATERIALIZED_PATH = "/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/url-reputation/processed/materialized"
+  override val EVALUATION_PATH = "prequential"
+  override val RESULT_PATH = "../../../experiment-results/url-reputation/sampling"
   val INITIAL_PIPELINE = "/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/pipelines/best/adam-0.001"
   override val DELIMITER = ","
   // val NUM_FEATURES = 3231961
@@ -30,7 +30,9 @@ class URLProfile extends Profile {
   override val MINI_BATCH = 1.0
   override val BATCH_EVALUATION = "/Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/data/url-reputation/processed/batch-evaluation"
   override val TRAINING_FREQUENCY = 1000
-  override val ROLLING_WINDOW = 1000 * 3
+  override val ROLLING_WINDOW = 6000
   override val ONLINE = true
+  override val MATERIALIZED_WINDOW = 6000
+  override val SAMPLING_STRATEGY = "time-based"
 }
 

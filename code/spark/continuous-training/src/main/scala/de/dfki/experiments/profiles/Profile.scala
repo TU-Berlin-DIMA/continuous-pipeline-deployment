@@ -30,7 +30,9 @@ abstract class Profile {
   val FAILED_PIPELINE: String = "None"
   val INIT_TIME: Int = 1
   val ROLLING_WINDOW: Int
+  val MATERIALIZED_WINDOW: Int
   val PROFILE_NAME: String
+  val SAMPLING_STRATEGY: String
 }
 
 object Profile {

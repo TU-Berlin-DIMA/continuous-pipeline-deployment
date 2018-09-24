@@ -42,7 +42,7 @@ class CommandLineParser(val args: Array[String]) {
   }
 
   private def parseArguments(argument: String): Unit = {
-    val parts = argument.split("=")
+    val parts = argument.split("=", 2)
     map += (parts(0).trim -> parts(1).trim)
   }
 }

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 curl https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2015-01.csv | /share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -put - /datasets/nyc-taxi/yellow/yellow_tripdata_2015-01.csv
 
 curl https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2015-02.csv | /share/hadoop/stable/hadoop-2.7.1/bin/hdfs dfs -put - /datasets/nyc-taxi/yellow/yellow_tripdata_2015-02.csv

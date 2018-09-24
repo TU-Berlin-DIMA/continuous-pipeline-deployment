@@ -42,7 +42,7 @@ object DynamicMaterialization extends Experiment {
     }
 
 
-    rates.filter(_ != 0.0).foreach {
+    rates.foreach {
       r =>
         val materializedWindowSize = (r * totalNumberOfChunks).toInt
         println(s"$materializedWindowSize/$totalNumberOfChunks are materialized")

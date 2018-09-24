@@ -27,7 +27,7 @@ class ContinuousDeploymentWithLimitedStorage(val history: String,
                                              slack: Int = 10,
                                              sampler: Sampler,
                                              otherParams: Params,
-                                             online: Boolean = true) extends Deployment(slack, sampler) {
+                                             online: Boolean = true) extends Deployment(sampler) {
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     // create rdd of the initial data that the pipeline was trained with
     val data = streamingContext.sparkContext

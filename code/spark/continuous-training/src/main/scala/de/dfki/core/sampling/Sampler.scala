@@ -67,3 +67,15 @@ abstract class Sampler(val rate: Double = 0.1,
 
   }
 }
+
+object Sampler {
+  def getSampler(samplingStragy: String, size: Int, windowSize: Int) = {
+    samplingStragy match {
+      case "time-based" => new TimeBasedSampler(size)
+      case "window-based" => new WindowBasedSampler(size = size, window = windowSize)
+      case "uniform" => new UniformSampler(size)
+      case _ => new ZeroSampler()
+    }
+
+  }
+}

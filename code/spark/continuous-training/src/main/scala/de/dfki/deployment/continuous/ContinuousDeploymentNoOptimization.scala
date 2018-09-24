@@ -23,7 +23,7 @@ class ContinuousDeploymentNoOptimization(val history: String,
                                          val daysToProcess: Array[Int],
                                          slack: Int = 10,
                                          sampler: Sampler,
-                                         otherParams: Params) extends Deployment(slack, sampler) {
+                                         otherParams: Params) extends Deployment(sampler) {
 
   override def deploy(streamingContext: StreamingContext, pipeline: Pipeline) = {
     // create rdd of the initial data that the pipeline was trained with

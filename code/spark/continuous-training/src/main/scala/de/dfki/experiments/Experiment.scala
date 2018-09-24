@@ -53,14 +53,18 @@ abstract class Experiment {
     val days = Array.range(streamingDays(0), streamingDays(1) + 1)
     val dayDuration = parser.getInteger("day-duration", profileFromArgs.DAY_DURATION)
     val sampleSize = parser.getInteger("sample-size", profileFromArgs.SAMPLE_SIZE)
+    val samplingStragy = parser.get("sampling-strategy", profileFromArgs.SAMPLING_STRATEGY)
+    val rollingWindow = parser.getInteger("rolling-window", profileFromArgs.ROLLING_WINDOW)
+
     val convergenceTol = parser.getDouble("convergence-tol", profileFromArgs.CONVERGENCE_TOL)
     val updater = Updater.getUpdater(parser.get("updater", profileFromArgs.UPDATER))
     val stepSize = parser.getDouble("step-size", profileFromArgs.STEP_SIZE)
+
     val miniBatch = parser.getDouble("mini-batch", profileFromArgs.MINI_BATCH)
     val batchEvaluationSet = parser.get("eval-set", profileFromArgs.BATCH_EVALUATION)
     val numPartitions = parser.getInteger("partitions", profileFromArgs.NUM_PARTITIONS)
     val trainingFrequency = parser.getInteger("training-frequency", profileFromArgs.TRAINING_FREQUENCY)
-    val rollingWindow = parser.getInteger("rolling-window", profileFromArgs.ROLLING_WINDOW)
+    val materializedWindow = parser.getInteger("materialized-window", profileFromArgs.MATERIALIZED_WINDOW)
     val failedPipeline = parser.get("failed-pipeline", profileFromArgs.FAILED_PIPELINE)
     val initTime = parser.getInteger("init-time", profileFromArgs.INIT_TIME)
     val online = parser.getBoolean("online", profileFromArgs.ONLINE)
@@ -77,6 +81,7 @@ abstract class Experiment {
       slack = slack,
       days = days,
       sampleSize = sampleSize,
+      samplingStrategy = samplingStragy,
       dayDuration = dayDuration,
       pipelineName = pipelineName,
       regParam = regParam,
@@ -88,6 +93,7 @@ abstract class Experiment {
       numPartitions = numPartitions,
       trainingFrequency = trainingFrequency,
       rollingWindow = rollingWindow,
+      materializedWindow = materializedWindow,
       failedPipeline = failedPipeline,
       initTime = initTime,
       online = online)
