@@ -15,17 +15,17 @@ The platform assigns a timestamp to every chunk indicating their creation time.
 The timestamp acts as both a unique identifier and an indicator of the recency of the chunk.\newline
 \textbf{2. Preprocessing the data: } 
 The platform utilizes the deployed pipeline to preprocess the raw training data chunks and transform them into feature chunks.
-Then, the platform stores the feature chunks in the storage unit.
-During the preprocessing stage, we utilize \textit{online statistics computation} to compute the required statistics for different pipeline components.
+Then, the platform stores the feature chunks along with a reference to the originating raw data chunk in the storage unit.
+During the preprocessing stage, we utilize \textit{online statistics computation} to compute the required statistics for the different pipeline components.
 These statistics speed up the data processing in later stages.
-If the storage unit is full, the platform only stores a reference to the originating raw data chunk.
-If a feature chunk is required during the later stages, the platform materializes them on-the-fly. \newline
+When the storage unit becomes full, the platform starts removing the oldest feature chunks and only keep the reference to the originating raw data chunks.
+In case the later stages of the deployment platform request a deleted feature chunk, the platform can recreate the feature chunk by utilizing the referenced raw data chunk. \newline
 \textbf{3. Sampling the data: }
 A sampler unit samples the feature chunks from the storage.
 Different sampling strategies are available to address different use-case requirements.\newline
 \textbf{4. Materializing the data: }
 Depending on the size of the storage unit, some preprocessed feature chunks (results of step 2) are not materialized.
-If the sampler selects these feature chunks, the platform reprocesses these feature chunks using the deployed pipeline to provide the materialized features chunks through a process called \textit{dynamic materialization}.\newline
+If the sampler selects unmaterialized feature chunks, the platform recreates these feature chunks by utilizing the deployed pipeline through a process called \textit{dynamic materialization}.\newline
 \textbf{5. Updating the model: }
 By utilizing the preprocessed feature chunks, the platform updates the deployed model through a process called \textit{proactive training}.\newline
 
@@ -34,7 +34,7 @@ The sampling strategy typically depends on the use-case.
 However, different sampling strategies have different implications for the dynamic materialization process.
 In the rest of this section, we first describe the details of the online statistics computation.
 Then we introduce the dynamic materialization approach and the effects of different sampling strategies on the materialization process.
-Finally, we describe the details proactive training method.
+Finally, we describe the details of the proactive training method.
 
 \subsection{Online Statistics Computation}\label{online-statistics-computation}
 Some components of the machine learning pipeline, such as the standard scaler or the one-hot encoder, require some statistics of the dataset before they process the data.
