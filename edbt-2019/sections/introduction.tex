@@ -76,13 +76,14 @@ First, the deployment platform processes a given sample using the pipeline, then
 The updated model is immediately ready for answering prediction queries.
 Our experiments show that proactive training reduces the training time by an order of magnitude while providing the same level of quality when compared to the periodical deployment approach.
 
-\textit{Online Statistics Computation and Feature Materialization.}
+\textit{Online Statistics Computation and Dynamic Materialization.}
 Before updating the model using proactive training, the pipeline has to preprocess the training data.
 Every component of the pipeline needs to scan the data, updates the statistics (for example the mean and the standard deviation of the standard scaler component), and finally transform the data.
 Computing these statistics and transforming the data are time consuming processes.
 Aside from the proactive training, our deployment platform also employs online learning methods to update the model in real-time.
 During the online learning, we compute the required statistics and transform the data.
 The deployment platform stores the updated statistics for every pipeline component and materializes the transformed features by storing them in memory or disk.
+\hl{In presence of a limited storage capacity, the platform removes the older transformed features, and only re-materializes them when needed.}
 By reusing the computed statistics and the materialized features during the proactive training, we eliminate the data preprocessing steps of the pipeline and further decrease the proactive training time.
 
 % Our contributions
@@ -90,7 +91,7 @@ In summary, our contributions are:
 \begin{itemize}
 \item A platform for continuously training deployed machine learning models and pipelines that adapts to the changes in the incoming data. The platform accommodates different types of machine learning models and pipelines. In our experiments, we design and deploy two different machine learning pipelines.
 \item Proactive training of the deployed models and pipelines that frequently updates the model using samples of the historical data which guarantees high-quality models while completely eliminating the need for periodical retraining.
-\item Efficient pipeline processing and model training by online statistics computation and feature materialization, thus guaranteeing the availability of up-to-date models for answering prediction queries.
+\item Efficient pipeline processing and model training by online statistics computation and dynamic feature materialization, thus guaranteeing the availability of up-to-date models for answering prediction queries.
 \end{itemize}
 
 The rest of this paper is organized as follows:
