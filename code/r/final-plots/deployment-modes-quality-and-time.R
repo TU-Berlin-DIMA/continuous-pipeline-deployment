@@ -29,10 +29,10 @@ urlQualityProcessing <- function(){
 
 urlTimeProcessing <- function(){
   scale = 1000 * 60
-  Online = cumsum(read.csv('url-cluster/deployment-modes/online/time', header = FALSE, col.names = c('time'))$time) / scale
-  Continuous = cumsum(read.csv('url-cluster/deployment-modes/continuous-with-optimization-time_based-100/time', header = FALSE, col.names = c('time'))$time) / scale
-  Baseline = cumsum(read.csv('url-cluster/deployment-modes/baseline/time', header = FALSE, col.names = c('time'))$time) / scale
-  Periodical = cumsum(read.csv('url-cluster/deployment-modes/periodical-with-warmstarting/time', header = FALSE, col.names = c('time'))$time) / scale
+  Online = cumsum(read.csv('url-reputation/deployment-modes/online/time', header = FALSE, col.names = c('time'))$time) / scale
+  Continuous = cumsum(read.csv('url-reputation/deployment-modes/continuous-with-optimization-time_based-100/time', header = FALSE, col.names = c('time'))$time) / scale
+  Baseline = cumsum(read.csv('url-reputation/deployment-modes/baseline/time', header = FALSE, col.names = c('time'))$time) / scale
+  Periodical = cumsum(read.csv('url-reputation/deployment-modes/periodical-with-warmstarting/time', header = FALSE, col.names = c('time'))$time) / scale
   last = tail(Periodical,1)
   Periodical = Periodical[1:length(Online)]
   Periodical[length(Periodical)] = last
@@ -118,14 +118,14 @@ taxiTimeProcessing <- function(){
 }
 
 # For the paper use
-#fontLabelSize = 8
-#baseSize = 10
-#margin = -1
+fontLabelSize = 10
+baseSize = 11
+margin = -1
 
 #For presentation use
-fontLabelSize = 12
-baseSize = 16
-margin = 2
+#fontLabelSize = 12
+#baseSize = 16
+#margin = 2
 
 
 ####### URL PLOT ##########
@@ -134,7 +134,7 @@ urlTime = urlTimeProcessing()
 urlBreaks = c(500,3000, 6000 ,9000, 12000)
 urlLabels = c("day1","day30", "day60", "day90","day120")
 
-urlQualityPlot = ggline(urlQuality, 'Time', 'value', ylab = "Misclassification %", xlab = '(a) URL',
+urlQualityPlot = ggline(urlQuality, 'Time', 'value', ylab = "Misclassification \\%", xlab = '(a) URL',
                  shape = '-1', size = 1, linetype ='Deployment', color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = urlBreaks, labels= urlLabels)
 urlQualityPlot = ggpar(urlQualityPlot, legend = "top", legend.title = "", font.x = c(fontLabelSize), font.y=c(fontLabelSize)) + 
@@ -218,7 +218,7 @@ criteoTimePlot = ggpar(criteoTimePlot, font.x = c(fontLabelSize), font.y=c(fontL
 deploymentQuality = ggarrange(urlQualityPlot,urlTimePlot, taxiQualityPlot, taxiTimePlot, nrow = 2, ncol = 2, common.legend = TRUE)
 
 
-ggsave(deploymentQuality, filename = '../images/experiment-results/eps/deployment-quality.eps', device = 'eps', width = 14, height = 6, units = "in")
-#tikz(file = "../images/experiment-results/tikz/deployment-quality-and-time-experiment.tex", width = 6, height = 4)
-#deploymentQuality
-#dev.off()
+#ggsave(deploymentQuality, filename = '../images/experiment-results/eps/deployment-quality.eps', device = 'eps', width = 14, height = 6, units = "in")
+tikz(file = "../images/experiment-results/tikz/deployment-quality-and-time-experiment.tex", width = 6, height = 4)
+deploymentQuality
+dev.off()

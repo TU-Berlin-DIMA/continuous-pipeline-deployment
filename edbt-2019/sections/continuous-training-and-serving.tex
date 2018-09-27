@@ -58,7 +58,6 @@ For such components, when possible, we can utilize probabilistic and approximate
 Otherwise, we do not provide support for deployment of pipelines containing components that require a scan of the entire historical data whenever new data becomes available.
 
 The platform can also facilitate the online statistics computation for custom pipeline components.
-\todo[inline]{Add this to system architecture}
 In Section \ref{sec:system-architecture}, we describe how users can incorporate this feature into their custom pipeline components.
 
 \subsection{Dynamic Materialization}\label{subsec:dynamic-materialization}
@@ -224,7 +223,9 @@ By proactively training the deployed model, the platform ensures the model stays
 \todo[inline]{Find a reference for incremental training}
 \hl{Proactive training is a form of incremental training [REF] which is limited to SGD-based models.
 In our deployment platform, one can replace the proactive training with other forms of incremental training.
-However, since the combination of the data sampling and the proactive training is similar to the mini-batch SGD procedure, we can guarantee the same regret bound as online stochastic gradient descent} \cite{zhang2004solving}.
+However, we limit the platform's support to SGD for two reasons.
+First, SGD is simple to implement and is used for training a verity of machine learning models in different domains \cite{ macmahan2013, bottou1995convergence, koren2009matrix,  funk2006netflix}. 
+Second, since the combination of the data sampling and the proactive training is similar to the mini-batch SGD procedure, we can guarantee the same regret bound and convergence as online stochastic gradient descent \cite{zhang2004solving}.}
 \todo[inline]{I need to make sure the last sentence has a proper structure (guarantee a regret bound or provide a regret bound or guarantee regret bound convergence ... ?}
 
 %\subsection{Proactive Training} \label{proactive-training}

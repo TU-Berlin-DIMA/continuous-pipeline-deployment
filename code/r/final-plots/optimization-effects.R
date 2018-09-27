@@ -39,14 +39,14 @@ criteoDataProcessing <- function(){
 }
 
 # For the paper use
-# fontLabelSize = 12
-# baseSize = 14
-# margin = -3
+fontLabelSize = 12
+baseSize = 14
+margin = -3
 
 # For presentation use
-fontLabelSize = 16
-baseSize = 18
-margin = 2
+#fontLabelSize = 16
+#baseSize = 18
+#margin = 2
 
 
 ####### URL PLOT ##########
@@ -103,9 +103,9 @@ criteoPlot = ggpar(criteoPlot, font.y=c(fontLabelSize), font.x=c(fontLabelSize+2
 
 optimization_effects = ggarrange(urlPlot, taxiPlot, nrow = 1, ncol = 2, common.legend = TRUE)
 
-ggsave(optimization_effects, filename = '../images/experiment-results/eps/optimization-time-experiment.eps', device = 'eps', width = 8, height = 4, units = "in")
-#tikz(file = "../images/experiment-results/tikz/optimization-time-experiment.tex", width = 4, height = 2)
-#optimization_effects 
-#dev.off()
+#ggsave(optimization_effects, filename = '../images/experiment-results/eps/optimization-time-experiment.eps', device = 'eps', width = 8, height = 4, units = "in")
+tikz(file = "../images/experiment-results/tikz/optimization-time-experiment.tex", width = 4, height = 2)
+optimization_effects 
+dev.off()
 
 

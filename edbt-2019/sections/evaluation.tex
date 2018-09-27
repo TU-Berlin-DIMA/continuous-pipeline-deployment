@@ -1,6 +1,4 @@
 \section{Evaluation} \label{evaluation} 
-\todo[inline]{Experiment for showing the effect of the dynamic materialization in random, time-based, and window-based sampling under limited resources.}
-\todo[inline]{Rename the micro-batch to chunk and rewrite in the setup (e.g. sampling rate) in terms of chunk }
 To evaluate the performance of our deployment platform, we perform several experiments.
 Our main goal is to show that the continuous deployment approach maintains the quality of the deployed model while reducing the total training time.
 Specifically, we answer the following questions:\\
@@ -32,8 +30,9 @@ RMSLE is also the chosen error metric for the NYC Taxi Trip Duration Kaggle comp
 We deploy the URL pipeline on a single laptop running a macOS High Sierra 10.13.4 with 2,2 GHz Intel Core i7 and 16 GB of RAM and the Taxi pipeline on a cluster of 21 machines (Intel Xeon 2.4 GHz 16 cores, 28 GB of dedicated RAM per node).
 In our current prototype, we are using Apache Spark 2.2 as the execution engine.
 The data manager component utilizes the Hadoop Distributed File System (HDFS) 2.7.1 for storing the historical data \cite{shvachko2010hadoop}.
-We leverage some of the components of the machine learning library in Spark to implement the SGD logic.
-Moreover, we utilize the caching mechanism of the Apache Spark for materializing the transformed features.
+\hl{We leverage the SVM, LogisticRegression, and the GradientDescent classes of the machine learning library in Spark (MLlib) to implement the proactive training logic.
+We represent both the raw data and the feature chunks as RDDs.
+Therefore, we can utilize the caching mechanism of Apache Spark to simply materialize/unmaterialize feature chunks.}
 
 \textbf{Experiment and Deployment Process. }
 Table \ref{dataset-description} describes the details of the datasets such as the size of the raw data for the initial training, and the amount of data for the prediction queries and further training after deployment. 
@@ -46,13 +45,13 @@ We use the remaining data for sending prediction queries and further training of
 For experiments that compare the quality of the deployed model, we utilize the prediction queries to compute the cumulative prequential error rate of the deployed models over time \cite{dawid1984present}.
 For experiments that capture the cost of the deployment, we measure the time the platforms spend in updating the model, performing retraining, and answering prediction queries.
 
-The URL dataset does not have timestamps. 
-Therefore, we divide every day of the data into micro-batches of 1 minute which results in 12000 micro-batches.
-We sequentially send the micro-batches to the deployment platform.
-The deployment platform first uses the micro-batch for prequential evaluation and then updates the deployed model.
+\hl{The URL dataset does not have timestamps. 
+Therefore, we divide every day of the data into chunks of 1 minute which results in a total of 12000 chunks, each one with the size of roughly 200KB.
+The deployment platform first uses the chunks for prequential evaluation and then updates the deployed model.
 The Taxi dataset includes timestamps. 
-In our experiments, each micro-batch of the Taxi dataset contains one hour of the data. 
-The micro-batches are sent in order of the timestamps (from 2015-Feb-01  00:00 to 2016-Jun-30 24:00, an 18 months period) to the deployment platform.
+In our experiments, each chunk of the Taxi dataset contains one hour of the data, which results in a total of 12382 chunks, with an average size of 3MB per chunk. 
+The deployment platform processes the chunks in order of the timestamps (from 2015-Feb-01  00:00 to 2016-Jun-30 24:00, an 18 months period).}
+
 \begin{table}[h!]
 \centering
 \begin{tabular}{lrrll}
@@ -71,7 +70,7 @@ Taxi        &  42 GB 	    & 280 M            & Jan15              & Feb15 to Jun
 In this experiment, we investigate the effect of our continuous deployment approach on model quality and the total training time.
 We use 3 different deployment approaches.
 \begin{itemize}
-\item Online: deploy the pipeline, then utilize online training (gradient descent with a sample size of 1 data point) method for updating the deployed model.
+\item Online: deploy the pipeline, then utilize online gradient descent with Adam learning rate adaptation method for updating the deployed model.
 \item Periodical: deploy the pipeline, then periodically retrain the deployed model.
 \item Continuous: deploy the pipeline, then continuously update the deployed model using our platform.
 \end{itemize}
