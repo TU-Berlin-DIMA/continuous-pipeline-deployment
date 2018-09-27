@@ -77,17 +77,21 @@ The new dataset is merged with the existing historical data and immediately beco
 The pipeline manager is the main component of the platform.
 It loads the pipeline and the trained model, transforms the data into features using the pipeline, enables the execution of the proactive training, and exposes the deployed model to answer prediction queries.
 
-During the online training, when new training data becomes available, the pipeline manager transforms the data using the pipeline and updates the model.
-The pipeline manager also updates and stores the statistics of the pipeline components.
-If the feature materialization optimization is enabled, the pipeline manager sends the transformed features to the data manager.
+\hl{Each pipeline component must implement two methods: \textit{update} and \textit{transform}.
+Furthermore, every pipeline component has an internal state for storing statistics (if needed).
+During the online training, when new training data becomes available, the pipeline manager first invokes the \textit{update} method which enables the component to update its internal statistics using the incoming data.
+Then, the pipeline manager invokes the \textit{transform} method, which transforms the data.
+After forwarding the data through every component of the pipeline, the pipeline manager sends the transformed features to the data manager for storage.}
 
-The scheduler component informs the pipeline manager to execute proactive training.
+\hl{The scheduler component informs the pipeline manager to execute proactive training.
 Then, the pipeline manager requests the data manager to provide it with a sample of the historical data for the next proactive training.
-The pipeline manager provides the proactive trainer with the current model parameter and the sample of the historical data.
-Once the proactive training is over, the pipeline manager receives the updated model.
+In case the storage unit has reached its limit, parts of the sampled data may be unmaterialized.
+In this case, first, the pipeline manager re-materializes the sample (as explained in Section \ref{subsec:dynamic-materialization}).
+Then, it provides the proactive trainer with the current model parameter and the materialized sample of the transformed features.
+Once the proactive training is over, the pipeline manager receives the updated model.}
 
 The data manager also forwards the prediction queries to the pipeline manager.
-Similar to the training data, the pipeline manager sends the prediction queries through the pipeline to perform the necessary data preprocessing.
+\hl{Similar to the training data, the pipeline manager sends the prediction queries through the pipeline to perform the necessary data preprocessing (by only invoking the \textit{transform} method of every pipeline component).}
 Using the same pipeline to process both the training data and the prediction queries guarantees that the same set of transformations are applied to both types of data.
 As a result, the pipeline manager prevents inconsistencies between training and inference that is a common problem in the deployment of machine learning pipelines \cite{baylor2017tfx}.
 After preprocessing the prediction queries, the pipeline manager uses the deployed model to make predictions.
