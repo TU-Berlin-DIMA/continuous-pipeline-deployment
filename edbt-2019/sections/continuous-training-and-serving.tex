@@ -1,4 +1,5 @@
 \section{Continuous Training Approach} \label{continuous-training-serving}
+\todo[inline]{This chapter is completely new. So I won't highlight it.}
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{../images/continuous-training-details.pdf}
@@ -137,7 +138,6 @@ Since the storage requirement is in worst-case scenario linear with respect to t
 The choice of the sampling strategy affects the efficiency of the dynamic materialization.
 Here, we analyze the effects of dynamic materialization in reducing the data processing overhead.
 
-\todo[inline]{these computations are all based on sampling with replacement. Sampling without replacement is a bit more complicated. If Alireza and Tilmann like this section, then I will add the sampling without replacement calculations (replace or add them in the appendix as they will be longer).}
 We define $n$ as the total number of the feature chunks, $m$ as the number of the materialized feature chunks, and $s$ as the number of the sample size, where $s < m < n$. 
 To quantify the efficiency of the dynamic materialization, we introduce the materialization utilization rate:
 \begin{center}
@@ -146,45 +146,42 @@ To quantify the efficiency of the dynamic materialization, we introduce the mate
 where $mc$ is the number of the materialized chunks.
 The materialization utilization rate indicates the ratio of the feature chunks that do not require re-materialization before updating the model (a $MU$ of $0.5$ indicates that on average half of the sampled chunks do not need to be re-materialized before updating the model).
 
-The variable $mc$ follows a binomial distribution where the success probability ($p$) is set to the probability of a sampled chunk being selected from the $m$ materialized chunks and the number of trials is set to $s$  (the sample size), i.e., $mc  \sim B(s,p)$.
-Following the binomial theorem, we have:
+The variable $mc$ follows a hypergeometric distribution\footnote{https://en.wikipedia.org/wiki/Hypergeometric\_distribution} (sampling without replacement) where the number of success states is $m$, the population size is $n$, and the number of draws is $s$.
+The expected value of the hypergeometric is:
 \begin{center}
-$E[mc] = sp$
+$E[mc] = s\dfrac{m}{n}$
 \end{center}
-The materialization utilization rate can be computed as: 
-\begin{center}
-$MU = \dfrac{sp}{s} = p$
-\end{center}
-Therefore, to find $MU$, we need to compute the value of $p$ for every sampling strategy.
+Therefore, the materialization utilization rate can be computed as: 
+\begin{equation} \label{formula-mu}
+MU = \dfrac{s\dfrac{m}{n}}{s} = \frac{m}{n}
+\end{equation}
 
 \textbf{Random Sampling:} 
-In random sampling, each feature chunk has the same probability of being sampled.
-Since there are $m$ materialized chunks and $n$ total chunks, therefore:
-\begin{center}
-$p = \dfrac{m}{n} \Rightarrow MU = \dfrac{m}{n}$ 
-\end{center}
+For the random sampling strategy, we can directly use Formula \ref{formula-mu} to compute the materialization utilization rate.
 
 \textbf{Window-based Sampling:}
 In window based sampling, we have an extra parameter $w$ which indicates the number of chunks in the active window.
-Since the sampling operation selects chunks from the active window, therefore:
-\begin{center}
-$p = \dfrac{m}{w} \Rightarrow MU = \dfrac{m}{w}$ 
-\end{center}
+Therefore, in Formula \ref{formula-mu}, we have to replace the population size $n$ with the window size $w$.
+Therefore, the materialization utilization rate is: 
+\begin{equation}
+MU = \dfrac{m}{w}
+\end{equation}
 
 \textbf{Time-based Sampling:}
 In time-based sampling, we assign a weight to each chunk indicating how recent the data has arrived at the system.
 Therefore, for the $n$ chunks, the weights are assigned using the following formula:
-\begin{center}
-$w_i = \dfrac{i}{\dfrac{n(n+1)}{2}}, \ i = 1 ... n$
-\end{center}
-To compute the probability of success $p$, we have to sum the weights of the last $m$ chunks:
-\begin{align*}
-p &= \sum_{i=n-m+1}^{n} w_i\\
-&=w_{n-m+1} + w_{n-m+2}+ ... + w_n\\
+\begin{equation} \label{formula-weight}
+w_i = \dfrac{i}{\dfrac{n(n+1)}{2}}, \ i = 1 ... n
+\end{equation}
+which ensures the sum of the all the weights is equal to 1.
+To compute the materialization utilization ratio, we have to $m$ with the sum of the weights of the materialized items ($\sum_{i=n-m+1}^{n} w_i$) and replace $n$ with the sum of all the weights ($\sum_{i=1}^{n} w_i\ = 1$).
+\begin{equation}
+\begin{aligned}
+MU &= \dfrac{\sum_{i=n-m+1}^{n} w_i}{1}\\
 &=\dfrac{n-m+1}{\dfrac{n(n+1)}{2}} + ... + \dfrac{n}{\dfrac{n(n+1)}{2}} \\
-&= \dfrac{m(2n-m+1)}{n(n+1)}\\
-&\Rightarrow MU = \dfrac{m(2n-m+1)}{n(n+1)}
-\end{align*}
+&= \dfrac{m(2n-m+1)}{n(n+1)}
+\end{aligned}
+\end{equation}
 
 \textbf{An example use-case:}
 To demonstrate with a real use-case, consider a storage system of a total of 120 GB.
@@ -221,11 +218,11 @@ In order to execute the proactive training, the deployment platform only needs t
 
 By proactively training the deployed model, the platform ensures the model stays up-to-date and provides accurate predictions.
 \todo[inline]{Find a reference for incremental training}
-\hl{Proactive training is a form of incremental training [REF] which is limited to SGD-based models.
+Proactive training is a form of incremental training [REF] which is limited to SGD-based models.
 In our deployment platform, one can replace the proactive training with other forms of incremental training.
 However, we limit the platform's support to SGD for two reasons.
 First, SGD is simple to implement and is used for training a verity of machine learning models in different domains \cite{ macmahan2013, bottou1995convergence, koren2009matrix,  funk2006netflix}. 
-Second, since the combination of the data sampling and the proactive training is similar to the mini-batch SGD procedure, we can guarantee the same regret bound and convergence as online stochastic gradient descent \cite{zhang2004solving}.}
+Second, since the combination of the data sampling and the proactive training is similar to the mini-batch SGD procedure, we can guarantee the same regret bound and convergence as online stochastic gradient descent \cite{zhang2004solving}.
 \todo[inline]{I need to make sure the last sentence has a proper structure (guarantee a regret bound or provide a regret bound or guarantee regret bound convergence ... ?}
 
 %\subsection{Proactive Training} \label{proactive-training}

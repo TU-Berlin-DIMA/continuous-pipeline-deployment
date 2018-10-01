@@ -32,13 +32,13 @@ cp /home/behrouz/jar/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar 
 # cluster uniform materialization 0.0
 /share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.experiments.RunContinuousDeployment --master "spark://cloud-11.dima.tu-berlin.de:7077" \
 /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar \
-"profile=taxi-cluster" "result=/share/hadoop/behrouz/experiments/nyc-taxi/results/dynamic-optimization/rate-0.0-rerun" \
+"profile=taxi-cluster" "result=/share/hadoop/behrouz/experiments/nyc-taxi/results/dynamic-optimization/rate-0.0" \
 "sampling-strategy=uniform" "materialized-window=0"
 
 # cluster uniform materialization 0.2
 /share/hadoop/behrouz/spark/stable/bin/spark-submit --class de.dfki.experiments.RunContinuousDeployment --master "spark://cloud-11.dima.tu-berlin.de:7077" \
 /share/hadoop/behrouz/jars/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar \
-"profile=taxi-cluster" "result=/share/hadoop/behrouz/experiments/nyc-taxi/results/dynamic-optimization/rate-0.2-rerun2" \
+"profile=taxi-cluster" "result=/share/hadoop/behrouz/experiments/nyc-taxi/results/dynamic-optimization/rate-0.2" \
 "sampling-strategy=uniform" "materialized-window=2400"
 
 # cluster uniform materialization 0.6

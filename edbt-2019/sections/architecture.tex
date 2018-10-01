@@ -18,10 +18,10 @@ The static scheduling utilizes a user-defined parameter that specifies the inter
 This is a simple mechanism for use cases that require constant updates to the deployed model (for example, every minute).
 The dynamic scheduling tunes the scheduling interval based on the rate of the incoming prediction, prediction latency, and the execution time of the proactive training.
 The scheduler uses the following formula to compute the time when to execute the next proactive training:
-\begin{center}
-$T' = S * T * pr * pl$
-\end{center}
-where $T'$ indicates the time in seconds when the next proactive training is scheduled to execute, $T$ is the execution time of the last proactive training, $pl$ is the average prediction latency, and $pr$ is the average number of prediction queries per second.
+\begin{equation}
+T' = S * T * pr * pl
+\end{equation}
+where $T'$ indicates the time in seconds when the next proactive training is scheduled to execute, $T$ is the length of the execution time (in seconds) of the last proactive training, $pl$ is the average prediction latency, and $pr$ is the average number of prediction queries per second.
 $S$ is the slack parameter.
 Slack is a user-defined parameter to hint the scheduler about the possibility of surges in the incoming prediction queries and training data.
 During a proactive training, a certain number of predictions queries arrive at the platform ($T * pr$) which requires $T * pr * pl$ seconds to be processed.
