@@ -27,7 +27,7 @@ To evaluate the model, we use the Root Mean Squared Logarithmic Error (RMSLE) me
 RMSLE is also the chosen error metric for the NYC Taxi Trip Duration Kaggle competition.
 
 \textbf{Deployment Environment. }
-We deploy the URL pipeline on a single laptop running a macOS High Sierra 10.13.4 with 2,2 GHz Intel Core i7 and 16 GB of RAM and the Taxi pipeline on a cluster of 21 machines (Intel Xeon 2.4 GHz 16 cores, 28 GB of dedicated RAM per node).
+We deploy the URL pipeline on a single laptop running a macOS High Sierra 10.13.4 with 2,2 GHz Intel Core i7, 16 GB of RAM, and 512GB SSD and the Taxi pipeline on a cluster of 21 machines (Intel Xeon 2.4 GHz 16 cores, 28 GB of dedicated RAM per node).
 In our current prototype, we are using Apache Spark 2.2 as the execution engine.
 The data manager component utilizes the Hadoop Distributed File System (HDFS) 2.7.1 for storing the historical data \cite{shvachko2010hadoop}.
 \hl{We leverage the SVM, LogisticRegression, and the GradientDescent classes of the machine learning library in Spark (MLlib) to implement the proactive training logic.
@@ -187,50 +187,55 @@ Moreover, time-based sampling performs similarly to window-based and uniform sam
 \end{figure}
 
 \subsection{Experiment 3: Optimizations Effects}
-In this experiment, we analyze the effects of the optimizations, namely, online statistics computation and materialization of features, on the cost of the continuous deployment (total data preprocessing, and model training time).
-Figure \ref{optimization-effect} shows the effect of optimizations on deployment cost.
-Online statistics computation and feature materialization eliminate data preprocessing steps.
-As a result, the proactive training computes the gradient and updates the deployed model without the need for data preprocessing.
-Our optimizations improve the deployment cost by 70\% and 130\% for the URL and Taxi dataset, respectively.
-The Taxi pipeline preprocesses a larger amount of data than the URL pipeline.
-As a result, the reduction in the Taxi dataset is greater than the URL dataset.
-\begin{figure}[h!]
-\centering
-\resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/optimization-time-experiment}}
-\caption{Effect of the optimizations on total training time}
-\label{optimization-effect}
-\end{figure}
-
-\subsection{Experiment 4: Dynamic Materialization}
-\todo[inline]{This experiment is a superset Experiment 3. We should replace it and combine the analysis from the experiment 'Optimization effect' and the 'Dynamic Optimization'}
-In this experiment, we analyze the effect of dynamic materialization under limited resources.
-In Section \ref{subsec:dynamic-materialization}, we provide mathematical bounds on the benefits of the dynamic optimization for different sampling strategies under limited resources.
-To demonstrate the effect of the dynamic optimization empirically, we execute the deployment scenario for both the URL and the Taxi datasets with different sampling strategies (i.e., time-based, uniform, and window-based) with different materialization rate.
-We define the materialization rate as the ratio of the number of materialized chunks over the total number of chunks (the total number of chunks for each of the URL and Taxi datasets are 12,000).
-Figure \ref{fig-dynamic-materialization} shows the end-to-end deployment cost using different sampling strategies under limited resources.
-We vary the materialization ratio from 0.0 (no chunks are materialized) to 1.0 (every chunk is materialized).
 \begin{figure}[!h]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/dynamic-materialization-experiment}}
-\caption{Effect of the materialization ratio on deployment cost with different sampling strategies}
-\label{fig-dynamic-materialization}
+\caption{Effect of the online statistics computation and dynamic materialization on the deployment cost with different sampling strategies}
+\label{fig-optimization-effect}
 \end{figure}
+\hl{
+In this experiment, we analyze the effect of the system optimizations, i.e., online statistics computation and the dynamic materialization on the total deployment cost.
+
+In Section \ref{subsec:dynamic-materialization}, we provided mathematical bounds on the benefits of the dynamic optimization for different sampling strategies under limited resources.
+To demonstrate the effect of the dynamic optimization empirically, we execute the deployment scenario for both the URL and the Taxi datasets with different sampling strategies (i.e., time-based, uniform, and window-based) with different materialization rate.
+We define the materialization rate as the ratio of the number of materialized chunks over the total number of chunks (the total number of chunks for each of the URL and Taxi datasets are 12,000).
+Figure \ref{fig-optimization-effect} shows the end-to-end deployment cost using different sampling strategies under limited resources.
+We vary the materialization ratio from 0.0 (no chunks are materialized) to 1.0 (every chunk is materialized).
 
 When the materialization rate is 0.0, the platform has to rematerialize every chunk, regardless of the sampling strategy.
 When the materialization rate is 1.0, the platform utilizes the feature chunks directly without any rematerialization.
 Therefore, the total deployment cost for the different sampling strategies is the same when materialization rate is 0.0 (90 minutes for URL and 600 minutes for Taxi) or 1.0 (55 minutes for URL and 300 minutes for Taxi).
 However, when the materialization rate is between 0 and 1, the decrease in the deployment cost for each sampling strategy is different.
+
 The uniform sampling strategy benefits the least from the increase in the materialization rate.
 Since the expected number of the sampled materialized feature chunks is directly proportional to the materialization rate, the decrease in the deployment cost is also proportional to the increase in the materialization rate. 
+For the URL dataset, the deployment cost of the uniform sampling strategy improves by 14\%, 28\%, and 40\% for the materialization rate of 0.2, 0.6, and 1.0, respectively.}
 
-For the URL dataset, the deployment cost of the uniform sampling strategy improves by 14\%, 28\%, and 40\% for the materialization rate of 0.2, 0.6, and 1.0, respectively.
 \todo[inline]{Taxi Data}
-
+\hl{
 Since the time-based and the window-based sampling strategies have a higher probability of sampling from the more recent data chunks, they benefit more from increasing the materialization rate.
-For the materialization rates of 0.2, 0.6, and 1.0, the deployment cost improves by 20\%, 34\%, and 40\% for the time-based sampling and by 24\%, 37\%, and 40\% for the window-based sampling.
+Moreover, for the window-based sampling strategy, we set the window size for both the URL and the Taxi use-cases to 6000 chunks (half of the total number of chunks).
+Therefore, when the materialization is greater than 0.5, the number of materialized chunks is greater than the window size.
+As a result, the window-based sampling strategy only samples from materialized chunks.
+Figure \ref{fig-optimization-effect}a shows that for the materialization rates of 0.2, 0.6, and 1.0, the deployment cost improves by 20\%, 34\%, and 40\% for the time-based sampling and by 24\%, 40\%, and 40\% for the window-based sampling.}
 \todo[inline]{Taxi Data}
+\hl{
+To analyze the effect of the online statistics computation on the total deployment time, we also execute the deployment scenarios with both the online statistics computation and the dynamic materialization optimizations disabled.
+In this case, the deployment platform must first access the sampled raw data chunk directly from the disk.
+Then, the platform must recompute the required statistics of every component by scanning the data once.
+Finally, it transforms the raw data chunk into the preprocessed feature chunks by utilizing the deployed pipeline.
+When all the optimizations are disabled, the choice of the sampling strategy does not affect the total deployment time (similar to the materialization rate of 0.0).
+Therefore, when the optimizations are disabled, we only show the results for the time-based sampling (depicted as NoOptimization in Figure \ref{fig-optimization-effect}).
+Therefore, when the optimizations are disabled, we only show the results for the time-based sampling (depicted as NoOptimization in Figure \ref{fig-optimization-effect}).
+The extra disk access and data processing result in an increase of \%110 for the URL dataset (Figure \ref{fig-optimization-effect}a) and \%170 for the Taxi dataset (Figure \ref{fig-optimization-effect}b) when compared with a fully optimized execution (with online statistics computation and materialization rate of 1.0).
+There are two reasons for the larger increase in the deployment cost for the Taxi dataset, when the online statistics computation is disabled.
+First, we store the URL dataset on an SSD drive and the Taxi use-case on an HDFS.
+Therefore, disk access for the URL dataset is faster than the Taxi dataset.
+Second, the sample size in the Taxi use-case is larger than the URL use-case.
+As a result, in every instance of the proactive training, the platform reads more data from disk in the Taxi use-case.
 
-The result of this experiment confirms our analysis from Section \ref{subsec:dynamic-materialization} showing that even under limited storage we can benefit from the dynamic materialization, especially for the time-based and window-based sampling strategies.
+The result of this experiment confirms our analysis from Section \ref{subsec:dynamic-materialization}, showing that even under limited storage we can benefit from the dynamic materialization, especially for the time-based and window-based sampling strategies.
+Furthermore, online statistics computation can affect the total deployment cost, especially when the expected amount of incoming data is large.}
 \subsection{Discussion} \label{subsec:discussion}
 \textbf{Trade-off between quality and training cost.}
 In many real-world use cases, even a small improvement in the quality of the deployed model can have a significant impact  \cite{ling2017model}.
