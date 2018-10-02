@@ -1,11 +1,10 @@
-\documentclass[sigconf,edbt]{acmart-edbt2019}
+\documentclass[sigconf,edbt, review=true]{acmart-edbt2019}
 
 
 
 % Copyright
 
 \renewcommand\footnotetextcopyrightpermission[1]{} % removes footnote with conference information in first column
-
 
 % DOI
 %\acmDOI{}
@@ -14,12 +13,12 @@
 %\acmISBN{XXX-X-XXXXX-XXX-X}
 
 %Conference
-%\acmConference[EDBT 2019]{22nd International Conference on Extending Database Technology (EDBT)}{March 26-29, 2019}{Lisbon, Portugal} 
+\acmConference[EDBT 2019]{22nd International Conference on Extending Database Technology (EDBT)}{March 26-29, 2019}{Lisbon, Portugal} 
 %\acmYear{2019}
 
 \settopmatter{printacmref=false, printccs=false, printfolios=false}
-
-\pagestyle{plain} % removes running headers
+%\settopmatter{printacmref=false}
+\thispagestyle{empty} % removes running headers
 
 
 \usepackage[moderate]{savetrees}
