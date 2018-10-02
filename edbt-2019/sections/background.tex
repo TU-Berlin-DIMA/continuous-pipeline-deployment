@@ -16,17 +16,17 @@ Prominent applications of SGD in neural networks are the work of Google Deepmind
 To explain the details of SGD, we describe how it is utilized to train a logistic regression model.
 In logistic regression, the goal is to find the weight vector ($w$) that maximizes the conditional likelihood of labels ($y$) based on the given data ($x$) in the training dataset:
 
-\begin{center}
-$$w^* = \argmax_w \sum_{i=1}^{N} ln(P(y^i | x^i, w))$$
-\end{center}
+\begin{equation}
+w^* = \argmax_w \sum_{i=1}^{N} ln(P(y^i | x^i, w))
+\end{equation}
 
 where $N$ is the size of the training dataset.
 To utilize SGD for finding the optimal $w$, we start from initial random weights.
 Then in every iteration, we update the weights based on the gradient of the loss function:
 
-\begin{center}
-$${w}^{t+1} = {w}^t + \eta \sum_{i \in S} x^i (y^i - \hat{P}(Y^i = 1 | x^i w))$$
-\end{center}
+\begin{equation}
+{w}^{t+1} = {w}^t + \eta \sum_{i \in S} x^i (y^i - \hat{P}(Y^i = 1 | x^i w))
+\end{equation}
 
 where $\eta$ is the learning rate parameter and $S$ is the random sample in the current iteration.
 The algorithm continues until convergence, i.e., when the weight vector does not change after an iteration.

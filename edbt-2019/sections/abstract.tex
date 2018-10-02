@@ -7,7 +7,7 @@ When online learning alone is not adequate to guarantee the prediction accuracy,
 While the online training is fast, the retraining of the model is time-consuming and adds extra overhead and complexity to the process of deployment.
 
 We propose a novel continuous deployment approach for updating the deployed model using a combination of the incoming real-time data and the historical data.
-We utilize fast sampling techniques to include the historical data in the training process, thus eliminating the need for retraining of deployed model.
+We utilize sampling techniques to include the historical data in the training process, thus eliminating the need for retraining the deployed model.
 We also offer online statistics computation and materialization of the preprocessed features, which further reduces the total training and data preprocessing time.
 In our experiments, we design and deploy two pipelines and models to process two real-world datasets.
 The experiments show that the continuous deployment reduces the total training cost up to 13 times while providing the same level of quality when compared to the state-of-the-art deployment approaches.
