@@ -215,15 +215,13 @@ Since the platform executes the proactive training in arbitrary intervals, we mu
 According to the mini-batch SGD algorithm, each iteration of the SGD only requires the model parameters ($m_{i-1}$) and the learning rate parameters ($\eta_{i-1}$) of the previous iterations (line 3 and 4).
 Given these parameters, iterations of SGD are conditionally independent of each other.
 In order to execute the proactive training, the deployment platform only needs to store the model parameters (model weight vector) and the learning rate parameters (past gradients and momentum vectors for the advanced learning rate adaptation methods).
-
 By proactively training the deployed model, the platform ensures the model stays up-to-date and provides accurate predictions.
-\todo[inline]{Find a reference for incremental training}
-Proactive training is a form of incremental training [REF] which is limited to SGD-based models.
+
+Proactive training is a form of incremental training \cite{gepperth2016incremental} which is limited to SGD-based models.
 In our deployment platform, one can replace the proactive training with other forms of incremental training.
 However, we limit the platform's support to SGD for two reasons.
 First, SGD is simple to implement and is used for training a verity of machine learning models in different domains \cite{ macmahan2013, bottou1995convergence, koren2009matrix,  funk2006netflix}. 
-Second, since the combination of the data sampling and the proactive training is similar to the mini-batch SGD procedure, we can guarantee the same regret bound and convergence as online stochastic gradient descent \cite{zhang2004solving}.
-\todo[inline]{I need to make sure the last sentence has a proper structure (guarantee a regret bound or provide a regret bound or guarantee regret bound convergence ... ?}
+Second, since the combination of the data sampling and the proactive training is similar to the mini-batch SGD procedure, proactive training provides the same regret bound on the convergence rate as the existing stochastic optimization approaches \cite{zhang2004solving, kingma2014adam}.
 
 %\subsection{Proactive Training} \label{proactive-training}
 %Proactive training is a replacement for the periodical retraining of the deployed model.

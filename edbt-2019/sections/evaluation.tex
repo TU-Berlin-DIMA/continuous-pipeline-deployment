@@ -34,7 +34,7 @@ The data manager component utilizes the Hadoop Distributed File System (HDFS) 2.
 We represent both the raw data and the feature chunks as RDDs.
 Therefore, we can utilize the caching mechanism of Apache Spark to simply materialize/unmaterialize feature chunks.}
 
-\textbf{Experiment and Deployment Process. }
+\hl{\textbf{Datasets. }}
 Table \ref{dataset-description} describes the details of the datasets such as the size of the raw data for the initial training, and the amount of data for the prediction queries and further training after deployment. 
 For the URL pipeline, we first train a model on the first day of the data (day 0).
 For the Taxi pipeline, we train a model using the data from January 2015.
@@ -42,10 +42,13 @@ For both datasets, since the entire data fits in the memory of the computing nod
 We then deploy the models (and the pipelines).
 We use the remaining data for sending prediction queries and further training of the deployed models.
 
+\hl{\textbf{Evaluation metrics. }}
 For experiments that compare the quality of the deployed model, we utilize the prediction queries to compute the cumulative prequential error rate of the deployed models over time \cite{dawid1984present}.
-For experiments that capture the cost of the deployment, we measure the time the platforms spend in updating the model, performing retraining, and answering prediction queries.
+For experiments that capture the cost of the deployment, we measure the time the platforms spend in updating the model, performing proactive training (retraining for the periodical deployment scenario), and answering prediction queries.
 
-\hl{The URL dataset does not have timestamps. 
+\hl{
+\textbf{Deployment process.}
+The URL dataset does not have timestamps. 
 Therefore, we divide every day of the data into chunks of 1 minute which results in a total of 12000 chunks, each one with the size of roughly 200KB.
 The deployment platform first uses the chunks for prequential evaluation and then updates the deployed model.
 The Taxi dataset includes timestamps. 
@@ -67,6 +70,13 @@ Taxi        &  42 GB 	    & 280 M            & Jan15              & Feb15 to Jun
 \end{table}
 
 \subsection{Experiment 1: Deployment Approaches}
+\begin{figure*}[t]
+\centering
+\resizebox{\textwidth}{!}{\input{../images/experiment-results/tikz/deployment-quality-and-time-experiment}}
+\caption{Model Quality and Training cost for different deployment approaches}
+\label{deployment-quality-figure}
+\end{figure*}
+
 In this experiment, we investigate the effect of our continuous deployment approach on model quality and the total training time.
 We use 3 different deployment approaches.
 \begin{itemize}
@@ -81,7 +91,6 @@ Based on the size and rate of the data, our deployment platform executes the pro
 To improve the performance of the periodical deployment, we utilize the warm starting technique, used in the TFX framework \cite{baylor2017tfx}.
 In warm starting, each periodical training uses the existing parameters such as the pipeline statistics (e.g., standard scaler), model weights, and learning rate adaptation parameters (e.g., the average of past gradients used in Adadelta, Adam, and Rmsprop) when training new models.
 
-\textbf{Model Quality. }
 Figure \ref{deployment-quality-figure} (a) and (c) show the cumulative error rate over time for the different deployment approaches.
 For both datasets, the continuous and the periodical deployment result in a lower error rate than the online deployment.
 Online deployment visits every incoming training data point only once.
@@ -97,30 +106,24 @@ When compared to the online deployment, periodical deployment slightly decreases
 However, between every retraining, the platform updates the model using online learning.
 This contributes to the higher error rate than the continuous deployment, where the platform continuously trains the deployed model using samples of the historical data.
 
-\begin{figure*}[t]
-\centering
-\resizebox{\textwidth}{!}{\input{../images/experiment-results/tikz/deployment-quality-and-time-experiment}}
-\caption{Model Quality and Training cost for different deployment approaches}
-\label{deployment-quality-figure}
-\end{figure*}
 In Figure \ref{deployment-quality-figure} (b) and (d), we report the cumulative cost over time for every deployment platform.
 We define the deployment cost as the total time spent in data preprocessing, model training, and performing prediction.
 For the URL dataset (Figure \ref{deployment-quality-figure} (b)), online deployment has the smallest cost (around 34 minutes) as it only scans each data point once (around 2.4 million scans).  
 The continuous deployment approach scans 45 million data points.
-However, the total cost at the end of the deployment is only two times larger than the online deployment approach (around 65 minutes).  
-Because of the online statistics computation and the feature materialization optimizations, a large part of the data preprocessing time is avoided.
+However, the total cost at the end of the deployment is only 50\% larger than the online deployment approach (around 54 minutes).  
+Because of the online statistics computation and the dynamic materialization optimizations, a large part of the data preprocessing time is avoided.
 For the periodical deployment approach, the cumulative deployment cost starts similar to the online deployment approach.
 However, after every offline retraining, the deployment cost substantially increases.
-At the end of the deployment process, the total cost for the periodical deployment is more than 850 minutes which is 13 times more than the total cost of the continuous deployment approach.
+At the end of the deployment process, the total cost for the periodical deployment is more than 850 minutes which is 15 times more than the total cost of the continuous deployment approach.
 Each data point in the URL dataset has more than 3 million features.
 Therefore, the convergence time for each retraining is very high.
 The high data-dimensionality and repeated data preprocessing contribute to the large deployment cost of the periodical deployment.
 
-For the Taxi dataset (Figure \ref{deployment-quality-figure} (d)), the cost of online, continuous, and periodical deployments are 250, 340, and 1600 minutes, respectively.
+For the Taxi dataset (Figure \ref{deployment-quality-figure} (d)), the cost of online, continuous, and periodical deployments are 262, 308, and 1765 minutes, respectively.
 Similar to the URL dataset, continuous deployment only adds a small overhead to the deployment cost when compared with the online deployment.
 Contrary to the URL dataset, the feature size of the Taxi dataset is 11.
 Therefore, offline retraining converges faster to a solution.
-As a result, for the Taxi dataset, the cost of the periodical deployment is 5 times larger than the continuous deployment (instead of 13 times for URL dataset). 
+As a result, for the Taxi dataset, the cost of the periodical deployment is 6 times larger than the continuous deployment (instead of 15 times for URL dataset). 
 
 \subsection{Experiment 2: System Tuning}
 \begin{table*}[t]
@@ -204,7 +207,7 @@ We vary the materialization ratio from 0.0 (no chunks are materialized) to 1.0 (
 
 When the materialization rate is 0.0, the platform has to rematerialize every chunk, regardless of the sampling strategy.
 When the materialization rate is 1.0, the platform utilizes the feature chunks directly without any rematerialization.
-Therefore, the total deployment cost for the different sampling strategies is the same when materialization rate is 0.0 (90 minutes for URL and 600 minutes for Taxi) or 1.0 (55 minutes for URL and 300 minutes for Taxi).
+Therefore, the total deployment cost for the different sampling strategies is the same when materialization rate is 0.0 (90 minutes for URL and 600 minutes for Taxi) or 1.0 (54 minutes for URL and 308 minutes for Taxi).
 However, when the materialization rate is between 0 and 1, the decrease in the deployment cost for each sampling strategy is different.
 
 The uniform sampling strategy benefits the least from the increase in the materialization rate.
@@ -236,6 +239,7 @@ As a result, in every instance of the proactive training, the platform reads mor
 
 The result of this experiment confirms our analysis from Section \ref{subsec:dynamic-materialization}, showing that even under limited storage we can benefit from the dynamic materialization, especially for the time-based and window-based sampling strategies.
 Furthermore, online statistics computation can affect the total deployment cost, especially when the expected amount of incoming data is large.}
+
 \subsection{Discussion} \label{subsec:discussion}
 \textbf{Trade-off between quality and training cost.}
 In many real-world use cases, even a small improvement in the quality of the deployed model can have a significant impact  \cite{ling2017model}.
@@ -245,7 +249,7 @@ To ensure the model is always up-to-date, the platform must constantly update th
 Long retraining time may have a negative impact on the prediction accuracy as the deployed model becomes stale.
 Figure \ref{trade-off-figure} shows the trade-off between the average quality and the total cost of the deployment.
 By utilizing continuous deployment, we improve the average quality by 0.05\% and 0.3\% for the Taxi and URL datasets over the periodical deployment approach.
-We also reduce the cost of the deployment 5 to 13 times when compared with periodical deployment.
+We also reduce the cost of the deployment 6 to 15 times when compared with periodical deployment.
 
 \begin{figure}[!h]
 \centering

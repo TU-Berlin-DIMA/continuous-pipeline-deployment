@@ -38,14 +38,14 @@ taxiDataProcessing <- function(){
 }
 
 # For the paper use
-# fontLabelSize = 12
-# baseSize = 14
-# margin = -1
+fontLabelSize = 12
+baseSize = 14
+margin = -1
 
 # For presentation use
-fontLabelSize = 16
-baseSize = 18
-margin = 2
+#fontLabelSize = 16
+#baseSize = 18
+#margin = 2
 
 
 
@@ -56,7 +56,7 @@ urlPlot = ggscatter(urlData, x = "Time",
           y= "MC", 
           color = "Deployment", 
           shape = "Deployment", size = 4, ylim=c(2.23,2.27), xlim=c(-20,1000),
-          ylab = 'Misclassification%', xlab = "Time(m)\n(a) URL",
+          ylab = 'Misclassification\\%', xlab = "Time(m)\n(a) URL",
           ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = urlBreaks) + 
   theme(legend.title = element_text(size = 0), 
@@ -103,7 +103,7 @@ criteoPlot = ggpar(criteoPlot, legend.title = "", font.x = c(fontLabelSize), fon
 #qualityVsTime = ggarrange(urlPlot, taxiPlot, criteoPlot, nrow = 1, ncol = 3, common.legend = TRUE)
 qualityVsTime = ggarrange(urlPlot, taxiPlot, nrow = 1, ncol = 2, common.legend = TRUE)
 
-ggsave(qualityVsTime, filename = '../images/experiment-results/eps/quality-vs-time.eps', device = 'eps', width = 8, height = 4, units = "in")
-#tikz(file = "../images/experiment-results/tikz/quality-vs-time.tex", width = 4, height = 2)
-#qualityVsTime 
-#dev.off()
+#ggsave(qualityVsTime, filename = '../images/experiment-results/eps/quality-vs-time.eps', device = 'eps', width = 8, height = 4, units = "in")
+tikz(file = "../images/experiment-results/tikz/quality-vs-time.tex", width = 4, height = 2)
+qualityVsTime 
+dev.off()

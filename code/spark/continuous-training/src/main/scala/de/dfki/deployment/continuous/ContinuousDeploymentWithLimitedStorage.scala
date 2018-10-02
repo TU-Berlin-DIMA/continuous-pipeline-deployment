@@ -82,7 +82,7 @@ class ContinuousDeploymentWithLimitedStorage(val history: String,
       processedRDD += pRDD
       if (processedRDD.size > materializedWindow) {
         val evictIndex = processedRDD.size - 1 - materializedWindow
-        processedRDD(evictIndex).unpersist(blocking = true)
+        processedRDD(evictIndex).unpersist()
       }
       time += 1
       val end = System.currentTimeMillis()

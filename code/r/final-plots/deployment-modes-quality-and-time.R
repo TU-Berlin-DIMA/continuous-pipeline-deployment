@@ -6,8 +6,8 @@ library(ggpubr)
 source('../code/r/final-plots/functions.r')
 
 urlQualityProcessing <- function(){
-  Online = getMisclassification('url-reputation/deployment-modes/online/confusion_matrix')
-  Continuous = getMisclassification('url-reputation/deployment-modes/continuous-with-optimization-time_based-100/confusion_matrix')
+  Online = getMisclassification('url-reputation/final/deployment-modes/online/confusion_matrix')
+  Continuous = getMisclassification('url-reputation/final/deployment-modes/continuous-with-optimization-time_based-100/confusion_matrix')
   Baseline = getMisclassification('url-reputation/final/deployment-modes/baseline/confusion_matrix')
   Periodical = getMisclassification('url-reputation/final/deployment-modes/periodical-with-warmstarting/confusion_matrix')
 
@@ -29,10 +29,10 @@ urlQualityProcessing <- function(){
 
 urlTimeProcessing <- function(){
   scale = 1000 * 60
-  Online = cumsum(read.csv('url-reputation/deployment-modes/online/time', header = FALSE, col.names = c('time'))$time) / scale
-  Continuous = cumsum(read.csv('url-reputation/deployment-modes/continuous-with-optimization-time_based-100/time', header = FALSE, col.names = c('time'))$time) / scale
-  Baseline = cumsum(read.csv('url-reputation/deployment-modes/baseline/time', header = FALSE, col.names = c('time'))$time) / scale
-  Periodical = cumsum(read.csv('url-reputation/deployment-modes/periodical-with-warmstarting/time', header = FALSE, col.names = c('time'))$time) / scale
+  Online = cumsum(read.csv('url-reputation/final/deployment-modes/online/time', header = FALSE, col.names = c('time'))$time) / scale
+  Continuous = cumsum(read.csv('url-reputation/final/deployment-modes/continuous-with-optimization-time_based-100/time', header = FALSE, col.names = c('time'))$time) / scale
+  Baseline = cumsum(read.csv('url-reputation/final/deployment-modes/baseline/time', header = FALSE, col.names = c('time'))$time) / scale
+  Periodical = cumsum(read.csv('url-reputation/final/deployment-modes/periodical-with-warmstarting/time', header = FALSE, col.names = c('time'))$time) / scale
   last = tail(Periodical,1)
   Periodical = Periodical[1:length(Online)]
   Periodical[length(Periodical)] = last
@@ -46,7 +46,7 @@ urlTimeProcessing <- function(){
 
 criteoQualityProcessing <- function(){
   Online = getMisclassification('url-reputation/deployment-modes/online/confusion_matrix')
-  Continuous = getMisclassification('url-reputation/deployment-modes/continuous-with-optimization-time_based-100/confusion_matrix')
+  Continuous = getMisclassification('url-reputation/final/deployment-modes/continuous-with-optimization-time_based-100/confusion_matrix')
   Baseline = getMisclassification('url-reputation/final/deployment-modes/baseline/confusion_matrix')
   Periodical = getMisclassification('url-reputation/final/deployment-modes/periodical-with-warmstarting/confusion_matrix')
   
@@ -112,7 +112,8 @@ taxiTimeProcessing <- function(){
   
   df = data.frame(Time = 1:length(Online), Continuous, Periodical, Online)
   DAY_DURATION = 500
-  df = df[(df$Time %% DAY_DURATION == 0), ]
+  df = df[(df$Time %% DAY_DURATION == 0 | df$Time == nrow(df)), ]
+  df = df [-24,]
   ml = melt(df, id.vars = 'Time', variable_name ='Deployment')
   return(ml)
 }
@@ -160,7 +161,7 @@ urlTimePlot = ggpar(urlTimePlot, legend = "top", legend.title = "", font.x = c(f
 ####### TAXI PLOT ##########
 taxiQuality = taxiQualityProcessing()
 taxiTime = taxiTimeProcessing()
-taxiBreaks = c(500,4000, 8000, 12300)
+taxiBreaks = c(500, 4000, 8000, 12300)
 taxiLabels = c("Feb15","Jul15", "Jan16", "June16")
 taxiQualityPlot = ggline(taxiQuality, 'Time', 'value', ylab = "RMSLE", xlab = '(c) Taxi',
                   shape = '-1',size = 1, linetype ='Deployment',color = "Deployment", ggtheme = theme_pubclean(base_size = baseSize)) + 
