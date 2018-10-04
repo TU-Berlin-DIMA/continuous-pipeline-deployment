@@ -83,7 +83,7 @@ Computing these statistics and transforming the data are time consuming processe
 Aside from the proactive training, our deployment platform also employs online learning methods to update the model in real-time.
 During the online learning, we compute the required statistics and transform the data.
 The deployment platform stores the updated statistics for every pipeline component and materializes the transformed features by storing them in memory or disk.
-\hl{In presence of a limited storage capacity, the platform removes the older transformed features, and only re-materializes them when needed.}
+In presence of a limited storage capacity, the platform removes the older transformed features, and only re-materializes them when needed.
 By reusing the computed statistics and the materialized features during the proactive training, we eliminate the data preprocessing steps of the pipeline and further decrease the proactive training time.
 
 % Our contributions

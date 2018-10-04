@@ -71,9 +71,14 @@ class ContinuousDeploymentWithLimitedStorage(val history: String,
           // sparkcontext union preserves persistence, so we do not need to explicitly cache them again
           //val transformed = streamingContext.sparkContext.union(historicalSample).persist(StorageLevel.MEMORY_ONLY)
           //transformed.count()
-          val transformed = streamingContext.sparkContext.union(historicalSample)
-          pipeline.train(transformed)
-          //transformed.unpersist()
+          //val transformed = streamingContext.sparkContext.union(historicalSample)
+          val transformedNotCached = streamingContext.sparkContext.union(historicalSample.filter(_.getStorageLevel != StorageLevel.MEMORY_ONLY))
+          val transformedCached = streamingContext.sparkContext.union(historicalSample.filter(_.getStorageLevel == StorageLevel.MEMORY_ONLY))
+          transformedNotCached.persist(StorageLevel.MEMORY_ONLY)
+          transformedNotCached.count()
+
+          pipeline.train(transformedCached.union(transformedNotCached))
+          transformedNotCached.unpersist(blocking = false)
         } else {
           logger.warn(s"Sample in iteration $time is empty")
         }
@@ -82,7 +87,7 @@ class ContinuousDeploymentWithLimitedStorage(val history: String,
       processedRDD += pRDD
       if (processedRDD.size > materializedWindow) {
         val evictIndex = processedRDD.size - 1 - materializedWindow
-        processedRDD(evictIndex).unpersist()
+        processedRDD(evictIndex).unpersist(blocking = false)
       }
       time += 1
       val end = System.currentTimeMillis()

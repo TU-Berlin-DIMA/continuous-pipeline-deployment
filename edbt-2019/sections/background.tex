@@ -66,7 +66,7 @@ After this step, all the partial gradients are combined to compute the final gra
 Distributed SGD significantly reduces the time for executing individual iterations, which results in a reduction in the overall training time.
 
 \subsection{Tuning the Periodical Deployment}
-\hl{Two groups of hyperparameters affect the efficiency of the periodical deployment approach.
+Two groups of hyperparameters affect the efficiency of the periodical deployment approach.
 The first group (the deployment hyperparameters) controls the frequency and amount of data for every retraining.
 The second group (the training hyperparameters) tunes the algorithm for retraining procedure.
 In this work, we are targeting training algorithms based on the Stochastic gradient descent.
@@ -76,5 +76,5 @@ There are several existing approaches for selecting the training hyperparameters
 The deployment hyperparameters, however, are typically selected to fit the specific use case.
 For example, in many of the real-world use cases, one retrains the deployed model using the entire historical data on a daily basis.
 Similarly, when tuning our continuous deployment platform, one has to select several hyperparameters which vary from use-case to use-case.
-In the next sections, we show that tuning our continuous deployment approach is no more complex than tuning the periodical deployment approach.}
+In the next sections, we show that tuning our continuous deployment approach is no more complex than tuning the periodical deployment approach.
 

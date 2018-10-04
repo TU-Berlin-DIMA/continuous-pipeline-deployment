@@ -42,7 +42,7 @@ The deployment platform provides the scheduler with the values of $pr$ and $pl$.
 
 
 \subsection{Data Manager} \label{data-manager}
-\hl{The data manager component is responsible for the storage of historical data and materialized features, receiving the incoming training data, and providing the pipeline manager with samples of the historical data.
+The data manager component is responsible for the storage of historical data and materialized features, receiving the incoming training data, and providing the pipeline manager with samples of the historical data.
 The data manager has four main tasks.
 First, the data manager discretizes the incoming training data into chunks, assigns a timestamp (which acts as a unique identifier) to them, and stores them in the storage unit.
 Second, it forwards the data chunks (and the prediction queries) to the pipeline manager for further processing.
@@ -65,7 +65,7 @@ Therefore, the time-based and window-based sampling provide more appropriate sam
 However, in some use cases, the incoming training data is not time-dependent (e.g., image classification of objects).
 In these scenarios, the window-based and the time-based sampling strategies fail to provide a non-biased sample, since it only samples from the recent data.
 %In our experiments, we show that the time-based sampling satisfies the requirement of both types of use cases.
-In Section \ref{evaluation}, we evaluate the effect of the sampling strategy on both the total deployment cost and the quality of the deployed model.}
+In Section \ref{evaluation}, we evaluate the effect of the sampling strategy on both the total deployment cost and the quality of the deployed model.
 
 %To increase the performance of the sampling operation, we utilize a data partitioning technique.
 %Upon the arrival of new training data, the data manager assembles a partition of the data and creates an index for the partition using the timestamps of the data inside the partition.
@@ -80,7 +80,7 @@ In Section \ref{evaluation}, we evaluate the effect of the sampling strategy on 
 The pipeline manager is the main component of the platform.
 It loads the pipeline and the trained model, transforms the data into features using the pipeline, enables the execution of the proactive training, and exposes the deployed model to answer prediction queries.
 
-\hl{Each pipeline component must implement two methods: \textit{update} and \textit{transform}.
+Each pipeline component must implement two methods: \textit{update} and \textit{transform}.
 Furthermore, every pipeline component has an internal state for storing statistics (if needed).
 During the online training, when new training data becomes available, the pipeline manager first invokes the \textit{update} method which enables the component to update its internal statistics using the incoming data.
 Then, the pipeline manager invokes the \textit{transform} method, which transforms the data.
@@ -91,10 +91,10 @@ Then, the pipeline manager requests the data manager to provide it with a sample
 In case the storage unit has reached its limit, some of the sampled data chunks may be unmaterialized.
 In this case, first, the pipeline manager re-materializes the chunks by invoking the transform methods of the pipeline components (as explained in Section \ref{subsec:dynamic-materialization}).
 Then, it provides the proactive trainer with the current model parameters and the materialized sample of the transformed features.
-Once the proactive training is over, the pipeline manager receives the updated model.}
+Once the proactive training is over, the pipeline manager receives the updated model.
 
 The data manager also forwards the prediction queries to the pipeline manager.
-\hl{Similar to the training data, the pipeline manager sends the prediction queries through the pipeline to perform the necessary data preprocessing (by only invoking the \textit{transform} method of every pipeline component).}
+Similar to the training data, the pipeline manager sends the prediction queries through the pipeline to perform the necessary data preprocessing (by only invoking the \textit{transform} method of every pipeline component).
 Using the same pipeline to process both the training data and the prediction queries guarantees that the same set of transformations are applied to both types of data.
 As a result, the pipeline manager prevents inconsistencies between training and inference that is a common problem in the deployment of machine learning pipelines \cite{baylor2017tfx}.
 After preprocessing the prediction queries, the pipeline manager utilizes the deployed model to make predictions.
@@ -106,9 +106,9 @@ Then, the proactive trainer performs one iteration of SGD and returns the update
 The proactive trainer utilizes advanced learning rate adaptation techniques to dynamically adjust the learning rate parameter when training the model.
 Although individual proactive training instances are independent of each other, the component must store the information required by the learning rate adaptation technique.
 
-\hl{In order for the proactive training to update the deployed model, the machine learning model component of the deployed pipeline must implement an \textit{update} method, which is responsible for computing the gradient.
+In order for the proactive training to update the deployed model, the machine learning model component of the deployed pipeline must implement an \textit{update} method, which is responsible for computing the gradient.
 Therefore, to provide support for other types of incremental training approaches, one only needs to implement the training logic in the \textit{update} method of the model.
-However, as described in Section \ref{proactive-training}, the proactive training with the data sampling can only guarantee convergence, when SGD optimization is utilized.}
+However, as described in Section \ref{proactive-training}, the proactive training with the data sampling can only guarantee convergence, when SGD optimization is utilized.
 
 %Lastly, the proactive trainer executes the SGD logic on the execution engine.
 %Therefore, to switch the execution engine, the proactive trainer must provide a new implementation of the SGD logic.

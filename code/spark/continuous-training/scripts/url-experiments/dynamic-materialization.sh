@@ -77,7 +77,7 @@ scp -r behrouz@cloud-11.dima.tu-berlin.de:/share/hadoop/behrouz/experiments/url/
 ~/Documents/frameworks/spark/2.2.0/bin/spark-submit --class de.dfki.experiments.RunContinuousDeployment \
 --master "spark://berlin-166.b.dfki.de:7077" --driver-memory 3G --executor-memory 6G \
 /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar \
-"profile=url" "result=/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/dynamic-optimization/rate-0.2-non-blocking" \
+"profile=url" "result=/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/dynamic-optimization/rate-0.2" \
 "sampling-strategy=uniform" "materialized-window=2400"
 
 # uniform , materialization 0.4
@@ -91,7 +91,7 @@ scp -r behrouz@cloud-11.dima.tu-berlin.de:/share/hadoop/behrouz/experiments/url/
 ~/Documents/frameworks/spark/2.2.0/bin/spark-submit --class de.dfki.experiments.RunContinuousDeployment \
 --master "spark://berlin-166.b.dfki.de:7077" --driver-memory 3G --executor-memory 6G \
 /Users/bede01/Documents/work/phd-papers/continuous-training/code/spark/continuous-training/target/continuous-training-1.0-SNAPSHOT-jar-with-dependencies.jar \
-"profile=url" "result=/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/dynamic-optimization/rate-0.6-non-blocking" \
+"profile=url" "result=/Users/bede01/Documents/work/phd-papers/continuous-training/experiment-results/url-reputation/dynamic-optimization/rate-0.6" \
 "sampling-strategy=uniform" "materialized-window=7200"
 
 # uniform , materialization 0.8
