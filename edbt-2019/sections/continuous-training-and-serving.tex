@@ -137,58 +137,104 @@ Since the storage requirement is in worst-case scenario linear with respect to t
 The choice of the sampling strategy affects the efficiency of the dynamic materialization.
 Here, we analyze the effects of dynamic materialization in reducing the data processing overhead.
 
-We define $n$ as the total number of the feature chunks, $m$ as the number of the materialized feature chunks, and $s$ as the number of the sample size, where $s < m < n$. 
-To quantify the efficiency of the dynamic materialization, we introduce the materialization utilization rate:
-\begin{center}
- $MU = \dfrac{E[mc]}{s}$
-\end{center}
-where $mc$ is the number of the materialized chunks.
-The materialization utilization rate indicates the ratio of the feature chunks that do not require re-materialization before updating the model (a $MU$ of $0.5$ indicates that on average half of the sampled chunks do not need to be re-materialized before updating the model).
-
-The variable $mc$ follows a hypergeometric distribution\footnote{https://en.wikipedia.org/wiki/Hypergeometric\_distribution} (sampling without replacement) where the number of success states is $m$, the population size is $n$, and the number of draws is $s$.
-The expected value of the hypergeometric is:
-\begin{center}
-$E[mc] = s\dfrac{m}{n}$
-\end{center}
-Therefore, the materialization utilization rate can be computed as: 
-\begin{equation} \label{formula-mu}
-MU = \dfrac{s\dfrac{m}{n}}{s} = \frac{m}{n}
+We define $N$ as the maximum number of the chunks, $n$ as the number of existing chunks during a sampling operation, $m$ as the maximum number of the materialized feature chunks (corresponds to the size of the dedicated storage for the materialized feature chunks), and $s$ as the sample size (In each sampling operation, we are sampling $s$ items out of the available $n$ chunks). \footnote{The value $N$ corresponds to the size of the storage unit dedicated for raw data chunks which bounds the variable $n$. If we assume $n$ is unbounded, then as $lim_{n\to\infty}$, the probability of sampling materialized feature chunks becomes $0$.}. 
+Let us define $ms$ as the number of materialized feature chunks in a sampling operation.
+The variable $ms$ follows a hypergeometric distribution\footnote{https://en.wikipedia.org/wiki/Hypergeometric\_distribution} (sampling without replacement) where the number of success states is $m$, and the number of draws is $s$.
+Therefore, the expected value of $ms$ for a sampling operation with $n$ chunks is:
+\begin{equation*}
+E_n[ms] = s\dfrac{m}{n}
+\end{equation*}
+To quantify the efficiency of the dynamic materialization, we introduce the materialization utilization rate with $n$ raw chunks, which indicates the ratio of the materialized feature chunks:
+\begin{equation*}   
+ MU_n=  \dfrac{E_n[ms]}{s}
+\end{equation*}
+Finally, the average materialization utilization rate for the dynamic materialization process is:
+\begin{equation}  \label{formula-mu}
+MU = \dfrac{\sum_{n=1}^N MU_n}{N}
 \end{equation}
+$MU$ indicates the ratio of the feature chunks that do not require re-materialization before updating the model (an $MU$ of $0.5$ shows on average half of the sampled chunks are materialized).
+To simplify the analysis, we assume the platform performs one sampling operation after every incoming data chunk. 
+In reality, a scheduler component governs the frequency of the sampling operation (Section \ref{sec:system-architecture}).
 
 \textbf{Random Sampling:} 
-For the random sampling strategy, we can directly use Formula \ref{formula-mu} to compute the materialization utilization rate.
-
-\textbf{Window-based Sampling:}
-In window based sampling, we have an extra parameter $w$ which indicates the number of chunks in the active window.
-Therefore, in Formula \ref{formula-mu}, we have to replace the population size $n$ with the window size $w$.
-Therefore, the materialization utilization rate is: 
-\begin{equation}
-MU = \dfrac{m}{w}
-\end{equation}
-
-\textbf{Time-based Sampling:}
-In time-based sampling, we assign a weight to each chunk indicating how recent the data has arrived at the system.
-Therefore, for the $n$ chunks, the weights are assigned using the following formula:
-\begin{equation} \label{formula-weight}
-w_i = \dfrac{i}{\dfrac{n(n+1)}{2}}, \ i = 1 ... n
-\end{equation}
-which ensures the sum of the all the weights is equal to 1.
-To compute the materialization utilization ratio, we have to $m$ with the sum of the weights of the materialized items ($\sum_{i=n-m+1}^{n} w_i$) and replace $n$ with the sum of all the weights ($\sum_{i=1}^{n} w_i\ = 1$).
+For the random sampling strategy, we compute $MU_n$ as:
+\begin{equation*}
+MU_n = 
+\begin{cases}
+    1, 	&\text{if } n \leq m\\
+     \dfrac{E_n[ms]}{s} = \dfrac{s\dfrac{m}{n}}{s} = \dfrac{m}{n},   & \text{otherwise}
+\end{cases}
+\end{equation*}
+Since for the first $m$ sampling operations the number of raw chunks ($n$) is smaller than the total size of the materialized chunks ($m$), $MU_n$ is 1.0 (every sampled chunk is materialized).
+\newcommand{\highlight}[1]{%
+  \colorbox{red!20}{$\displaystyle#1$}}
+As a result, 
 \begin{equation}
 \begin{aligned}
-MU &= \dfrac{\sum_{i=n-m+1}^{n} w_i}{1}\\
-&=\dfrac{n-m+1}{\dfrac{n(n+1)}{2}} + ... + \dfrac{n}{\dfrac{n(n+1)}{2}} \\
-&= \dfrac{m(2n-m+1)}{n(n+1)}
+MU=\dfrac{\sum\limits_{n=1}^N MU_n}{N}
+&=\dfrac{m \times 1.0 + \sum\limits_{n = m+1}^{N} \dfrac{m}{n}}{N} \\
+&=\dfrac{m  +  m (\highlight{\dfrac{1}{m+1} +\dfrac{1}{m+2}  + ... + \dfrac{1}{N}}) }{N}\\
+&=\dfrac{m(1 + (H_N - H_{m+1}))}{N}\\
+&\approx \dfrac{m( 1+(ln(N) - ln(m+1))}{N}
 \end{aligned}
 \end{equation}
 
-\textbf{An example use-case:}
-To demonstrate with a real use-case, consider a storage system of a total of 120 GB.
-We divide the data into chunks of 1 MB. 
-Let's assume $n=10000$ (100 GB), $m=2000$ (20 GB), $w=5000$, and $s=100$.
-With these values, the materialization utilization $MU$ is $0.2$, $0.4$, and $0.345$ for the random, window-based, and time-based sampling respectively.
-The theoretical analysis in this section provides an estimate of how much the dynamic optimization can reduce the processing overhead.
-In our experiments, we also empirically show the effect of dynamic optimization on real-world datasets.
+The highlighted section corresponds to the Harmonic numbers \cite{sun2012arithmetic}.
+The $t$-th harmonic number is:
+\begin{equation*}
+H_t = 1 + \dfrac{1}{2} + \dfrac{1}{3} + ... + \dfrac{1}{t} \approx ln(t) + \gamma + \dfrac{1}{2t} - \dfrac{1}{12t^2}
+\end{equation*}
+where $\gamma \approx 0.5772156649$ is the Euler-Mascheroni constant.
+In our analysis, since $t$ is sufficiently large (more than 1000), we ignore $\dfrac{1}{2t} - \dfrac{1}{12t^2}$.
+
+\textbf{Window-based Sampling:}
+In the window-based sampling, we have an extra parameter $w$ which indicates the number of chunks in the active window.
+We compute $MU_n$ as:
+\begin{equation*}
+MU_n = 
+\begin{cases}
+    1, 	&\text{if } n \leq m\\
+     \dfrac{E_n[ms]}{s} = \dfrac{m}{n},   &\text{if } m < n \leq w\\
+      \dfrac{E_w[ms]}{s} = \dfrac{m}{w},  &\text{if } w < n
+\end{cases}
+\end{equation*}
+Therefore: 
+\begin{equation}
+\begin{aligned}
+MU=\dfrac{\sum\limits_{n=1}^N MU_n}{N}
+&=\dfrac{m + \sum\limits_{n = m+1}^{w} \dfrac{m}{n} + (N-w)\dfrac{m}{w} }{N} \\
+&\approx\dfrac{m  +  m (H_w - H_{m+1}) + (N-w)\dfrac{m}{w}}{N}\\
+&=\dfrac{m(1 + ln(w) - ln(m+1) + \dfrac{N-w}{w})}{N}
+\end{aligned}
+\end{equation}
+
+\textbf{Time-based Sampling:}
+For the time-based sampling strategy, there is no direct approach for computing the expected value of $ms$ (the number of the materialized chunks in the sample).
+However, we are assigning a higher sampling probability to the recent chunks.
+As a result, we guarantee the time-based sampling has a higher average materialization utilization rate than the uniform sampling.
+In the experiments, we empirically show the average materialization utilization rate.
+%In time-based sampling, we assign a weight to each chunk indicating how recent the data has arrived at the system.
+%Therefore, for the $n$ chunks, the weights are assigned using the following formula:
+%\begin{equation} \label{formula-weight}
+%w_i = \dfrac{i}{\dfrac{n(n+1)}{2}}, \ i = 1 ... n
+%\end{equation}
+%which ensures the sum of the all the weights is equal to 1.
+%To compute the materialization utilization ratio, we have to $m$ with the sum of the weights of the materialized items ($\sum_{i=n-m+1}^{n} w_i$) and replace $n$ with the sum of all the weights ($\sum_{i=1}^{n} w_i\ = 1$).
+%\begin{equation}
+%\begin{aligned}
+%MU &= \dfrac{\sum_{i=n-m+1}^{n} w_i}{1}\\
+%&=\dfrac{n-m+1}{\dfrac{n(n+1)}{2}} + ... + \dfrac{n}{\dfrac{n(n+1)}{2}} \\
+%&= \dfrac{m(2n-m+1)}{n(n+1)}
+%\end{aligned}
+%\end{equation}
+
+%\textbf{An example use-case:}
+%To demonstrate with a real use-case, consider a storage system of a total of 120 GB.
+%We divide the data into chunks of 1 MB. 
+%Let's assume $n=10000$ (100 GB), $m=2000$ (20 GB), $w=5000$, and $s=100$.
+%With these values, the materialization utilization $MU$ is $0.2$, $0.4$, and $0.345$ for the random, window-based, and time-based sampling respectively.
+%The theoretical analysis in this section provides an estimate of how much the dynamic optimization can reduce the processing overhead.
+%In our experiments, we also empirically show the effect of dynamic optimization on real-world datasets.
 
 \subsection{Proactive Training}\label{proactive-training}
 Updating the model is the last step of our continuous deployment platform.
