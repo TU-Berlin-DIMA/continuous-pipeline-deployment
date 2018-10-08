@@ -65,6 +65,7 @@ Taxi        &  42 GB 	    & 280 M            & Jan15              & Feb15 to Jun
 \hline
 \end{tabular}
 \caption{Description of Datasets. The Initial and Deployment columns indicate the amount of data used during the initial model training and the deployment phase (prediction queries and further training data)}  
+ \vspace{-20pt}
 \label{dataset-description}
 \end{table}
 
@@ -131,6 +132,7 @@ As a result, for the Taxi dataset, the cost of the periodical deployment is 6 ti
 \input{../images/experiment-results/tikz/parameter-selection-table}
 \end{adjustbox}
 \caption{Hyperparameter tuning during initial training (bold numbers show the best results for each adaptation techniques)}
+ \vspace{-20pt}
 \label{hyper-param-table}
 \end{table*}
 In this experiment, we investigate the effect of different parameters on the quality of the models after deployment.
@@ -185,6 +187,7 @@ Moreover, time-based sampling performs similarly to window-based and uniform sam
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/sampling-mode-figure}}
 \caption{Effect of different sampling methods on quality}
+ \vspace{-20pt}
 \label{sampling-method-figure}
 \end{figure}
 
@@ -196,46 +199,69 @@ Moreover, time-based sampling performs similarly to window-based and uniform sam
 \label{fig-optimization-effect}
 \end{figure}
 In this experiment, we analyze the effect of the system optimizations, i.e., online statistics computation and the dynamic materialization on the total deployment cost.
+We define the materialization rate as the ratio of the number of materialized chunks over the total number of chunks (both URL and Taxi have a total of 12,000 chunks).
+For both datasets, the materialization rates of 0.0, 0.2, 0.6, and 1.0 indicates that 0, 2400, 6000, and 12000 chunks are materialized.
+For the window-based sampling strategy, we set the window size to 6,000 chunks (half of the total chunks).
 
-In Section \ref{subsec:dynamic-materialization}, we provided mathematical bounds on the benefits of the dynamic optimization for different sampling strategies under limited resources.
-To demonstrate the effect of the dynamic optimization empirically, we execute the deployment scenario for both the URL and the Taxi datasets with different sampling strategies (i.e., time-based, uniform, and window-based) with different materialization rate.
-We define the materialization rate as the ratio of the number of materialized chunks over the total number of chunks (the total number of chunks for each of the URL and Taxi datasets are 12,000).
-Figure \ref{fig-optimization-effect} shows the end-to-end deployment cost using different sampling strategies under limited resources.
-We vary the materialization ratio from 0.0 (no chunks are materialized) to 1.0 (every chunk is materialized).
+Using the Formula \ref{formula-uniform} and \ref{formula-window-based} of Section \ref{subsec:dynamic-materialization}, the average materialization utilization rate ($MU$) is 0.0, 0.5218, 0.9064, and 1.0 for uniform sampling and 0.0, 0.5832, 1.0, and 1.0 for window-based sampling.
+To validate our analysis, we compute $MU$ empirically as well.
+Table \ref{table-empirical-mu} shows the value of $MU$ for different settings.
+For both the uniform and time-based sampling, the empirical and analytical computation yield similar values.
+Moreover, the empirical computation shows that the time-based strategy performs better than the uniform sampling strategy.
+When the number of materialized feature chunks is 0 or 12000, the design of the deployment platform guarantees that $MU$ is 0.0 and 1.0 respectively. 
+Therefore, we do not report those results in the table.
 
-When the materialization rate is 0.0, the platform has to rematerialize every chunk, regardless of the sampling strategy.
-When the materialization rate is 1.0, the platform utilizes the feature chunks directly without any rematerialization.
-Therefore, the total deployment cost for the different sampling strategies is the same when materialization rate is 0.0 (90 minutes for URL and 600 minutes for Taxi) or 1.0 (54 minutes for URL and 308 minutes for Taxi).
-However, when the materialization rate is between 0 and 1, the decrease in the deployment cost for each sampling strategy is different.
+\begin{table}
+\begin{tabular}{lllll}
+\hline
+& \multicolumn{2}{c}{\textbf{URL}}  & \multicolumn{2}{c}{\textbf{Taxi}} \\
+ \cmidrule(lr){2-3} \cmidrule(lr){4-5} 
+\textbf{Sampling}  & \multicolumn{1}{l}{m=2400} & \multicolumn{1}{l}{m=7200} 
+ &  \multicolumn{1}{l}{m=2400} & \multicolumn{1}{l}{m=7200}  \\
+\hline
+Uniform      	&  0.52 & 0.91 & 0.51 & 0.90 \\
+Window-based &  0.58 	& 1.0 & 0.57 & 1.0 \\
+Time-based &   0.68 	&  0.97 & 0.65 & 0.97 \\ \hline      
+\end{tabular}
+\caption{Empirical computation of $MU$ for different sampling strategies and materialization rates.}
+\label{table-empirical-mu}
+ \vspace{-31pt}
+\end{table}
+To examine the effect of $MU$ on the deployment cost, we plot the total deployment cost using different sampling strategies and materialization rates for the URL and Taxi deployment scenarios in Figure \ref{fig-optimization-effect}.
+When the materialization rate is 0.0 or 1.0, the sampling strategies have similar effects on the deployment cost. 
+Therefore, the total deployment cost for every sampling strategy is 90 minutes for URL and 600 minutes for Taxi deployment scenario, when the materialization rate is 0.0.
+Similarly, the deployment cost is 54 minutes for URL and 308 minutes for Taxi, when the materialization rate is 1.0 (an improvement of 40\% for URL and 49\% for Taxi deployment scenarios).
 
-The uniform sampling strategy benefits the least from the increase in the materialization rate.
-Since the expected number of the sampled materialized feature chunks is directly proportional to the materialization rate, the decrease in the deployment cost is also proportional to the increase in the materialization rate. 
-For the URL dataset, the deployment cost of the uniform sampling strategy improves by 14\%, 28\%, and 40\% for the materialization rate of 0.2, 0.6, and 1.0, respectively.
+For the URL deployment scenario, when the materialization rate is 0.2, time-based, window-based, and uniform sampling improve the deployment cost by 30\%, 25\%, and 23\% in comparison with the materialization rate of 0.0.
+Similarly, in the Taxi deployment scenario, time-based, window-based, and uniform sampling improve the deployment cost by 22\%, 16\%, and 12\%, respectively. 
+Time-based sampling performs better since it has a higher average materialization rate than the other two sampling strategies (Table \ref{table-empirical-mu}).
+When the materialization rate of 0.2, the rate of the decrease in the deployment cost for the URL scenario is greater than the Taxi scenario.
+We attribute this difference in the decrease in the deployment cost to two reasons.
+First, the number of sampled chunks in the Taxi deployment scenario is larger than the URL (720 for Taxi and 100 for URL).
+Before updating the model, we utilize the \textit{context.union} operation of Spark, to combine all the non-materialized and materialized chunks.
+The union operation incurs a larger overhead when the number of underlying chunks is bigger.
+Second, we execute the URL deployment scenario on a single machine with SSD.
+Since materializing data that resides on an SSD is faster than an HD, we observe a larger decrease in the deployment cost.
 
-\todo[inline]{Taxi Data}
-Since the time-based and the window-based sampling strategies have a higher probability of sampling from the more recent data chunks, they benefit more from increasing the materialization rate.
-Moreover, for the window-based sampling strategy, we set the window size for both the URL and the Taxi use-cases to 6000 chunks (half of the total number of chunks).
-Therefore, when the materialization is greater than 0.5, the number of materialized chunks is greater than the window size.
-As a result, the window-based sampling strategy only samples from materialized chunks.
-Figure \ref{fig-optimization-effect}a shows that for the materialization rates of 0.2, 0.6, and 1.0, the deployment cost improves by 20\%, 34\%, and 40\% for the time-based sampling and by 24\%, 40\%, and 40\% for the window-based sampling.
-\todo[inline]{Taxi Data}
+When the materialization rate is 0.6, window-based sampling has the best performance.
+Since the size of the window is smaller than the number of the materialized feature chunks, every sampled feature chunk is materialized.
+For the URL deployment scenario, window-based, time-based, and uniform sampling improves the performance by 40\%, 36\%, and 33\%, respectively.
+For the Taxi deployment scenario, window-based, time-based, and uniform sampling improves the performance by 49\%, 46\%, and 37\%, respectively.
+Similar phenomena explain the difference in performance improvement at materialization rate of 0.6 between the Taxi and the URL deployment scenarios.
+At materialization rate of 0.6, more than 90\% of the chunks are materialized.
+Therefore, the Taxi deployment scenario gains relatively more than the URL deployment scenario from a smaller number of disk I/O operations.
 
-To analyze the effect of the online statistics computation on the total deployment time, we also execute the deployment scenarios with both the online statistics computation and the dynamic materialization optimizations disabled.
-In this case, the deployment platform must first access the sampled raw data chunk directly from the disk.
-Then, the platform must recompute the required statistics of every component by scanning the data once.
+To analyze the effect of the online statistics computation on the deployment cost, we also execute the deployment scenarios without the online statistics computation and the dynamic materialization optimizations.
+In this case, the deployment platform first accesses the sampled raw data chunk directly from the disk.
+Then, the platform recomputes the required statistics of every component by scanning the data.
 Finally, it transforms the raw data chunk into the preprocessed feature chunks by utilizing the deployed pipeline.
-When all the optimizations are disabled, the choice of the sampling strategy does not affect the total deployment time (similar to the materialization rate of 0.0).
+Without the optimizations, the choice of the sampling strategy does not affect the total deployment time (similar to the materialization rate of 0.0).
 Therefore, when the optimizations are disabled, we only show the results for the time-based sampling (depicted as NoOptimization in Figure \ref{fig-optimization-effect}).
-Therefore, when the optimizations are disabled, we only show the results for the time-based sampling (depicted as NoOptimization in Figure \ref{fig-optimization-effect}).
-The extra disk access and data processing result in an increase of \%110 for the URL dataset (Figure \ref{fig-optimization-effect}a) and \%170 for the Taxi dataset (Figure \ref{fig-optimization-effect}b) when compared with a fully optimized execution (with online statistics computation and materialization rate of 1.0).
-There are two reasons for the larger increase in the deployment cost for the Taxi dataset, when the online statistics computation is disabled.
-First, we store the URL dataset on an SSD drive and the Taxi use-case on an HDFS.
-Therefore, disk access for the URL dataset is faster than the Taxi dataset.
-Second, the sample size in the Taxi use-case is larger than the URL use-case.
-As a result, in every instance of the proactive training, the platform reads more data from disk in the Taxi use-case.
+The extra disk access and data processing result in an increase of \%110 for the URL (Figure \ref{fig-optimization-effect}a) and \%170 for the Taxi deployment scenarios (Figure \ref{fig-optimization-effect}b) when compared with a fully optimized execution (with online statistics computation and materialization rate of 1.0).
+Similar to the dynamic materialization case, we observe a larger increase in the deployment cost of the Taxi deployment scenario due to the larger overhead of disk I/O.
 
-The result of this experiment confirms our analysis from Section \ref{subsec:dynamic-materialization}, showing that even under limited storage we can benefit from the dynamic materialization, especially for the time-based and window-based sampling strategies.
-Furthermore, online statistics computation can affect the total deployment cost, especially when the expected amount of incoming data is large.
+The result of this experiment shows that even under limited storage we can benefit from the dynamic materialization, especially for the time-based and window-based sampling strategies.
+Furthermore, online statistics computation can improve the total deployment cost, especially when the expected amount of incoming data is large.
 
 \subsection{Discussion} \label{subsec:discussion}
 \textbf{Trade-off between quality and training cost.}

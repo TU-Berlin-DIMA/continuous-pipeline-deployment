@@ -2,6 +2,7 @@
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{../images/continuous-training-details.pdf}
+ \vspace{-20pt}
 \caption{Workflow of our continuous deployment approach. (1) The platform converts the data into small units (2) The platform utilizes the deployed pipeline to preprocess the data and transform the raw data into features and store them in the storage. (3) The platform samples the data from the storage. (4) The platform materializes the sampled data (5) Using the sampled data, the deployment platform updates the deployed model.}
 \label{fig:continuous-deployment-details}
 \end{figure*}
@@ -106,7 +107,8 @@ feature selection            & feature (column)             & selecting a subset
 feature extraction & feature (column) & creating new columns \\
 \hline
 \end{tabular}
-\caption{Description of the pipeline component types. Unit of work: \textit{row} indicates the component operates on one or multiple rows at a time, \textit{column} indicates the component operates on one or multiple columns at a time}  
+\caption{Description of the pipeline component types. Unit of work indicates whether the component operates on a row or a column.}  
+ \vspace{-28pt}
 \label{pipeline-component-description}
 \end{table}
 Assuming the size of the input data is $n$, the storage complexity of data transformation and feature selection operations are linear in terms of the input size ($O(n)$).
@@ -169,7 +171,7 @@ Since for the first $m$ sampling operations the number of raw chunks ($n$) is sm
 \newcommand{\highlight}[1]{%
   \colorbox{red!20}{$\displaystyle#1$}}
 As a result, 
-\begin{equation}
+\begin{equation} \label{formula-uniform}
 \begin{aligned}
 MU=\dfrac{\sum\limits_{n=1}^N MU_n}{N}
 &=\dfrac{m \times 1.0 + \sum\limits_{n = m+1}^{N} \dfrac{m}{n}}{N} \\
@@ -199,7 +201,8 @@ MU_n =
 \end{cases}
 \end{equation*}
 Therefore: 
-\begin{equation}
+
+\begin{equation} \label{formula-window-based}
 \begin{aligned}
 MU=\dfrac{\sum\limits_{n=1}^N MU_n}{N}
 &=\dfrac{m + \sum\limits_{n = m+1}^{w} \dfrac{m}{n} + (N-w)\dfrac{m}{w} }{N} \\
@@ -207,6 +210,9 @@ MU=\dfrac{\sum\limits_{n=1}^N MU_n}{N}
 &=\dfrac{m(1 + ln(w) - ln(m+1) + \dfrac{N-w}{w})}{N}
 \end{aligned}
 \end{equation}
+
+Formula \ref{formula-window-based} only applies to cases where $w<m$ (size of the window is smaller than the number of materialized feature chunks).
+If $m \geq w$ then $MU=1$, as all the feature chunks in the active window are always materialized.
 
 \textbf{Time-based Sampling:}
 For the time-based sampling strategy, there is no direct approach for computing the expected value of $ms$ (the number of the materialized chunks in the sample).
