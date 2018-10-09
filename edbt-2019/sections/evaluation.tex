@@ -19,9 +19,9 @@ To evaluate the SVM model, we compute the misclassification rate on the unseen d
 \textit{Taxi Pipeline.} The Taxi pipeline processes the New York taxi trip dataset and predicts the trip duration of every taxi ride \cite{newyork-taxi}. 
 The pipeline consists of 5 components: input parser, feature extractor, anomaly detector, standard scaler, and a Linear Regression model.
 We design the pipeline based on the solutions of the top scorers of the New York City (NYC) Taxi Trip Duration Kaggle competition\footnote{https://www.kaggle.com/c/nyc-taxi-trip-duration/}. 
-%The input parser computes the actual trip duration by first extracting the pickup and drop off time fields from the input records and calculating the difference (in seconds) between the two values.
-%The feature extractor computes the haversine distance\footnote{https://en.wikipedia.org/wiki/Haversine\_formula}, the bearing\footnote{https://en.wikipedia.org/wiki/Bearing\_(navigation)}, the hour of the day, and the day of the week from the input records. 
-%Finally, the anomaly detector filters the trips that are longer than 22 hours, smaller than 10 seconds, or the trips that have a total distance of zero (the car never moved).
+The input parser computes the actual trip duration by first extracting the pickup and drop off time fields from the input records and calculating the difference (in seconds) between the two values.
+The feature extractor computes the haversine distance\footnote{https://en.wikipedia.org/wiki/Haversine\_formula}, the bearing\footnote{https://en.wikipedia.org/wiki/Bearing\_(navigation)}, the hour of the day, and the day of the week from the input records. 
+Finally, the anomaly detector filters the trips that are longer than 22 hours, smaller than 10 seconds, or the trips that have a total distance of zero (the car never moved).
 To evaluate the model, we use the Root Mean Squared Logarithmic Error (RMSLE) measure.
 RMSLE is also the chosen error metric for the NYC Taxi Trip Duration Kaggle competition.
 
@@ -64,7 +64,7 @@ Taxi        &  42 GB 	    & 280 M            & Jan15              & Feb15 to Jun
 \hline
 \end{tabular}
 \caption{Description of Datasets. The Initial and Deployment columns indicate the amount of data used during the initial model training and the deployment phase (prediction queries and further training data)}  
- \vspace{-20pt}
+ \vspace{-25pt}
 \label{dataset-description}
 \end{table}
 
@@ -158,12 +158,6 @@ For the Taxi dataset, we observe a similar behavior to the initial training wher
 
 This experiment confirms that the effect of the hyperparameters (learning rate and regularization) during the initial and proactive training are the same.
 Therefore, we tune the parameters of the proactive training based on the result of the hyperparameter search during the initial training.
-\begin{figure}[!h]
-\centering
-\resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/parameter-selection-figure}}
-\caption{Result of hyperparameter tuning during the deployment}
-\label{hyper-param-figure}
-\end{figure}
 
 \textbf{Sampling Methods.}
 The choice of the sampling strategy also affects the proactive training.
@@ -184,6 +178,13 @@ Moreover, time-based sampling performs similarly to window-based and uniform sam
 
 \begin{figure}[!h]
 \centering
+\resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/parameter-selection-figure}}
+\caption{Result of hyperparameter tuning during the deployment}
+ \vspace{-15pt}
+\label{hyper-param-figure}
+\end{figure}
+\begin{figure}[!h]
+\centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/sampling-mode-figure}}
 \caption{Effect of different sampling methods on quality}
  \vspace{-20pt}
@@ -191,12 +192,6 @@ Moreover, time-based sampling performs similarly to window-based and uniform sam
 \end{figure}
 
 \subsection{Experiment 3: Optimizations Effects}
-\begin{figure}[!h]
-\centering
-\resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/dynamic-materialization-experiment}}
-\caption{Effect of the online statistics computation and dynamic materialization on the deployment cost with different sampling strategies}
-\label{fig-optimization-effect}
-\end{figure}
 In this experiment, we analyze the effect of the system optimizations, i.e., online statistics computation and the dynamic materialization on the total deployment cost.
 We define the materialization rate as the ratio of the number of materialized chunks over the total number of chunks (both URL and Taxi have a total of 12,000 chunks).
 For both datasets, the materialization rates of 0.0, 0.2, 0.6, and 1.0 indicates that 0, 2400, 6000, and 12000 chunks are materialized.
@@ -210,7 +205,7 @@ Moreover, the empirical computation shows that the time-based strategy performs 
 When the number of materialized feature chunks is 0 or 12000, the design of the deployment platform guarantees that $MU$ is 0.0 and 1.0 respectively. 
 Therefore, we do not report those results in the table.
 
-\begin{table}
+\begin{table}[!h]
 \begin{tabular}{lllll}
 \hline
 & \multicolumn{2}{c}{\textbf{URL}}  & \multicolumn{2}{c}{\textbf{Taxi}} \\
@@ -226,6 +221,14 @@ Time-based &   0.68 	&  0.97 & 0.65 & 0.97 \\ \hline
 \label{table-empirical-mu}
  \vspace{-31pt}
 \end{table}
+\begin{figure}[!h]
+\centering
+\resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/dynamic-materialization-experiment}}
+\caption{Effect of the online statistics computation and dynamic materialization on the deployment cost with different sampling strategies}
+ \vspace{-20pt}
+\label{fig-optimization-effect}
+\end{figure}
+
 To examine the effect of $MU$ on the deployment cost, we plot the total deployment cost using different sampling strategies and materialization rates for the URL and Taxi deployment scenarios in Figure \ref{fig-optimization-effect}.
 When the materialization rate is 0.0 or 1.0, the sampling strategies have similar effects on the deployment cost. 
 Therefore, the total deployment cost for every sampling strategy is 90 minutes for URL and 600 minutes for Taxi deployment scenario, when the materialization rate is 0.0.
@@ -277,6 +280,7 @@ We also reduce the cost of the deployment 6 to 15 times when compared with perio
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/quality-vs-time}}
 \caption{Trade-off between average quality and deployment cost}
+ \vspace{-10pt}
 \label{trade-off-figure}
 \end{figure}
 

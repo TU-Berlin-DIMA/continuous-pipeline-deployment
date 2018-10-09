@@ -2,8 +2,8 @@
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{../images/continuous-training-details.pdf}
- \vspace{-20pt}
 \caption{Workflow of our continuous deployment approach. (1) The platform converts the data into small units (2) The platform utilizes the deployed pipeline to preprocess the data and transform the raw data into features and store them in the storage. (3) The platform samples the data from the storage. (4) The platform materializes the sampled data (5) Using the sampled data, the deployment platform updates the deployed model.}
+ \vspace{-13pt}
 \label{fig:continuous-deployment-details}
 \end{figure*}
 
@@ -82,6 +82,7 @@ In this scenario, the platform first re-materializes the evicted chunks using th
 \centering
 \includegraphics[width=\columnwidth]{../images/dynamic-materialization.pdf}
 \caption{Dynamic Materialization process}
+ \vspace{-10pt}
 \label{fig:dynamic-materialization-process}
 \end{figure}
 It is important to note that the continuous training platform assumes the raw data chunks are always stored and are available for re-materialization.

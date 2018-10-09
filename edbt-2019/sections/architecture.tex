@@ -32,11 +32,11 @@ As a result, the deployment platform allocates more resources for training the m
 \centering
 \includegraphics[width=\columnwidth]{../images/system-architecture.pdf}
 \caption{Architecture of the Continuous Deployment Platform}
- \vspace{-30pt}
+ \vspace{-22pt}
 \label{fig:system-architecture}
 \end{figure}
 \subsection{Data Manager} \label{data-manager}
-The data manager component is responsible for the storage of historical data and materialized features, receiving the incoming training data, and providing the pipeline manager with samples of the historical data.
+The data manager component is responsible for the storage of historical data and materialized features, receiving the incoming training data, and providing the pipeline manager with samples of the data.
 The data manager has four main tasks.
 First, the data manager discretizes the incoming training data into chunks, assigns a timestamp (which acts as a unique identifier) to them, and stores them in the storage unit.
 Second, it forwards the data chunks (and the prediction queries) to the pipeline manager for further processing.
@@ -50,12 +50,12 @@ For every sampled timestamp, if the transformed feature chunk exists in the stor
 However, if the data manager has previously removed the transformed feature chunks from the storage unit, the data manager forwards the raw data chunk to the pipeline manager and notifies the pipeline manager to re-transform the raw data chunk (i.e., the dynamic materialization process).
 
 The data manager provides three sampling strategies, namely, uniform, time-based, and window-based.
-The uniform sampling strategy provides a random sample from the entire historical data where every data chunk has the same probability of being sampled.
+The uniform sampling strategy provides a random sample from the entire data where every data chunk has the same probability of being sampled.
 The time-based sampling strategy assigns weights to every data chunk based on their timestamp such that recent chunks have a higher probability of being sampled.
 The window-based sampling strategy is similar to the uniform sampling, but instead of sampling from the entire historical data, the data manager samples the data from a given time range. 
 Based on the specific use-case, the user chooses the appropriate sampling strategy.
 In many real-world use cases (e.g., e-commerce and online advertising), the deployed model should adapt to the more recent data.
-Therefore, the time-based and window-based sampling provide more appropriate samples for the training data.
+Therefore, the time-based and window-based sampling provide more appropriate samples for training.
 However, in some use cases, the incoming training data is not time-dependent (e.g., image classification of objects).
 In these scenarios, the window-based and the time-based sampling strategies may fail to provide a non-biased sample.
 %In our experiments, we show that the time-based sampling satisfies the requirement of both types of use cases.
@@ -75,13 +75,13 @@ The pipeline manager is the main component of the platform.
 It loads the pipeline and the trained model, transforms the data into features using the pipeline, enables the execution of the proactive training, and exposes the deployed model to answer prediction queries.
 
 Each pipeline component must implement two methods: \textit{update} and \textit{transform}.
-Furthermore, every pipeline component has an internal state for storing statistics (if needed).
+Furthermore, every pipeline component has an internal state for storing the statistics (if needed).
 During the online training, when new training data becomes available, the pipeline manager first invokes the \textit{update} method which enables the component to update its internal statistics using the incoming data.
 Then, the pipeline manager invokes the \textit{transform} method, which transforms the data.
 After forwarding the data through every component of the pipeline, the pipeline manager sends the transformed features to the data manager for storage.
 
-When the scheduler component informs the pipeline manager to execute proactive training, the pipeline manager requests the data manager to provide it with a sample of the historical data for the next proactive training.
-In case the storage unit has reached its limit, some of the sampled data chunks may be unmaterialized.
+When the scheduler component informs the pipeline manager to execute proactive training, the pipeline manager requests the data manager to provide it with a sample of the data for the next proactive training.
+In case the storage unit has reached its limit, some of the sampled data chunks may not be materialized.
 In this case, first, the pipeline manager re-materializes the chunks by invoking the transform methods of the pipeline components (as explained in Section \ref{subsec:dynamic-materialization}).
 Then, it provides the proactive trainer with the current model parameters and the materialized sample of the features.
 Once the proactive training is over, the pipeline manager receives the updated model.
@@ -94,13 +94,13 @@ Finally, the pipeline manager utilizes the deployed model to make predictions.
 
 \subsection{Proactive Trainer} 
 The proactive trainer is responsible for training the deployed model by executing iterations of SGD.
-In the training process, the proactive trainer receives a training dataset (sample of the data) and the current model parameters from the pipeline manager.
+In the training process, the proactive trainer receives a training dataset (sampled materialized features) and the current model parameters from the pipeline manager.
 Then, the proactive trainer performs one iteration of SGD and returns the updated model to the pipeline manager.
 The proactive trainer utilizes advanced learning rate adaptation techniques to dynamically adjust the learning rate parameter when training the model.
 
 In order for the proactive training to update the deployed model, the machine learning model component of the deployed pipeline must implement an \textit{update} method, which is responsible for computing the gradient.
-Therefore, to provide support for other types of incremental training approaches, one needs to implement the training logic in the \textit{update} method of the model.
-However, as described in Section \ref{proactive-training}, the proactive training with the data sampling can only guarantee convergence, only when the SGD optimization is utilized.
+To provide support for other types of incremental training approaches, one needs to implement the training logic in the \textit{update} method of the model.
+However, as described in Section \ref{proactive-training}, the proactive training with data sampling can guarantee convergence only when the SGD optimization is utilized.
 
 %Lastly, the proactive trainer executes the SGD logic on the execution engine.
 %Therefore, to switch the execution engine, the proactive trainer must provide a new implementation of the SGD logic.
