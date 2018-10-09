@@ -13,26 +13,21 @@ The execution engine is responsible for executing the actual data transformation
 The scheduler is responsible for scheduling the proactive training.
 The scheduler instructs the pipeline manager when to execute the proactive training.
 The scheduler accommodates two types of scheduling mechanisms, namely, \textit{static} and \textit{dynamic}.
-
 The static scheduling utilizes a user-defined parameter that specifies the interval between executions of the proactive training.
 This is a simple mechanism for use cases that require constant updates to the deployed model (for example, every minute).
-The dynamic scheduling tunes the scheduling interval based on the rate of the incoming prediction, prediction latency, and the execution time of the proactive training.
+The dynamic scheduling tunes the scheduling interval based on the rate of the incoming predictions, prediction latency, and the execution time of the proactive training.
 The scheduler uses the following formula to compute the time when to execute the next proactive training:
 \begin{equation}
 T' = S * T * pr * pl
 \end{equation}
-where $T'$ indicates the time in seconds when the next proactive training is scheduled to execute, $T$ is the length of the execution time (in seconds) of the last proactive training, $pl$ is the average prediction latency, and $pr$ is the average number of prediction queries per second.
+where $T'$ is the time in seconds when the next proactive training is scheduled to execute, $T$ is the length of the execution time (in seconds) of the previous proactive training, $pl$ is the average prediction latency, and $pr$ is the average number of prediction queries per second.
 $S$ is the slack parameter.
 Slack is a user-defined parameter to hint the scheduler about the possibility of surges in the incoming prediction queries and training data.
 During a proactive training, a certain number of predictions queries arrive at the platform ($T * pr$) which requires $T * pr * pl$ seconds to be processed.
 The scheduler must guarantee that the deployment platform answers all the queries before executing the next proactive training ($T' > T * pr * pl$).
 A large slack value ($\geq2$) results in a larger scheduling interval, thus allocating most of the resources of the deployment platform to the query answering component.
-A small slack value ($2 \geq S \geq 1$) results in smaller scheduling intervals.
+A small slack value ($1 \leq S \leq 2$) results in smaller scheduling intervals.
 As a result, the deployment platform allocates more resources for training the model.
-A slack value of less than 1 increases the latency of prediction query answering.
-The scheduler computes the value of $T$ for every proactive training.
-The deployment platform provides the scheduler with the values of $pr$ and $pl$. 
-
 \begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{../images/system-architecture.pdf}
@@ -40,8 +35,6 @@ The deployment platform provides the scheduler with the values of $pr$ and $pl$.
  \vspace{-30pt}
 \label{fig:system-architecture}
 \end{figure}
-
-
 \subsection{Data Manager} \label{data-manager}
 The data manager component is responsible for the storage of historical data and materialized features, receiving the incoming training data, and providing the pipeline manager with samples of the historical data.
 The data manager has four main tasks.
@@ -64,7 +57,7 @@ Based on the specific use-case, the user chooses the appropriate sampling strate
 In many real-world use cases (e.g., e-commerce and online advertising), the deployed model should adapt to the more recent data.
 Therefore, the time-based and window-based sampling provide more appropriate samples for the training data.
 However, in some use cases, the incoming training data is not time-dependent (e.g., image classification of objects).
-In these scenarios, the window-based and the time-based sampling strategies fail to provide a non-biased sample, since it only samples from the recent data.
+In these scenarios, the window-based and the time-based sampling strategies may fail to provide a non-biased sample.
 %In our experiments, we show that the time-based sampling satisfies the requirement of both types of use cases.
 In Section \ref{evaluation}, we evaluate the effect of the sampling strategy on both the total deployment cost and the quality of the deployed model.
 
@@ -87,29 +80,27 @@ During the online training, when new training data becomes available, the pipeli
 Then, the pipeline manager invokes the \textit{transform} method, which transforms the data.
 After forwarding the data through every component of the pipeline, the pipeline manager sends the transformed features to the data manager for storage.
 
-The scheduler component informs the pipeline manager to execute proactive training.
-Then, the pipeline manager requests the data manager to provide it with a sample of the historical data for the next proactive training.
+When the scheduler component informs the pipeline manager to execute proactive training, the pipeline manager requests the data manager to provide it with a sample of the historical data for the next proactive training.
 In case the storage unit has reached its limit, some of the sampled data chunks may be unmaterialized.
 In this case, first, the pipeline manager re-materializes the chunks by invoking the transform methods of the pipeline components (as explained in Section \ref{subsec:dynamic-materialization}).
-Then, it provides the proactive trainer with the current model parameters and the materialized sample of the transformed features.
+Then, it provides the proactive trainer with the current model parameters and the materialized sample of the features.
 Once the proactive training is over, the pipeline manager receives the updated model.
 
 The data manager also forwards the prediction queries to the pipeline manager.
 Similar to the training data, the pipeline manager sends the prediction queries through the pipeline to perform the necessary data preprocessing (by only invoking the \textit{transform} method of every pipeline component).
 Using the same pipeline to process both the training data and the prediction queries guarantees that the same set of transformations are applied to both types of data.
 As a result, the pipeline manager prevents inconsistencies between training and inference that is a common problem in the deployment of machine learning pipelines \cite{baylor2017tfx}.
-After preprocessing the prediction queries, the pipeline manager utilizes the deployed model to make predictions.
+Finally, the pipeline manager utilizes the deployed model to make predictions.
 
 \subsection{Proactive Trainer} 
 The proactive trainer is responsible for training the deployed model by executing iterations of SGD.
 In the training process, the proactive trainer receives a training dataset (sample of the data) and the current model parameters from the pipeline manager.
 Then, the proactive trainer performs one iteration of SGD and returns the updated model to the pipeline manager.
 The proactive trainer utilizes advanced learning rate adaptation techniques to dynamically adjust the learning rate parameter when training the model.
-Although individual proactive training instances are independent of each other, the component must store the information required by the learning rate adaptation technique.
 
 In order for the proactive training to update the deployed model, the machine learning model component of the deployed pipeline must implement an \textit{update} method, which is responsible for computing the gradient.
-Therefore, to provide support for other types of incremental training approaches, one only needs to implement the training logic in the \textit{update} method of the model.
-However, as described in Section \ref{proactive-training}, the proactive training with the data sampling can only guarantee convergence, when SGD optimization is utilized.
+Therefore, to provide support for other types of incremental training approaches, one needs to implement the training logic in the \textit{update} method of the model.
+However, as described in Section \ref{proactive-training}, the proactive training with the data sampling can only guarantee convergence, only when the SGD optimization is utilized.
 
 %Lastly, the proactive trainer executes the SGD logic on the execution engine.
 %Therefore, to switch the execution engine, the proactive trainer must provide a new implementation of the SGD logic.

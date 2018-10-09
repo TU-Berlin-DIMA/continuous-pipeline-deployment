@@ -8,7 +8,6 @@ Specifically, we answer the following questions:\\
 
 To that end, we first design two pipelines each processing one real-world dataset.
 Then, we deploy the pipelines using different deployment approaches.
-
 \subsection{Setup}\label{subsec:setup}
 \textbf{Pipelines.}
 We design two pipelines for all the experiments.
@@ -20,9 +19,9 @@ To evaluate the SVM model, we compute the misclassification rate on the unseen d
 \textit{Taxi Pipeline.} The Taxi pipeline processes the New York taxi trip dataset and predicts the trip duration of every taxi ride \cite{newyork-taxi}. 
 The pipeline consists of 5 components: input parser, feature extractor, anomaly detector, standard scaler, and a Linear Regression model.
 We design the pipeline based on the solutions of the top scorers of the New York City (NYC) Taxi Trip Duration Kaggle competition\footnote{https://www.kaggle.com/c/nyc-taxi-trip-duration/}. 
-The input parser computes the actual trip duration by first extracting the pickup and drop off time fields from the input records and calculating the difference (in seconds) between the two values.
-The feature extractor computes the haversine distance\footnote{https://en.wikipedia.org/wiki/Haversine\_formula}, the bearing\footnote{https://en.wikipedia.org/wiki/Bearing\_(navigation)}, the hour of the day, and the day of the week from the input records. 
-Finally, the anomaly detector filters the trips that are longer than 22 hours, smaller than 10 seconds, or the trips that have a total distance of zero (the car never moved).
+%The input parser computes the actual trip duration by first extracting the pickup and drop off time fields from the input records and calculating the difference (in seconds) between the two values.
+%The feature extractor computes the haversine distance\footnote{https://en.wikipedia.org/wiki/Haversine\_formula}, the bearing\footnote{https://en.wikipedia.org/wiki/Bearing\_(navigation)}, the hour of the day, and the day of the week from the input records. 
+%Finally, the anomaly detector filters the trips that are longer than 22 hours, smaller than 10 seconds, or the trips that have a total distance of zero (the car never moved).
 To evaluate the model, we use the Root Mean Squared Logarithmic Error (RMSLE) measure.
 RMSLE is also the chosen error metric for the NYC Taxi Trip Duration Kaggle competition.
 
