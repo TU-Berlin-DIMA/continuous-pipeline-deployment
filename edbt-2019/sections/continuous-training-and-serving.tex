@@ -47,43 +47,41 @@ Then it updates its underlying statistics.
 Finally, the component transforms and forwards the data to the next component.
 Online computation of the required statistics eliminates the need to recompute the same statistics during the dynamic materialization and proactive training.
 
-Online statistics computation is only possible for certain types of pipeline components.
-The support for stateless pipeline operations is trivial.
-These operations require no update.
-They are only utilized to transform the data for the following pipeline components.
+Online statistics computation is only applicable to certain types of pipeline components.
+The support for stateless pipeline components is trivial as they do not rely on any statistics before transforming the data.
 For stateful operations, since the statistics update occurs during the online data processing, the platform can only update the statistics that can be computed incrementally.
-Many of the well-known data preprocessing components (such as standardization and one-hot encoding) require statistics that can be computed incrementally.
+Many of the well-known data preprocessing components (such as standardization and one-hot encoding) require statistics that can be computed incrementally (such as mean, standard deviation, and hash table).
 However, some pipeline components require statistics that cannot be updated incrementally (such as percentile).
 For these types of statistics, the pipeline component has to rescan the entire data points whenever new data becomes available.
-For such components, when possible, we can utilize probabilistic and approximate data structures (such as bloom filters or count-min sketch \cite{cormode2005improved}).
-Otherwise, we do not provide support for deployment of pipelines containing components that require a scan of the entire historical data whenever new data becomes available.
+For such components, when applicable, we utilize probabilistic and approximate data structures (such as bloom filters or count-min sketch \cite{cormode2005improved}).
+Otherwise, we do not provide support for the deployment of pipelines containing components that require a rescan of the entire data whenever new data becomes available.
 
-The platform can also facilitate the online statistics computation for custom pipeline components.
+The platform can also facilitate the online statistics computation for user-defined pipeline components.
 In Section \ref{sec:system-architecture}, we describe how users can incorporate this feature into their custom pipeline components.
 
 \subsection{Dynamic Materialization}\label{subsec:dynamic-materialization}
-In order to update the statistics of the pipeline components, each component must transform the data and passes it to the next component.
+In order to update the statistics of the pipeline components, each component must first transform the data and then forwards the transformed data to the next component.
 At the end of this process, the pipeline has transformed the data chunks into feature chunks that the model will utilize during the training process.
-In our continuous training platform, we repeatedly sample the feature chunks to update the model.
+In our continuous deployment platform, we repeatedly sample the data chunks to update the model.
 Storing the chunks as materialized features greatly reduces the processing time as the entire data preprocessing steps can be skipped during the model update.
 However, in presence of a limited storage capacity, one has to consider the effect of storing the materialized feature chunks.
 
 To address the storage capacity issue, we utilize dynamic materialization.
-While creating the feature chunks, the platform assigns a unique identifier (the creation timestamp) and a reference to the raw data chunk.
-In dynamic materialization, when the size of the store feature chunks exceeds the storage capacity, the platform removes the content of the oldest materialized feature chunks from the storage and only keeps the unique identifier and the reference to the raw data chunk (similar to cache eviction).
-The next time the sampler selects one or more of the evicted feature chunks, the platform re-materializes each feature chunk from the raw data chunk by utilizing the deployed pipeline.
+While creating the feature chunks, the platform assigns a unique identifier (the creation timestamp) and a reference to the originating raw data chunk.
+In dynamic materialization, when the size of the stored feature chunks exceeds the storage capacity, the platform removes the content of the oldest materialized feature chunks from the storage and only keeps the unique identifier and the reference to the raw data chunk (similar to cache eviction).
+The next time the sampler selects one or more of the evicted feature chunks, the platform re-materializes each feature chunk from the raw data chunk by reapplying the deployed pipeline to the raw data chunk.
 Figure \ref{fig:dynamic-materialization-process} shows the process of dynamic materialization in two possible scenarios.
 For both scenarios, there are a total 6 data chunks (raw and feature) available in the storage (with timestamps $t_0$ to $t_5$).
 The sampling operation selects the chunks at $t_0$, $t_2$, and $t_5$.
-In the first scenario (left), the feature chunks are all materialized.
+In Scenario 1, all the feature chunks are materialized.
 Therefore, the platform directly utilizes them to update the model.
-In the second scenario (right), the platform has previously evicted some of the materialized feature chunks due to the limit on the storage capacity.
+In Scenario 2, the platform has previously evicted some of the materialized feature chunks due to the limit on the storage capacity.
 In this scenario, the platform first re-materializes the evicted chunks using the deployed pipeline components before updating the model.
 
 \begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{../images/dynamic-materialization.pdf}
-\caption{Dynamic Materialization process. (left) all feature chunks are materialized. (right) some feature chunks are evicted}
+\caption{Dynamic Materialization process}
 \label{fig:dynamic-materialization-process}
 \end{figure}
 It is important to note that the continuous training platform assumes the raw data chunks are always stored and are available for re-materialization.
