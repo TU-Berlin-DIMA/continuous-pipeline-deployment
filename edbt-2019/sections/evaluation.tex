@@ -1,4 +1,11 @@
 \section{Evaluation} \label{evaluation} 
+\begin{figure*}[t]
+\centering
+\resizebox{\textwidth}{!}{\input{../images/experiment-results/tikz/deployment-quality-and-time-experiment}}
+\caption{Model Quality and Training cost for different deployment approaches}
+ \vspace{-10pt}
+\label{deployment-quality-figure}
+\end{figure*}
 To evaluate the performance of our deployment platform, we perform several experiments.
 Our main goal is to show that the continuous deployment approach maintains the quality of the deployed model while reducing the total training time.
 Specifically, we answer the following questions:\\
@@ -40,19 +47,6 @@ For the Taxi pipeline, we train a model using the data from January 2015.
 For both datasets, since the entire data fits in the memory of the computing nodes, we use batch gradient descent (sampling ratio of 1.0) during the initial training.
 We then deploy the models (and the pipelines).
 We use the remaining data for sending prediction queries and further training of the deployed models.
-
-\textbf{Evaluation metrics. }
-For experiments that compare the quality of the deployed model, we utilize the prediction queries to compute the cumulative prequential error rate of the deployed models over time \cite{dawid1984present}.
-For experiments that capture the cost of the deployment, we measure the time the platforms spend in updating the model, performing proactive training (retraining for the periodical deployment scenario), and answering prediction queries.
-
-\textbf{Deployment process.}
-The URL dataset does not have timestamps. 
-Therefore, we divide every day of the data into chunks of 1 minute which results in a total of 12000 chunks, each one with the size of roughly 200KB.
-The deployment platform first uses the chunks for prequential evaluation and then updates the deployed model.
-The Taxi dataset includes timestamps. 
-In our experiments, each chunk of the Taxi dataset contains one hour of the data, which results in a total of 12382 chunks, with an average size of 3MB per chunk. 
-The deployment platform processes the chunks in order of the timestamps (from 2015-Feb-01  00:00 to 2016-Jun-30 24:00, an 18 months period).
-
 \begin{table}[h!]
 \centering
 \begin{tabular}{lrrll}
@@ -68,14 +62,19 @@ Taxi        &  42 GB 	    & 280 M            & Jan15              & Feb15 to Jun
 \label{dataset-description}
 \end{table}
 
-\subsection{Experiment 1: Deployment Approaches}
-\begin{figure*}[t]
-\centering
-\resizebox{\textwidth}{!}{\input{../images/experiment-results/tikz/deployment-quality-and-time-experiment}}
-\caption{Model Quality and Training cost for different deployment approaches}
-\label{deployment-quality-figure}
-\end{figure*}
+\textbf{Evaluation metrics. }
+For experiments that compare the quality of the deployed model, we utilize the prediction queries to compute the cumulative prequential error rate of the deployed models over time \cite{dawid1984present}.
+For experiments that capture the cost of the deployment, we measure the time the platforms spend in updating the model, performing proactive training (retraining for the periodical deployment scenario), and answering prediction queries.
 
+\textbf{Deployment process.}
+The URL dataset does not have timestamps. 
+Therefore, we divide every day of the data into chunks of 1 minute which results in a total of 12000 chunks, each one with the size of roughly 200KB.
+The deployment platform first uses the chunks for prequential evaluation and then updates the deployed model.
+The Taxi dataset includes timestamps. 
+In our experiments, each chunk of the Taxi dataset contains one hour of the data, which results in a total of 12382 chunks, with an average size of 3MB per chunk. 
+The deployment platform processes the chunks in order of the timestamps (from 2015-Feb-01  00:00 to 2016-Jun-30 24:00, an 18 months period).
+
+\subsection{Experiment 1: Deployment Approaches}
 In this experiment, we investigate the effect of our continuous deployment approach on model quality and the total training time.
 We use 3 different deployment approaches.
 \begin{itemize}
@@ -131,9 +130,23 @@ As a result, for the Taxi dataset, the cost of the periodical deployment is 6 ti
 \input{../images/experiment-results/tikz/parameter-selection-table}
 \end{adjustbox}
 \caption{Hyperparameter tuning during initial training (bold numbers show the best results for each adaptation techniques)}
- \vspace{-20pt}
+ \vspace{-25pt}
 \label{hyper-param-table}
 \end{table*}
+\begin{figure}[!h]
+\centering
+\resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/parameter-selection-figure}}
+\caption{Result of hyperparameter tuning during the deployment}
+ \vspace{-5pt}
+\label{hyper-param-figure}
+\end{figure}
+\begin{figure}[!h]
+\centering
+\resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/sampling-mode-figure}}
+\caption{Effect of different sampling methods on quality}
+ \vspace{-5pt}
+\label{sampling-method-figure}
+\end{figure}
 In this experiment, we investigate the effect of different parameters on the quality of the models after deployment.
 As described in Section \ref{proactive-training}, proactive training is an extension of the stochastic gradient descent to the deployment phase.
 Therefore, we expect the set of hyperparameters with best performance during the initial training also performs the best during the deployment phase.
@@ -175,22 +188,6 @@ As a result, we observe that different sampling strategies have the same effect 
 
 Our experiments show that for datasets that gradually change over time, time-based sampling outperforms other sampling strategies.
 Moreover, time-based sampling performs similarly to window-based and uniform sampling for datasets with stationary distributions.
-
-\begin{figure}[!h]
-\centering
-\resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/parameter-selection-figure}}
-\caption{Result of hyperparameter tuning during the deployment}
- \vspace{-15pt}
-\label{hyper-param-figure}
-\end{figure}
-\begin{figure}[!h]
-\centering
-\resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/sampling-mode-figure}}
-\caption{Effect of different sampling methods on quality}
- \vspace{-20pt}
-\label{sampling-method-figure}
-\end{figure}
-
 \subsection{Experiment 3: Optimizations Effects}
 In this experiment, we analyze the effect of the system optimizations, i.e., online statistics computation and the dynamic materialization on the total deployment cost.
 We define the materialization rate as the ratio of the number of materialized chunks over the total number of chunks (both URL and Taxi have a total of 12,000 chunks).
@@ -204,8 +201,8 @@ For both the uniform and time-based sampling, the empirical and analytical compu
 Moreover, the empirical computation shows that the time-based strategy performs better than the uniform sampling strategy.
 When the number of materialized feature chunks is 0 or 12000, the design of the deployment platform guarantees that $MU$ is 0.0 and 1.0 respectively. 
 Therefore, we do not report those results in the table.
-
 \begin{table}[!h]
+ \vspace{-9pt}
 \begin{tabular}{lllll}
 \hline
 & \multicolumn{2}{c}{\textbf{URL}}  & \multicolumn{2}{c}{\textbf{Taxi}} \\
@@ -218,8 +215,8 @@ Window-based &  0.58 	& 1.0 & 0.57 & 1.0 \\
 Time-based &   0.68 	&  0.97 & 0.65 & 0.97 \\ \hline      
 \end{tabular}
 \caption{Empirical computation of $MU$ for different sampling strategies and materialization rates.}
+ \vspace{-15pt}
 \label{table-empirical-mu}
- \vspace{-31pt}
 \end{table}
 \begin{figure}[!h]
 \centering
@@ -275,7 +272,6 @@ Long retraining time may have a negative impact on the prediction accuracy as th
 Figure \ref{trade-off-figure} shows the trade-off between the average quality and the total cost of the deployment.
 By utilizing continuous deployment, we improve the average quality by 0.05\% and 0.3\% for the Taxi and URL datasets over the periodical deployment approach.
 We also reduce the cost of the deployment 6 to 15 times when compared with periodical deployment.
-
 \begin{figure}[!h]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/quality-vs-time}}
