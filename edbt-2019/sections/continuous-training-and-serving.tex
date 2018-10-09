@@ -90,7 +90,7 @@ A similar issue arises in the periodical deployment approach.
 If there is not enough space to store all the historical and incoming data, at every retraining, the platform only utilizes the available data in the storage.
 
 \subsubsection{Storage requirement for materialized feature chunks.} 
-In order to estimate the storage requirement for the preprocessed feature chunks, we investigate the storage complexity of different pipeline components in terms of the input size (raw data chunks).
+In order to estimate the storage requirement for the preprocessed feature chunks, we investigate the size complexity of different pipeline components in terms of the input size (raw data chunks).
 Table \ref{pipeline-component-description} shows the categories of the pipeline components and their characteristics.
 \begin{table}[h!]
 \centering
@@ -109,29 +109,25 @@ feature extraction & feature (column) & creating new columns \\
  \vspace{-28pt}
 \label{pipeline-component-description}
 \end{table}
-Assuming the size of the input data is $n$, the storage complexity of data transformation and feature selection operations are linear in terms of the input size ($O(n)$).
-This is because these operations either perform a one-to-one mapping (normalization) or reduce the size of the data (anomaly filtering and feature selection).
+Let us assume the total number of the values in the input is $n$ ($\#rows \times \#columns$) , the complexity of data transformation and feature selection operations are linear in terms of the input size ($O(n)$).
+This is because these operations either perform a one-to-one mapping (normalization) or reduce the size of the data (anomaly filtering and variance thresholding).
 The case for feature extraction is more complicated as there are different types of feature extraction operations.
-In many cases, the feature extraction process creates a new feature by combining one or more existing features (such as summing or multiplying features together).
-In these cases, the storage complexity is $O(n)$ as the increase in size is linear with respect to the input size.
-In some cases, the feature extraction process may generate many features from a small subset of the existing features.
+In many cases, the feature extraction process creates a new feature (column) by combining one or more existing features (such as summing or multiplying features together).
+In these cases, the complexity is $O(n)$ as the increase in size is linear with respect to the input size.
+However, in some case, the feature extraction process generates many features (columns) from a small subset of the existing features.
 Prominent examples of such operations are one-hot encoding and feature hashing.
 One-hot encoding converts a column of the data with categorical values into several columns (1 column for each unique value).
 For every value in the original column, the encoded representation has the value of $1$ in the column the value represents and $0$ in all the other columns.
-Let us assume the number of the unique values in the column is $m$.
-Thus, the storage complexity of the one-hot encoding operation is $O(mn)$.
-Based on the value of $m$, three scenarios can occur:
-\begin{itemize}
-\item if $m \ll n$, then the storage complexity is $O(n)$
-\item if $m \approx n$, then the storage complexity is $O(n^2)$
-\item if $m \gg n$, then the storage complexity is $\Omega (n^2)$
-\end{itemize}
-In the first two cases, we have an upper bound on the storage requirements.
-However, the last case is data-dependent and the size of the materialized features may have a polynomial growth rate with respect to the size of the original data, which may render storage of even a few features chunks impossible.
-However, both one-hot encoding and feature hashing produce sparse data.
-Therefore, by utilizing sparse data representation, we can guarantee a storage complexity of $O(n)$ in all three cases.
+Consider the case when we are applying the one-hot encoding operation to every column of the dataset.
+Furthermore, Let us assume $m$ represents the number of unique values in the column with the highest number of unique values.
+Thus, the complexity of the one-hot encoding operation is $O(mn)$ (each existing value is encoded with at most $m$ binary values).
+If $m$ is very small, then the complexity is still $O(n)$.
+However, in the worst-case scenario, when almost every value in the dataset is unique ($m \approx n$), the complexity is $O(n^2)$.
+A quadratic growth rate, especially in the presence of large datasets, is not desirable and may render the storage of even a few feature chunks impossible.
+However, both one-hot encoding and feature hashing produce sparse data where for every encoded data point, only one entry is $1$ and all the other entries are $0$.
+Therefore, by utilizing sparse vector representation, we guarantee a complexity of $O(n)$.
 
-Since the storage requirement is in worst-case scenario linear with respect to the size of the raw data and the eviction policy gradually dematerializes the older feature chunks, we can safely assume the size of the materialized features will not exceed the storage capacity.
+Since the complexity is in worst-case scenario linear with respect to the size of the raw data and the eviction policy gradually dematerializes the older feature chunks, the platform ensures the size of the materialized features will not unexpectedly exceed the storage capacity.
 
 \subsubsection{Effects of sampling strategies on the dynamic materialization.}
 The choice of the sampling strategy affects the efficiency of the dynamic materialization.
@@ -252,18 +248,19 @@ Algorithm \ref{mini-batch-SGD} shows the pseudocode of the mini-batch SGD algori
 \begin{algorithmic}[1]
 \Require  $D=$ training dataset
 \Ensure $m=$ trained model
-\For {$i = 1 ... N$}
+\State initialize $m_0$
+\For {$i = 1 ... n$}
 	\State $s_i =$ sample from $D$
 	\State $g = \nabla J(s_i, \textcolor{blue}{m_{i-1}})$
 	\State $m_i = \textcolor{blue}{m_{i-1}} - \textcolor{blue}{\eta_{i-1}}g$
 \EndFor
+\State \Return $m_n$
 \end{algorithmic}
 \end{algorithm}
-
 Since the platform executes the proactive training in arbitrary intervals, we must ensure each instance of the proactive training is independent of the previous instances.
-According to the mini-batch SGD algorithm, each iteration of the SGD only requires the model parameters ($m_{i-1}$) and the learning rate parameters ($\eta_{i-1}$) of the previous iterations (line 3 and 4).
+According to the mini-batch SGD algorithm, each iteration of the SGD only requires the model ($m_{i-1}$) and the learning rate ($\eta_{i-1}$) of the previous iteration (line 4 and 5).
 Given these parameters, iterations of SGD are conditionally independent of each other.
-In order to execute the proactive training, the deployment platform only needs to store the model parameters (model weight vector) and the learning rate parameters (past gradients and momentum vectors for the advanced learning rate adaptation methods).
+Therefore, to execute the proactive training, the deployment platform only needs to store the model weights and the learning rate.
 By proactively training the deployed model, the platform ensures the model stays up-to-date and provides accurate predictions.
 
 Proactive training is a form of incremental training \cite{gepperth2016incremental} which is limited to SGD-based models.
