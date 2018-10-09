@@ -1,8 +1,8 @@
 \section{Background} \label{background}
-To continuously train the deployed model, we rely on computing partial updates based on the current parameters of the model and a combination of the incoming and existing data.
+To continuously train the deployed model, we compute partial updates based on the current model parameters and a combination of the incoming and existing data.
 To compute the partial updates, we utilize Stochastic Gradient Descent (SGD) \cite{zhang2004solving}.
-SGD has several parameters and in order to work effectively, they have to be tuned.
-In this section, we describe the details of SGD and its parameters and discuss the effect of the parameters on training machine learning models.
+SGD has several parameters (typically referred to as hyperparameters) and in order to work effectively, they have to be tuned.
+In this section, we describe the details of SGD and its hyperparameters and discuss the effect of the hyperparameters on training machine learning models.
 
 \subsection{Stochastic Gradient Descent} \label{sgd}
 \textit{Stochastic Gradient Descent (SGD)} is an optimization strategy utilized by many machine learning algorithms for training a model.
@@ -28,11 +28,11 @@ Then in every iteration, we update the weights based on the gradient of the loss
 {w}^{t+1} = {w}^t + \eta \sum_{i \in S} x^i (y^i - \hat{P}(Y^i = 1 | x^i w))
 \end{equation}
 
-where $\eta$ is the learning rate parameter and $S$ is the random sample in the current iteration.
+where $\eta$ is the learning rate hyperparameter and $S$ is the random sample in the current iteration.
 The algorithm continues until convergence, i.e., when the weight vector does not change after an iteration.
 
 \textbf{Learning Rate.}
-An important parameter of stochastic gradient descent is the learning rate.
+An important hyperparameter of stochastic gradient descent is the learning rate.
 The learning rate controls the degree of change in the weights during every iteration.
 The most trivial approach for tuning the learning rate is to initialize it to a small value and after every iteration decrease the value by a small factor.
 However, in complex and high-dimensional problems, the simple tuning approach is ineffective \cite{schaul2013no}. 
@@ -42,7 +42,7 @@ Moreover, some of the learning rate adaptation methods perform per coordinate mo
 In many high-dimensional problems, the parameters of the weight vector do not have the same level of importance, therefore each parameter must be treated differently during the training process.
 
 \textbf{Sample Size.}
-Another parameter of stochastic gradient descent is the sample size.
+Another hyperparameter of stochastic gradient descent is the sample size (sometimes referred to as the mini-batch size).
 Given proper learning rate tuning mechanism, SGD eventually converges to a solution regardless of the sample size.
 However, the sample size can greatly affect the time that is required to converge.
 Two extremes of the sample size are 1 (every iteration considers 1 data item) and $N$ (similar to batch gradient descent, every iteration scans the entire dataset).
@@ -66,15 +66,15 @@ After this step, all the partial gradients are combined to compute the final gra
 Distributed SGD significantly reduces the time for executing individual iterations, which results in a reduction in the overall training time.
 
 \subsection{Tuning the Periodical Deployment}
-Two groups of hyperparameters affect the efficiency of the periodical deployment approach.
-The first group (the deployment hyperparameters) controls the frequency and amount of data for every retraining.
-The second group (the training hyperparameters) tunes the algorithm for retraining procedure.
-In this work, we are targeting training algorithms based on the Stochastic gradient descent.
+Typically, two groups of hyperparameters affect the efficiency of the periodical deployment approach.
+The first group (the deployment hyperparameters) control the frequency and amount of data for every retraining.
+The second group (the training hyperparameters) tune the algorithm for retraining procedure.
+In this work, we are targeting training algorithms based on Stochastic gradient descent.
 Therefore, the hyperparameters are the learning rate and the sample size.
 
-There are several existing approaches for selecting the training hyperparameters, such as grid search, random search, and sequential model based search \cite{bergstra2012random}.
+There are several existing approaches for tuning the training hyperparameters, such as grid search, random search, and sequential model based search \cite{bergstra2012random}.
 The deployment hyperparameters, however, are typically selected to fit the specific use case.
 For example, in many of the real-world use cases, one retrains the deployed model using the entire historical data on a daily basis.
-Similarly, when tuning our continuous deployment platform, one has to select several hyperparameters which vary from use-case to use-case.
+Similarly, when tuning our continuous deployment platform, one has to select two hyperparameters which vary from use-case to use-case.
 In the next sections, we show that tuning our continuous deployment approach is no more complex than tuning the periodical deployment approach.
 
