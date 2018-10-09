@@ -38,11 +38,10 @@ Moreover, the platform appends the new training data to the historical data.
 By the time the retraining process is over, enough training data is accumulated which requires the deployment platform to perform another retraining.
 As a result, the deployed model quickly becomes stale.
 
-An efficient deployment platform, aside from being robust and easy to tune, must be able to maintain the quality of the deployed model without incurring the high training cost of the periodical deployment approach.
- 
-We propose a deployment platform, that completely eliminates the need for retraining, thus significantly reducing the training cost while achieving the same level of quality as the periodical deployment approach.
-Our deployment platform is also robust and accommodates many different types of machine learning models and pipelines.
-Lastly, the tuning process of our deployment approach is simple and requires minimal user interaction.
+Although periodical deployment is robust and easy to tune, it cannot maintain the quality of the deployed model without incurring a high training cost.
+We propose a deployment platform that eliminates the need for retraining, thus significantly reducing the training cost while achieving the same level of quality as the periodical deployment approach.
+Our deployment platform is robust, i.e., it accommodates many different types of machine learning models and pipelines.
+Moreover, similar to the periodical deployment, the tuning process of our deployment platform is simple and requires the same amount of user interaction as the periodical deployment.
 
 %% Use case
 %\begin{figure}[h!]
@@ -67,35 +66,35 @@ Lastly, the tuning process of our deployment approach is simple and requires min
 %% Our solution
 Our deployment platform continuously updates the model using a combination of the historical and incoming training data.
 Similar to existing deployment platforms, our platform also utilizes online learning methods to update the model based on the incoming training data.
-However, instead of periodical retraining, our deployment platform performs regular updates to the model based on samples of the historical data.
-Our deployment platform offers the following two optimizations.
+However, instead of the periodical retraining, our deployment platform performs regular updates to the model based on samples of the historical data.
+Our deployment platform offers the following two features.
 
 \textit{Proactive training.}
-Proactive training is the process of utilizing samples of the historical data to update the deployed model.
+Proactive training is the process of utilizing samples of the data to update the deployed model.
 First, the deployment platform processes a given sample using the pipeline, then it computes a partial gradient and updates the deployed model based on the partial gradient.
 The updated model is immediately ready for answering prediction queries.
-Our experiments show that proactive training reduces the training time by an order of magnitude while providing the same level of quality when compared to the periodical deployment approach.
+Our experiments show that proactive training reduces the training time by one order of magnitude while providing the same level of quality when compared to the periodical deployment approach.
 
 \textit{Online Statistics Computation and Dynamic Materialization.}
 Before updating the model using proactive training, the pipeline has to preprocess the training data.
-Every component of the pipeline needs to scan the data, updates the statistics (for example the mean and the standard deviation of the standard scaler component), and finally transform the data.
+Every component of the pipeline needs to scan the data, updates the statistics (for example the mean and the standard deviation of the standard scaler component), and finally, transform the data.
 Computing these statistics and transforming the data are time consuming processes.
 Aside from the proactive training, our deployment platform also employs online learning methods to update the model in real-time.
 During the online learning, we compute the required statistics and transform the data.
 The deployment platform stores the updated statistics for every pipeline component and materializes the transformed features by storing them in memory or disk.
-In presence of a limited storage capacity, the platform removes the older transformed features, and only re-materializes them when needed.
+In presence of a limited storage capacity, the platform removes the older transformed features, and only re-materializes them when needed (through a process called \textit{dynamic materialization}).
 By reusing the computed statistics and the materialized features during the proactive training, we eliminate the data preprocessing steps of the pipeline and further decrease the proactive training time.
 
 % Our contributions
 In summary, our contributions are:
 \begin{itemize}
 \item A platform for continuously training deployed machine learning models and pipelines that adapts to the changes in the incoming data. The platform accommodates different types of machine learning models and pipelines. In our experiments, we design and deploy two different machine learning pipelines.
-\item Proactive training of the deployed models and pipelines that frequently updates the model using samples of the historical data which guarantees high-quality models while completely eliminating the need for periodical retraining.
-\item Efficient pipeline processing and model training by online statistics computation and dynamic feature materialization, thus guaranteeing the availability of up-to-date models for answering prediction queries.
+\item Proactive training of the deployed models and pipelines that frequently updates the model using samples of the data which guarantees high-quality models while completely eliminating the need for periodical retraining.
+\item Efficient pipeline processing and model training by online statistics computation and dynamic materialization, thus guaranteeing the availability of up-to-date models for answering prediction queries.
 \end{itemize}
 
 The rest of this paper is organized as follows:
-In Section \ref{background}, we describe the details of the optimization strategy we utilize for our continuous deployment platform.
+In Section \ref{background}, we provide background information on the optimization strategy we utilize in our continuous deployment platform and tuning mechanism of the existing deployment platforms.
 Section \ref{continuous-training-serving} describes the details of our continuous training approach.
 In Section \ref{sec:system-architecture}, we introduce the architecture of our deployment platform.
 In Section \ref{evaluation}, we evaluate the performance of our continuous deployment platform.
