@@ -194,7 +194,7 @@ Moreover, time-based sampling performs similarly to window-based and uniform sam
 \subsection{Experiment 3: Optimizations Effects}
 In this experiment, we analyze the effect of the system optimizations, i.e., online statistics computation and the dynamic materialization on the total deployment cost.
 We define the materialization rate as the ratio of the number of materialized chunks over the total number of chunks (both URL and Taxi have a total of 12,000 chunks).
-For both datasets, the materialization rates of 0.0, 0.2, 0.6, and 1.0 indicates that 0, 2400, 6000, and 12000 chunks are materialized.
+For both datasets, the materialization rates of 0.0, 0.2, 0.6, and 1.0 indicates that 0, 2400, 7200, and 12000 chunks are materialized.
 For the window-based sampling strategy, we set the window size to 6,000 chunks (half of the total chunks).
 
 Using the Formula \ref{formula-uniform} and \ref{formula-window-based} of Section \ref{subsec:dynamic-materialization}, the average materialization utilization rate ($MU$) is 0.0, 0.5218, 0.9064, and 1.0 for uniform sampling and 0.0, 0.5832, 1.0, and 1.0 for window-based sampling.
@@ -210,8 +210,8 @@ Therefore, we do not report those results in the table.
 \hline
 & \multicolumn{2}{c}{\textbf{URL}}  & \multicolumn{2}{c}{\textbf{Taxi}} \\
  \cmidrule(lr){2-3} \cmidrule(lr){4-5} 
-\textbf{Sampling}  & \multicolumn{1}{l}{m=2400} & \multicolumn{1}{l}{m=7200} 
- &  \multicolumn{1}{l}{m=2400} & \multicolumn{1}{l}{m=7200}  \\
+\textbf{Sampling}  & \multicolumn{1}{l}{m=0.2} & \multicolumn{1}{l}{m=0.6} 
+ &  \multicolumn{1}{l}{m=0.2} & \multicolumn{1}{l}{m=0.6}  \\
 \hline
 Uniform      	&  0.52 & 0.91 & 0.51 & 0.90 \\
 Window-based &  0.58 	& 1.0 & 0.57 & 1.0 \\
