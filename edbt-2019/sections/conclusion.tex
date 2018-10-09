@@ -9,14 +9,14 @@ This results in model-staleness which may decrease the quality of the deployed m
 
 We propose a training approach, called proactive training, that utilizes samples of the historical data to train the deployed pipeline.
 Proactive training replaces the periodical retraining, thus guaranteeing a high-quality model without the lengthy retraining process.
-We also propose online statistics computation and materialization of the preprocessed features which further decreases the training time.
+We also propose online statistics computation and dynamic materialization of the preprocessed features which further decreases the training time.
 We propose a modular design that enables our deployment platform to be integrated with different scalable data processing platforms.
 
 We implement a prototype using Apache Spark to evaluate the performance of our deployment platform.
 In our experiments, we develop two pipelines with two machine learning models to process two real-world datasets.
 We discuss how to tune the deployment platform based on the available historical data.
-Our experiments show that our continuous deployment reduces the total training cost by a factor of $6$ and $15$ for the Taxi and URL datasets, respectively.
+Our experiments show that our continuous deployment reduces the total deployment cost by a factor of $6$ and $15$ for the Taxi and URL datasets, respectively.
 Moreover, continuous deployment platform provides the same level of quality for the deployed model when compared with the periodical deployment approach.
 
-In the future work, we will integrate more complex machine learning pipelines and models (e.g., neural networks) into our deployment platform and investigate the effect of concept drift and anomaly on our deployment platform.
+In the future work, we will integrate more complex machine learning pipelines and models (e.g., neural networks) into our deployment platform and investigate the effect of concept drift and anomalies on our deployment platform.
 
