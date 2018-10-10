@@ -221,7 +221,7 @@ As a result, we guarantee the time-based sampling has a higher average materiali
 In the experiments, we empirically show the average materialization utilization rate.
 
 \textbf{An example use-case:}
-To demonstrate with a real use-case, consider a scenario where we are dividing the incoming data chunks into 1 MB and expect 100,000 chunks ($N = 100000$, 100 GB) in a certain time period.
+To demonstrate with a real use-case, consider a scenario where we divide the incoming data chunks into 1 MB and expect 100,000 chunks ($N = 100000$, 100 GB) in a certain time period.
 Furthermore, we set the maximum number of chunks that we would like to materialize to 2,000 ($m=20000$).
 Using a uniform sampling strategy, $MU =0.522 $ (Formula \ref{formula-uniform}).
 This shows that by materializing 20\% of the incoming chunks (around 20 GB), we guarantee that 52\% of data that the proactive trainer uses does not need re-materialization.
