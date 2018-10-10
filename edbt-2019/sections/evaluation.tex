@@ -2,6 +2,7 @@
 \begin{figure*}[t]
 \centering
 \resizebox{\textwidth}{!}{\input{../images/experiment-results/tikz/deployment-quality-and-time-experiment}}
+ \vspace{-20pt}
 \caption{Model Quality and Training cost for different deployment approaches}
  \vspace{-10pt}
 \label{deployment-quality-figure}
@@ -122,8 +123,6 @@ Similar to the URL dataset, continuous deployment only adds a small overhead to 
 Contrary to the URL dataset, the feature size of the Taxi dataset is 11.
 Therefore, offline retraining converges faster to a solution.
 As a result, for the Taxi dataset, the cost of the periodical deployment is 6 times larger than the continuous deployment (instead of 15 times for URL dataset). 
-
-\subsection{Experiment 2: System Tuning}
 \begin{table*}[t]
 \centering
 \begin{adjustbox}{max width=\textwidth}
@@ -133,18 +132,21 @@ As a result, for the Taxi dataset, the cost of the periodical deployment is 6 ti
  \vspace{-25pt}
 \label{hyper-param-table}
 \end{table*}
+\subsection{Experiment 2: System Tuning}
 \begin{figure}[!h]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/parameter-selection-figure}}
+ \vspace{-15pt}
 \caption{Result of hyperparameter tuning during the deployment}
- \vspace{-5pt}
+ \vspace{-10pt}
 \label{hyper-param-figure}
 \end{figure}
 \begin{figure}[!h]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/sampling-mode-figure}}
+ \vspace{-15pt}
 \caption{Effect of different sampling methods on quality}
- \vspace{-5pt}
+ \vspace{-15pt}
 \label{sampling-method-figure}
 \end{figure}
 In this experiment, we investigate the effect of different parameters on the quality of the models after deployment.
@@ -190,17 +192,9 @@ Our experiments show that for datasets that gradually change over time, time-bas
 Moreover, time-based sampling performs similarly to window-based and uniform sampling for datasets with stationary distributions.
 \subsection{Experiment 3: Optimizations Effects}
 In this experiment, we analyze the effect of the system optimizations, i.e., online statistics computation and the dynamic materialization on the total deployment cost.
-We define the materialization rate as the ratio of the number of materialized chunks over the total number of chunks (both URL and Taxi have a total of 12,000 chunks).
+We define the materialization rate as the ratio of the number of materialized chunks over the total number of chunks (both URL and Taxi have around 12,000 chunks in total).
 For both datasets, the materialization rates of 0.0, 0.2, 0.6, and 1.0 indicates that 0, 2400, 7200, and 12000 chunks are materialized.
 For the window-based sampling strategy, we set the window size to 6,000 chunks (half of the total chunks).
-
-Using the Formula \ref{formula-uniform} and \ref{formula-window-based} of Section \ref{subsec:dynamic-materialization}, the average materialization utilization rate ($MU$) is 0.0, 0.5218, 0.9064, and 1.0 for uniform sampling and 0.0, 0.5832, 1.0, and 1.0 for window-based sampling.
-To validate our analysis, we compute $MU$ empirically as well.
-Table \ref{table-empirical-mu} shows the value of $MU$ for different settings.
-For both the uniform and time-based sampling, the empirical and analytical computation yield similar values.
-Moreover, the empirical computation shows that the time-based strategy performs better than the uniform sampling strategy.
-When the number of materialized feature chunks is 0 or 12000, the design of the deployment platform guarantees that $MU$ is 0.0 and 1.0 respectively. 
-Therefore, we do not report those results in the table.
 \begin{table}[!h]
  \vspace{-9pt}
 \begin{tabular}{lllll}
@@ -215,14 +209,22 @@ Window-based &  0.58 	& 1.0 & 0.57 & 1.0 \\
 Time-based &   0.68 	&  0.97 & 0.65 & 0.97 \\ \hline      
 \end{tabular}
 \caption{Empirical computation of $MU$ for different sampling strategies and materialization rates (m).}
- \vspace{-15pt}
+ \vspace{-23pt}
 \label{table-empirical-mu}
 \end{table}
+Using the Formula \ref{formula-uniform} and \ref{formula-window-based} of Section \ref{subsec:dynamic-materialization}, the average materialization utilization rate ($MU$) is 0.0, 0.5218, 0.9064, and 1.0 for uniform sampling and 0.0, 0.5832, 1.0, and 1.0 for window-based sampling.
+To validate our analysis, we compute $MU$ empirically as well.
+Table \ref{table-empirical-mu} shows the value of $MU$ for different settings.
+For both the uniform and time-based sampling, the empirical and analytical computation yield similar values.
+Moreover, the empirical computation shows that the time-based strategy performs better than the uniform sampling strategy.
+When the number of materialized feature chunks is 0 or 12000, the design of the deployment platform guarantees that $MU$ is 0.0 and 1.0, respectively. 
+Therefore, we do not report those results in the table.
 \begin{figure}[!h]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/dynamic-materialization-experiment}}
-\caption{Effect of the online statistics computation and dynamic materialization on the deployment cost with different sampling strategies}
- \vspace{-20pt}
+ \vspace{-15pt}
+\caption{Effect of the online statistics computation and dynamic materialization on the deployment cost}
+ \vspace{-21pt}
 \label{fig-optimization-effect}
 \end{figure}
 
@@ -233,8 +235,8 @@ Similarly, the deployment cost is 54 minutes for URL and 308 minutes for Taxi, w
 
 For the URL deployment scenario, when the materialization rate is 0.2, time-based, window-based, and uniform sampling improve the deployment cost by 30\%, 25\%, and 23\% in comparison with the materialization rate of 0.0.
 Similarly, in the Taxi deployment scenario, time-based, window-based, and uniform sampling improve the deployment cost by 22\%, 16\%, and 12\%, respectively. 
-Time-based sampling performs better since it has a higher average materialization rate than the other two sampling strategies (Table \ref{table-empirical-mu}).
-When the materialization rate of 0.2, the rate of the decrease in the deployment cost for the URL scenario is greater than the Taxi scenario.
+Time-based sampling performs better since it has a higher $MU$ value than the other two sampling strategies (Table \ref{table-empirical-mu}).
+When the materialization rate is 0.2, the rate of the decrease in the deployment cost for the URL scenario is greater than the Taxi scenario.
 We attribute this difference in the decrease in the deployment cost to two reasons.
 First, the number of sampled chunks in the Taxi deployment scenario is larger than the URL (720 for Taxi and 100 for URL).
 Before updating the model, we utilize the \textit{context.union} operation of Spark, to combine all the non-materialized and materialized chunks.
@@ -276,6 +278,7 @@ We also reduce the cost of the deployment 6 to 15 times when compared with perio
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/quality-vs-time}}
 \caption{Trade-off between average quality and deployment cost}
+ \vspace{-10pt}
 \label{trade-off-figure}
 \end{figure}
 

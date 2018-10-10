@@ -2,6 +2,7 @@
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{../images/continuous-training-details.pdf}
+ \vspace{-20pt}
 \caption{Workflow of our continuous deployment approach. (1) The platform converts the data into small units (2) The platform utilizes the deployed pipeline to preprocess the data and transform the raw data into features and store them in the storage. (3) The platform samples the data from the storage. (4) The platform materializes the sampled data (5) Using the sampled data, the deployment platform updates the deployed model.}
  \vspace{-13pt}
 \label{fig:continuous-deployment-details}
@@ -12,7 +13,7 @@ Figure \ref{fig:continuous-deployment-details} shows the workflow of our propose
 The platform processes the incoming training data through 5 stages:\newline
 \textbf{1. Discretizing the data: } 
 To efficiently preprocess the data and update the model, the platform transforms the data into small chunks and stores them in the storage unit. 
-The platform assigns a timestamp to every chunk indicating their creation time.
+The platform assigns a timestamp to every chunk indicating its creation time.
 The timestamp acts as both a unique identifier and an indicator of the recency of the chunk.\newline
 \textbf{2. Preprocessing the data: } 
 The platform utilizes the deployed pipeline to preprocess the raw training data chunks and transform them into feature chunks.
@@ -81,6 +82,7 @@ In this scenario, the platform first re-materializes the evicted chunks using th
 \begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{../images/dynamic-materialization.pdf}
+ \vspace{-20pt}
 \caption{Dynamic Materialization process}
  \vspace{-10pt}
 \label{fig:dynamic-materialization-process}
@@ -99,42 +101,46 @@ Table \ref{pipeline-component-description} shows the categories of the pipeline 
 \hline
 \textbf{Component type}  & \textbf{Unit of work} &\textbf{Characteristics}  \\
 \hline
-data transformation			& data point (row)       	  & filtering or        \\
-			&  	  &  one-to-one mapping        \\
-feature selection            & feature (column)             & selecting a subset of   \\
-			&  	  &   the columns        \\
-feature extraction & feature (column) & creating new columns \\
+data transformation			& data point (row)       	  & filtering or mapping        \\
+feature selection            & feature (column)             & selecting some columns\\
+feature extraction & feature (column) & generating new columns \\
 \hline
 \end{tabular}
 \caption{Description of the pipeline component types. Unit of work indicates whether the component operates on a row or a column.}  
- \vspace{-28pt}
+ \vspace{-32pt}
 \label{pipeline-component-description}
 \end{table}
-Let us assume the total number of the values in the input is $n$ ($\#rows \times \#columns$) , the complexity of data transformation and feature selection operations are linear in terms of the input size ($O(n)$).
-This is because these operations either perform a one-to-one mapping (normalization) or reduce the size of the data (anomaly filtering and variance thresholding).
+Let us assume the total number of the values in a dataset where $\mathcal{R}$ represents the rows and $\mathcal{C}$ represents columns is $p$, where $p = |\mathcal{R}| \times |\mathcal{C}|$.
+Data transformation and feature selection operations either perform a one-to-one mapping (e.g., normalization) or remove some rows or columns (e.g., anomaly filtering and variance thresholding).
+Therefore, the complexity of data transformation and feature selection operations is linear in terms of the input size ($O(p)$).
 The case for feature extraction is more complicated as there are different types of feature extraction operations.
 In many cases, the feature extraction process creates a new feature (column) by combining one or more existing features (such as summing or multiplying features together).
-In these cases, the complexity is $O(n)$ as the increase in size is linear with respect to the input size.
+This results in a complexity of $O(p)$ as the increase in size is linear with respect to the input size.
 However, in some case, the feature extraction process generates many features (columns) from a small subset of the existing features.
 Prominent examples of such operations are one-hot encoding and feature hashing.
 One-hot encoding converts a column of the data with categorical values into several columns (1 column for each unique value).
 For every value in the original column, the encoded representation has the value of $1$ in the column the value represents and $0$ in all the other columns.
-Consider the case when we are applying the one-hot encoding operation to every column of the dataset.
-Furthermore, Let us assume $m$ represents the number of unique values in the column with the highest number of unique values.
-Thus, the complexity of the one-hot encoding operation is $O(mn)$ (each existing value is encoded with at most $m$ binary values).
-If $m$ is very small, then the complexity is still $O(n)$.
-However, in the worst-case scenario, when almost every value in the dataset is unique ($m \approx n$), the complexity is $O(n^2)$.
+Consider the case when we are applying the one-hot encoding operation to every column $\forall c \in \mathcal{C}$.
+Furthermore, let us assume $q = \max_{\forall c \in \mathcal{C}} |\mathcal{U}(c)|$, where $\mathcal{U}$ is the function that returns the unique values in a column.
+Thus, the complexity of the one-hot encoding operation is $O(pq)$ (each existing value is encoded with at most $q$ binary values).
+Based on the value of $q$, two scenarios may occur:
+\begin{itemize}
+\item if $q \ll p$, the complexity is $O(p)$
+\item if $q \approx p$, the complexity is  $O(p^2)$
+\end{itemize}
+The second scenario represents the worst-case scenario where almost every value in the dataset is unique.
 A quadratic growth rate, especially in the presence of large datasets, is not desirable and may render the storage of even a few feature chunks impossible.
 However, both one-hot encoding and feature hashing produce sparse data where for every encoded data point, only one entry is $1$ and all the other entries are $0$.
-Therefore, by utilizing sparse vector representation, we guarantee a complexity of $O(n)$.
+Therefore, by utilizing sparse vector representation, we guarantee a complexity of $O(p)$.
 
-Since the complexity is in worst-case scenario linear with respect to the size of the raw data and the eviction policy gradually dematerializes the older feature chunks, the platform ensures the size of the materialized features will not unexpectedly exceed the storage capacity.
+Since the complexity is in worst-case scenario linear with respect to the size of the input data and the eviction policy gradually dematerializes the older feature chunks, the platform ensures the size of the materialized features will not unexpectedly exceed the storage capacity.
 
 \subsubsection{Effects of sampling strategies on the dynamic materialization.}
+Our platform offers three sampling strategies, namely, uniform, window-based, and time-based (Section \ref{data-manager}).
 The choice of the sampling strategy affects the efficiency of the dynamic materialization.
 Here, we analyze the effects of dynamic materialization in reducing the data processing overhead.
 
-We define $N$ as the maximum number of the chunks, $n$ as the number of existing chunks during a sampling operation, $m$ as the maximum number of the materialized feature chunks (corresponds to the size of the dedicated storage for the materialized feature chunks), and $s$ as the sample size (In each sampling operation, we are sampling $s$ items out of the available $n$ chunks). \footnote{The value $N$ corresponds to the size of the storage unit dedicated for raw data chunks which bounds the variable $n$. If we assume $n$ is unbounded, then as $lim_{n\to\infty}$, the probability of sampling materialized feature chunks becomes $0$.}. 
+We define $N$ as the maximum number of the raw data chunks, $n$ as the number of existing raw chunks during a sampling operation, $m$ as the maximum number of the materialized feature chunks (corresponds to the size of the dedicated storage for the materialized feature chunks), and $s$ as the sample size (in each sampling operation, we are sampling $s$ chunks out of the available $n$ chunks)\footnote{The value $N$ corresponds to the size of the storage unit dedicated for raw data chunks which bounds the variable $n$. If we assume $n$ is unbounded, then as $lim_{n\to\infty}$, the probability of sampling materialized feature chunks becomes $0$.}.
 Let us define $ms$ as the number of materialized feature chunks in a sampling operation.
 The variable $ms$ follows a hypergeometric distribution\footnote{https://en.wikipedia.org/wiki/Hypergeometric\_distribution} (sampling without replacement) where the number of success states is $m$, and the number of draws is $s$.
 Therefore, the expected value of $ms$ for a sampling operation with $n$ chunks is:
@@ -151,7 +157,8 @@ MU = \dfrac{\sum_{n=1}^N MU_n}{N}
 \end{equation}
 $MU$ indicates the ratio of the feature chunks that do not require re-materialization before updating the model (an $MU$ of $0.5$ shows on average half of the sampled chunks are materialized).
 To simplify the analysis, we assume the platform performs one sampling operation after every incoming data chunk. 
-In reality, a scheduler component governs the frequency of the sampling operation (Section \ref{sec:system-architecture}).
+In reality, a scheduler component governs the frequency of the sampling operation (Section \ref{scheduler}).
+Next, we describe how the sampling strategy affects the computation of $MU$.
 
 \textbf{Random Sampling:} 
 For the random sampling strategy, we compute $MU_n$ as:
@@ -172,7 +179,7 @@ MU=\dfrac{\sum\limits_{n=1}^N MU_n}{N}
 &=\dfrac{m \times 1.0 + \sum\limits_{n = m+1}^{N} \dfrac{m}{n}}{N} \\
 &=\dfrac{m  +  m (\highlight{\dfrac{1}{m+1} +\dfrac{1}{m+2}  + ... + \dfrac{1}{N}}) }{N}\\
 &=\dfrac{m(1 + (H_N - H_{m+1}))}{N}\\
-&\approx \dfrac{m( 1+(ln(N) - ln(m+1))}{N}
+&\approx \dfrac{m( 1+ln(N) - ln(m+1))}{N}
 \end{aligned}
 \end{equation}
 
@@ -186,7 +193,8 @@ In our analysis, since $t$ is sufficiently large (more than 1000), we ignore $\d
 
 \textbf{Window-based Sampling:}
 In the window-based sampling, we have an extra parameter $w$ which indicates the number of chunks in the active window.
-We compute $MU_n$ as:
+If $m \geq w$ then $MU=1$, as all the feature chunks in the active window are always materialized.
+However, when $m < w$:
 \begin{equation*}
 MU_n = 
 \begin{cases}
@@ -195,7 +203,7 @@ MU_n =
       \dfrac{E_w[ms]}{s} = \dfrac{m}{w},  &\text{if } w < n
 \end{cases}
 \end{equation*}
-Therefore: 
+therefore: 
 
 \begin{equation} \label{formula-window-based}
 \begin{aligned}
@@ -206,14 +214,18 @@ MU=\dfrac{\sum\limits_{n=1}^N MU_n}{N}
 \end{aligned}
 \end{equation}
 
-Formula \ref{formula-window-based} only applies to cases where $w<m$ (size of the window is smaller than the number of materialized feature chunks).
-If $m \geq w$ then $MU=1$, as all the feature chunks in the active window are always materialized.
-
 \textbf{Time-based Sampling:}
 For the time-based sampling strategy, there is no direct approach for computing the expected value of $ms$ (the number of the materialized chunks in the sample).
 However, we are assigning a higher sampling probability to the recent chunks.
 As a result, we guarantee the time-based sampling has a higher average materialization utilization rate than the uniform sampling.
 In the experiments, we empirically show the average materialization utilization rate.
+
+\textbf{An example use-case:}
+To demonstrate with a real use-case, consider a scenario where we are dividing the incoming data chunks into 1 MB and expect 100,000 chunks ($N = 100000$, 100 GB) in a certain time period.
+Furthermore, we set the maximum number of chunks that we would like to materialize to 2,000 ($m=20000$).
+Using a uniform sampling strategy, $MU =0.522 $ (Formula \ref{formula-uniform}).
+This shows that by materializing 20\% of the incoming chunks (around 20 GB), we guarantee that 52\% of data that the proactive trainer uses does not need re-materialization.
+
 %In time-based sampling, we assign a weight to each chunk indicating how recent the data has arrived at the system.
 %Therefore, for the $n$ chunks, the weights are assigned using the following formula:
 %\begin{equation} \label{formula-weight}

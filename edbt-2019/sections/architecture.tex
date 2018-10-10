@@ -20,7 +20,7 @@ The scheduler uses the following formula to compute the time when to execute the
 \begin{equation}
 T' = S * T * pr * pl
 \end{equation}
-where $T'$ is the time in seconds when the next proactive training is scheduled to execute, $T$ is the length of the execution time (in seconds) of the previous proactive training, $pl$ is the average prediction latency, and $pr$ is the average number of prediction queries per second.
+where $T'$ is the time in seconds when the next proactive training is scheduled to execute, $T$ is the length of the execution time (in seconds) of the previous proactive training, $pl$ is the average prediction latency (second per item), and $pr$ is the average number of prediction queries per second (items per second).
 $S$ is the slack parameter.
 Slack is a user-defined parameter to hint the scheduler about the possibility of surges in the incoming prediction queries and training data.
 During a proactive training, a certain number of predictions queries arrive at the platform ($T * pr$) which requires $T * pr * pl$ seconds to be processed.
@@ -31,8 +31,9 @@ As a result, the deployment platform allocates more resources for training the m
 \begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{../images/system-architecture.pdf}
+ \vspace{-20pt}
 \caption{Architecture of the Continuous Deployment Platform}
- \vspace{-22pt}
+ \vspace{-20pt}
 \label{fig:system-architecture}
 \end{figure}
 \subsection{Data Manager} \label{data-manager}
@@ -80,9 +81,8 @@ During the online training, when new training data becomes available, the pipeli
 Then, the pipeline manager invokes the \textit{transform} method, which transforms the data.
 After forwarding the data through every component of the pipeline, the pipeline manager sends the transformed features to the data manager for storage.
 
-When the scheduler component informs the pipeline manager to execute proactive training, the pipeline manager requests the data manager to provide it with a sample of the data for the next proactive training.
-In case the storage unit has reached its limit, some of the sampled data chunks may not be materialized.
-In this case, first, the pipeline manager re-materializes the chunks by invoking the transform methods of the pipeline components (as explained in Section \ref{subsec:dynamic-materialization}).
+When the scheduler component informs the pipeline manager to execute proactive training, the pipeline manager requests the data manager to provide it with a sample of the data chunks for the next proactive training.
+If some of the sampled data chunks are not materialized, the pipeline manager re-materializes the chunks by invoking the transform methods of the pipeline components.
 Then, it provides the proactive trainer with the current model parameters and the materialized sample of the features.
 Once the proactive training is over, the pipeline manager receives the updated model.
 
