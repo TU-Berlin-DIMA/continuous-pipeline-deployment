@@ -112,26 +112,26 @@ feature extraction & feature (column) & generating new columns \\
 \end{table}
 Let us assume the total number of the values in a dataset where $\mathcal{R}$ represents the rows and $\mathcal{C}$ represents columns is $p$, where $p = |\mathcal{R}| \times |\mathcal{C}|$.
 Data transformation and feature selection operations either perform a one-to-one mapping (e.g., normalization) or remove some rows or columns (e.g., anomaly filtering and variance thresholding).
-Therefore, the complexity of data transformation and feature selection operations is linear in terms of the input size ($O(p)$).
+Therefore, the complexity of data transformation and feature selection operations is linear in terms of the input size ($\mathcal{O}(p)$).
 The case for feature extraction is more complicated as there are different types of feature extraction operations.
 In many cases, the feature extraction process creates a new feature (column) by combining one or more existing features (such as summing or multiplying features together).
-This results in a complexity of $O(p)$ as the increase in size is linear with respect to the input size.
+This results in a complexity of $\mathcal{O}(p)$ as the increase in size is linear with respect to the input size.
 However, in some case, the feature extraction process generates many features (columns) from a small subset of the existing features.
 Prominent examples of such operations are one-hot encoding and feature hashing.
 One-hot encoding converts a column of the data with categorical values into several columns (1 column for each unique value).
 For every value in the original column, the encoded representation has the value of $1$ in the column the value represents and $0$ in all the other columns.
 Consider the case when we are applying the one-hot encoding operation to every column $\forall c \in \mathcal{C}$.
-Furthermore, let us assume $q = \max_{\forall c \in \mathcal{C}} |\mathcal{U}(c)|$, where $\mathcal{U}$ is the function that returns the unique values in a column.
-Thus, the complexity of the one-hot encoding operation is $O(pq)$ (each existing value is encoded with at most $q$ binary values).
+Furthermore, let us assume $q = \max_{\forall c \in \mathcal{C}} |\mathcal{U}(c)|$, where $\mathcal{U}$ is the function that returns the unique values in a column ($\mathcal{U}(x) \in [\mathopen 1, |\mathcal{R}| \mathopen ]$).
+Thus, the complexity of the one-hot encoding operation is $\mathcal{O}(pq)$ (each existing value is encoded with at most $q$ binary values).
 Based on the value of $q$, two scenarios may occur:
 \begin{itemize}
-\item if $q \ll p$, the complexity is $O(p)$
-\item if $q \approx p$, the complexity is  $O(p^2)$
+\item if $q \ll |\mathcal{R}| \Rightarrow \mathcal{O}(pq) = \mathcal{O}(p)$
+\item if $q \approx |\mathcal{R}| \Rightarrow \mathcal{O}(pq) = \mathcal{O}(p|\mathcal{R}|) = \mathcal{O}(p\dfrac{p}{|\mathcal{C}|})=\mathcal{O}(p^2)$
 \end{itemize}
-The second scenario represents the worst-case scenario where almost every value in the dataset is unique.
+The second scenario represents the worst-case scenario where almost every value is unique and we have very few columns (if the number of columns is large then the complexity is lower than $\mathcal{O}(p^2)$).
 A quadratic growth rate, especially in the presence of large datasets, is not desirable and may render the storage of even a few feature chunks impossible.
 However, both one-hot encoding and feature hashing produce sparse data where for every encoded data point, only one entry is $1$ and all the other entries are $0$.
-Therefore, by utilizing sparse vector representation, we guarantee a complexity of $O(p)$.
+Therefore, by utilizing sparse vector representation, we guarantee a complexity of $\mathcal{O}(p)$.
 
 Since the complexity is in worst-case scenario linear with respect to the size of the input data and the eviction policy gradually dematerializes the older feature chunks, the platform ensures the size of the materialized features will not unexpectedly exceed the storage capacity.
 
@@ -218,11 +218,10 @@ However, we are assigning a higher sampling probability to the recent chunks.
 As a result, we guarantee the time-based sampling has a higher average materialization utilization rate than the uniform sampling.
 In the experiments, we empirically show the average materialization utilization rate.
 
-\textbf{An example use-case:}
-To demonstrate with a real use-case, consider a scenario where we divide the incoming data chunks into 1 MB and expect 100,000 chunks ($N = 100000$, 100 GB) in a certain time period.
-Furthermore, we set the maximum number of chunks that we would like to materialize to 2,000 ($m=20000$).
-Using a uniform sampling strategy, $MU =0.522 $ (Formula \ref{formula-uniform}).
-This shows that by materializing 20\% of the incoming chunks (around 20 GB), we guarantee that 52\% of data that the proactive trainer uses does not need re-materialization.
+In our experiments, we execute a deployment scenario with a total of 12,000 chunks ($N = 12000$), where each chunk is around 3.5 MB (a total of 42 GB).
+For the uniform sampling strategy, in order to achieve $MU = 0.91$, using Formula \ref{formula-uniform}, we set the maximum number of the materialized chunks to 7,200 ($m=7200$).
+This shows that, in the worst-case scenario (when uniform sampling is utilized), by materializing around 25 GB of the data, we ensure the deployment platform does not need to re-materialize the data 91\% of the time.
+
 
 %In time-based sampling, we assign a weight to each chunk indicating how recent the data has arrived at the system.
 %Therefore, for the $n$ chunks, the weights are assigned using the following formula:
