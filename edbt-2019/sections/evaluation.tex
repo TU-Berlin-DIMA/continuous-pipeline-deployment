@@ -151,7 +151,7 @@ As a result, for the Taxi dataset, the cost of the periodical deployment is 6 ti
 \end{figure}
 In this experiment, we investigate the effect of different parameters on the quality of the models after deployment.
 As described in Section \ref{proactive-training}, proactive training is an extension of the stochastic gradient descent to the deployment phase.
-Therefore, we expect the set of hyperparameters with best performance during the initial training also performs the best during the deployment phase.
+Therefore, we expect the set of hyperparameters with the best performance during the initial training also performs the best during the deployment phase.
 
 \textbf{Proactive Training Parameters. }
 Stochastic gradient descent is heavily dependent on the choice of learning rate and the regularization parameter.
@@ -163,7 +163,7 @@ Table \ref{hyper-param-table} shows the result of the hyperparameter tuning for 
 For the URL dataset, Adam with regularization parameter $1E{\text -}3$ yields the model with the lowest error rate.
 The Taxi dataset is less complex than the URL dataset and has a smaller number of feature dimensions.
 As a result, the choice of different hyperparameter does not have a large impact on the quality of the model.
-The Rmsprop adaptation technique with regularization parameter of $1E{\text -}4$ results in a slightly better model than the other configurations.
+The Rmsprop adaptation technique with the regularization parameter of $1E{\text -}4$ results in a slightly better model than the other configurations.
 
 After the initial training, for every configuration, we deploy the model and use 10 \% of the remaining data to evaluate the model after deployment.
 Figure \ref{hyper-param-figure} shows the results of the different hyperparameter configurations on the deployed model.
@@ -185,7 +185,7 @@ For the URL dataset, time-based sampling improves the average error rate by 0.5\
 As new features are added to the URL dataset over time, the underlying characteristics of the dataset gradually change \cite{ma2009identifying}.
 A time-based sampling approach is more likely to select the recent items for the proactive training.
 As a result, the deployed model performs better on the incoming prediction queries.
-The underlying characteristics of the Taxi dataset is known to remain static over time.
+The underlying characteristics of the Taxi dataset are known to remain static over time.
 As a result, we observe that different sampling strategies have the same effect on the quality of the deployed model.
 
 Our experiments show that for datasets that gradually change over time, time-based sampling outperforms other sampling strategies.
@@ -288,4 +288,4 @@ However, in real-world scenarios, the training data and the prediction queries c
 Therefore, the periodical deployment platform pauses the online update of the deployed model and answers the prediction queries using the currently deployed model (similar to how Velox operates \cite{crankshaw2014missing}).
 As a result, the error rate of the deployed model may increase during the retraining process.
 However, in our continuous deployment platform, the average time for the proactive training is small (200 ms for the URL dataset and 700 ms for the Taxi dataset).
-Therefore, the continuous deployment platform always performs online model update and answers the predictions queries using an up-to-date model.
+Therefore, the continuous deployment platform always performs the online model update and answers the predictions queries using an up-to-date model.
