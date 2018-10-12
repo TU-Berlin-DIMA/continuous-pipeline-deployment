@@ -170,9 +170,7 @@ MU_n =
 \end{cases}
 \end{equation*}
 Since for the first $m$ sampling operations the number of raw chunks ($n$) is smaller than the total size of the materialized chunks ($m$), $MU_n$ is 1.0 (every sampled chunk is materialized).
-\newcommand{\highlight}[1]{%
-  \colorbox{red!20}{$\displaystyle#1$}}
-As a result, 
+\newcommand{\highlight}[1]{\colorbox{red!20}{$\displaystyle#1$}}
 \begin{equation} \label{formula-uniform}
 \begin{aligned}
 MU=\dfrac{\sum\limits_{n=1}^N MU_n}{N}
@@ -271,7 +269,7 @@ Algorithm \ref{mini-batch-SGD} shows the pseudocode of the mini-batch SGD algori
 \end{algorithmic}
 \end{algorithm}
 Since the platform executes the proactive training in arbitrary intervals, we must ensure each instance of the proactive training is independent of the previous instances.
-According to the mini-batch SGD algorithm, each iteration of the SGD only requires the model ($m_{i-1}$) and the learning rate ($\eta_{i-1}$) of the previous iteration (line 4 and 5).
+According to the mini-batch SGD algorithm, each iteration of the SGD only requires the model ($m_{i-1}$) and the learning rate ($\eta_{i-1}$) of the previous iteration (Lines 4 and 5).
 Given these parameters, iterations of SGD are conditionally independent of each other.
 Therefore, to execute the proactive training, the deployment platform only needs to store the model weights and the learning rate.
 By proactively training the deployed model, the platform ensures the model stays up-to-date and provides accurate predictions.
