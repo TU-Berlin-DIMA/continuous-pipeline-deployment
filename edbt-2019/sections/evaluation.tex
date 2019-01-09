@@ -199,7 +199,6 @@ The total size of the datasets after materialization is 5.2 GB and 59 GB for the
 Therefore, when setting the materialization rate to a specific value, we must ensure we have enough memory capacity to store both the materialized and the raw data.}
 \todo[inline]{Moved the theoretical estimates of $\mu$ from the text to the table instead (R2:14)}
 \begin{table}[!h]
- \vspace{-5pt}
  \small
 \begin{tabular}{lllll}
 \hline
@@ -213,7 +212,7 @@ Window-based &  0.58 (\textbf{0.58}) 	& 1.0 (\textbf{1.0}) & 0.57 (\textbf{0.58}
 Time-based &   0.68 	&  0.97 & 0.65 & 0.97 \\ \hline      
 \end{tabular}
 \caption{\added{Empirical computation and theoretical estimates (bold numbers) of $\mu$ for different sampling strategies and materialization rates ($\dfrac{m}{n}$). We omit the materialization rates 0.0 and 1.0 since both the empirical and theoretical estimates of $\mu$ are 0.0 and 1.0 for every sampling strategy.}\deleted{Empirical computation of $\mu$ the for different sampling strategies and materialization rates (m).}}
- \vspace{-20pt}
+ \vspace{-15pt}
 \label{table-empirical-mu}
 \end{table}
 \deleted[comment={R2:14}]{Using the Formula \ref{formula-uniform} and \ref{formula-window-based} of Section \ref{subsec:dynamic-materialization}, when the materialization rate is 0.0, 0.2, 0.6, and 1.0 the average materialization utilization rate ($\mu$) is 0.0, 0.5218, 0.9064, and 1.0 for uniform sampling and 0.0, 0.5832, 1.0, and 1.0 for window-based sampling.
@@ -226,9 +225,9 @@ Therefore, we do not report those results in the table.
 \begin{figure}[!h]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/dynamic-materialization-experiment}}
- \vspace{-15pt}
+ \vspace{-20pt}
 \caption{Effect of the online statistics computation and dynamic materialization on the deployment cost}
- \vspace{-10pt}
+ \vspace{-5pt}
 \label{fig-optimization-effect}
 \end{figure}
 
