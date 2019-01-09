@@ -18,8 +18,13 @@
 \settopmatter{printacmref=false, printccs=false, printfolios=false}
 
 \pagestyle{empty} % removes running headers
-
-
+\let\ACMcomment\comment
+\let\comment\relax
+\usepackage[authormarkup=superscript, commentmarkup=margin,final]{changes}
+\usepackage[disable]{todonotes}
+\definechangesauthor[name ={Reviewer 1}, color = blue]{r1}
+\definechangesauthor[name ={Reviewer 2}, color = blue]{r2}
+\definechangesauthor[name ={Reviewer 3}, color = blue]{r3}
 \usepackage[moderate]{savetrees}
 \usepackage{multirow}
 \usepackage{diagbox}
@@ -32,7 +37,6 @@
 \usepackage{color,soul}
 \usepackage{float}
 \usepackage{amsmath}
-\usepackage{todonotes}
 \usepackage[outdir=./figures/]{epstopdf}
 \usepackage{listings}
 \PassOptionsToPackage{table}{colorx}
@@ -51,6 +55,7 @@
 \soulregister\ref7
 \soulregister\pageref7
 \begin{document}
+\show\comments
 %\lstset{numbers=left, numberstyle=\small, numbersep=8pt, frame = single, language=Pascal, framexleftmargin=15pt}
 
 \title{Continuous Deployment of Machine Learning Pipelines}
@@ -100,7 +105,7 @@
 \input{sections/related-work}
 \input{sections/conclusion}
 
-\bibliographystyle{extreme}
+\bibliographystyle{ACM-Reference-Format}
 {\fontsize{8}{4}\selectfont \bibliography{references}}
 \end{document}
 

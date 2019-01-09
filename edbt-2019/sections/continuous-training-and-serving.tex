@@ -7,7 +7,7 @@
  \vspace{-13pt}
 \label{fig:continuous-deployment-details}
 \end{figure*}
-
+\todo[inline]{Edited Figure \ref{fig:continuous-deployment-details}, adding numbers to the steps and an arrow back from the model to the update step}
 In this section, we describe the details of our continuous training approach.
 Figure \ref{fig:continuous-deployment-details} shows the workflow of our proposed platform.
 The platform processes the incoming training data through 5 stages:\newline
@@ -18,10 +18,12 @@ The timestamp acts as both a unique identifier and an indicator of the recency o
 \textbf{2. Preprocessing the data: } 
 The platform utilizes the deployed pipeline to preprocess the raw training data chunks and transform them into feature chunks.
 Then, the platform stores the feature chunks along with a reference to the originating raw data chunk in the storage unit.
-During the preprocessing stage, we utilize \textit{online statistics computation} to compute the required statistics for the different pipeline components.
-These statistics speed up the data processing in later stages.
+\deleted[comment={R2:16}]{During the preprocessing stage, we utilize \textit{online statistics computation} to compute the required statistics for the different pipeline components.
+These statistics speed up the data processing in later stages.}
 When the storage unit becomes full, the platform starts removing the oldest feature chunks and only keep the reference to the originating raw data chunks.
-In case the later stages of the deployment platform request a deleted feature chunk, the platform can recreate the feature chunk by utilizing the referenced raw data chunk. \newline
+In case the later stages of the deployment platform request a deleted feature chunk, the platform can recreate the feature chunk by utilizing the referenced raw data chunk. 
+\added[comment={R2:16}]{During the preprocessing stage, we utilize \textit{online statistics computation} to compute the required statistics for the different pipeline components.
+These statistics speed up the data processing in later stages.}\newline
 \textbf{3. Sampling the data: }
 A sampler unit samples the feature chunks from the storage.
 Different sampling strategies are available to address different use-case requirements.\newline
@@ -31,10 +33,10 @@ If the sampler selects unmaterialized feature chunks, the platform recreates the
 \textbf{5. Updating the model: }
 By utilizing the preprocessed feature chunks, the platform updates the deployed model through a process called \textit{proactive training}.\newline
 
-After the user designs and deploys the pipeline, we rely on the existing big data processing frameworks to perform the discretization and preprocessing.
+\deleted[comment=R2:16]{After the user designs and deploys the pipeline, we rely on the existing big data processing frameworks to perform the discretization and preprocessing.
 The sampling strategy typically depends on the use-case.
-However, different sampling strategies have different implications for the dynamic materialization process.
-In the rest of this section, we first describe the details of the online statistics computation.
+However, different sampling strategies have different implications for the dynamic materialization process.}
+In the rest of this section, we first describe the details of the online statistics computation \added{the platform performs during the preprocessing step.}
 Then we introduce the dynamic materialization approach and the effects of different sampling strategies on the materialization process.
 Finally, we describe the details of the proactive training method.
 
@@ -52,10 +54,12 @@ Online statistics computation is only applicable to certain types of pipeline co
 The support for stateless pipeline components is trivial as they do not rely on any statistics before transforming the data.
 For stateful operations, since the statistics update occurs during the online data processing, the platform can only update the statistics that can be computed incrementally.
 Many of the well-known data preprocessing components (such as standardization and one-hot encoding) require statistics that can be computed incrementally (such as mean, standard deviation, and hash table).
-However, some pipeline components require statistics that cannot be updated incrementally (such as percentile).
-For these types of statistics, the pipeline component has to rescan the entire data points whenever new data becomes available.
+However, some pipeline components require statistics that cannot be updated incrementally (such as percentile) \added[comment={R2:3-Sec3.1, R1:feature engineering, R3:D5}]{or the algorithm utilized by the pipeline component is non-incremental (such as PCA).
+As a result, our deployment platform does not support such components.
+Fortunately, recent bodies of work are devoted to developing novel techniques for online feature engineering \cite{yu2016scalable, tsamardinos2018greedy} and approximate machine learning \cite{park2018blinkml} that offer fast and incremental alternatives with theoretical error bounds to non-incremental algorithms.}
+\deleted{For these types of statistics, the pipeline component has to rescan the entire data points whenever new data becomes available.
 For such components, when applicable, we utilize probabilistic and approximate data structures (such as bloom filters or count-min sketch \cite{cormode2005improved}).
-Otherwise, we do not provide support for the deployment of pipelines containing components that require a rescan of the entire data whenever new data becomes available.
+Otherwise, we do not provide support for the deployment of pipelines containing components that require a rescan of the entire data whenever new data becomes available.}
 
 The platform can also facilitate the online statistics computation for user-defined pipeline components.
 In Section \ref{sec:system-architecture}, we describe how users can incorporate this feature into their custom pipeline components.
@@ -65,7 +69,7 @@ In order to update the statistics of the pipeline components, each component mus
 At the end of this process, the pipeline has transformed the data chunks into feature chunks that the model will utilize during the training process.
 In our continuous deployment platform, we repeatedly sample the data chunks to update the model.
 Storing the chunks as materialized features greatly reduces the processing time as the entire data preprocessing steps can be skipped during the model update.
-However, in presence of a limited storage capacity, one has to consider the effect of storing the materialized feature chunks.
+However, in the presence of a limited storage capacity, one has to consider the effect of storing the materialized feature chunks.
 
 To address the storage capacity issue, we utilize dynamic materialization.
 While creating the feature chunks, the platform assigns a unique identifier (the creation timestamp) and a reference to the originating raw data chunk.
@@ -107,7 +111,7 @@ feature extraction & feature (column) & generating new columns \\
 \hline
 \end{tabular}
 \caption{Description of the pipeline component types. Unit of work indicates whether the component operates on a row or a column.}  
- \vspace{-32pt}
+ \vspace{-20pt}
 \label{pipeline-component-description}
 \end{table}
 Let us assume the total number of the values in a dataset where $\mathcal{R}$ represents the rows and $\mathcal{C}$ represents columns is $p$, where $p = |\mathcal{R}| \times |\mathcal{C}|$.
@@ -141,43 +145,44 @@ The choice of the sampling strategy affects the efficiency of the dynamic materi
 Here, we analyze the effects of dynamic materialization in reducing the data processing overhead.
 
 We define $N$ as the maximum number of the raw data chunks, $n$ as the number of existing raw chunks during a sampling operation, $m$ as the maximum number of the materialized feature chunks (corresponds to the size of the dedicated storage for the materialized feature chunks), and $s$ as the sample size (in each sampling operation, we are sampling $s$ chunks out of the available $n$ chunks)\footnote{The value $N$ corresponds to the size of the storage unit dedicated for raw data chunks which bounds the variable $n$. If we assume $n$ is unbounded, then as $lim_{n\to\infty}$, the probability of sampling materialized feature chunks becomes $0$.}.
-Let us define $ms$ as the number of materialized feature chunks in a sampling operation.
-The variable $ms$ follows a hypergeometric distribution\footnote{https://en.wikipedia.org/wiki/Hypergeometric\_distribution} (sampling without replacement) where the number of success states is $m$, and the number of draws is $s$.
-Therefore, the expected value of $ms$ for a sampling operation with $n$ chunks is:
+Let us define $MS$ as the number of materialized feature chunks in a sampling operation.
+The variable $MS$ follows a hypergeometric distribution\footnote{https://en.wikipedia.org/wiki/Hypergeometric\_distribution} (sampling without replacement) where the number of success states is $m$, and the number of draws is $s$.
+Therefore, the expected value of $MS$ for a sampling operation with $n$ chunks is:
 \begin{equation*}
-E_n[ms] = s\dfrac{m}{n}
+E_n[MS] = s\dfrac{m}{n}
 \end{equation*}
 To quantify the efficiency of the dynamic materialization, we introduce the materialization utilization rate with $n$ raw chunks, which indicates the ratio of the materialized feature chunks:
 \begin{equation*}   
- MU_n=  \dfrac{E_n[ms]}{s}
+ \mu_n=  \dfrac{E_n[MS]}{s}
 \end{equation*}
+\todo[inline]{R2:10 changed $MU$ to $\mu$ (Also in the evaluation section) and $ms$ to $MS$}
 Finally, the average materialization utilization rate for the dynamic materialization process is:
 \begin{equation}  \label{formula-mu}
-MU = \dfrac{\sum_{n=1}^N MU_n}{N}
+\mu = \dfrac{\sum_{n=1}^N \mu_n}{N}
 \end{equation}
-$MU$ indicates the ratio of the feature chunks that do not require re-materialization before updating the model (an $MU$ of $0.5$ shows on average half of the sampled chunks are materialized).
+$\mu$ indicates the ratio of the feature chunks that do not require re-materialization before updating the model (an $\mu$ of $0.5$ shows on average half of the sampled chunks are materialized).
 To simplify the analysis, we assume the platform performs one sampling operation after every incoming data chunk. 
 In reality, a scheduler component governs the frequency of the sampling operation (Section \ref{scheduler}).
-Next, we describe how the sampling strategy affects the computation of $MU$.
+Next, we describe how the sampling strategy affects the computation of $\mu$.
 
 \textbf{Random Sampling:} 
-For the random sampling strategy, we compute $MU_n$ as:
+For the random sampling strategy, we compute $\mu_n$ as:
 \begin{equation*}
-MU_n = 
+\mu_n = 
 \begin{cases}
     1, 	&\text{if } n \leq m\\
-     \dfrac{E_n[ms]}{s} = \dfrac{s\dfrac{m}{n}}{s} = \dfrac{m}{n},   & \text{otherwise}
+     \dfrac{E_n[MS]}{s} = \dfrac{s\dfrac{m}{n}}{s} = \dfrac{m}{n},   & \text{otherwise}
 \end{cases}
 \end{equation*}
-Since for the first $m$ sampling operations the number of raw chunks ($n$) is smaller than the total size of the materialized chunks ($m$), $MU_n$ is 1.0 (every sampled chunk is materialized).
-\newcommand{\highlight}[1]{\colorbox{red!20}{$\displaystyle#1$}}
+Since for the first $m$ sampling operations the number of raw chunks ($n$) is smaller than the total size of the materialized chunks ($m$), $\mu_n$ is 1.0 (every sampled chunk is materialized).
+\newcommand{\customhighlight}[1]{\colorbox{red!20}{$\displaystyle#1$}}
 \begin{equation} \label{formula-uniform}
 \begin{aligned}
-MU=\dfrac{\sum\limits_{n=1}^N MU_n}{N}
+\mu=\dfrac{\sum\limits_{n=1}^N \mu_n}{N}
 &=\dfrac{m \times 1.0 + \sum\limits_{n = m+1}^{N} \dfrac{m}{n}}{N} \\
-&=\dfrac{m  +  m (\highlight{\dfrac{1}{m+1} +\dfrac{1}{m+2}  + ... + \dfrac{1}{N}}) }{N}\\
-&=\dfrac{m(1 + (H_N - H_{m+1}))}{N}\\
-&\approx \dfrac{m( 1+ln(N) - ln(m+1))}{N}
+&=\dfrac{m  +  m (\customhighlight{\dfrac{1}{m+1} +\dfrac{1}{m+2}  + ... + \dfrac{1}{N}}) }{N}\\
+&=\dfrac{m(1 + (H_N - H_{m}))}{N}\\
+&\approx \dfrac{m( 1+ln(N) - ln(m))}{N}
 \end{aligned}
 \end{equation}
 
@@ -191,35 +196,35 @@ In our analysis, since $t$ is sufficiently large (more than 1000), we ignore $\d
 
 \textbf{Window-based Sampling:}
 In the window-based sampling, we have an extra parameter $w$ which indicates the number of chunks in the active window.
-If $m \geq w$ then $MU=1$, as all the feature chunks in the active window are always materialized.
+If $m \geq w$ then $\mu=1$, as all the feature chunks in the active window are always materialized.
 However, when $m < w$:
 \begin{equation*}
-MU_n = 
+\mu_n = 
 \begin{cases}
     1, 	&\text{if } n \leq m\\
-     \dfrac{E_n[ms]}{s} = \dfrac{m}{n},   &\text{if } m < n \leq w\\
-      \dfrac{E_w[ms]}{s} = \dfrac{m}{w},  &\text{if } w < n
+     \dfrac{E_n[MS]}{s} = \dfrac{m}{n},   &\text{if } m < n \leq w\\
+      \dfrac{E_w[MS]}{s} = \dfrac{m}{w},  &\text{if } w < n
 \end{cases}
 \end{equation*}
 therefore: 
 
 \begin{equation} \label{formula-window-based}
 \begin{aligned}
-MU=\dfrac{\sum\limits_{n=1}^N MU_n}{N}
-&=\dfrac{m + \sum\limits_{n = m+1}^{w} \dfrac{m}{n} + (N-w)\dfrac{m}{w} }{N} \\
-&\approx\dfrac{m  +  m (H_w - H_{m+1}) + (N-w)\dfrac{m}{w}}{N}\\
-&=\dfrac{m(1 + ln(w) - ln(m+1) + \dfrac{N-w}{w})}{N}
+\mu=\dfrac{\sum\limits_{n=1}^N \mu_n}{N}
+&=\dfrac{m + \sum\limits_{n = m+1}^{w} \dfrac{m}{n} + (N-w)\dfrac{m}{w}}{N} \\
+&\approx\dfrac{m  +  m (H_w - H_{m}) + (N-w)\dfrac{m}{w}}{N}\\
+&=\dfrac{m(1 + ln(w) - ln(m) + \dfrac{N-w}{w})}{N}
 \end{aligned}
 \end{equation}
-
+\todo[inline]{Fixed the equation 4 and 5: changed $H_{m+1}$ to $H_{m}$ R2:11}
 \textbf{Time-based Sampling:}
-For the time-based sampling strategy, there is no direct approach for computing the expected value of $ms$ (the number of the materialized chunks in the sample).
+For the time-based sampling strategy, there is no direct approach for computing the expected value of $MS$ (the number of the materialized chunks in the sample).
 However, we are assigning a higher sampling probability to the recent chunks.
 As a result, we guarantee the time-based sampling has a higher average materialization utilization rate than the uniform sampling.
 In the experiments, we empirically show the average materialization utilization rate.
 
 In our experiments, we execute a deployment scenario with a total of 12,000 chunks ($N = 12000$), where each chunk is around 3.5 MB (a total of 42 GB).
-For the uniform sampling strategy, in order to achieve $MU = 0.91$, using Formula \ref{formula-uniform}, we set the maximum number of the materialized chunks to 7,200 ($m=7200$).
+For the uniform sampling strategy, in order to achieve $\mu = 0.91$, using Formula \ref{formula-uniform}, we set the maximum number of the materialized chunks to 7,200 ($m=7200$).
 This shows that, in the worst-case scenario (when uniform sampling is utilized), by materializing around 25 GB of the data, we ensure the deployment platform does not need to re-materialize the data 91\% of the time.
 
 
@@ -267,6 +272,8 @@ Algorithm \ref{mini-batch-SGD} shows the pseudocode of the mini-batch SGD algori
 \State \Return $m_n$
 \end{algorithmic}
 \end{algorithm}
+\added[comment={R2:12}]{In mini-batch SGD, we first initialize the model (Line 1).
+Then, in every iteration, we randomly sample points from the dataset (Line 4), compute the gradient of the loss function $J$ (Line 5), and finally update the model based on the value of the gradient and the learning rate (Line 6).}
 Since the platform executes the proactive training in arbitrary intervals, we must ensure each instance of the proactive training is independent of the previous instances.
 According to the mini-batch SGD algorithm, each iteration of the SGD only requires the model ($m_{i-1}$) and the learning rate ($\eta_{i-1}$) of the previous iteration (Lines 4 and 5).
 Given these parameters, iterations of SGD are conditionally independent of each other.

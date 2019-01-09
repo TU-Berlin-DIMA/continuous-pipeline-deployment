@@ -20,7 +20,7 @@ The scheduler uses the following formula to compute the time when to execute the
 \begin{equation}
 T' = S * T * pr * pl
 \end{equation}
-where $T'$ is the time in seconds when the next proactive training is scheduled to execute, $T$ is the length of the execution time (in seconds) of the previous proactive training, $pl$ is the average prediction latency (second per item), and $pr$ is the average number of prediction queries per second (items per second).
+where $T'$ is the time in seconds when the next proactive training is scheduled to execute, \deleted[comment={R2:16}]{$T$ is the length of the execution time (in seconds) of the previous proactive training}\added{$T$ is the total execution time (in seconds) of the last proactive training}, $pl$ is the average prediction latency (second per item), and $pr$ is the average number of prediction queries per second (items per second).
 $S$ is the slack parameter.
 Slack is a user-defined parameter to hint the scheduler about the possibility of surges in the incoming prediction queries and training data.
 During a proactive training, a certain number of predictions queries arrive at the platform ($T * pr$) which requires $T * pr * pl$ seconds to be processed.
@@ -31,9 +31,9 @@ As a result, the deployment platform allocates more resources for training the m
 \begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{../images/system-architecture.pdf}
- \vspace{-20pt}
+ \vspace{-15pt}
 \caption{Architecture of the Continuous Deployment Platform}
- \vspace{-20pt}
+ \vspace{-15pt}
 \label{fig:system-architecture}
 \end{figure}
 \subsection{Data Manager} \label{data-manager}
@@ -96,7 +96,7 @@ Finally, the pipeline manager utilizes the deployed model to make predictions.
 The proactive trainer is responsible for training the deployed model by executing iterations of SGD.
 In the training process, the proactive trainer receives a training dataset (sampled materialized features) and the current model parameters from the pipeline manager.
 Then, the proactive trainer performs one iteration of SGD and returns the updated model to the pipeline manager.
-The proactive trainer utilizes advanced learning rate adaptation techniques to dynamically adjust the learning rate parameter when training the model.
+The proactive trainer utilizes advanced learning rate adaptation techniques  \added[comment=R2:16]{such as Adam, Rmsprop, and AdaDelta} to dynamically adjust the learning rate parameter when training the model.
 
 In order for the proactive training to update the deployed model, the machine learning model component of the deployed pipeline must implement an \textit{update} method, which is responsible for computing the gradient.
 To provide support for other types of incremental training approaches, one needs to implement the training logic in the \textit{update} method of the model.

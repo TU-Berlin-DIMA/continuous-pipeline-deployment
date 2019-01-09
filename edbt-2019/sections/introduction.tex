@@ -10,11 +10,13 @@ Finally, the platform must maintain the quality of the model by further training
 
 %% Intro to the problem of continuous improvement
 Online deployment of machine learning models is one method for maintaining the quality of a deployed model.
-In the online deployment approach, the deployment platform utilizes online learning methods to further train the deployed model.
+In the online deployment approach, the deployment platform utilizes online learning methods to further train the deployed model \cite{duchi2011adaptive}.
 In online learning, the model is updated based on the incoming training data.
 Online learning adapts the model to the new training data and provides an up-to-date model.
-However, purely online deployment approach degrades the quality over time, rendering it ineffective in many cases.
-In some applications that online learning has proven to be effective, to guarantee a high level of quality, one has to tune the online learning method to the specific use case \cite{ma2009identifying, macmahan2013}.
+\deleted[comment={R2:3-Sect1}]{However, purely online deployment approach degrades the quality over time, rendering it ineffective in many cases.}
+\added{However, online learning is sensitive to noise and outliers which may result in an increase in the prediction error rate.}
+\deleted{In some applications that online learning has proven to be effective,}
+\added{Therefore,} to guarantee a high level of quality, one has to tune the online learning method to the specific use case \cite{ma2009identifying, macmahan2013}.
 Thus, effective online deployment of machine learning models cannot provide robustness and simplicity.
 
 %Figure \ref{fig:motivational-example} shows the typical process of the existing deployment platforms.
@@ -89,8 +91,8 @@ By reusing the computed statistics and the materialized features during the proa
 In summary, our contributions are:
 \begin{itemize}
 \item A platform for continuously training deployed machine learning models and pipelines that adapts to the changes in the incoming data. The platform accommodates different types of machine learning models and pipelines. In our experiments, we design and deploy two different machine learning pipelines.
-\item Proactive training of the deployed models and pipelines that frequently updates the model using samples of the data which guarantees high-quality models while completely eliminating the need for periodical retraining.
-\item Efficient pipeline processing and model training by online statistics computation and dynamic materialization, thus guaranteeing the availability of up-to-date models for answering prediction queries.
+\item Proactive training of the deployed models and pipelines that frequently updates the model using samples of the data which \added[comment={R2: 6}]{completely eliminates the need for periodical retraining while providing the same level of model quality.} \deleted{guarantees high-quality models while completely eliminating the need for periodical retraining.}
+\item Efficient pipeline processing and model training by online statistics computation and dynamic materialization, \added[comment={R2:6}]{which provides} \deleted{thus guaranteeing the availability of} up-to-date models for answering prediction queries.
 \end{itemize}
 
 The rest of this paper is organized as follows:

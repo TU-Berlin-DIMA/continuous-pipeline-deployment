@@ -11,22 +11,31 @@ SGD is suitable for large datasets as it does not require scanning the entire da
 SGD is also suitable for online learning scenarios, where new training data becomes available one at a time.
 Many different machine learning tasks such as classification \cite{zhang2004solving, macmahan2013}, clustering \cite{bottou1995convergence}, and matrix factorization \cite{koren2009matrix,  funk2006netflix} utilize SGD in training models.
 SGD is also the most common optimization strategy for training neural networks on large datasets \cite{dean2012large}.
-Prominent applications of SGD in neural networks are the work of Google Deepmind team that managed to train neural networks that defeat humans in the game of Go \cite{silver2016mastering} and mastering Atari games \cite{mnih2013playing}.
+\deleted[comment={to save space}]{Prominent applications of SGD in neural networks are the work of Google Deepmind team that managed to train neural networks that defeat humans in the game of Go \cite{silver2016mastering} and mastering Atari games \cite{mnih2013playing}.}
 
-To explain the details of SGD, we describe how it is utilized to train a logistic regression model.
-In logistic regression, the goal is to find the weight vector ($w$) that maximizes the conditional likelihood of labels ($y$) based on the given data ($x$) in the training dataset:
-
+\added[comment={R2:7}]{To explain the details of SGD, we describe how it is utilized to train a simple linear regression model.
+In linear regression, the goal is to find the weight vector($w$) that minimizes the least-squares cost function ($J(w)$): }
+\deleted{To explain the details of SGD, we describe how it is utilized to train a logistic regression model.
+In logistic regression, the goal is to find the weight vector ($w$) that maximizes the conditional likelihood of labels ($y$) based on the given data ($x$) in the training dataset:}
+\todo[inline]{switched the formula from logistic regression to linear regression, since it is easier to understand how we get to the final update rule without stating intermediate steps}
 \begin{equation}
-w^* = \argmax_w \sum_{i=1}^{N} ln(P(y^i | x^i, w))
+\added{J(w)=\dfrac{1}{2}\sum_{i=1}^{N}(x^iw - y^i)^2}
 \end{equation}
+%\begin{equation}
+%w^* = \argmax_w \sum_{i=1}^{N} ln(P(y^i | x^i, w))
+%\end{equation}
 
 where $N$ is the size of the training dataset.
 To utilize SGD for finding the optimal $w$, we start from initial random weights.
 Then in every iteration, we update the weights based on the gradient of the loss function:
 
 \begin{equation}
-{w}^{t+1} = {w}^t + \eta \sum_{i \in S} x^i (y^i - \hat{P}(Y^i = 1 | x^i w))
+\added{{w}^{t+1} = {w}^t + \eta \sum_{i \in S} (y^i - x^iw)x^i}
 \end{equation}
+
+%\begin{equation}
+%{w}^{t+1} = {w}^t + \eta \sum_{i \in S} x^i (y^i - \hat{P}(Y^i = 1 | x^i w))
+%\end{equation}
 
 where $\eta$ is the learning rate hyperparameter and $S$ is the random sample in the current iteration.
 The algorithm continues until convergence, i.e., when the weight vector does not change after an iteration.
@@ -55,7 +64,7 @@ A common approach is mini-batch gradient descent.
 In mini-batch gradient descent, the sample size is selected in such a way that each iteration is fast.
 Moreover, the training process requires fewer iterations to converge.
 
-
+\deleted[comment={R2:8}]{
 \textbf{Distributed SGD.}
 To efficiently train machine learning models on large datasets, one has to employ scalable training algorithms.
 SGD inherently works well with large datasets because it does not need to scan every data point during every iteration.
@@ -63,7 +72,7 @@ However, SGD has to perform many iterations to converge.
 To decrease the execution time, one can distribute the large dataset among multiple nodes.
 During the training, each node computes a partial gradient on a subset of the data in parallel.
 After this step, all the partial gradients are combined to compute the final gradient.
-Distributed SGD significantly reduces the time for executing individual iterations, which results in a reduction in the overall training time.
+Distributed SGD significantly reduces the time for executing individual iterations, which results in a reduction in the overall training time.}
 
 \subsection{Tuning the Periodical Deployment}
 Typically, two groups of hyperparameters affect the efficiency of the periodical deployment approach.
@@ -72,9 +81,9 @@ The second group (the training hyperparameters) tune the algorithm for retrainin
 In this work, we are targeting training algorithms based on Stochastic gradient descent.
 Therefore, the hyperparameters are the learning rate and the sample size.
 
-There are several existing approaches for tuning the training hyperparameters, such as grid search, random search, and sequential model based search \cite{bergstra2012random}.
+There are several existing approaches for tuning the training hyperparameters, such as grid search, random search, and sequential model based search \cite{bergstra2012random,hutter2011sequential}.
 The deployment hyperparameters, however, are typically selected to fit the specific use case.
-For example, in many of the real-world use cases, one retrains the deployed model using the entire historical data on a daily basis.
-Similarly, when tuning our continuous deployment platform, one has to select two hyperparameters which vary from use-case to use-case.
-In the next sections, we show that tuning our continuous deployment approach is no more complex than tuning the periodical deployment approach.
+For example, in many of the real-world use cases, one retrains the deployed model using the entire historical data \added[comment={R2:9}]{(hyperparameter for the amount of data for every retraining)} on a daily basis \added[]{(hyperparameter for the frequency of the retraining)}.
+\deleted[]{Similarly, when tuning our continuous deployment platform, one has to select two hyperparameters which vary from use-case to use-case.}
+In the next sections, \deleted{we show that tuning our continuous deployment approach is no more complex than tuning the periodical deployment approach.}\added{we describe how we tune the deployment and training hyperparameters of our deployment framework.}
 

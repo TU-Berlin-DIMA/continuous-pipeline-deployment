@@ -8,7 +8,7 @@ As a result of the lengthy training process, the platform cannot produce fresh m
 This results in model-staleness which may decrease the quality of the deployed model.
 
 We propose a training approach, called proactive training, that utilizes samples of the historical data to train the deployed pipeline.
-Proactive training replaces the periodical retraining, thus guaranteeing a high-quality model without the lengthy retraining process.
+Proactive training replaces the periodical retraining, \added[comment={R2: 6}]{which provides the same level of model quality} \deleted{thus guaranteeing a high-quality model} without the lengthy retraining process.
 We also propose online statistics computation and dynamic materialization of the preprocessed features which further decreases the training time.
 We propose a modular design that enables our deployment platform to be integrated with different scalable data processing platforms.
 
@@ -19,4 +19,8 @@ Our experiments show that our continuous deployment reduces the total deployment
 Moreover, continuous deployment platform provides the same level of quality for the deployed model when compared with the periodical deployment approach.
 
 In the future work, we will integrate more complex machine learning pipelines and models (e.g., neural networks) into our deployment platform and investigate the effect of concept drift and anomalies on our deployment platform.
+\newline
+\added[comment=acknowledgments]{{\small
+\textbf{Acknowledgments.} This work has been supported by the European Commission
+through Streamline (ref. 688191) and by the German Ministry for Education and Research by Berlin Big Data Center BBDC (funding mark 01IS14013A) and Berliner Zentrum für Maschinelles Lernen BZML (funding mark 01IS18037A).}}
 
