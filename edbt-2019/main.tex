@@ -20,7 +20,7 @@
 \pagestyle{empty} % removes running headers
 \let\ACMcomment\comment
 \let\comment\relax
-\usepackage[authormarkup=superscript, commentmarkup=margin,final]{changes}
+\usepackage[authormarkup=superscript, commentmarkup=margin, final]{changes}
 \usepackage[disable]{todonotes}
 \definechangesauthor[name ={Reviewer 1}, color = blue]{r1}
 \definechangesauthor[name ={Reviewer 2}, color = blue]{r2}
@@ -55,7 +55,8 @@
 \soulregister\ref7
 \soulregister\pageref7
 \begin{document}
-\show\comments
+
+%
 %\lstset{numbers=left, numberstyle=\small, numbersep=8pt, frame = single, language=Pascal, framexleftmargin=15pt}
 
 \title{Continuous Deployment of Machine Learning Pipelines}

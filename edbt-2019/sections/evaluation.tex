@@ -194,7 +194,7 @@ In this experiment, we analyze the effect of the system optimizations, i.e., onl
 We define the materialization rate \added[comment ={R2:13}]{(i.e., $\dfrac{m}{n}$, as described in Section \ref{subsec:dynamic-materialization})} as the ratio of the number of materialized chunks over the total number of chunks (both URL and Taxi have around 12,000 chunks in total).
 For both datasets, the materialization rates of 0.0, 0.2, 0.6, and 1.0 indicates that 0, 2400, 7200, and 12000 chunks are materialized.
 For the window-based sampling strategy, we set the window size to 6,000 chunks (half of the total chunks).
-\added[comment=R2:16]{In this experiment, we assume the raw data is always stored in memory.
+\added[comment=R2:2]{In this experiment, we assume the raw data is always stored in memory.
 The total size of the datasets after materialization is 5.2 GB and 59 GB for the URL and Taxi datasets, respectively.
 Therefore, when setting the materialization rate to a specific value, we must ensure we have enough memory capacity to store both the materialized and the raw data.}
 \todo[inline]{Moved the theoretical estimates of $\mu$ from the text to the table instead (R2:14)}

@@ -216,7 +216,7 @@ therefore:
 &=\dfrac{m(1 + ln(w) - ln(m) + \dfrac{N-w}{w})}{N}
 \end{aligned}
 \end{equation}
-\todo[inline]{Fixed the equation 4 and 5: changed $H_{m+1}$ to $H_{m}$ R2:11}
+\todo[inline]{R2:11 Fixed the equation 4 and 5: changed $H_{m+1}$ to $H_{m}$}
 \textbf{Time-based Sampling:}
 For the time-based sampling strategy, there is no direct approach for computing the expected value of $MS$ (the number of the materialized chunks in the sample).
 However, we are assigning a higher sampling probability to the recent chunks.
@@ -283,7 +283,7 @@ By proactively training the deployed model, the platform ensures the model stays
 Proactive training is a form of incremental training \cite{gepperth2016incremental} which is limited to SGD-based models.
 In our deployment platform, one can replace the proactive training with other forms of incremental training.
 However, we limit the platform's support to SGD for two reasons.
-First, SGD is simple to implement and is used for training a verity of machine learning models in different domains \cite{ macmahan2013, bottou1995convergence, koren2009matrix,  funk2006netflix}. 
+First, SGD is simple to implement and is used for training a verity of machine learning models in different domains \cite{ macmahan2013, bottou1995convergence, koren2009matrix}. 
 Second, since the combination of the data sampling and the proactive training is similar to the mini-batch SGD procedure, proactive training provides the same regret bound on the convergence rate as the existing stochastic optimization approaches \cite{zhang2004solving, kingma2014adam}.
 
 %\subsection{Proactive Training} \label{proactive-training}
