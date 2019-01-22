@@ -11,7 +11,7 @@ This results in model-staleness which may decrease the quality of the deployed m
 We propose a training approach, called proactive training, that utilizes samples of the historical data to train the deployed pipeline.
 Proactive training replaces the periodical retraining, \added[comment={R2: 6}]{which provides the same level of model quality} \deleted{thus guaranteeing a high-quality model} without the lengthy retraining process.
 We also propose online statistics computation and dynamic materialization of the preprocessed features which further decreases the training time.
-\deleted{We propose a modular design that enables our deployment platform to be integrated with different scalable data processing platforms.}
+We propose a modular design that enables our deployment platform to be integrated with different scalable data processing platforms.
 
 We implement a prototype using Apache Spark to evaluate the performance of our deployment platform.
 In our experiments, we develop two pipelines with two machine learning models to process two real-world datasets.
@@ -19,15 +19,18 @@ We discuss how to tune the deployment platform based on the available historical
 Our experiments show that our continuous deployment reduces the total deployment cost by a factor of $6$ and $15$ for the Taxi and URL datasets, respectively.
 Moreover, continuous deployment platform provides the same level of quality for the deployed model when compared with the periodical deployment approach.
 
-\added[comment=R1:weak-points-2]{We recognize two drawbacks with our current work.
-First, we do not tackle the integration of more complex machine learning models (e.g., neural networks).
-Second, we only provide support for anomaly and concept drift detection through components of the machine learning pipeline even though they can greatly affect the quality of a deployed model.
-In the future work, we plan to integrate more complex machine learning models and provide native support for concept drift and anomaly detection.}
+%\added[comment=R1:weak-points-2]{We recognize two drawbacks with our current work.
+%First, we do not tackle the integration of more complex machine learning models (e.g., neural networks).
+%Second, we only provide support for anomaly and concept drift detection through components of the machine learning pipeline even though they can greatly affect the quality of a deployed model.
+%In the future work, we plan to integrate more complex machine learning models and provide native support for concept drift and anomaly detection.}
+\added[comment=R1:weak-points-2]{Currently, we provide support for anomaly and concept drift detection through components of the machine learning pipeline.
+However, given the large impact of the concept drift and anomalies on the performance of a deployed model, in the future work, we plan to extend our platform to provide native support for both concept drift and anomaly detection and alleviation.
+Furthermore, we plan to integrate more complex machine learning pipelines and models (e.g., neural networks) into our deployment platform.}
 \deleted{
 In the future work, we will integrate more complex machine learning pipelines and models (e.g., neural networks) into our deployment platform and investigate the effect of concept drift and anomalies on our deployment platform.}
 \newline
 
 \added[comment=acknowledgments]{{\small
 \textbf{Acknowledgments.} This work has been supported by the European Commission
-through Streamline (ref. 688191) and by the German Ministry for Education and Research by Berlin Big Data Center BBDC (funding mark 01IS14013A) and Berliner Zentrum für Maschinelles Lernen BZML (funding mark 01IS18037A).}}
+through Streamline (ref. 688191), by the German Ministry for Education and Research through Berlin Big Data Center BBDC (funding mark 01IS14013A) and Berliner Zentrum für Maschinelles Lernen BZML (funding mark 01IS18037A), and by Zalando.}}
 

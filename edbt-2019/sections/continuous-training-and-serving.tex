@@ -86,7 +86,7 @@ In this scenario, the platform first re-materializes the evicted chunks using th
 \begin{figure}[h]
 \centering
 \includegraphics[width=\columnwidth]{../images/dynamic-materialization.pdf}
- \vspace{-20pt}
+% \vspace{-20pt}
 \caption{Dynamic Materialization process}
  \vspace{-10pt}
 \label{fig:dynamic-materialization-process}
@@ -160,7 +160,7 @@ Finally, the average materialization utilization rate for the dynamic materializ
 \begin{equation}  \label{formula-mu}
 \mu = \dfrac{\sum_{n=1}^N \mu_n}{N}
 \end{equation}
-$\mu$ indicates the ratio of the feature chunks that do not require re-materialization before updating the model (an $\mu$ of $0.5$ shows on average half of the sampled chunks are materialized).
+$\mu$ indicates the ratio of the feature chunks that do not require re-materialization before updating the model (a $\mu$ of $0.5$ shows on average half of the sampled chunks are materialized).
 To simplify the analysis, we assume the platform performs one sampling operation after every incoming data chunk. 
 In reality, a scheduler component governs the frequency of the sampling operation (Section \ref{scheduler}).
 Next, we describe how the sampling strategy affects the computation of $\mu$.
@@ -273,7 +273,7 @@ Algorithm \ref{mini-batch-SGD} shows the pseudocode of the mini-batch SGD algori
 \end{algorithmic}
 \end{algorithm}
 \added[comment={R2:12}]{In mini-batch SGD, we first initialize the model (Line 1).
-Then, in every iteration, we randomly sample points from the dataset (Line 4), compute the gradient of the loss function $J$ (Line 5), and finally update the model based on the value of the gradient and the learning rate (Line 6).}
+Then, in every iteration, we randomly sample points from the dataset (Line 3), compute the gradient of the loss function $J$ (Line 4), and finally update the model based on the value of the gradient and the learning rate (Line 5).}
 Since the platform executes the proactive training in arbitrary intervals, we must ensure each instance of the proactive training is independent of the previous instances.
 According to the mini-batch SGD algorithm, each iteration of the SGD only requires the model ($m_{i-1}$) and the learning rate ($\eta_{i-1}$) of the previous iteration (Lines 4 and 5).
 Given these parameters, iterations of SGD are conditionally independent of each other.
@@ -283,7 +283,7 @@ By proactively training the deployed model, the platform ensures the model stays
 Proactive training is a form of incremental training \cite{gepperth2016incremental} which is limited to SGD-based models.
 In our deployment platform, one can replace the proactive training with other forms of incremental training.
 However, we limit the platform's support to SGD for two reasons.
-First, SGD is simple to implement and is used for training a verity of machine learning models in different domains \cite{ macmahan2013, bottou1995convergence, koren2009matrix}. 
+First, SGD is simple to implement and is used for training a variety of machine learning models in different domains \cite{ macmahan2013, bottou1995convergence, koren2009matrix}. 
 Second, since the combination of the data sampling and the proactive training is similar to the mini-batch SGD procedure, proactive training provides the same regret bound on the convergence rate as the existing stochastic optimization approaches \cite{zhang2004solving, kingma2014adam}.
 
 %\subsection{Proactive Training} \label{proactive-training}

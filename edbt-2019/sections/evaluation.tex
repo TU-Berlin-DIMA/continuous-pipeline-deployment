@@ -2,7 +2,7 @@
 \begin{figure*}[t]
 \centering
 \resizebox{\textwidth}{!}{\input{../images/experiment-results/tikz/deployment-quality-and-time-experiment}}
- \vspace{-20pt}
+ \vspace{-10pt}
 \caption{Model Quality and Training cost for different deployment approaches}
  \vspace{-10pt}
 \label{deployment-quality-figure}
@@ -59,7 +59,7 @@ Taxi        &  42 GB 	    & 280 M            & Jan15              & Feb15 to Jun
 \hline
 \end{tabular}
 \caption{Description of Datasets. The Initial and Deployment columns indicate the amount of data used during the initial model training and the deployment phase (prediction queries and further training data)}  
- \vspace{-25pt}
+ \vspace{-15pt}
 \label{dataset-description}
 \end{table}
 
@@ -129,16 +129,16 @@ As a result, for the Taxi dataset, the cost of the periodical deployment is 6 ti
 \input{../images/experiment-results/tikz/parameter-selection-table}
 \end{adjustbox}
 \caption{Hyperparameter tuning during initial training (bold numbers show the best results for each adaptation techniques)}
- \vspace{-25pt}
+ \vspace{-15pt}
 \label{hyper-param-table}
 \end{table*}
 \subsection{Experiment 2: System Tuning}
 \begin{figure}[!h]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/parameter-selection-figure}}
- \vspace{-15pt}
+ \vspace{-20pt}
 \caption{Result of hyperparameter tuning during the deployment}
- \vspace{-10pt}
+ \vspace{-15pt}
 \label{hyper-param-figure}
 \end{figure}
 \begin{figure}[!h]
@@ -146,7 +146,7 @@ As a result, for the Taxi dataset, the cost of the periodical deployment is 6 ti
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/sampling-mode-figure}}
  \vspace{-10pt}
 \caption{Effect of different sampling methods on quality}
- \vspace{-10pt}
+
 \label{sampling-method-figure}
 \end{figure}
 In this experiment, we investigate the effect of different parameters on the quality of the models after deployment.
@@ -191,7 +191,7 @@ Our experiments show that for datasets that gradually change over time, time-bas
 Moreover, time-based sampling performs similarly to window-based and uniform sampling for datasets with stationary distributions.
 \subsection{Experiment 3: Optimizations Effects}
 In this experiment, we analyze the effect of the system optimizations, i.e., online statistics computation and the dynamic materialization on the total deployment cost.
-We define the materialization rate \added[comment ={R2:13}]{(i.e., $\dfrac{m}{n}$, as described in Section \ref{subsec:dynamic-materialization})} as the ratio of the number of materialized chunks over the total number of chunks (both URL and Taxi have around 12,000 chunks in total).
+We define the materialization rate \added[comment ={R2:13}]{(i.e., $\tfrac{m}{n}$, as described in Section \ref{subsec:dynamic-materialization})} as the ratio of the number of materialized chunks over the total number of chunks (both URL and Taxi have around 12,000 chunks in total).
 For both datasets, the materialization rates of 0.0, 0.2, 0.6, and 1.0 indicates that 0, 2400, 7200, and 12000 chunks are materialized.
 For the window-based sampling strategy, we set the window size to 6,000 chunks (half of the total chunks).
 \added[comment=R2:2]{In this experiment, we assume the raw data is always stored in memory.
@@ -204,15 +204,15 @@ Therefore, when setting the materialization rate to a specific value, we must en
 \hline
 & \multicolumn{2}{c}{\textbf{URL}}  & \multicolumn{2}{c}{\textbf{Taxi}} \\
  \cmidrule(lr){2-3} \cmidrule(lr){4-5} 
-\textbf{Sampling}  & \multicolumn{1}{l}{$\dfrac{m}{n}$=0.2} & \multicolumn{1}{l}{$\dfrac{m}{n}$=0.6} 
- &  \multicolumn{1}{l}{$\dfrac{m}{n}$=0.2} & \multicolumn{1}{l}{$\dfrac{m}{n}$=0.6}  \\
+\textbf{Sampling}  & \multicolumn{1}{l}{$\tfrac{m}{n}$=0.2} & \multicolumn{1}{l}{$\tfrac{m}{n}$=0.6} 
+ &  \multicolumn{1}{l}{$\tfrac{m}{n}$=0.2} & \multicolumn{1}{l}{$\tfrac{m}{n}$=0.6}  \\
 \hline
 Uniform      	&  0.52 (\textbf{0.52}) & 0.91 (\textbf{0.91}) & 0.51 (\textbf{0.52}) & 0.90 (\textbf{0.91})\\
 Window-based &  0.58 (\textbf{0.58}) 	& 1.0 (\textbf{1.0}) & 0.57 (\textbf{0.58}) & 1.0 (\textbf{1.0}) \\
 Time-based &   0.68 	&  0.97 & 0.65 & 0.97 \\ \hline      
 \end{tabular}
-\caption{\added{Empirical computation and theoretical estimates (bold numbers) of $\mu$ for different sampling strategies and materialization rates ($\dfrac{m}{n}$). We omit the materialization rates 0.0 and 1.0 since both the empirical and theoretical estimates of $\mu$ are 0.0 and 1.0 for every sampling strategy.}\deleted{Empirical computation of $\mu$ the for different sampling strategies and materialization rates (m).}}
- \vspace{-15pt}
+\caption{\added{Empirical computation and theoretical estimates (bold numbers) of $\mu$ for different sampling strategies and materialization rates ($\tfrac{m}{n}$). We omit the materialization rates 0.0 and 1.0 since both the empirical and theoretical estimates of $\mu$ are 0.0 and 1.0 for every sampling strategy.}\deleted{Empirical computation of $\mu$ the for different sampling strategies and materialization rates (m).}}
+ \vspace{-5pt}
 \label{table-empirical-mu}
 \end{table}
 \deleted[comment={R2:14}]{Using the Formula \ref{formula-uniform} and \ref{formula-window-based} of Section \ref{subsec:dynamic-materialization}, when the materialization rate is 0.0, 0.2, 0.6, and 1.0 the average materialization utilization rate ($\mu$) is 0.0, 0.5218, 0.9064, and 1.0 for uniform sampling and 0.0, 0.5832, 1.0, and 1.0 for window-based sampling.
@@ -225,13 +225,11 @@ Therefore, we do not report those results in the table.
 \begin{figure}[!h]
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/dynamic-materialization-experiment}}
- \vspace{-20pt}
 \caption{Effect of the online statistics computation and dynamic materialization on the deployment cost}
- \vspace{-5pt}
 \label{fig-optimization-effect}
 \end{figure}
 
-To examine the effect of $\mu$ on the deployment cost, we plot the total deployment cost using different sampling strategies and materialization rates for the URL and Taxi deployment scenarios in Figure \ref{fig-optimization-effect}.
+To examine the effect of $\mu$ on the deployment cost, we plot the total deployment cost using different sampling strategies and materialization rates ($\tfrac{m}{n}$) for the URL and Taxi deployment scenarios in Figure \ref{fig-optimization-effect}.
 When the materialization rate is 0.0 or 1.0, the sampling strategies have similar effects on the deployment cost. 
 Therefore, the total deployment cost for every sampling strategy is 90 minutes for URL and 600 minutes for Taxi deployment scenario, when the materialization rate is 0.0.
 Similarly, the deployment cost is 54 minutes for URL and 308 minutes for Taxi, when the materialization rate is 1.0 (an improvement of 40\% for URL and 49\% for Taxi deployment scenarios).
@@ -282,7 +280,6 @@ We also reduce the cost of the deployment 6 to 15 times when compared with perio
 \centering
 \resizebox{\columnwidth}{!}{\input{../images/experiment-results/tikz/quality-vs-time}}
 \caption{Trade-off between average quality and deployment cost}
- \vspace{-10pt}
 \label{trade-off-figure}
 \end{figure}
 
