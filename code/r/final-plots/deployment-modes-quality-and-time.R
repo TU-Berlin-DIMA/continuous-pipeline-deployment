@@ -119,14 +119,16 @@ taxiTimeProcessing <- function(){
 }
 
 # For the paper use
-fontLabelSize = 10
-baseSize = 11
-margin = -1
+#fontLabelSize = 10
+#baseSize = 11
+#margin = -1
+#loc ='tikz'
 
 #For presentation use
-#fontLabelSize = 12
-#baseSize = 16
-#margin = 2
+fontLabelSize = 12
+baseSize = 16
+margin = 2
+loc = 'slides'
 
 
 ####### URL PLOT ##########
@@ -218,8 +220,7 @@ criteoTimePlot = ggpar(criteoTimePlot, font.x = c(fontLabelSize), font.y=c(fontL
 #deploymentQuality = ggarrange(urlQualityPlot,urlTimePlot, taxiQualityPlot, taxiTimePlot, criteoQualityPlot, criteoTimePlot, nrow = 3, ncol = 2, common.legend = TRUE)
 deploymentQuality = ggarrange(urlQualityPlot,urlTimePlot, taxiQualityPlot, taxiTimePlot, nrow = 2, ncol = 2, common.legend = TRUE)
 
-
-#ggsave(deploymentQuality, filename = '../images/experiment-results/eps/deployment-quality.eps', device = 'eps', width = 14, height = 6, units = "in")
-tikz(file = "../images/experiment-results/tikz/deployment-quality-and-time-experiment.tex", width = 6, height = 4)
-deploymentQuality
-dev.off()
+ggsave(deploymentQuality, filename = paste('../images/experiment-results/',loc,'/deployment-quality.eps',sep=''), device = 'eps', width = 14, height = 6, units = "in")
+#tikz(file = "../images/experiment-results/tikz/deployment-quality-and-time-experiment.tex", width = 6, height = 4)
+#deploymentQuality
+#dev.off()

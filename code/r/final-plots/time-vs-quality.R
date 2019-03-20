@@ -3,7 +3,7 @@ library(ggplot2)
 library(reshape)
 library(tikzDevice)
 library(ggpubr)
-
+source('../code/r/final-plots/functions.r')
 
 
 urlDataProcessing <- function(){
@@ -38,14 +38,16 @@ taxiDataProcessing <- function(){
 }
 
 # For the paper use
-fontLabelSize = 12
-baseSize = 14
-margin = -1
+# fontLabelSize = 12
+# baseSize = 14
+# margin = -1
+# loc = 'tikz'
 
 # For presentation use
-#fontLabelSize = 16
-#baseSize = 18
-#margin = 2
+fontLabelSize = 16
+baseSize = 18
+margin = 2
+loc = 'slides'
 
 
 
@@ -103,7 +105,7 @@ criteoPlot = ggpar(criteoPlot, legend.title = "", font.x = c(fontLabelSize), fon
 #qualityVsTime = ggarrange(urlPlot, taxiPlot, criteoPlot, nrow = 1, ncol = 3, common.legend = TRUE)
 qualityVsTime = ggarrange(urlPlot, taxiPlot, nrow = 1, ncol = 2, common.legend = TRUE)
 
-#ggsave(qualityVsTime, filename = '../images/experiment-results/eps/quality-vs-time.eps', device = 'eps', width = 8, height = 4, units = "in")
-tikz(file = "../images/experiment-results/tikz/quality-vs-time.tex", width = 4, height = 2)
-qualityVsTime 
-dev.off()
+ggsave(qualityVsTime, filename = paste('../images/experiment-results/',loc, '/quality-vs-time.eps', sep=''), device = 'eps', width = 8, height = 4, units = "in")
+#tikz(file = "../images/experiment-results/tikz/quality-vs-time.tex", width = 4, height = 2)
+#qualityVsTime 
+#dev.off()

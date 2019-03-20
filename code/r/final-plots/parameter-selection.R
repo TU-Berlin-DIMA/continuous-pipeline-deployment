@@ -76,11 +76,13 @@ taxiDataProcessing <- function(){
 # fontLabelSize = 12
 # baseSize = 14
 # margin = -1
+# loc = 'tikz'
 
 # For presentation use
 fontLabelSize = 16
 baseSize = 18
 margin = 2
+loc = 'slides'
 
 ####### URL PLOT ##########
 urlData = urlDataProcessing()
@@ -129,7 +131,7 @@ criteoPlot = ggpar(criteoPlot, legend.title = "",font.x = c(fontLabelSize), font
 
 #param_selection_plot = ggarrange(urlPlot, taxiPlot, criteoPlot,  nrow = 1, ncol = 3, common.legend = TRUE)
 param_selection_plot = ggarrange(urlPlot, taxiPlot,  nrow = 1, ncol = 2, common.legend = TRUE)
-ggsave(param_selection_plot, filename = '../images/experiment-results/eps/param-selection-experiment.eps', device = 'eps', width = 8, height = 4, units = "in")
+ggsave(param_selection_plot, filename = paste('../images/experiment-results/',loc, '/param-selection-experiment.eps', sep = ''), device = 'eps', width = 8, height = 4, units = "in")
 
 #tikz(file = "../images/experiment-results/tikz/parameter-selection-figure.tex", width = 4, height = 2)
 #param_selection_plot

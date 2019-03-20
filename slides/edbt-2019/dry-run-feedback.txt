@@ -1,0 +1,19 @@
+Check 1. other author's name
+Check 2. slide number
+Check 3. titles are small
+4. motivation is too long (10 minutes !!!!!!)
+5. slide 9 to 10 (especially 10) make the contribution clear, maybe with a figure
+6. maybe a bit more text
+7. be more explict, (data storage is historica data etc)
+8. Some highlighting on the longer processes, or make sure you're not going back and forth
+9. toy example or use case
+**10. Restructure the platform architecture part (mix it with the processes)**
+11. quality (specially the evaluation figures)
+12. slide 23 highlight the interesting aspects
+13. be more specific in the evaluation, what are the x and y axis? 
+14. slide 23, make it clear that we're as good as periodical in terms of error rate and as fast as online in terms of cost.
+15. white font slide 22, 24-25
+16. slide 24, highlight the message you're trying to communicate
+Check 17. be more excited
+Check 18. dont touch your nose
+
