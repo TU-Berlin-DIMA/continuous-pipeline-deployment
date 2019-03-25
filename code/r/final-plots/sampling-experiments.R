@@ -82,8 +82,8 @@ taxiDataProcessing <- function(){
 # loc = tikz
 
 # For presentation use
-fontLabelSize = 16
-baseSize = 18
+fontLabelSize = 18
+baseSize = 22
 margin = 2
 loc = 'slides'
 
@@ -92,12 +92,12 @@ loc = 'slides'
 urlData = urlDataProcessing()
 urlBreaks = c(200, 1500,3000)
 urlLabels = c("day1","day15","day30")
-urlPlot = ggline(urlData, 'Time', 'value', ylab = "Misclassification\\%", xlab = '(a) URL',
+urlPlot = ggline(urlData, 'Time', 'value', ylab = "Misclassification %", xlab = 'URL',
                  shape = '-1', linetype ='Sampling', size =2, color = "Sampling", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = urlBreaks, labels= urlLabels)
 urlPlot = ggpar(urlPlot, legend.title = "",font.x = c(fontLabelSize), font.y=c(fontLabelSize)) +
   theme(legend.title = element_text(size = 0), 
-        legend.key.width = unit(1.2,'cm'),
+        legend.key.width = unit(2,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         plot.margin = unit(c(0,1.2,0,0), "lines"), 
         axis.title.y = element_text(margin = margin(r=margin)),
@@ -107,12 +107,12 @@ urlPlot = ggpar(urlPlot, legend.title = "",font.x = c(fontLabelSize), font.y=c(f
 taxiData = taxiDataProcessing()
 taxiBreaks = c(1,2000)
 taxiLabels = c("Feb15", "Apr15")
-taxiPlot = ggline(taxiData, 'Time', 'value', ylab = "RMSLE", xlab = '(b) Taxi',
+taxiPlot = ggline(taxiData, 'Time', 'value', ylab = "RMSLE", xlab = 'Taxi',
                   shape = '-1', linetype ='Sampling',size = 2, color = "Sampling", ggtheme = theme_pubclean(base_size = baseSize)) + 
   scale_x_continuous(breaks = taxiBreaks, labels = taxiLabels)
 taxiPlot = ggpar(taxiPlot, legend.title = "",font.x = c(fontLabelSize), font.y=c(fontLabelSize))+
   theme(legend.title = element_text(size = 0), 
-        legend.key.width = unit(1.2,'cm'),
+        legend.key.width = unit(2,'cm'),
         legend.key.height = unit(0.4,'cm'), 
         plot.margin = unit(c(0,1.5,0,0), "lines"), 
         axis.title.y = element_text(margin = margin(r=margin)),
@@ -138,7 +138,7 @@ criteoPlot = ggpar(criteoPlot,legend.title = "", font.x = c(fontLabelSize), font
 #samplingPlot = ggarrange(urlPlot, taxiPlot,criteoPlot,  nrow = 1, ncol = 3, common.legend = TRUE)
 
 samplingPlot = ggarrange(urlPlot, taxiPlot,  nrow = 1, ncol = 2, common.legend = TRUE)
-ggsave(samplingPlot, filename = paste('../images/experiment-results/',loc,'/sampling-experiments-experiment.eps', sep =''), device = 'eps', width = 8, height = 4, units = "in")
+ggsave(samplingPlot, filename = paste('../images/experiment-results/',loc,'/sampling-experiments-experiment.pdf', sep =''), device = 'pdf', width = 10, height = 4, units = "in")
 #tikz(file = "../images/experiment-results/tikz/sampling-mode-figure.tex", width = 4, height = 2)
 #samplingPlot
 #dev.off()
