@@ -1,8 +1,17 @@
 # ML Pipeline Deployment
 This repository contains the source code and publications of our work on machine learning model deployment. 
 
-## Continuous Deployment of Machine Learning Pipelines
-This work is pubilshed in EDBT'19. 
+## Features
+- Deployment platform for machine learning pipelines
+- Efficiently processes the incoming data using the deployed pipeline
+- Continously update the deployed model
+- Eliminates the need for periodical retraining
+
+## Resources
+- [Paper: Continuous Deployment of Machine Learning Pipelines at EDBT'19](http://openproceedings.org/2019/conf/edbt/EDBT19_paper_23.pdf)
+- [Slides: EDBT'19 presentation] (https://www.slideshare.net/BehrouzDerakhshan/continuous-deployment-of-machine-learning-pipelines)
+
+## Continuous Deployment of Machine Learning Pipelines (EDBT'19)
 
 ### Abstract
 Today machine learning is entering many business and scientific applications.
