@@ -1,20 +1,19 @@
-# continuous-training
-Repository for continuous training (latex files + code)
+# ML Pipeline Deployment
+This repository contains the source code and publications of our work on machine learning model deployment. 
 
-## Notes
+## Continuous Deployment of Machine Learning Pipelines
+This work is pubilshed in EDBT'19. 
 
-1- Title suggestion
-- Continuous Deployment and Serving of ML Models
-- Continuous Deployment of Machine Learning Models
-- One-off Deployment and Continuous Update of Machine Learning Models
-- Streamlining Deployment of Machine Learning Models
+### Abstract
+Today machine learning is entering many business and scientific applications.
+The life cycle of machine learning applications consists of data preprocessing for transforming the raw data into features, training a model using the features, and deploying the model for answering prediction queries.
+In order to guarantee accurate predictions, one has to continuously monitor and update the deployed model and pipeline. 
+Current deployment platforms update the model using online learning methods.
+When online learning alone is not adequate to guarantee the prediction accuracy, some deployment platforms provide a mechanism for automatic or manual retraining of the model.
+While the online training is fast, the retraining of the model is time-consuming and adds extra overhead and complexity to the process of deployment.
 
-2- About citing "Identifying suspicious URLs: an application of large-scale online learning": the evaluation is done in single node
-
-3- About citing "Adaptive SubgradientMethods for Online Learning and Stochastic Optimization" based on page 2 and second paragraph of the related work is similar to what Adam* is doing
-
-4- Trade off: efficient computation (time, resource) and accuracy
-
-## Related Work
-### Weasel
-"The main contribution of WEASEL is not the approach itself, but the several pieces that compose the solution related to feautre crafting".
+We propose a novel continuous deployment approach for updating the deployed model using a combination of the incoming real-time data and the historical data.
+We utilize sampling techniques to include the historical data in the training process, thus eliminating the need for retraining the deployed model.
+We also offer online statistics computation and dynamic materialization of the preprocessed features, which further reduces the total training and data preprocessing time.
+In our experiments, we design and deploy two pipelines and models to process two real-world datasets.
+The experiments show that continuous deployment reduces the total training cost up to 15 times while providing the same level of quality when compared to the state-of-the-art deployment approaches.
