@@ -9,7 +9,7 @@ This repository contains the source code and publications of our work on machine
 
 ## Resources
 - [Paper: Continuous Deployment of Machine Learning Pipelines at EDBT'19](http://openproceedings.org/2019/conf/edbt/EDBT19_paper_23.pdf)
-- [Slides: EDBT'19 presentation] (https://www.slideshare.net/BehrouzDerakhshan/continuous-deployment-of-machine-learning-pipelines)
+- [Slides: EDBT'19 presentation](https://www.slideshare.net/BehrouzDerakhshan/continuous-deployment-of-machine-learning-pipelines)
 
 ## Continuous Deployment of Machine Learning Pipelines (EDBT'19)
 
